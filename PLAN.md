@@ -295,3 +295,31 @@ Users see one clean import: `import { useList } from '@ohmystack/convex/react'`
 - [ ] Documentation site live with DB switcher
 - [ ] All three npm packages published
 - [ ] CI green with path-filtered multi-job pipeline
+
+## Ralph Loop Prompt
+
+```
+/ralph-loop "Execute PLAN.md phases 0 through 8 for the ohmystack monorepo. Read PLAN.md and AGENTS.md first — they are your single source of truth for structure, tasks, constraints, and code conventions.
+
+Work phase by phase in order. Within each phase, work task by task. After each task, run the phase's verification command before moving on. After each phase, run full verification before starting the next phase.
+
+Phase gate verification (run after completing each phase):
+- Phase 0: bun i && bun fix
+- Phase 1: bun fix && bun typecheck
+- Phase 2: bun fix && bun typecheck && bun test
+- Phase 3: docker compose -f ohmystack.yml up -d && backend tests pass for both DBs
+- Phase 4: bun fix && bun build for all 8 apps && E2E tests pass
+- Phase 5: Swift codegen && native builds && Maestro tests && Swift tests
+- Phase 6: bun fix && bun build for docs app && docs site renders with DB switcher
+- Phase 7: bun ohmystack@latest init works for both Convex and SpacetimeDB choices
+- Phase 8: all npm packages published && CI green && all success criteria checked off
+
+Source repos (archived, read-only — copy from these):
+- /Users/o/z/betterspace (SpacetimeDB)
+- /Users/o/z/lazyconvex (Convex)
+- /Users/o/z/lintmax (linting framework source)
+
+If any verification fails, fix it before moving forward. If stuck after 3 attempts on the same issue, consult Oracle. Never skip a failing check. Never leave tests broken. Commit after each completed task. Push after each completed phase.
+
+Do not stop until every task in every phase is done and every success criterion at the bottom of PLAN.md is checked off." --max-iterations=100
+```
