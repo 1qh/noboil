@@ -2,23 +2,19 @@
 
 ## Vision
 
-Schema-first, zero-boilerplate fullstack. Pick your database, forget about the backend.
-
-`bun ohmystack@latest init` → choose a database → ship in minutes.
-
-Convex and SpacetimeDB are our first two supported backends. The architecture is designed to support more databases over time (drizzle + oRPC for SQL databases is on the roadmap).
+Schema-first, zero-boilerplate fullstack. Pick your database, forget about the backend. `bun ohmystack@latest init` → ship in minutes.
 
 ## Motivation
 
 betterspace (SpacetimeDB) and lazyconvex (Convex) share everything — philosophy, code, linting, dependencies, demo apps, monorepo structure. Maintaining two repos with ~70% identical code is wasteful. Consolidating into one monorepo unlocks massive reuse.
 
-But this is not just a merge. ohmystack is a new home with a long-term vision: **schema-first, no-brainer backend, zero-boilerplate, just pick your favorite database.** Every solution ohmystack offers is easy to use, easy to adopt, easy to configure, while covering all concerns about scalability and security.
+But this is not just a merge. ohmystack is a new home with a long-term vision. Every solution it offers is easy to use, easy to adopt, easy to configure, while covering all concerns about scalability and security. The goal: any dev picks a database and ships a fullstack app in minutes, not weeks, forgetting about backend configuration entirely.
 
-ohmystack is for any dev who wants the most minimum effort to ship a fullstack app in minutes, not weeks. Pick a database, forget about the backend. Convex and SpacetimeDB are the first two supported backends. More will follow — drizzle + oRPC for SQL databases is on the roadmap (to be discussed after ohmystack ships, multi-db support needs careful consideration).
+Convex and SpacetimeDB are the first two supported backends. More will follow — drizzle + oRPC for SQL databases is on the roadmap (to be discussed after ohmystack ships, multi-db support needs careful consideration). The architecture is built to grow.
 
-The repo IS the template. `bun ohmystack@latest init` → pick a database → done. No separate template repos to maintain. Clone the repo, strip library source and docs, keep the monorepo structure, GitHub Actions, shadcn components, strict linting, and demo apps. A `doctor` command checks if the consumer's project is outdated vs upstream, and a `sync` command pulls upstream changes.
+The repo IS the template. No separate template repos to maintain per library. The per-library `init` CLIs are removed — `bun ohmystack@latest init` handles everything. Clone the repo, strip library source and docs, keep the monorepo structure, GitHub Actions, shadcn components, strict linting, and demo apps to reference or clone. Consumers get the same DX we have — a `doctor` command checks if their project is outdated vs upstream, and a `sync` command pulls upstream changes.
 
-Documentation lives in a fumadocs site, not scattered markdown files. Devs can switch between databases in a global toggle and see the difference in consumer code — same UX as SDKs that show multiple language clients side by side, but for different databases.
+Documentation lives in a fumadocs site, not scattered markdown files. The root README is a concise pitch that drives people straight to the docs site. Devs can switch between databases in a global toggle and see the difference in consumer code — same UX as SDKs that show multiple language clients side by side, but for different databases.
 
 Both betterspace and lazyconvex remain valid on their own — they are archived as read-only references, not deprecated. ohmystack is where they grow from here.
 
