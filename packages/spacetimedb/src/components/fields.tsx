@@ -1,6 +1,6 @@
 // biome-ignore-all lint/nursery/noLeakedRender: conditional rendering
 // oxlint-disable promise/prefer-await-to-then
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+
 // biome-ignore-all lint/performance/noImgElement: x
 // biome-ignore-all lint/performance/noAwaitInLoops: x
 // biome-ignore-all lint/suspicious/noExplicitAny: x
@@ -51,27 +51,27 @@ const DEFAULT_ASYNC_DEBOUNCE_MS = 300,
     schema: ZodObject<ZodRawShape>
     serverErrors: Record<string, string>
   }>(null),
-   useFCtx = () => {
-     const c = use(FormContext)
-     if (!c)
-       throw new Error(
-         '[@ohmystack/spacetimedb] Field must be inside <Form>. Wrap your field components with <Form schema={...}> from @ohmystack/spacetimedb/components.'
-       )
-     return c
-   },
-   useField = (name: string, kind: FieldKind) => {
-     const ctx = useFCtx(),
-       info = ctx.meta[name]
-     if (!info)
-       throw new Error(
-         `[@ohmystack/spacetimedb] Unknown field: "${name}". Available fields: ${Object.keys(ctx.meta).join(', ') || '(none)'}. Check your Zod schema — the field name must match a key in the schema passed to <Form>.`
-       )
-     if (info.kind !== kind)
-       throw new Error(
-         `[@ohmystack/spacetimedb] Field "${name}" has kind "${info.kind}", but <${kind.charAt(0).toUpperCase() + kind.slice(1)}> expects kind "${kind}". Use the field component that matches the schema type (e.g. z.string() → <Text>, z.number() → <Num>, z.boolean() → <Toggle>, z.enum() → <Choose>).`
-       )
-     return { form: ctx.form, info, schema: ctx.schema, serverErrors: ctx.serverErrors }
-   },
+  useFCtx = () => {
+    const c = use(FormContext)
+    if (!c)
+      throw new Error(
+        '[@ohmystack/spacetimedb] Field must be inside <Form>. Wrap your field components with <Form schema={...}> from @ohmystack/spacetimedb/components.'
+      )
+    return c
+  },
+  useField = (name: string, kind: FieldKind) => {
+    const ctx = useFCtx(),
+      info = ctx.meta[name]
+    if (!info)
+      throw new Error(
+        `[@ohmystack/spacetimedb] Unknown field: "${name}". Available fields: ${Object.keys(ctx.meta).join(', ') || '(none)'}. Check your Zod schema — the field name must match a key in the schema passed to <Form>.`
+      )
+    if (info.kind !== kind)
+      throw new Error(
+        `[@ohmystack/spacetimedb] Field "${name}" has kind "${info.kind}", but <${kind.charAt(0).toUpperCase() + kind.slice(1)}> expects kind "${kind}". Use the field component that matches the schema type (e.g. z.string() → <Text>, z.number() → <Num>, z.boolean() → <Toggle>, z.enum() → <Choose>).`
+      )
+    return { form: ctx.form, info, schema: ctx.schema, serverErrors: ctx.serverErrors }
+  },
   /** Derives a human-readable label from a camelCase field name. */
   deriveLabel = (name: string): string => name.replace(CAMEL_RE, '$1 $2').replace(FIRST_CHAR_RE, c => c.toUpperCase()),
   defaultEnumOptions = (schema: ZodObject<ZodRawShape>, name: string): { label: string; value: string }[] => {
@@ -80,9 +80,9 @@ const DEFAULT_ASYNC_DEBOUNCE_MS = 300,
       const opts = (inner as { options: readonly string[] }).options
       return opts.map(v => ({ label: v.charAt(0).toUpperCase() + v.slice(1), value: v }))
     }
-     throw new Error(
-       `[@ohmystack/spacetimedb] Choose: field "${name}" has no enum options. Define the field as z.enum(["opt1", "opt2"]) in your schema, or pass an explicit options={[{ label: "...", value: "..." }]} prop to <Choose>.`
-     )
+    throw new Error(
+      `[@ohmystack/spacetimedb] Choose: field "${name}" has no enum options. Define the field as z.enum(["opt1", "opt2"]) in your schema, or pass an explicit options={[{ label: "...", value: "..." }]} prop to <Choose>.`
+    )
   },
   /**
    * Renders a server-side field validation error for one form input.

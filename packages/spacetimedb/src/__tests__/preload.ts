@@ -1,5 +1,5 @@
 // biome-ignore-all lint/suspicious/noEmptyBlockStatements: WASM syscall mock
-/* eslint-disable @typescript-eslint/no-empty-function */
+
 import { mock } from 'bun:test'
 
 const noop = () => {},

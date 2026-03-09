@@ -31,12 +31,12 @@ class ConvexErrorBoundary extends Component<ConvexErrorBoundaryProps, ConvexErro
 
   // oxlint-disable-next-line class-methods-use-this
 
-  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+  override componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     const { onError } = this.props
     if (onError) onError(error, errorInfo)
   }
 
-  async render() {
+  override async render() {
     const { error } = this.state,
       { children, fallback } = this.props
 

@@ -91,7 +91,7 @@ const DEFAULT_API_ENDPOINT = '/api/upload/presign',
         method: 'POST'
       }),
       payload = (await response.json().catch((parseError: unknown) => {
-         console.error('[@ohmystack/spacetimedb] Upload presign response is not valid JSON:', parseError) // eslint-disable-line no-console
+        console.error('[@ohmystack/spacetimedb] Upload presign response is not valid JSON:', parseError) // eslint-disable-line no-console
         return null
       })) as unknown
     if (!response.ok) err('FILE_NOT_FOUND', { message: `Failed to create upload URL (HTTP ${response.status})` })

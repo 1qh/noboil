@@ -89,7 +89,7 @@ const orgScoped = makeOrgScoped({
       </div>
     )
   },
-   /** Interactive playground for previewing @ohmystack/spacetimedb schema tables and their generated endpoints. */
+  /** Interactive playground for previewing @ohmystack/spacetimedb schema tables and their generated endpoints. */
   SchemaPlayground = ({
     className,
     defaultValue = DEFAULT_SCHEMA,

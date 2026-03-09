@@ -228,10 +228,10 @@ const schemaMarkers = ['schema(', 'table(', 't.'],
       flags = new Set(process.argv.slice(2)),
       args = process.argv.slice(2).filter(a => !a.startsWith('--'))
 
-     console.log(bold('\nohmystack-stdb migrate\n'))
+    console.log(bold('\nohmystack-stdb migrate\n'))
 
-     if (flags.has('--help') || flags.has('-h')) {
-       console.log(`Usage: ohmystack-stdb migrate [options]
+    if (flags.has('--help') || flags.has('-h')) {
+      console.log(`Usage: ohmystack-stdb migrate [options]
 
 Compare SpacetimeDB schema versions and generate publish plans.
 

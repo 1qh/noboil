@@ -305,7 +305,7 @@ const defineSteps = <const Defs extends readonly [StepDef, ...StepDef[]]>(...def
               // oxlint-disable-next-line promise/prefer-await-to-then
               s.submitAll(stepDataRef.current).catch((catchError: unknown) => {
                 // eslint-disable-next-line no-console
-                 console.error('[@ohmystack/spacetimedb] Step form final submission failed:', catchError)
+                console.error('[@ohmystack/spacetimedb] Step form final submission failed:', catchError)
               })
             else s.inner.navigation.next()
           },

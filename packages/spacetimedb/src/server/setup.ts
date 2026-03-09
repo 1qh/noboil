@@ -1242,18 +1242,18 @@ const compoundIndexToEntry = (columns: string[]): { accessor: string; algorithm:
     }
   },
   ohmystackStdb = (
-     define: (helpers: {
-       cacheTable: (keyFieldOrName: string | TblKey, fields: TblInput, options?: { ttl?: number }) => BsTable
-       childTable: (fkOrChild: ChildLike | string, schema?: TblChild) => BsTable
-       fileTable: () => BsTable
-       orgScopedTable: <F extends TblInput>(fields: F, options?: OrgScopedOpts<F>) => BsTable
-       orgTable: <F extends TblInput>(fields: F, options?: OrgTableOpts<F>) => BsTable
-       ownedTable: <F extends TblInput>(fields: F, options?: OwnedOpts<F>) => BsTable
-       singletonTable: (fields: TblInput) => BsTable
-       t: SchemaHelpers['t']
-       table: TableFn
-     }) => Record<string, BsTable>
-   ) => {
+    define: (helpers: {
+      cacheTable: (keyFieldOrName: string | TblKey, fields: TblInput, options?: { ttl?: number }) => BsTable
+      childTable: (fkOrChild: ChildLike | string, schema?: TblChild) => BsTable
+      fileTable: () => BsTable
+      orgScopedTable: <F extends TblInput>(fields: F, options?: OrgScopedOpts<F>) => BsTable
+      orgTable: <F extends TblInput>(fields: F, options?: OrgTableOpts<F>) => BsTable
+      ownedTable: <F extends TblInput>(fields: F, options?: OwnedOpts<F>) => BsTable
+      singletonTable: (fields: TblInput) => BsTable
+      t: SchemaHelpers['t']
+      table: TableFn
+    }) => Record<string, BsTable>
+  ) => {
     const raw = makeSchema(),
       result = define(makeBsHelpers(raw) as never),
       rawTables: Record<string, unknown> = {},

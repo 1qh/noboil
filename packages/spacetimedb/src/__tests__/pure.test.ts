@@ -1433,7 +1433,6 @@ describe('branded schema error messages (SchemaTypeError)', () => {
   })
 })
 
-/* eslint-disable @typescript-eslint/require-await */
 // oxlint-disable promise/prefer-await-to-then
 const failStorage = () => ({
   delete: async () => {

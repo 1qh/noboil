@@ -181,7 +181,6 @@ const IMAGE_TYPES = new Set(['image/gif', 'image/jpeg', 'image/png', 'image/svg+
         return NextResponse.json({ error: error instanceof Error ? error.message : 'Processing failed' }, { status: 500 })
       }
     },
-  // eslint-disable-next-line @typescript-eslint/require-await
   makeImageRoute = async ({ fileInfoEndpoint, storageBaseUrl }: ImageRouteConfig) => ({
     GET: makeGet({ fileInfoEndpoint, storageBaseUrl }),
     POST: makePost({ fileInfoEndpoint, storageBaseUrl })

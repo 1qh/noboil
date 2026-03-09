@@ -155,8 +155,8 @@ const mergeGlobalHooks = (a: GlobalHooks | undefined, b: GlobalHooks | undefined
       }
     return merged
   },
-   /**
-    * Initializes @ohmystack/convex by wiring Convex builders, auth, hooks, and middleware into factory functions.
+  /**
+   * Initializes @ohmystack/convex by wiring Convex builders, auth, hooks, and middleware into factory functions.
    * @param config - Convex query/mutation/action builders, getAuthUserId, optional hooks, middleware, and org config
    * @returns Object containing `crud`, `orgCrud`, `childCrud`, `cacheCrud`, `singletonCrud`, custom builders (`pq`, `q`, `m`), and `org` endpoints
    * @example

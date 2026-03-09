@@ -570,9 +570,9 @@ const discoveryCheck = {
   },
   meta: {
     messages: {
-       discoveryFailed:
-         '@ohmystack/spacetimedb: could not find {{missing}} while scanning project TypeScript sources. Some rules are inactive.'
-     },
+      discoveryFailed:
+        '@ohmystack/spacetimedb: could not find {{missing}} while scanning project TypeScript sources. Some rules are inactive.'
+    },
     type: 'suggestion' as const
   }
 }
@@ -791,22 +791,22 @@ const noEmptySearchConfig = {
 
 /** Map of all ESLint rules provided by the ohmystack-stdb plugin. */
 const rules = {
-   'api-casing': apiCasing,
-   'consistent-crud-naming': consistentCrudNaming,
-   'discovery-check': discoveryCheck,
-   'form-field-exists': formFieldExists,
-   'form-field-kind': formFieldKind,
-   'no-duplicate-crud': noDuplicateCrud,
-   'no-empty-search-config': noEmptySearchConfig,
-   'no-raw-fetch-in-server-component': noRawFetchInServerComponent,
-   'no-unlimited-file-size': noUnlimitedFileSize,
-   'no-unprotected-mutation': noUnprotectedMutation,
-   'no-unsafe-api-cast': noUnsafeApiCast,
-   'prefer-useList': preferUseList,
-   'prefer-useOrgQuery': preferUseOrgQuery,
-   'require-connection': requireConnection,
-   'require-error-boundary': requireErrorBoundary,
-   'require-rate-limit': requireRateLimit
+  'api-casing': apiCasing,
+  'consistent-crud-naming': consistentCrudNaming,
+  'discovery-check': discoveryCheck,
+  'form-field-exists': formFieldExists,
+  'form-field-kind': formFieldKind,
+  'no-duplicate-crud': noDuplicateCrud,
+  'no-empty-search-config': noEmptySearchConfig,
+  'no-raw-fetch-in-server-component': noRawFetchInServerComponent,
+  'no-unlimited-file-size': noUnlimitedFileSize,
+  'no-unprotected-mutation': noUnprotectedMutation,
+  'no-unsafe-api-cast': noUnsafeApiCast,
+  'prefer-useList': preferUseList,
+  'prefer-useOrgQuery': preferUseOrgQuery,
+  'require-connection': requireConnection,
+  'require-error-boundary': requireErrorBoundary,
+  'require-rate-limit': requireRateLimit
 }
 
 /** ESLint plugin object containing all ohmystack-stdb rules. */
@@ -814,28 +814,28 @@ const plugin = { rules }
 
 /** Recommended ESLint configuration for ohmystack-stdb projects. */
 const recommended = {
-   files: ['**/*.ts', '**/*.tsx'],
-   plugins: {
-     'ohmystack-stdb': plugin
-   },
-   rules: {
-     'ohmystack-stdb/api-casing': 'error' as const,
-     'ohmystack-stdb/consistent-crud-naming': 'error' as const,
-     'ohmystack-stdb/discovery-check': 'warn' as const,
-     'ohmystack-stdb/form-field-exists': 'error' as const,
-     'ohmystack-stdb/form-field-kind': 'warn' as const,
-     'ohmystack-stdb/no-duplicate-crud': 'error' as const,
-     'ohmystack-stdb/no-empty-search-config': 'error' as const,
-     'ohmystack-stdb/no-raw-fetch-in-server-component': 'warn' as const,
-     'ohmystack-stdb/no-unlimited-file-size': 'warn' as const,
-     'ohmystack-stdb/no-unprotected-mutation': 'warn' as const,
-     'ohmystack-stdb/no-unsafe-api-cast': 'warn' as const,
-     'ohmystack-stdb/prefer-useList': 'warn' as const,
-     'ohmystack-stdb/prefer-useOrgQuery': 'warn' as const,
-     'ohmystack-stdb/require-connection': 'error' as const,
-     'ohmystack-stdb/require-error-boundary': 'warn' as const,
-     'ohmystack-stdb/require-rate-limit': 'warn' as const
-   }
+  files: ['**/*.ts', '**/*.tsx'],
+  plugins: {
+    'ohmystack-stdb': plugin
+  },
+  rules: {
+    'ohmystack-stdb/api-casing': 'error' as const,
+    'ohmystack-stdb/consistent-crud-naming': 'error' as const,
+    'ohmystack-stdb/discovery-check': 'warn' as const,
+    'ohmystack-stdb/form-field-exists': 'error' as const,
+    'ohmystack-stdb/form-field-kind': 'warn' as const,
+    'ohmystack-stdb/no-duplicate-crud': 'error' as const,
+    'ohmystack-stdb/no-empty-search-config': 'error' as const,
+    'ohmystack-stdb/no-raw-fetch-in-server-component': 'warn' as const,
+    'ohmystack-stdb/no-unlimited-file-size': 'warn' as const,
+    'ohmystack-stdb/no-unprotected-mutation': 'warn' as const,
+    'ohmystack-stdb/no-unsafe-api-cast': 'warn' as const,
+    'ohmystack-stdb/prefer-useList': 'warn' as const,
+    'ohmystack-stdb/prefer-useOrgQuery': 'warn' as const,
+    'ohmystack-stdb/require-connection': 'error' as const,
+    'ohmystack-stdb/require-error-boundary': 'warn' as const,
+    'ohmystack-stdb/require-rate-limit': 'warn' as const
+  }
 }
 
 export { plugin, recommended, rules }

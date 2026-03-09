@@ -7775,7 +7775,7 @@ describe('doctor', () => {
   })
 
   test('checkDeps — all present', () => {
-    expect(checkDeps({ dependencies: { convex: '1', '@ohmystack/convex': '2', zod: '3' } }).status).toBe('pass')
+    expect(checkDeps({ dependencies: { '@ohmystack/convex': '2', convex: '1', zod: '3' } }).status).toBe('pass')
   })
 
   test('checkDeps — missing dep is fail', () => {
@@ -7783,7 +7783,7 @@ describe('doctor', () => {
   })
 
   test('checkDeps — devDependencies count', () => {
-    expect(checkDeps({ devDependencies: { convex: '1', '@ohmystack/convex': '2', zod: '3' } }).status).toBe('pass')
+    expect(checkDeps({ devDependencies: { '@ohmystack/convex': '2', convex: '1', zod: '3' } }).status).toBe('pass')
   })
 
   test('checkDeps — no package.json', () => {

@@ -78,8 +78,6 @@ export default eslint({
     '*.config.ts',
     'packages/be-convex/**',
     'packages/be-spacetimedb/**',
-    'packages/convex/**',
-    'packages/spacetimedb/**',
     'packages/fe/**',
     'packages/e2e/**',
     'packages/ui/**'
