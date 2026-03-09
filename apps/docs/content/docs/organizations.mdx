@@ -1,0 +1,703 @@
+---
+title: Organizations
+description: Multi-tenant apps with roles, invites, join requests, and per-item ACL.
+---
+
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs'
+
+Both databases provide a full multi-tenant system with roles, invites, join requests, and per-item ACL. The APIs differ but the concepts are the same.
+
+## Schema setup
+
+<Tabs groupId="db" items={['Convex', 'SpacetimeDB']} persist>
+<Tab value="Convex">
+
+Define org-scoped tables in `convex/t.ts`:
+
+```tsx
+import { makeOrgScoped } from '@ohmystack/convex/server'
+import { object, string } from 'zod'
+
+const orgScoped = makeOrgScoped({
+  wiki: object({
+    title: string().min(1),
+    slug: string(),
+    status: string()
+  }),
+  project: object({
+    name: string().min(1),
+    description: string().optional()
+  })
+})
+
+export { orgScoped }
+```
+
+</Tab>
+<Tab value="SpacetimeDB">
+
+Define org and org-scoped tables in `t.ts`:
+
+```typescript
+import { schema } from '@ohmystack/spacetimedb/schema'
+import { object, string } from 'zod/v4'
+
+const s = schema({
+  org: {
+    team: object({
+      name: string().min(1),
+      slug: string().regex(/^[a-z0-9-]+$/u)
+    })
+  },
+  orgScoped: {
+    project: object({ description: string().optional(), name: string().min(1) })
+  }
+})
+
+export { s }
+```
+
+Wire it up in `index.ts`:
+
+```typescript
+import { ohmystackStdb } from '@ohmystack/spacetimedb/server'
+import { s } from '../../t'
+
+export default ohmystackStdb(({ table }) => ({
+  org: table(s.team, { unique: ['slug'] }),
+  project: table(s.project)
+}))
+```
+
+`table(org.x)` auto-creates the `orgMember`, `orgInvite`, and `orgJoinRequest` sub-tables. Org-scoped tables cascade-delete by default when an org is removed. Opt out with `cascade: false` if needed.
+
+</Tab>
+</Tabs>
+
+## One-line org-scoped CRUD
+
+<Tabs groupId="db" items={['Convex', 'SpacetimeDB']} persist>
+<Tab value="Convex">
+
+```tsx
+export const {
+  addEditor,
+  bulkRm,
+  create,
+  editors,
+  list,
+  read,
+  removeEditor,
+  restore,
+  rm,
+  setEditors,
+  update
+} = orgCrud('wiki', orgScoped.wiki, { acl: true, softDelete: true })
+```
+
+</Tab>
+<Tab value="SpacetimeDB">
+
+`table(s.orgScopedEntry)` registers a table that belongs to an org and enforces org membership before any write:
+
+```typescript
+export default ohmystackStdb(({ table }) => ({
+  project: table(s.project)
+}))
+```
+
+Generated reducers: `create_project`, `update_project`, `rm_project`.
+
+The `create_project` reducer requires `orgId` in addition to the fields. It checks that the caller is a member of that org before inserting. The `update_project` and `rm_project` reducers check that the caller is either an org admin or the original creator of the row.
+
+</Tab>
+</Tabs>
+
+## Generated org API
+
+Both databases generate the same set of org management operations:
+
+<Tabs groupId="db" items={['Convex', 'SpacetimeDB']} persist>
+<Tab value="Convex">
+
+Management: `create`, `update`, `get`, `getBySlug`, `myOrgs`, `remove`
+
+Membership: `membership`, `members`, `setAdmin`, `removeMember`, `leave`, `transferOwnership`
+
+Invites: `invite`, `acceptInvite`, `revokeInvite`, `pendingInvites`
+
+Join requests: `requestJoin`, `approveJoinRequest`, `rejectJoinRequest`, `pendingJoinRequests`
+
+</Tab>
+<Tab value="SpacetimeDB">
+
+| Reducer                 | Description                                      |
+| ----------------------- | ------------------------------------------------ |
+| `create_org`            | Create a new org (caller becomes owner + member) |
+| `update_org`            | Update org name/slug/avatar (owner only)         |
+| `remove_org`            | Delete org and cascade-delete all resources      |
+| `get_org`               | Fetch org by ID                                  |
+| `get_org_by_slug`       | Fetch org by slug                                |
+| `my_orgs`               | List orgs the caller belongs to                  |
+| `add_member`            | Add a user as member (admin only)                |
+| `remove_member`         | Remove a member (admin only)                     |
+| `set_admin`             | Toggle admin status for a member                 |
+| `leave_org`             | Leave an org (cannot leave if sole owner)        |
+| `transfer_ownership`    | Transfer ownership to another member             |
+| `invite`                | Create an invite link (admin only)               |
+| `accept_invite`         | Accept an invite by token                        |
+| `revoke_invite`         | Delete an invite (admin only)                    |
+| `pending_invites`       | List pending invites for an org                  |
+| `request_join`          | Submit a join request                            |
+| `approve_join_request`  | Approve a pending join request (admin only)      |
+| `reject_join_request`   | Reject a pending join request (admin only)       |
+| `pending_join_requests` | List pending join requests for an org            |
+| `membership`            | Get caller's membership in an org                |
+| `members`               | List all members of an org                       |
+
+</Tab>
+</Tabs>
+
+## Client-side org context
+
+<Tabs groupId="db" items={['Convex', 'SpacetimeDB']} persist>
+<Tab value="Convex">
+
+```tsx
+const { useOrg, useActiveOrg, useMyOrgs } = createOrgHooks(api.org)
+
+<OrgProvider membership={membership} org={org} role={role}>
+  {children}
+</OrgProvider>
+
+const { org, role, isAdmin, isOwner } = useOrg()
+const projects = useOrgQuery(api.project.list, { paginationOpts: { cursor: null, numItems: 20 } })
+const remove = useOrgMutation(api.project.rm)
+await remove({ id: projectId })
+```
+
+`useOrgQuery` and `useOrgMutation` automatically inject `orgId` from the `OrgProvider` context — no manual passing required.
+
+</Tab>
+<Tab value="SpacetimeDB">
+
+Use `OrgProvider` to make org data available throughout your component tree:
+
+```typescript
+'use client'
+
+import { OrgProvider } from '@ohmystack/spacetimedb/react'
+import { useTable } from 'spacetimedb/react'
+import { tables } from '@/generated/module_bindings'
+
+const OrgLayout = ({
+  children,
+  orgSlug,
+}: {
+  children: React.ReactNode
+  orgSlug: string
+}) => {
+  const [orgs] = useTable(tables.org)
+  const [members] = useTable(tables.orgMember)
+
+  const org = orgs.find(o => o.slug === orgSlug)
+  if (!org) return <div>Org not found</div>
+
+  const myMembership = members.find(
+    m => m.orgId === org.id && m.userId === currentIdentity
+  )
+  const role = org.userId === currentIdentity
+    ? 'owner'
+    : myMembership?.isAdmin
+    ? 'admin'
+    : 'member'
+
+  return (
+    <OrgProvider org={org} role={role} membership={myMembership ?? null}>
+      {children}
+    </OrgProvider>
+  )
+}
+```
+
+</Tab>
+</Tabs>
+
+## Org hooks
+
+<Tabs groupId="db" items={['Convex', 'SpacetimeDB']} persist>
+<Tab value="Convex">
+
+```tsx
+const { org, role, isAdmin, isOwner } = useOrg()
+const { activeOrg } = useActiveOrg()
+const { orgs } = useMyOrgs()
+```
+
+</Tab>
+<Tab value="SpacetimeDB">
+
+```typescript
+'use client'
+
+import { useOrg, useActiveOrg, useMyOrgs } from '@ohmystack/spacetimedb/react'
+
+const OrgHeader = () => {
+  const { org, role, isAdmin, isOwner, canManageMembers } = useOrg()
+  const { activeOrg, setActiveOrg } = useActiveOrg()
+  const { orgs } = useMyOrgs()
+
+  return (
+    <header>
+      <h1>{org.name}</h1>
+      <span>{role}</span>
+      {isAdmin && <a href="/members">Manage members</a>}
+    </header>
+  )
+}
+```
+
+</Tab>
+</Tabs>
+
+## Org-scoped mutations
+
+<Tabs groupId="db" items={['Convex', 'SpacetimeDB']} persist>
+<Tab value="Convex">
+
+`useOrgMutation` automatically injects `orgId` from the `OrgProvider` context:
+
+```tsx
+const remove = useOrgMutation(api.project.rm)
+await remove({ id: projectId })
+```
+
+</Tab>
+<Tab value="SpacetimeDB">
+
+`useOrgMutation` automatically injects `orgId` into reducer calls:
+
+```typescript
+'use client'
+
+import { useOrgMutation } from '@ohmystack/spacetimedb/react'
+import { useReducer } from 'spacetimedb/react'
+import { reducers } from '@/generated/module_bindings'
+
+const CreateProject = () => {
+  const createProject = useOrgMutation(useReducer(reducers.create_project))
+
+  const handleSubmit = async (name: string) => {
+    await createProject({ name })
+  }
+}
+```
+
+</Tab>
+</Tabs>
+
+## createOrgHooks
+
+<Tabs groupId="db" items={['Convex', 'SpacetimeDB']} persist>
+<Tab value="Convex">
+
+`createOrgHooks` is a factory that returns typed org hooks bound to your org API:
+
+```tsx
+const { useOrg, useActiveOrg, useMyOrgs, useOrgQuery, useOrgMutation } = createOrgHooks(api.org)
+```
+
+</Tab>
+<Tab value="SpacetimeDB">
+
+`createOrgHooks` returns typed org hooks bound to your org type. Use it when your org has extra fields or when you need `orgId` coerced to a specific type before being injected into mutations:
+
+```typescript
+import { createOrgHooks } from '@ohmystack/spacetimedb/react'
+
+const { useActiveOrg, useMyOrgs, useOrg, useOrgMutation } = createOrgHooks<
+  Org & { _id: string }
+>({
+  orgIdForMutation: Number
+})
+```
+
+The `orgIdForMutation` option accepts a function that transforms the org's `_id` string before injecting it as `orgId` into mutation calls. In the example above, `Number` converts the string ID to a number, matching a `u32` reducer argument.
+
+```typescript
+const update = useOrgMutation(useReducer(reducers.orgUpdate))
+await update(d)
+```
+
+When `orgIdForMutation` is omitted, `orgId` is passed as-is.
+
+</Tab>
+</Tabs>
+
+## Org-scoped queries
+
+<Tabs groupId="db" items={['Convex', 'SpacetimeDB']} persist>
+<Tab value="Convex">
+
+```tsx
+const projects = useOrgQuery(api.project.list, {
+  paginationOpts: { cursor: null, numItems: 20 }
+})
+```
+
+</Tab>
+<Tab value="SpacetimeDB">
+
+`useOrgQuery` automatically injects `orgId` into query arguments:
+
+```typescript
+'use client'
+
+import { useOrgQuery } from '@ohmystack/spacetimedb/react'
+
+const ProjectList = () => {
+  const projects = useOrgQuery(queryProject, { status: 'active' })
+}
+```
+
+Pass `'skip'` to skip the query when required data isn't ready:
+
+```typescript
+const details = useOrgQuery(
+  queryProject,
+  selectedId ? { id: selectedId } : 'skip'
+)
+```
+
+</Tab>
+</Tabs>
+
+## ACL (per-item editor permissions)
+
+<Tabs groupId="db" items={['Convex', 'SpacetimeDB']} persist>
+<Tab value="Convex">
+
+Pass `acl: true` to get `addEditor`, `removeEditor`, `setEditors`, `editors` endpoints. Add `editors: array(zid('users')).optional()` to schema.
+
+| Role            | Can edit?         |
+| --------------- | ----------------- |
+| Org owner/admin | Always            |
+| Item creator    | Always (own docs) |
+| In `editors[]`  | Yes               |
+| Regular member  | View only         |
+
+Child tables inherit ACL from parents:
+
+```tsx
+orgCrud('task', orgScoped.task, {
+  aclFrom: { field: 'projectId', table: 'project' }
+})
+```
+
+</Tab>
+<Tab value="SpacetimeDB">
+
+For per-item permissions beyond role-based access:
+
+```typescript
+wiki: table(s.wiki, {
+  extra: { editors: t.array(t.identity()).optional() },
+  softDelete: true
+})
+```
+
+The `editors` field stores Identity arrays. Use `canEditResource` to gate UI and server-side logic:
+
+```typescript
+import { canEditResource } from '@ohmystack/spacetimedb/react'
+
+const canEdit = canEditResource({
+  resource: wiki,
+  editorsList: wiki.editors ?? [],
+  isAdmin: org.isAdmin,
+  userId: currentIdentity.toHexString()
+})
+```
+
+</Tab>
+</Tabs>
+
+## Cascade delete
+
+<Tabs groupId="db" items={['Convex', 'SpacetimeDB']} persist>
+<Tab value="Convex">
+
+```tsx
+orgCrud('project', orgScoped.project, {
+  acl: true,
+  cascade: orgCascade(orgScoped.task, {
+    foreignKey: 'projectId',
+    table: 'task'
+  })
+})
+```
+
+Both `foreignKey` and `table` are type-checked — typos are compile errors.
+
+Configure org-level cascade in `setup()`:
+
+```tsx
+setup({
+  orgCascadeTables: [
+    'project',
+    'wiki',
+    { table: 'attachment', fileFields: ['fileId'] }
+  ]
+})
+```
+
+File fields are cleaned from storage before rows are deleted. Members, invites, and join requests are also purged. The org document is deleted last.
+
+</Tab>
+<Tab value="SpacetimeDB">
+
+Org-scoped tables cascade-delete by default when an org is deleted. All rows belonging to the deleted org are automatically removed. Opt out with `cascade: false`:
+
+```typescript
+project: table(s.project, { cascade: false })
+```
+
+</Tab>
+</Tabs>
+
+## Invite and join lifecycle
+
+Two paths for adding members to an org. Both databases implement the same flows.
+
+**Path 1: Admin invites a user**
+
+```
+Admin calls invite(email, orgId)
+  → Invite record created with expiration token
+  → Invited user calls acceptInvite(token)
+    → orgMember record created
+    → Invite marked as used
+```
+
+<Tabs groupId="db" items={['Convex', 'SpacetimeDB']} persist>
+<Tab value="Convex">
+
+```tsx
+await invite({ email: 'alice@company.com', orgId: org._id })
+
+const pending = await pendingInvites({ orgId: org._id })
+
+await revokeInvite({ inviteId: pending[0]._id, orgId: org._id })
+```
+
+</Tab>
+<Tab value="SpacetimeDB">
+
+```typescript
+const invite = useReducer(reducers.invite)
+const pendingInvites = useReducer(reducers.pending_invites)
+const revokeInvite = useReducer(reducers.revoke_invite)
+
+await invite({ email: 'alice@company.com', orgId: org.id })
+await revokeInvite({ inviteId: pending[0].id, orgId: org.id })
+```
+
+</Tab>
+</Tabs>
+
+**Path 2: User requests to join**
+
+```
+User calls requestJoin(orgId, message?)
+  → Join request created (status: 'pending')
+  → Admin sees request in pendingJoinRequests(orgId)
+  → Admin calls approveJoinRequest(requestId, orgId)
+    → orgMember record created
+    → Request status → 'approved'
+  OR rejectJoinRequest(requestId, orgId)
+    → Request status → 'rejected'
+```
+
+<Tabs groupId="db" items={['Convex', 'SpacetimeDB']} persist>
+<Tab value="Convex">
+
+```tsx
+await requestJoin({ orgId: org._id, message: 'I work on the frontend team' })
+
+const requests = await pendingJoinRequests({ orgId: org._id })
+
+await approveJoinRequest({ orgId: org._id, requestId: requests[0]._id })
+```
+
+</Tab>
+<Tab value="SpacetimeDB">
+
+```typescript
+const requestJoin = useReducer(reducers.request_join)
+const approveJoinRequest = useReducer(reducers.approve_join_request)
+
+await requestJoin({ orgId: org.id, message: 'I work on the frontend team' })
+await approveJoinRequest({ orgId: org.id, requestId: requests[0].id })
+```
+
+</Tab>
+</Tabs>
+
+## Org switching
+
+<Tabs groupId="db" items={['Convex', 'SpacetimeDB']} persist>
+<Tab value="Convex">
+
+The active org is stored as a cookie so server components can read it:
+
+```tsx
+import {
+  setActiveOrgCookie,
+  getActiveOrg,
+  clearActiveOrgCookie
+} from '@ohmystack/convex/next'
+
+await setActiveOrgCookie(orgId)
+
+const activeOrg = await getActiveOrg()
+
+await clearActiveOrgCookie()
+```
+
+Client-side:
+
+```tsx
+import { setActiveOrgCookieClient } from '@ohmystack/convex/react'
+
+setActiveOrgCookieClient(orgId)
+```
+
+</Tab>
+<Tab value="SpacetimeDB">
+
+```typescript
+import { useActiveOrg } from '@ohmystack/spacetimedb/react'
+
+const { activeOrg, setActiveOrg } = useActiveOrg()
+
+setActiveOrg(org.id)
+```
+
+</Tab>
+</Tabs>
+
+## Read-side ACL with views
+
+<Tabs groupId="db" items={['Convex', 'SpacetimeDB']} persist>
+<Tab value="Convex">
+
+For data that should only be visible to org members, use the `auth` read endpoint with `requireOrgMember` in custom queries:
+
+```tsx
+export const orgData = q({
+  args: { orgId: v.id('org') },
+  handler: async (c, { orgId }) => {
+    await requireOrgMember({ db: c.db, orgId, userId: c.user._id })
+    return c.db.query('project').filter(q => q.eq(q.field('orgId'), orgId)).collect()
+  }
+})
+```
+
+</Tab>
+<Tab value="SpacetimeDB">
+
+For data that should only be visible to org members, use private tables with public views filtered by `ctx.sender`:
+
+```sql
+CREATE VIEW my_org_data AS
+  SELECT d.* FROM private_data d
+  JOIN org_member m ON m.org_id = d.org_id
+  WHERE m.user_id = ctx_sender()
+```
+
+Clients subscribe to the view, not the base table. SpacetimeDB enforces this at the subscription level.
+
+</Tab>
+</Tabs>
+
+## Role escalation
+
+Both databases use the same three-tier role model:
+
+| Role     | Permissions                                                      |
+| -------- | ---------------------------------------------------------------- |
+| `owner`  | All permissions. Transfer ownership. Delete org.                 |
+| `admin`  | Manage members. Invite/remove. Approve join requests. Full CRUD. |
+| `member` | CRUD own resources within the org. Leave org.                    |
+
+## Handling permission errors
+
+<Tabs groupId="db" items={['Convex', 'SpacetimeDB']} persist>
+<Tab value="Convex">
+
+```tsx
+import { handleConvexError } from '@ohmystack/convex/server'
+
+handleConvexError(error, {
+  NOT_ORG_MEMBER: () => router.push('/orgs'),
+  INSUFFICIENT_ORG_ROLE: () => toast.error('Admin access required'),
+  EDITOR_REQUIRED: () => toast.error('You need editor permission'),
+  ALREADY_ORG_MEMBER: () => toast.info('Already a member'),
+  INVITE_EXPIRED: () => toast.error('This invite has expired'),
+  MUST_TRANSFER_OWNERSHIP: () =>
+    toast.error('Transfer ownership before leaving'),
+  default: () => toast.error('Something went wrong')
+})
+```
+
+</Tab>
+<Tab value="SpacetimeDB">
+
+```typescript
+import { extractErrorData } from '@ohmystack/spacetimedb/server'
+
+try {
+  await createProject({ name, orgId: org.id })
+} catch (error) {
+  const data = extractErrorData(error)
+  switch (data?.code) {
+    case 'NOT_ORG_MEMBER':
+      router.push('/orgs')
+      break
+    case 'FORBIDDEN':
+      toast.error('Admin access required')
+      break
+    case 'RATE_LIMITED':
+      toast.error(`Slow down — retry in ${data.retryAfter}ms`)
+      break
+    default:
+      toast.error('Something went wrong')
+  }
+}
+```
+
+</Tab>
+</Tabs>
+
+## Pre-built components (Convex)
+
+<Tabs groupId="db" items={['Convex', 'SpacetimeDB']} persist>
+<Tab value="Convex">
+
+```tsx
+import {
+  EditorsSection,
+  PermissionGuard,
+  OrgAvatar,
+  RoleBadge,
+  OfflineIndicator
+} from '@ohmystack/convex/components'
+```
+
+</Tab>
+<Tab value="SpacetimeDB">
+
+Build your own org UI components using the hooks from `@ohmystack/spacetimedb/react`. The `useOrg`, `useActiveOrg`, and `useMyOrgs` hooks provide all the data you need.
+
+</Tab>
+</Tabs>

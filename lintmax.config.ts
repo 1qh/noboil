@@ -2,7 +2,7 @@ import { defineConfig } from 'lintmax'
 
 export default defineConfig({
   biome: {
-    ignorePatterns: ['mobile/convex/maestro', 'apps/*/next-env.d.ts'],
+    ignorePatterns: ['mobile/convex/maestro', 'apps/*/next-env.d.ts', 'apps/docs/.source'],
     overrides: [
       {
         disableLinter: true,
@@ -26,7 +26,14 @@ export default defineConfig({
     }
   },
   oxlint: {
-    ignorePatterns: ['_generated/', 'generated/', 'module_bindings/', 'mobile/convex/maestro/', 'packages/ui/'],
+    ignorePatterns: [
+      '_generated/',
+      'generated/',
+      'module_bindings/',
+      'mobile/convex/maestro/',
+      'packages/ui/',
+      '.source/'
+    ],
     overrides: [
       {
         files: ['**/convex/blogProfile.ts', '**/convex/mobileAi.ts', '**/convex/orgProfile.ts'],

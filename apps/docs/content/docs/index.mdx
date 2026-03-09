@@ -1,0 +1,37 @@
+---
+title: Introduction
+description: Schema-first, zero-boilerplate fullstack. Pick your database, forget about the backend.
+---
+
+## What is ohmystack?
+
+ohmystack is a fullstack framework that generates your entire backend from a schema definition.
+Define your tables, get CRUD operations, real-time subscriptions, file uploads, multi-tenancy, and forms — all type-safe, all zero-config.
+
+Pick your database:
+
+- **Convex** — Document store with automatic caching, optimistic updates, and serverless functions
+- **SpacetimeDB** — Relational database with WebSocket subscriptions and Rust-powered modules
+
+Both share the same philosophy: **schema-first, zero-boilerplate**.
+The consumer code is nearly identical — switch databases by changing one import.
+
+## Quick Start
+
+```bash
+bun ohmystack@latest init
+```
+
+Choose your database, pick your demo apps, and you're shipping in minutes.
+
+## Features
+
+- **Schema-first** — Define tables with Zod, get everything else generated
+- **Zero-boilerplate** — No hand-writing CRUD, pagination, or auth boilerplate
+- **Type-safe** — End-to-end types from database to UI, including Swift codegen
+- **Real-time** — Live subscriptions out of the box
+- **Multi-tenancy** — Organizations, roles, invites, ACL in one function call
+- **Forms** — Auto-generated form components with validation
+- **File uploads** — Drag-and-drop with compression and progress
+- **Soft delete** — Built-in with restore and permanent delete
+- **DevTools** — Schema playground, query inspector, subscription monitor

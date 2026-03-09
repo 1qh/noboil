@@ -1,0 +1,619 @@
+---
+title: Migration
+description: Adopt ohmystack incrementally — one table at a time, without touching existing code.
+---
+
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs'
+
+No big bang required. Both backends support incremental adoption: convert one table at a time while keeping your existing code untouched.
+
+<Tabs groupId="db" items={['Convex', 'SpacetimeDB']} persist>
+
+<Tab value="Convex">
+
+## Step 1: Install
+
+```bash
+bun add @ohmystack/convex
+```
+
+Peer dependencies: `convex`, `convex-helpers`, `zod`, `@tanstack/react-form`, `react`.
+
+## Step 2: Define One Schema
+
+Pick your simplest user-owned table. Define a Zod schema with `makeOwned`:
+
+```tsx
+import { makeOwned } from '@ohmystack/convex/schema'
+import { boolean, object, string } from 'zod/v4'
+
+const owned = makeOwned({
+  note: object({
+    title: string().min(1),
+    content: string(),
+    archived: boolean()
+  })
+})
+```
+
+## Step 3: Register the Table
+
+Add the table alongside your existing schema. `ownedTable()` returns a standard Convex table definition:
+
+```tsx
+import { defineSchema, defineTable } from 'convex/server'
+import { ownedTable } from '@ohmystack/convex/server'
+
+export default defineSchema({
+  posts: defineTable({
+    title: v.string(),
+    body: v.string(),
+    userId: v.id('users')
+  }),
+  comments: defineTable({ postId: v.id('posts'), text: v.string() }),
+
+  note: ownedTable(owned.note)
+})
+```
+
+## Step 4: Setup and Generate Endpoints
+
+Create a setup file (or add to an existing one):
+
+```tsx
+import { setup } from '@ohmystack/convex/server'
+import { getAuthUserId } from '@convex-dev/auth/server'
+import {
+  action,
+  internalMutation,
+  internalQuery,
+  mutation,
+  query
+} from './_generated/server'
+
+const { crud, pq, q, m } = setup({
+  query,
+  mutation,
+  action,
+  internalQuery,
+  internalMutation,
+  getAuthUserId
+})
+```
+
+Then generate endpoints for your new table:
+
+```tsx
+export const { create, list, read, rm, update } = crud('note', owned.note)
+```
+
+Your existing `posts` and `comments` endpoints keep working. The new `note` endpoints live alongside them.
+
+## Step 5: Use in React
+
+```tsx
+import { useList } from '@ohmystack/convex/react'
+import { api } from '../convex/_generated/api'
+
+const { items: notes, loadMore, status } = useList(api.note.list)
+```
+
+## Converting Tables One at a Time
+
+### Before (raw Convex)
+
+```tsx
+export const list = query({
+  args: {},
+  handler: async ctx => {
+    const userId = await getAuthUserId(ctx)
+    if (!userId) throw new Error('Not authenticated')
+    return ctx.db
+      .query('posts')
+      .filter(q => q.eq(q.field('userId'), userId))
+      .order('desc')
+      .collect()
+  }
+})
+
+export const create = mutation({
+  args: { title: v.string(), body: v.string() },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx)
+    if (!userId) throw new Error('Not authenticated')
+    return ctx.db.insert('posts', { ...args, userId })
+  }
+})
+```
+
+### After (@ohmystack/convex)
+
+```tsx
+export const { create, list, read, rm, update } = crud('post', owned.post)
+```
+
+### Coexistence
+
+Both patterns work simultaneously:
+
+```
+convex/
+  posts.ts      ← raw Convex (existing, untouched)
+  comments.ts   ← raw Convex (existing, untouched)
+  note.ts       ← @ohmystack/convex crud()
+  wiki.ts       ← @ohmystack/convex orgCrud()
+  setup.ts      ← @ohmystack/convex setup()
+```
+
+## Mixing crud() with Custom Endpoints
+
+Generated CRUD covers standard operations. For custom logic, use `pq`, `q`, `m` from setup:
+
+```tsx
+export const { create, list, read, rm, update } = crud('note', owned.note)
+
+export const archive = m({
+  args: { id: zid('note') },
+  handler: async (c, { id }) => {
+    const doc = await c.get(id)
+    await c.patch(id, { archived: true })
+    return doc
+  }
+})
+```
+
+Both `crud()` endpoints and custom `m()` endpoints export from the same file and appear on the same `api.note` namespace.
+
+## Adding Features Incrementally
+
+Start simple, add features as needed:
+
+```tsx
+export const { create, list, read, rm, update } = crud('note', owned.note)
+
+export const { create, list, read, rm, update } = crud('note', owned.note, {
+  rateLimit: { max: 10, window: 60_000 }
+})
+
+export const {
+  create,
+  rm,
+  update,
+  pub: { list, read, search }
+} = crud('note', owned.note, {
+  rateLimit: { max: 10, window: 60_000 },
+  search: 'content'
+})
+```
+
+## Org-Scoped Tables
+
+When you need multi-tenancy, use `makeOrgScoped` + `orgCrud`:
+
+```tsx
+import { makeOrgScoped } from '@ohmystack/convex/schema'
+import { orgTables } from '@ohmystack/convex/server'
+
+const orgScoped = makeOrgScoped({
+  wiki: object({
+    title: string().min(1),
+    content: string(),
+    status: zenum(['draft', 'published'])
+  })
+})
+
+export default defineSchema({
+  ...orgTables(),
+  wiki: orgTable(orgScoped.wiki)
+})
+```
+
+```tsx
+export const { create, list, read, rm, update } = orgCrud(
+  'wiki',
+  orgScoped.wiki
+)
+```
+
+## ESLint Plugin
+
+Add the ESLint plugin to catch common mistakes at dev time:
+
+```tsx
+import ohmystackConvex from '@ohmystack/convex/eslint'
+import { defineConfig } from 'eslint/config'
+
+export default defineConfig([ohmystackConvex.recommended])
+```
+
+This catches wrong API casing (`api.blogprofile` vs `api.blogProfile`), form field typos, missing `await connection()` in Server Components, and more.
+
+## Type Safety with strictApi
+
+Convex's generated `api` object has a runtime `anyApi` proxy that accepts any property name. Use `strictApi` to strip the index signature:
+
+```tsx
+import { strictApi } from '@ohmystack/convex'
+import { api as rawApi } from '../convex/_generated/api'
+
+const api = strictApi(rawApi)
+api.note.list
+api.noet.list
+```
+
+## Checklist
+
+| Step | Status |
+| ---- | ------ |
+| Install `@ohmystack/convex` | |
+| Define first Zod schema with `makeOwned` / `makeOrgScoped` | |
+| Add table to schema with `ownedTable` / `orgTable` | |
+| Call `setup()` in a convex file | |
+| Generate endpoints with `crud()` / `orgCrud()` | |
+| Use `useList`, `useForm` in React | |
+| Add ESLint plugin | |
+| Wrap `api` with `strictApi` | |
+| Convert remaining tables one at a time | |
+
+</Tab>
+
+<Tab value="SpacetimeDB">
+
+`@ohmystack/spacetimedb` is the SpacetimeDB successor to `@ohmystack/convex`. The mental model is similar, but the underlying system is different. This guide maps Convex concepts to their SpacetimeDB equivalents.
+
+## The big picture
+
+| Concept | Convex | SpacetimeDB |
+| ------- | ------ | ----------- |
+| Backend | Convex cloud | SpacetimeDB (Docker or Maincloud) |
+| Data model | Document store (JSON) | Relational tables |
+| Real-time | `useQuery` with reactive queries | `useTable` with WebSocket subscriptions |
+| Mutations | `useMutation` | `useReducer` |
+| Server functions | Convex functions (`query`, `mutation`, `action`) | Reducers + Procedures |
+| Provider | `ConvexProvider` | `SpacetimeDBProvider` |
+| Auth | ConvexAuth (JWT) | Anonymous Identity + OIDC (Maincloud) |
+| File storage | Convex storage | S3/MinIO via API routes |
+| IDs | `Id<"tableName">` (string) | `u32` (number) |
+| Schema | Zod-based `defineTable` | `t.string()`, `t.u32()`, etc. |
+
+## Provider
+
+```typescript
+import { ConvexProvider, ConvexReactClient } from 'convex/react'
+
+const client = new ConvexReactClient(process.env.NEXT_PUBLIC_CONVEX_URL!)
+
+<ConvexProvider client={client}>
+  {children}
+</ConvexProvider>
+```
+
+```typescript
+import { SpacetimeDBProvider } from 'spacetimedb/react'
+import { DbConnection } from '@/generated/module_bindings'
+
+<SpacetimeDBProvider
+  uri={process.env.NEXT_PUBLIC_SPACETIMEDB_URL!}
+  module={process.env.NEXT_PUBLIC_MODULE_NAME!}
+  createConnection={() => DbConnection.builder()}
+>
+  {children}
+</SpacetimeDBProvider>
+```
+
+## Reading data
+
+```typescript
+import { useQuery } from 'convex/react'
+import { api } from '@/convex/_generated/api'
+
+const posts = useQuery(api.blog.list, { published: true })
+```
+
+```typescript
+import { useTable } from 'spacetimedb/react'
+import { tables } from '@/generated/module_bindings'
+
+const [posts, isReady] = useTable(tables.post)
+```
+
+Key differences:
+
+- `useQuery` returns `undefined` while loading. `useTable` returns an empty array immediately and `isReady` becomes `true` when the initial sync completes.
+- `useQuery` takes a function reference and args. `useTable` takes a table reference (optionally with `.where()`).
+- Convex queries run on the server and return computed results. SpacetimeDB subscriptions return raw table rows.
+
+### Filtering
+
+```typescript
+export const list = query({
+  args: { published: v.boolean() },
+  handler: async (ctx, { published }) => {
+    return ctx.db
+      .query('post')
+      .withIndex('by_published', q => q.eq('published', published))
+      .collect()
+  }
+})
+
+const posts = useQuery(api.blog.list, { published: true })
+```
+
+```typescript
+const [posts, isReady] = useTable(tables.post.where(r => r.published.eq(true)))
+
+import { useList } from '@ohmystack/spacetimedb/react'
+
+const [allPosts, isReady] = useTable(tables.post)
+const { data: posts } = useList(allPosts, isReady, {
+  where: { published: true }
+})
+```
+
+### Pagination
+
+```typescript
+import { usePaginatedQuery } from 'convex/react'
+
+const { results, status, loadMore } = usePaginatedQuery(
+  api.blog.listPaginated,
+  {},
+  { initialNumItems: 20 }
+)
+```
+
+```typescript
+import { useList } from '@ohmystack/spacetimedb/react'
+
+const [posts, isReady] = useTable(tables.post)
+const { data, hasMore, loadMore, totalCount } = useList(posts, isReady, {
+  pageSize: 20,
+  sort: { field: 'updatedAt', direction: 'desc' }
+})
+```
+
+## Writing data
+
+```typescript
+import { useMutation } from 'convex/react'
+import { api } from '@/convex/_generated/api'
+
+const createPost = useMutation(api.blog.create)
+await createPost({ title: 'Hello', content: 'World' })
+```
+
+```typescript
+import { useReducer } from 'spacetimedb/react'
+import { reducers } from '@/generated/module_bindings'
+
+const createPost = useReducer(reducers.create_post)
+await createPost({ title: 'Hello', content: 'World', published: false })
+```
+
+Key differences:
+
+- `useMutation` takes a function reference from the generated API. `useReducer` takes a reducer reference from the generated bindings.
+- Both return an async function with a single object argument.
+- Convex mutations can return values. SpacetimeDB reducers are fire-and-forget (use procedures for return values).
+
+## Server functions
+
+```typescript
+export const getBySlug = query({
+  args: { slug: v.string() },
+  handler: async (ctx, { slug }) => {
+    return ctx.db
+      .query('post')
+      .withIndex('by_slug', q => q.eq('slug', slug))
+      .unique()
+  }
+})
+
+export const create = mutation({
+  args: { title: v.string(), content: v.string() },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx)
+    return ctx.db.insert('post', { ...args, userId, published: false })
+  }
+})
+
+export const fetchFromApi = action({
+  args: { id: v.string() },
+  handler: async (ctx, { id }) => {
+    const data = await fetch(`https://api.example.com/${id}`).then(r => r.json())
+    await ctx.runMutation(api.cache.store, { id, data })
+    return data
+  }
+})
+```
+
+```typescript
+export const createPost = spacetimedb.reducer(
+  { name: 'create_post' },
+  { title: t.string(), content: t.string() },
+  (ctx, args) => {
+    ctx.db.post.insert({
+      id: 0,
+      title: args.title,
+      content: args.content,
+      published: false,
+      updatedAt: ctx.timestamp,
+      userId: ctx.sender
+    })
+  }
+)
+
+export const getPostBySlug = spacetimedb.procedure(
+  { name: 'get_post_by_slug' },
+  { slug: t.string() },
+  (ctx, { slug }) => {
+    for (const post of ctx.db.post) {
+      if (post.slug === slug) return post
+    }
+    throw new SenderError('NOT_FOUND: post:getBySlug')
+  }
+)
+
+export const GET = async (req: Request) => {
+  const data = await fetch('https://api.example.com/...').then(r => r.json())
+  return Response.json(data)
+}
+```
+
+## Schema definition
+
+```typescript
+import { defineSchema, defineTable } from 'convex/server'
+import { v } from 'convex/values'
+
+export default defineSchema({
+  post: defineTable({
+    title: v.string(),
+    content: v.string(),
+    published: v.boolean(),
+    userId: v.string()
+  }).index('by_published', ['published'])
+})
+```
+
+```typescript
+import { schema } from '@ohmystack/spacetimedb/schema'
+import { boolean, object, string } from 'zod/v4'
+
+const s = schema({
+  owned: {
+    post: object({
+      content: string(),
+      published: boolean(),
+      title: string()
+    })
+  }
+})
+
+export { s }
+```
+
+```typescript
+import { ohmystackStdb } from '@ohmystack/spacetimedb/server'
+import { s } from '../t'
+
+export default ohmystackStdb(({ table }) => ({
+  post: table(s.post, { pub: 'published' })
+}))
+```
+
+Key differences:
+
+- Convex uses `v.string()`, `v.boolean()`, etc. SpacetimeDB uses standard Zod: `string()`, `boolean()`, etc.
+- Convex IDs are strings (`Id<"post">`). SpacetimeDB IDs are numbers (`u32`).
+- Both add system fields automatically (`id`, `updatedAt`, `userId` in SpacetimeDB; `_id`, `_creationTime` in Convex).
+- SpacetimeDB uses `{ pub: 'published' }` which auto-indexes and sets RLS, instead of `.index('by_published', ['published'])`.
+
+## IDs
+
+```typescript
+const postId: Id<'post'> = post._id
+await updatePost({ id: postId, title: 'New title' })
+
+const url = `/posts/${postId}`
+```
+
+```typescript
+const postId: number = post.id
+await updatePost({ id: postId, title: 'New title' })
+
+const url = `/posts/${postId}`
+
+import { idToWire } from '@ohmystack/spacetimedb'
+const url = `/posts/${idToWire(postId)}`
+```
+
+## Auth
+
+```typescript
+import { convexAuth } from '@convex-dev/auth/server'
+export const { auth, signIn, signOut, store } = convexAuth({
+  providers: [Google]
+})
+
+const userId = await getAuthUserId(ctx)
+```
+
+```typescript
+import { identityEquals } from '@ohmystack/spacetimedb/server'
+
+;(ctx, args) => {
+  const userId = ctx.sender
+}
+
+identityEquals(ctx.sender, row.userId)
+
+ctx.sender.toHexString()
+```
+
+For production auth with real users, SpacetimeDB supports OIDC providers via Maincloud. Local dev uses anonymous connections with stable tokens.
+
+## File storage
+
+```typescript
+const storageId = await generateUploadUrl()
+await ctx.storage.getUrl(storageId)
+```
+
+```typescript
+import { useUpload } from '@ohmystack/spacetimedb/react'
+
+const { upload } = useUpload({
+  apiEndpoint: '/api/upload/presign',
+  registerFile: async ({ storageKey, ...meta }) => {
+    await registerUpload({ storageKey, ...meta })
+    return { storageId: storageKey }
+  }
+})
+```
+
+## Error handling
+
+```typescript
+throw new ConvexError({ code: 'NOT_FOUND', message: 'Post not found' })
+
+try {
+  await createPost(data)
+} catch (error) {
+  if (error instanceof ConvexError) {
+    console.log(error.data.code)
+  }
+}
+```
+
+```typescript
+throw new SenderError('NOT_FOUND: post:update')
+
+import { extractErrorData, getErrorCode } from '@ohmystack/spacetimedb'
+
+try {
+  await createPost(data)
+} catch (error) {
+  const code = getErrorCode(error)
+  const data = extractErrorData(error)
+}
+```
+
+## Real-time latency
+
+Convex reactive queries update within ~100-300ms. SpacetimeDB subscriptions update within ~39ms (local Docker). Optimistic updates are unnecessary at this latency.
+
+## What doesn't exist in SpacetimeDB (yet)
+
+| Convex feature | Status in SpacetimeDB |
+| -------------- | --------------------- |
+| `usePaginatedQuery` | Use `useList` with `loadMore` |
+| Optimistic updates | Not needed at 39ms latency; `useOptimisticMutation` is a placeholder |
+| `skip` option on queries | Conditionally render the subscribing component instead |
+| Built-in rate limiting | Implement manually with a tracking table |
+| `ctx.http.fetch` in reducers | Panics in local Docker; use Next.js API routes |
+| Full OAuth (Google, GitHub) | Requires Maincloud; local dev uses anonymous identity |
+
+</Tab>
+
+</Tabs>

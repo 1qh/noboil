@@ -81,7 +81,8 @@ export default eslint({
     'packages/be-spacetimedb/**',
     'packages/fe/**',
     'packages/e2e/**',
-    'packages/ui/**'
+    'packages/ui/**',
+    '.source/**'
   ],
   rules: {
     '@eslint-react/dom/no-dangerously-set-innerhtml': 'off',

@@ -1,0 +1,1617 @@
+---
+title: Recipes
+description: Real-world composition patterns for both Convex and SpacetimeDB. Each recipe shows schema, backend, and frontend.
+---
+
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs'
+
+## Blog with Auth, File Upload, Pagination, and Search
+
+**Features:** owned CRUD · file upload · rate limiting · search · where clauses
+
+<Tabs groupId="db" items={['Convex', 'SpacetimeDB']} persist>
+<Tab value="Convex">
+
+### Schema
+
+```tsx
+import { cvFile, makeOwned } from '@ohmystack/convex/schema'
+import { boolean, object, string, enum as zenum } from 'zod/v4'
+
+const owned = makeOwned({
+  blog: object({
+    title: string().min(1),
+    content: string().min(3),
+    category: zenum(['tech', 'life', 'tutorial']),
+    published: boolean(),
+    coverImage: cvFile().nullable().optional()
+  })
+})
+```
+
+### Backend
+
+```tsx
+export const {
+  bulkRm,
+  bulkUpdate,
+  create,
+  pub: { list, read, search },
+  rm,
+  update
+} = crud('blog', owned.blog, {
+  rateLimit: { max: 10, window: 60_000 },
+  search: 'content'
+})
+```
+
+### Frontend
+
+```tsx
+import { useList } from '@ohmystack/convex/react'
+import { Form, useForm } from '@ohmystack/convex/components'
+
+const BlogPage = () => {
+  const { items, loadMore, status } = useList(api.blog.list, {
+    where: { published: true }
+  })
+  const searched = useList(api.blog.search, { query: 'react hooks' })
+
+  return (
+    <ul>
+      {items.map(b => (
+        <li key={b._id}>
+          {b.coverImageUrl && <img src={b.coverImageUrl} alt="" />}
+          <h2>{b.title}</h2>
+        </li>
+      ))}
+      {status === 'CanLoadMore' && (
+        <button onClick={loadMore}>Load more</button>
+      )}
+    </ul>
+  )
+}
+
+const CreateBlog = () => {
+  const form = useForm({
+    schema: owned.blog,
+    onSubmit: async d => {
+      await create(d)
+      return d
+    }
+  })
+
+  return (
+    <Form
+      form={form}
+      render={({ Text, Choose, Toggle, File, Submit }) => (
+        <>
+          <Text name="title" />
+          <Text name="content" multiline />
+          <Choose name="category" />
+          <Toggle name="published" />
+          <File name="coverImage" accept="image/*" />
+          <Submit>Publish</Submit>
+        </>
+      )}
+    />
+  )
+}
+```
+
+</Tab>
+<Tab value="SpacetimeDB">
+
+SpacetimeDB doesn't have a direct equivalent for this recipe. For blog-style owned CRUD with file upload, see the [File Upload](#file-upload-with-s3-pre-signed-urls) and [Org-scoped Data](#org-scoped-data-access) recipes, then combine them with `useList` filtering.
+
+</Tab>
+</Tabs>
+
+---
+
+## Org CRUD with ACL and Cascade Delete
+
+**Features:** org multi-tenancy · per-item ACL · soft delete · cascade · permission guard
+
+<Tabs groupId="db" items={['Convex', 'SpacetimeDB']} persist>
+<Tab value="Convex">
+
+### Schema
+
+```tsx
+import { makeOrgScoped } from '@ohmystack/convex/schema'
+import { array, boolean, number, object, string, enum as zenum } from 'zod/v4'
+
+const orgScoped = makeOrgScoped({
+  project: object({
+    name: string().min(1),
+    description: string(),
+    status: zenum(['active', 'archived']),
+    editors: array(zid('users')).optional()
+  }),
+  task: object({
+    projectId: zid('project'),
+    title: string().min(1),
+    priority: number(),
+    done: boolean(),
+    deletedAt: number().optional()
+  })
+})
+```
+
+### Backend
+
+```tsx
+import { orgCascade } from '@ohmystack/convex/server'
+
+export const {
+  addEditor,
+  bulkRm,
+  create,
+  editors,
+  list,
+  read,
+  removeEditor,
+  rm,
+  setEditors,
+  update
+} = orgCrud('project', orgScoped.project, {
+  acl: true,
+  cascade: orgCascade(orgScoped.task, {
+    foreignKey: 'projectId',
+    table: 'task'
+  })
+})
+
+export const {
+  create: createTask,
+  list: listTasks,
+  rm: rmTask,
+  update: updateTask,
+  restore
+} = orgCrud('task', orgScoped.task, {
+  aclFrom: { field: 'projectId', table: 'project' },
+  softDelete: true
+})
+```
+
+### Frontend
+
+```tsx
+import { useOrgQuery, useOrgMutation } from '@ohmystack/convex/react'
+import { EditorsSection, PermissionGuard } from '@ohmystack/convex/components'
+
+const ProjectPage = ({ projectId }: { projectId: Id<'project'> }) => {
+  const project = useOrgQuery(api.project.read, { id: projectId })
+  const tasks = useOrgQuery(api.task.list, {
+    paginationOpts: { cursor: null, numItems: 50 }
+  })
+  const remove = useOrgMutation(api.project.rm)
+
+  return (
+    <>
+      <PermissionGuard doc={project} fallback={<p>View only</p>}>
+        <button onClick={() => remove({ id: projectId })}>Delete</button>
+      </PermissionGuard>
+      <EditorsSection docId={projectId} api={api.project} />
+      <ul>
+        {tasks?.page.map(t => (
+          <li key={t._id}>{t.title}</li>
+        ))}
+      </ul>
+    </>
+  )
+}
+```
+
+</Tab>
+<Tab value="SpacetimeDB">
+
+### Schema
+
+`t.ts`:
+
+```typescript
+import { schema } from '@ohmystack/spacetimedb/schema'
+import { object, string } from 'zod/v4'
+
+const s = schema({
+  orgScoped: {
+    project: object({ description: string().optional(), name: string().min(1) })
+  }
+})
+
+export { s }
+```
+
+`index.ts`:
+
+```typescript
+import { ohmystackStdb } from '@ohmystack/spacetimedb/server'
+import { s } from '../t'
+
+export default ohmystackStdb(({ table }) => ({
+  project: table(s.project)
+}))
+```
+
+### Client
+
+```typescript
+'use client'
+
+import { useTable, useReducer } from 'spacetimedb/react'
+import { useList, useOrg, useOrgMutation } from '@ohmystack/spacetimedb/react'
+import { tables, reducers } from '@/generated/module_bindings'
+
+const ProjectList = () => {
+  const { org } = useOrg()
+  const [allProjects, isReady] = useTable(tables.project)
+
+  const { data: projects } = useList(allProjects, isReady, {
+    where: { orgId: org.id },
+    sort: { field: 'updatedAt', direction: 'desc' },
+  })
+
+  const createProject = useOrgMutation(useReducer(reducers.create_project))
+
+  return (
+    <div>
+      <button onClick={() => createProject({ name: 'New project' })}>
+        New project
+      </button>
+      <ul>
+        {projects.map(p => (
+          <li key={p.id}>{p.name}</li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+```
+
+`useOrgMutation` injects `orgId` automatically on every call.
+
+</Tab>
+</Tabs>
+
+---
+
+## Cache with External API
+
+**Features:** TTL · external API · load/refresh · rate limiting
+
+<Tabs groupId="db" items={['Convex', 'SpacetimeDB']} persist>
+<Tab value="Convex">
+
+### Schema
+
+```tsx
+import { makeBase } from '@ohmystack/convex/schema'
+import { number, object, string } from 'zod/v4'
+
+const base = makeBase({
+  movie: object({
+    tmdb_id: number(),
+    title: string(),
+    overview: string(),
+    poster_path: string().nullable(),
+    vote_average: number()
+  })
+})
+```
+
+### Backend
+
+```tsx
+export const { all, get, load, refresh, invalidate, purge } = cacheCrud({
+  table: 'movie',
+  schema: base.movie,
+  key: 'tmdb_id',
+  ttl: 86400,
+  fetcher: async (_, tmdbId) => {
+    const res = await fetch(
+      `https://api.themoviedb.org/3/movie/${tmdbId}?api_key=${process.env.TMDB_KEY}`
+    )
+    const { id, title, overview, poster_path, vote_average } = await res.json()
+    return { tmdb_id: id, title, overview, poster_path, vote_average }
+  },
+  rateLimit: { max: 30, window: 60_000 }
+})
+```
+
+### Frontend
+
+```tsx
+import { useQuery, useMutation } from 'convex/react'
+
+const MoviePage = ({ tmdbId }: { tmdbId: number }) => {
+  const movie = useQuery(api.movie.get, { key: tmdbId })
+  const loadMovie = useMutation(api.movie.load)
+  const refreshMovie = useMutation(api.movie.refresh)
+
+  if (movie === undefined) {
+    loadMovie({ key: tmdbId })
+    return <p>Loading...</p>
+  }
+
+  return (
+    <>
+      <h1>{movie.title}</h1>
+      <p>{movie.overview}</p>
+      <p>Rating: {movie.vote_average}/10</p>
+      <button onClick={() => refreshMovie({ key: tmdbId })}>Refresh</button>
+    </>
+  )
+}
+```
+
+</Tab>
+<Tab value="SpacetimeDB">
+
+### Schema
+
+`t.ts`:
+
+```typescript
+import { schema } from '@ohmystack/spacetimedb/schema'
+import { number, object, string } from 'zod/v4'
+
+const s = schema({
+  base: {
+    movie: object({
+      overview: string(),
+      title: string(),
+      tmdbId: number(),
+      voteAverage: number()
+    })
+  }
+})
+
+export { s }
+```
+
+`index.ts`:
+
+```typescript
+import { ohmystackStdb } from '@ohmystack/spacetimedb/server'
+import { s } from '../t'
+
+export default ohmystackStdb(({ table }) => ({
+  movie: table(s.movie, { key: 'tmdbId' })
+}))
+```
+
+### Next.js API route for cache population
+
+Since `ctx.http.fetch()` panics in local Docker, use a Next.js API route to fetch from the external API and populate the cache. SpacetimeDB's SQL API does not support parameterized queries, but since `tmdbId` is validated as a number, injection is prevented at the validation layer.
+
+```typescript
+import { NextResponse } from 'next/server'
+
+const STDB_URL = process.env.SPACETIMEDB_URL ?? 'http://localhost:3000'
+const MODULE = process.env.MODULE_NAME ?? 'my-app'
+const TMDB_API_KEY = process.env.TMDB_API_KEY
+
+export const GET = async (
+  _req: Request,
+  { params }: { params: { tmdbId: string } }
+) => {
+  const tmdbId = Number(params.tmdbId)
+
+  const cacheRes = await fetch(`${STDB_URL}/v1/database/${MODULE}/sql`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain' },
+    body: `SELECT * FROM movie WHERE tmdb_id = ${tmdbId} AND invalidated_at IS NULL LIMIT 1`
+  })
+  const [cacheResult] = (await cacheRes.json()) as [{ rows: unknown[][] }]
+
+  if (cacheResult.rows.length > 0) {
+    return NextResponse.json({ source: 'cache', data: cacheResult.rows[0] })
+  }
+
+  const tmdbRes = await fetch(
+    `https://api.themoviedb.org/3/movie/${tmdbId}?api_key=${TMDB_API_KEY}`
+  )
+  const movie = (await tmdbRes.json()) as {
+    id: number
+    title: string
+    overview: string
+    vote_average: number
+  }
+
+  return NextResponse.json({ source: 'api', data: movie })
+}
+```
+
+### Client
+
+```typescript
+'use client'
+
+import { useTable } from 'spacetimedb/react'
+import { useList } from '@ohmystack/spacetimedb/react'
+import { tables } from '@/generated/module_bindings'
+
+const MovieList = () => {
+  const [movies, isReady] = useTable(tables.movie)
+  const { data } = useList(movies, isReady, {
+    where: { invalidatedAt: undefined },
+    sort: { field: 'voteAverage', direction: 'desc' },
+  })
+
+  return (
+    <ul>
+      {data.map(movie => (
+        <li key={movie.id}>
+          {movie.title} ({movie.voteAverage.toFixed(1)})
+        </li>
+      ))}
+    </ul>
+  )
+}
+```
+
+</Tab>
+</Tabs>
+
+---
+
+## Soft Delete with Restore
+
+<Tabs groupId="db" items={['Convex', 'SpacetimeDB']} persist>
+<Tab value="Convex">
+
+Soft delete is available on any `orgCrud` table via `softDelete: true`. The `restore` mutation is generated automatically.
+
+```tsx
+export const {
+  create: createTask,
+  list: listTasks,
+  rm: rmTask,
+  update: updateTask,
+  restore
+} = orgCrud('task', orgScoped.task, {
+  softDelete: true
+})
+```
+
+Filter active vs deleted rows using `where`:
+
+```tsx
+import { useList } from '@ohmystack/convex/react'
+
+const { items: activeTasks } = useList(api.task.listTasks, {
+  where: { deletedAt: undefined }
+})
+```
+
+</Tab>
+<Tab value="SpacetimeDB">
+
+### Schema
+
+`t.ts`:
+
+```typescript
+import { schema } from '@ohmystack/spacetimedb/schema'
+import { object, string } from 'zod/v4'
+
+const s = schema({
+  orgScoped: {
+    wiki: object({ content: string().optional(), title: string().min(1) })
+  }
+})
+
+export { s }
+```
+
+`index.ts`:
+
+```typescript
+import { ohmystackStdb } from '@ohmystack/spacetimedb/server'
+import { s } from '../t'
+
+export default ohmystackStdb(({ table }) => ({
+  wiki: table(s.wiki, { softDelete: true })
+}))
+```
+
+### Client
+
+Filter out deleted rows:
+
+```typescript
+const { data: activeWikis } = useList(wikis, isReady, {
+  where: { deletedAt: undefined }
+})
+
+const { data: deletedWikis } = useList(wikis, isReady, {
+  where: { deletedAt: { $gt: 0 } }
+})
+```
+
+Restore by setting `deletedAt` back to null:
+
+```typescript
+const updateWiki = useReducer(reducers.update_wiki)
+
+const restore = async (id: number) => {
+  await updateWiki({ id, deletedAt: null })
+}
+```
+
+</Tab>
+</Tabs>
+
+---
+
+## Real-Time Presence Tracking
+
+**Features:** presence · cursor tracking · online status · typing indicators
+
+<Tabs groupId="db" items={['Convex', 'SpacetimeDB']} persist>
+<Tab value="Convex">
+
+### Schema
+
+```tsx
+import { presenceTable } from '@ohmystack/convex/server'
+
+export default defineSchema({
+  ...presenceTable()
+})
+```
+
+### Backend
+
+```tsx
+import { makePresence } from '@ohmystack/convex/server'
+
+export const { heartbeat, list: listPresence } = makePresence({
+  mutation,
+  query
+})
+```
+
+### Frontend
+
+```tsx
+import { usePresence } from '@ohmystack/convex/react'
+
+const CollaborativeEditor = ({ docId }: { docId: string }) => {
+  const { others, updatePresence } = usePresence(api.presence, {
+    room: docId,
+    initialData: { cursor: { x: 0, y: 0 }, status: 'viewing' as const }
+  })
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    updatePresence({
+      cursor: { x: e.clientX, y: e.clientY },
+      status: 'editing'
+    })
+  }
+
+  return (
+    <div onMouseMove={handleMouseMove}>
+      {others.map(p => (
+        <div
+          key={p.id}
+          className="absolute size-4 rounded-full bg-blue-500"
+          style={{ left: p.data.cursor.x, top: p.data.cursor.y }}
+        />
+      ))}
+    </div>
+  )
+}
+```
+
+</Tab>
+<Tab value="SpacetimeDB">
+
+### Schema
+
+`index.ts`:
+
+```typescript
+import { ohmystackStdb, makePresence } from '@ohmystack/spacetimedb/server'
+import { s } from '../t'
+
+export default ohmystackStdb(({ table, t }) => {
+  const presence = makePresence({
+    dataField: t.string(),
+    roomIdField: t.string()
+  })
+
+  return {
+    chat: table(s.chat, { index: ['isPublic'] }),
+    message: table(s.message),
+    ...presence.tables
+  }
+})
+```
+
+### Frontend
+
+```typescript
+'use client'
+
+import { useTable, useReducer } from 'spacetimedb/react'
+import { usePresence } from '@ohmystack/spacetimedb/react'
+import { tables, reducers } from '@/generated/module_bindings'
+
+const CollaborativeRoom = ({ roomId }: { roomId: string }) => {
+  const [presenceRows] = useTable(tables.presence)
+  const heartbeat = useReducer(reducers.presence_heartbeat_presence)
+  const { users } = usePresence(
+    presenceRows,
+    async () => heartbeat({ roomId }),
+  )
+
+  return (
+    <div>
+      <span>{users.length} online</span>
+    </div>
+  )
+}
+```
+
+</Tab>
+</Tabs>
+
+---
+
+## Real-Time Chat
+
+> Available for SpacetimeDB only. Convex users can build a similar pattern with `crud` + `useList` + presence.
+
+**Features:** rooms · messages · live presence
+
+### Schema
+
+`t.ts`:
+
+```typescript
+import { child, schema } from '@ohmystack/spacetimedb/schema'
+import { boolean, object, string } from 'zod/v4'
+
+const s = schema({
+  owned: {
+    chat: object({ isPublic: boolean(), title: string().min(1) })
+  },
+  children: {
+    message: child('chat', object({ content: string() }))
+  }
+})
+
+export { s }
+```
+
+`index.ts`:
+
+```typescript
+import { ohmystackStdb, makePresence } from '@ohmystack/spacetimedb/server'
+import { s } from '../t'
+
+export default ohmystackStdb(({ table, t }) => {
+  const presence = makePresence({
+    dataField: t.string(),
+    roomIdField: t.string()
+  })
+
+  return {
+    chat: table(s.chat, { index: ['isPublic'] }),
+    message: table(s.message),
+    ...presence.tables
+  }
+})
+```
+
+### Chat component
+
+```typescript
+'use client'
+
+import { useTable, useReducer } from 'spacetimedb/react'
+import { useList, usePresence } from '@ohmystack/spacetimedb/react'
+import { tables, reducers } from '@/generated/module_bindings'
+
+const ChatRoom = ({ chatId }: { chatId: number }) => {
+  const [allMessages, messagesReady] = useTable(
+    tables.message.where(r => r.chatId.eq(chatId))
+  )
+  const { data: messages } = useList(allMessages, messagesReady, {
+    sort: { field: 'id', direction: 'asc' },
+  })
+
+  const [presenceRows] = useTable(tables.presence)
+  const heartbeat = useReducer(reducers.presence_heartbeat_presence)
+  const { users } = usePresence(
+    presenceRows,
+    async () => heartbeat({ roomId: String(chatId) }),
+  )
+
+  const createMessage = useReducer(reducers.create_message)
+
+  const handleSend = async (content: string) => {
+    await createMessage({ chatId, content })
+  }
+
+  return (
+    <div>
+      <div>{users.length} online</div>
+      <ul>
+        {messages.map(msg => (
+          <li key={msg.id}>{msg.content}</li>
+        ))}
+      </ul>
+      <MessageInput onSend={handleSend} />
+    </div>
+  )
+}
+```
+
+---
+
+## File Upload with S3 Pre-Signed URLs
+
+> Available for SpacetimeDB only. Convex users get native file storage via `cvFile()` in the schema.
+
+Upload files to MinIO/S3 and register them in SpacetimeDB.
+
+### API route
+
+```typescript
+import { createS3UploadPresignedUrl } from '@ohmystack/spacetimedb/server'
+import { NextResponse } from 'next/server'
+
+export const POST = async (req: Request) => {
+  const { filename, contentType } = (await req.json()) as {
+    filename: string
+    contentType: string
+    size: number
+  }
+
+  const key = `uploads/${crypto.randomUUID()}-${filename}`
+
+  const presigned = await createS3UploadPresignedUrl({
+    accessKeyId: process.env.S3_ACCESS_KEY_ID,
+    secretAccessKey: process.env.S3_SECRET_ACCESS_KEY,
+    bucket: process.env.S3_BUCKET,
+    endpoint: process.env.S3_ENDPOINT ?? 'http://localhost:9000',
+    region: process.env.S3_REGION ?? 'us-east-1',
+    key,
+    contentType,
+    expiresInSeconds: 900
+  })
+
+  return NextResponse.json({
+    uploadUrl: presigned.url,
+    storageKey: key,
+    headers: presigned.headers,
+    method: 'PUT'
+  })
+}
+```
+
+### Upload component
+
+```typescript
+'use client'
+
+import { useUpload } from '@ohmystack/spacetimedb/react'
+import { useReducer } from 'spacetimedb/react'
+import { reducers } from '@/generated/module_bindings'
+
+const FileUploader = () => {
+  const registerUpload = useReducer(reducers.register_upload_file)
+
+  const { upload, isUploading, progress, error } = useUpload({
+    registerFile: async ({ contentType, filename, size, storageKey }) => {
+      await registerUpload({ contentType, filename, size, storageKey })
+      return { storageId: storageKey }
+    },
+  })
+
+  const handleChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const result = await upload(file)
+    if (!result.ok) console.error('Upload failed:', result.code)
+  }
+
+  return (
+    <div>
+      <input type="file" onChange={handleChange} disabled={isUploading} />
+      {isUploading && <span>{progress}%</span>}
+      {error && <span>Error: {error}</span>}
+    </div>
+  )
+}
+```
+
+---
+
+## Multi-Step Onboarding Form
+
+> Available for Convex only. SpacetimeDB users can compose `useMut` calls across steps manually.
+
+**Features:** defineSteps · per-step validation · typed merged data · step navigation
+
+### Schema
+
+```tsx
+import { cvFile } from '@ohmystack/convex/schema'
+import { object, string, enum as zenum } from 'zod/v4'
+
+const profileStep = object({
+  displayName: string().min(1),
+  avatar: cvFile().nullable().optional()
+})
+
+const orgStep = object({
+  name: string().min(2),
+  slug: string()
+    .min(2)
+    .regex(/^[a-z0-9-]+$/)
+})
+
+const preferencesStep = object({
+  theme: zenum(['light', 'dark', 'system']),
+  language: zenum(['en', 'es', 'fr', 'de'])
+})
+```
+
+### Backend
+
+```tsx
+export const { upsert } = singletonCrud('profile', singleton.profile)
+
+export const { create: createOrg } = orgFns({
+  mutation,
+  query,
+  internalMutation,
+  internalQuery
+})
+```
+
+### Frontend
+
+```tsx
+import { defineSteps } from '@ohmystack/convex/components'
+import { useMutation } from 'convex/react'
+
+const { StepForm, useStepper } = defineSteps(
+  { id: 'profile', label: 'Profile', schema: profileStep },
+  { id: 'org', label: 'Organization', schema: orgStep },
+  { id: 'preferences', label: 'Preferences', schema: preferencesStep }
+)
+
+const Onboarding = () => {
+  const upsert = useMutation(api.profile.upsert)
+  const createOrg = useMutation(api.org.create)
+
+  const stepper = useStepper({
+    onSubmit: async d => {
+      await upsert({
+        displayName: d.profile.displayName,
+        avatar: d.profile.avatar
+      })
+      await createOrg({ name: d.org.name, slug: d.org.slug })
+    },
+    onSuccess: () => router.push('/dashboard')
+  })
+
+  return (
+    <StepForm stepper={stepper} submitLabel="Complete">
+      <StepForm.Step
+        id="profile"
+        render={({ Text, File }) => (
+          <>
+            <Text name="displayName" />
+            <File name="avatar" accept="image/*" />
+          </>
+        )}
+      />
+      <StepForm.Step
+        id="org"
+        render={({ Text }) => (
+          <>
+            <Text name="name" />
+            <Text name="slug" />
+          </>
+        )}
+      />
+      <StepForm.Step
+        id="preferences"
+        render={({ Choose }) => (
+          <>
+            <Choose name="theme" />
+            <Choose name="language" />
+          </>
+        )}
+      />
+    </StepForm>
+  )
+}
+```
+
+---
+
+## Singleton Profile with File Upload
+
+> Available for Convex only. SpacetimeDB users can use `orgScoped` with a single-member org or a `base` table with a unique user constraint.
+
+**Features:** singletonCrud · 1:1 per-user · file upload · upsert
+
+### Schema
+
+```tsx
+import { cvFile, makeSingleton } from '@ohmystack/convex/schema'
+import { object, string, enum as zenum } from 'zod/v4'
+
+const singleton = makeSingleton({
+  profile: object({
+    displayName: string().min(1),
+    bio: string().optional(),
+    avatar: cvFile().nullable().optional(),
+    theme: zenum(['light', 'dark', 'system'])
+  })
+})
+```
+
+### Backend
+
+```tsx
+export const { get, upsert } = singletonCrud('profile', singleton.profile)
+```
+
+### Frontend
+
+```tsx
+import { useQuery } from 'convex/react'
+import { Form, useForm } from '@ohmystack/convex/components'
+import { pickValues } from '@ohmystack/convex/zod'
+
+const ProfilePage = () => {
+  const profile = useQuery(api.profile.get)
+  const upsert = useMutation(api.profile.upsert)
+
+  const form = useForm({
+    schema: singleton.profile,
+    values: profile ? pickValues(singleton.profile, profile) : undefined,
+    onSubmit: async d => {
+      await upsert(d)
+      return d
+    }
+  })
+
+  return (
+    <Form
+      form={form}
+      render={({ Text, File, Choose, Submit }) => (
+        <>
+          <Text name="displayName" />
+          <Text name="bio" multiline />
+          <File name="avatar" accept="image/*" />
+          <Choose name="theme" />
+          <Submit>Save</Submit>
+        </>
+      )}
+    />
+  )
+}
+```
+
+---
+
+## Custom Queries Alongside CRUD
+
+> Available for Convex only. SpacetimeDB users write custom reducers and queries directly in Rust.
+
+**Features:** pq/q/m escape hatches · typed args · coexistence with CRUD
+
+### Backend
+
+```tsx
+import { z } from 'zod/v4'
+
+export const { create, list, read, rm, update } = crud('blog', owned.blog, {
+    rateLimit: { max: 10, window: 60_000 }
+  }),
+  stats = pq({
+    args: { category: z.string().optional() },
+    handler: async (c, { category }) => {
+      const docs = await c.db.query('blog').collect()
+      let total = 0
+      let published = 0
+      for (const d of docs) {
+        if (category && d.category !== category) continue
+        total++
+        if (d.published) published++
+      }
+      return { total, published, draft: total - published }
+    }
+  }),
+  bySlug = pq({
+    args: { slug: z.string() },
+    handler: async (c, { slug }) => {
+      const doc = await c.db
+        .query('blog')
+        .withIndex('by_slug', q => q.eq('slug', slug))
+        .unique()
+      return doc ? (await c.withAuthor([doc]))[0] : null
+    }
+  }),
+  archive = m({
+    args: { id: z.string() },
+    handler: async (c, { id }) => c.patch(id, { published: false })
+  })
+```
+
+### Frontend
+
+```tsx
+import { useQuery } from 'convex/react'
+import { useList } from '@ohmystack/convex/react'
+
+const Dashboard = () => {
+  const stats = useQuery(api.blog.stats, { category: 'tech' })
+  const { items } = useList(api.blog.list)
+
+  return (
+    <>
+      <p>
+        {stats?.published} published / {stats?.draft} drafts
+      </p>
+      <ul>
+        {items.map(b => (
+          <li key={b._id}>{b.title}</li>
+        ))}
+      </ul>
+    </>
+  )
+}
+```
+
+---
+
+## Bulk Operations with Progress
+
+> Available for Convex only. SpacetimeDB reducers run server-side, so bulk operations are handled in a single reducer call.
+
+**Features:** useBulkMutate · toast feedback · progress tracking · error collection
+
+Uses the `bulkRm` export from any `crud()` call. No extra backend code needed.
+
+### Frontend
+
+```tsx
+import { useMutation } from 'convex/react'
+import { useBulkMutate } from '@ohmystack/convex/react'
+
+const BulkActions = ({ selectedIds }: { selectedIds: string[] }) => {
+  const rm = useMutation(api.blog.rm)
+  const { isPending, progress, run } = useBulkMutate(
+    (id: string) => rm({ id }),
+    {
+      onProgress: p => console.log(`${p.succeeded}/${p.total}`),
+      toast: {
+        error: 'Some items failed to delete',
+        loading: p => `Deleting ${p.succeeded}/${p.total}...`,
+        success: n => `Deleted ${n} items`
+      }
+    }
+  )
+
+  return (
+    <button
+      disabled={isPending}
+      onClick={() => {
+        run(selectedIds)
+      }}
+    >
+      {progress
+        ? `${progress.succeeded}/${progress.total}`
+        : `Delete ${selectedIds.length}`}
+    </button>
+  )
+}
+```
+
+`useBulkMutate` fires all mutations concurrently, tracks per-item success/failure, and returns `{ errors, results, settled }` when done. Use `onError: false` to silence the default error toast. Use `onSettled` for cleanup that runs regardless of outcome.
+
+---
+
+## Ownership Flags with useOwnRows
+
+> Available for Convex only. SpacetimeDB users can filter rows client-side using `useList` with a `where` clause on `userId`.
+
+**Features:** useOwnRows · per-row ownership · conditional UI
+
+### Frontend
+
+```tsx
+import { useQuery } from 'convex/react'
+import { useList, useOwnRows } from '@ohmystack/convex/react'
+
+const BlogList = () => {
+  const me = useQuery(api.users.viewer)
+  const { items } = useList(api.blog.pub.list)
+  const blogs = useOwnRows(items, me ? b => b.userId === me._id : null)
+
+  return (
+    <ul>
+      {blogs.map(b => (
+        <li key={b._id}>
+          {b.title}
+          {b.own && <span>yours</span>}
+        </li>
+      ))}
+    </ul>
+  )
+}
+```
+
+`useOwnRows` annotates each row with `own: boolean` using a memoized predicate. Pass `null` when the user is unauthenticated and all rows get `own: false`. Use the `own` flag to conditionally render edit/delete buttons without extra queries.
+
+---
+
+## Post-Mutation Workflows
+
+**Features:** onSuccess · onSettled · redirect · reset form state · toast
+
+<Tabs groupId="db" items={['Convex', 'SpacetimeDB']} persist>
+<Tab value="Convex">
+
+Use `onSuccess` and `onSettled` callbacks on any Convex mutation:
+
+```tsx
+import { useMutation } from 'convex/react'
+
+const CreatePost = () => {
+  const router = useRouter()
+  const create = useMutation(api.post.create)
+
+  const handleSubmit = async (data: PostCreate) => {
+    await create(data)
+    router.push('/posts')
+  }
+
+  return <form onSubmit={...}>{...}</form>
+}
+```
+
+</Tab>
+<Tab value="SpacetimeDB">
+
+```typescript
+'use client'
+
+import { useMut } from '@ohmystack/spacetimedb/react'
+import { useRouter } from 'next/navigation'
+import { reducers } from '@/generated/module_bindings'
+
+const CreatePostForm = () => {
+  const router = useRouter()
+
+  const save = useMut(reducers.create_post, {
+    onSuccess: (_result, args) => {
+      router.push('/posts')
+    },
+    onSettled: (_args, error) => {
+      setSubmitting(false)
+      if (error) console.error('Create failed:', error)
+    }
+  })
+
+  return (
+    <form onSubmit={async e => {
+      e.preventDefault()
+      const form = new FormData(e.currentTarget)
+      await save({
+        title: form.get('title') as string,
+        content: form.get('content') as string,
+        published: false
+      })
+    }}>
+      <input name="title" required />
+      <textarea name="content" required />
+      <button type="submit">Create</button>
+    </form>
+  )
+}
+```
+
+`onSettled` fires whether the mutation succeeds or fails. Use it for cleanup that must always happen (clearing spinners, resetting flags). Use `onSuccess` for actions that only make sense on success (redirects, toasts).
+
+</Tab>
+</Tabs>
+
+---
+
+## Typing Components with InferRow, InferCreate, InferUpdate
+
+> Available for SpacetimeDB only. Convex users derive types directly from Zod schemas using `z.infer`.
+
+Derive prop types from your schema brands instead of duplicating type definitions.
+
+```typescript
+import type { InferRow, InferCreate, InferUpdate } from '@ohmystack/spacetimedb/server'
+import { schema } from '@ohmystack/spacetimedb/schema'
+import { boolean, object, string } from 'zod/v4'
+
+const s = schema({
+  owned: {
+    post: object({
+      title: string(),
+      content: string(),
+      published: boolean()
+    })
+  }
+})
+
+type PostRow = InferRow<typeof s.post>
+type PostCreate = InferCreate<typeof s.post>
+type PostUpdate = InferUpdate<typeof s.post>
+
+const PostCard = ({ post }: { post: PostRow }) => (
+  <div>
+    <h2>{post.title}</h2>
+    <p>{post.content}</p>
+    <span>{post.published ? 'Published' : 'Draft'}</span>
+  </div>
+)
+
+const CreatePostForm = ({ onSubmit }: { onSubmit: (data: PostCreate) => void }) => {
+  return null
+}
+
+const EditPostForm = ({ post, onSubmit }: { post: PostRow; onSubmit: (data: PostUpdate) => void }) => {
+  return null
+}
+```
+
+`InferRow` includes the database-added fields (`id`, `updatedAt`, `userId` for owned schemas). `InferCreate` is the raw field shape you pass to the create reducer. `InferUpdate` makes all fields optional.
+
+---
+
+## Phantom Type Inference
+
+> Available for SpacetimeDB only. Branded schemas expose `$inferRow`, `$inferCreate`, and `$inferUpdate` as readable properties. No import needed.
+
+```typescript
+import { schema } from '@ohmystack/spacetimedb/schema'
+import { boolean, object, string } from 'zod/v4'
+
+const s = schema({
+  owned: {
+    post: object({
+      title: string(),
+      content: string(),
+      published: boolean()
+    })
+  }
+})
+
+type PostRow = typeof s.post.$inferRow
+type PostCreate = typeof s.post.$inferCreate
+type PostUpdate = typeof s.post.$inferUpdate
+```
+
+`PostRow` includes the database-added fields. This is equivalent to `InferRow<typeof s.post>` but skips the import.
+
+The `~types` accessor groups all three:
+
+```typescript
+type PostTypes = (typeof s.post)['~types']
+type PostRow = PostTypes['row']
+type PostCreate = PostTypes['create']
+type PostUpdate = PostTypes['update']
+```
+
+Use these in component props to stay in sync with the schema:
+
+```typescript
+const PostCard = ({ post }: { post: typeof s.post.$inferRow }) => (
+  <div>
+    <h2>{post.title}</h2>
+    <p>{post.content}</p>
+  </div>
+)
+```
+
+---
+
+## Global Error Type with Register
+
+> Available for SpacetimeDB only. Use declaration merging to set a project-wide default error type. All `@ohmystack/spacetimedb` hooks and utilities will use your type instead of the default `Error`.
+
+```typescript
+declare module '@ohmystack/spacetimedb/server' {
+  interface Register {
+    defaultError: AppError
+  }
+}
+
+interface AppError {
+  code: string
+  message: string
+  requestId?: string
+}
+```
+
+After augmenting `Register`, `RegisteredDefaultError` resolves to `AppError`:
+
+```typescript
+import type { RegisteredDefaultError } from '@ohmystack/spacetimedb/server'
+
+const handleError = (error: RegisteredDefaultError) => {
+  console.error(`[${error.requestId}] ${error.code}: ${error.message}`)
+}
+```
+
+---
+
+## Create and Update Forms with schemaVariants
+
+> Available for SpacetimeDB only. Convex users can use Zod's `.partial()` directly or `pickValues` from `@ohmystack/convex/zod`.
+
+Define one base schema and derive both create and update variants from it.
+
+```typescript
+import { schemaVariants } from '@ohmystack/spacetimedb/zod'
+import { boolean, object, string } from 'zod/v4'
+
+const postSchema = object({
+  title: string().min(1, 'Title is required'),
+  content: string().min(10, 'Content must be at least 10 characters'),
+  published: boolean()
+})
+
+const { create: createSchema, update: updateSchema } = schemaVariants(postSchema, ['title'])
+
+const CreatePost = () => {
+  const createPost = useReducer(reducers.create_post)
+  const form = useForm({
+    schema: createSchema,
+    onSubmit: async ({ value }) => {
+      await createPost(value)
+    }
+  })
+  return (
+    <Form form={form}>
+      <fields.Text name="title" required />
+      <fields.Text name="content" multiline required />
+      <fields.Toggle name="published" trueLabel="Published" />
+      <fields.Submit>Create</fields.Submit>
+    </Form>
+  )
+}
+
+const EditPost = ({ post }: { post: PostRow }) => {
+  const updatePost = useReducer(reducers.update_post)
+  const form = useForm({
+    schema: updateSchema,
+    defaultValues: { title: post.title, content: post.content, published: post.published },
+    onSubmit: async ({ value }) => {
+      await updatePost({ id: post.id, ...value })
+    }
+  })
+  return (
+    <Form form={form}>
+      <fields.Text name="title" required />
+      <fields.Text name="content" multiline />
+      <fields.Toggle name="published" trueLabel="Published" />
+      <fields.Submit>Save</fields.Submit>
+    </Form>
+  )
+}
+```
+
+---
+
+## Typed Form Validation Errors with getFieldErrors
+
+> Available for SpacetimeDB only. Surface server-side field validation errors back into your form UI.
+
+```typescript
+'use client'
+
+import { getFieldErrors } from '@ohmystack/spacetimedb/server'
+import { useMut } from '@ohmystack/spacetimedb/react'
+import { useState } from 'react'
+import { reducers } from '@/generated/module_bindings'
+import { z } from 'zod/v4'
+
+const postSchema = z.object({
+  title: z.string().min(1),
+  content: z.string().min(10),
+  published: z.boolean()
+})
+
+const CreatePost = () => {
+  const [fieldErrors, setFieldErrors] = useState<Partial<{ title: string; content: string }>>({})
+
+  const save = useMut(reducers.create_post, {
+    onError: error => {
+      const errors = getFieldErrors<typeof postSchema>(error)
+      if (errors) {
+        setFieldErrors(errors)
+        return
+      }
+    }
+  })
+
+  return (
+    <form onSubmit={async e => {
+      e.preventDefault()
+      setFieldErrors({})
+      const form = new FormData(e.currentTarget)
+      await save({
+        title: form.get('title') as string,
+        content: form.get('content') as string,
+        published: false
+      })
+    }}>
+      <div>
+        <input name="title" />
+        {fieldErrors.title && <p className="text-red-500">{fieldErrors.title}</p>}
+      </div>
+      <div>
+        <textarea name="content" />
+        {fieldErrors.content && <p className="text-red-500">{fieldErrors.content}</p>}
+      </div>
+      <button type="submit">Create</button>
+    </form>
+  )
+}
+```
+
+`getFieldErrors` returns `undefined` when the error has no field-level data, so you can safely fall through to a generic error handler.
+
+---
+
+## Reducing Mutation Boilerplate with useMutation
+
+> Available for SpacetimeDB only. `useMutation` combines `useReducer` + `useMutate` into one call.
+
+Before:
+
+```typescript
+import { useMutate } from '@ohmystack/spacetimedb/react'
+import { useReducer } from 'spacetimedb/react'
+import { reducers } from '@/generated/module_bindings'
+
+const raw = useReducer(reducers.update_blog)
+const save = useMutate(raw, { onSuccess: () => toast.success('Saved') })
+```
+
+With `useMutation`:
+
+```typescript
+import { useMutation } from '@ohmystack/spacetimedb/react'
+import { useReducer } from 'spacetimedb/react'
+import { reducers } from '@/generated/module_bindings'
+
+const save = useMutation(useReducer, reducers.update_blog, {
+  onSuccess: () => toast.success('Saved')
+})
+```
+
+With `useMut` (simplest):
+
+```typescript
+import { useMut } from '@ohmystack/spacetimedb/react'
+import { reducers } from '@/generated/module_bindings'
+
+const save = useMut(reducers.update_blog, {
+  onSuccess: () => toast.success('Saved')
+})
+```
+
+All `MutateOptions` work the same way: `onSuccess`, `onSettled`, `onError`, `retry`, `optimistic`, etc.
+
+---
+
+## Toast Shorthand with useMutation
+
+> Available for SpacetimeDB only. The `toast` option replaces manual `onSuccess`/`onError` callbacks when all you need is a message.
+
+Before:
+
+```typescript
+import { useMutation } from '@ohmystack/spacetimedb/react'
+import { useReducer } from 'spacetimedb/react'
+import { reducers } from '@/generated/module_bindings'
+
+const save = useMutation(useReducer, reducers.update_blog, {
+  onSuccess: () => toast.success('Saved'),
+  onError: () => toast.error('Save failed')
+})
+```
+
+After, with dynamic messages:
+
+```typescript
+const save = useMutation(useReducer, reducers.update_blog, {
+  toast: {
+    success: (result, args) => `"${args.title}" saved`,
+    error: err =>
+      `Save failed: ${err instanceof Error ? err.message : 'unknown'}`
+  }
+})
+```
+
+`fieldErrors` defaults to `true`. If the server returns field validation errors, the first one is toasted before the generic `error` message. Set `fieldErrors: false` to skip that behavior.
+
+`onSuccess` and `toast.success` compose; both run when provided.
+
+`useFormMutation` also accepts `toast: { success?, error? }` with the same composition rules:
+
+```typescript
+const form = useFormMutation({
+  schema: blogSchema,
+  mutate: useReducer(reducers.createBlog),
+  toast: { success: 'Created' },
+  onSuccess: () => router.push('/posts')
+})
+```
+
+---
+
+## Field Validation Error Toasts with toastFieldError
+
+> Available for SpacetimeDB only. Use `toastFieldError` to surface the first field validation error as a toast, then fall back to a generic message for non-field errors.
+
+```typescript
+'use client'
+
+import { toastFieldError } from '@ohmystack/spacetimedb/react'
+import { useMutation } from '@ohmystack/spacetimedb/react'
+import { useReducer } from 'spacetimedb/react'
+import { reducers } from '@/generated/module_bindings'
+
+const BlogEditor = () => {
+  const save = useMutation(useReducer, reducers.update_blog, {
+    onError: error => {
+      if (!toastFieldError(error, toast.error)) {
+        toast.error('Something went wrong')
+      }
+    }
+  })
+
+  const handleSubmit = async (data: { id: number; title: string; content: string }) => {
+    await save(data)
+  }
+
+  return <form onSubmit={...}>{...}</form>
+}
+```
+
+`toastFieldError` returns `true` when it toasted a field error, so the `if` block only runs for other error types. Pair it with `getFieldErrors` when you need to display errors inline in the form rather than as toasts.
+
+---
+
+## Error Discrimination with SenderError._tag
+
+> Available for SpacetimeDB only. `SenderError` carries `_tag: 'SenderError'` as a const property. Use it to narrow errors in catch blocks when you need to distinguish `@ohmystack/spacetimedb` reducer errors from other thrown values.
+
+```typescript
+import { extractErrorData } from '@ohmystack/spacetimedb/server'
+
+try {
+  await save(data)
+} catch (e) {
+  if (e instanceof Error && '_tag' in e && e._tag === 'SenderError') {
+    const data = extractErrorData(e)
+    if (data?.code === 'CONFLICT') {
+      showConflictDialog(data)
+      return
+    }
+  }
+  throw e
+}
+```
+
+For most cases, `handleError` or `matchError` is simpler. They parse the error internally without the `_tag` check. Use `_tag` when you need to re-throw non-`@ohmystack/spacetimedb` errors or integrate with an external error boundary that inspects error shape.

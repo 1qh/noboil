@@ -1,0 +1,20 @@
+{
+  "title": "Documentation",
+  "pages": [
+    "index",
+    "quickstart",
+    "data-fetching",
+    "forms",
+    "organizations",
+    "security",
+    "testing",
+    "schema-evolution",
+    "api-reference",
+    "custom-queries",
+    "recipes",
+    "migration",
+    "ejecting",
+    "native-apps",
+    "deployment"
+  ]
+}

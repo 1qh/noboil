@@ -1,0 +1,1174 @@
+---
+title: API Reference
+description: Complete API reference for @ohmystack/convex and @ohmystack/spacetimedb — server factories, React hooks, utilities, and error codes.
+---
+
+import { Tabs, Tab } from 'fumadocs-ui/components/tabs'
+
+## Installation
+
+<Tabs groupId="db" items={['Convex', 'SpacetimeDB']} persist>
+<Tab value="Convex">
+
+```bash
+bun add @ohmystack/convex
+```
+
+Peer dependencies: `convex`, `convex-helpers`, `zod`, `@tanstack/react-form`, `react`.
+
+</Tab>
+<Tab value="SpacetimeDB">
+
+```bash
+bun add @ohmystack/spacetimedb
+```
+
+Peer dependencies: `spacetimedb`, `zod`, `@tanstack/react-form`, `react`.
+
+</Tab>
+</Tabs>
+
+## Imports
+
+<Tabs groupId="db" items={['Convex', 'SpacetimeDB']} persist>
+<Tab value="Convex">
+
+| Module                          | Key Exports |
+| ------------------------------- | ----------- |
+| `@ohmystack/convex`             | `guardApi`, `strictApi` |
+| `@ohmystack/convex/server`      | `setup`, `ownedTable`, `orgTable`, `baseTable`, `singletonTable`, `childTable`, `orgChildTable`, `orgTables`, `uploadTables`, `rateLimitTable`, `orgCascade`, `ownedCascade`, `canEdit`, `getOrgMember`, `getOrgRole`, `requireOrgMember`, `requireOrgRole`, `handleConvexError`, `getErrorCode`, `getErrorMessage`, `getErrorDetail`, `extractErrorData`, `isErrorCode`, `isMutationError`, `isRecord`, `matchError`, `checkRateLimit`, `checkSchema`, `makeOrg`, `makeFileUpload`, `makePresence`, `presenceTable`, `err`, `ok`, `fail`, `time`, `composeMiddleware`, `auditLog`, `inputSanitize`, `slowQueryWarn` |
+| `@ohmystack/convex/test`        | `makeTestAuth`, `makeOrgTestCrud`, `getOrgMembership`, `discoverModules`, `createTestContext`, `isTestMode`, `TEST_EMAIL` |
+| `@ohmystack/convex/react`       | `createOrgHooks`, `useForm`, `useFormMutation`, `useList`, `useOwnRows`, `useSearch`, `useInfiniteList`, `usePresence`, `useOptimisticMutation`, `useSoftDelete`, `useUpload`, `useBulkSelection`, `useBulkMutate`, `useCacheEntry`, `useMutate`, `useOnlineStatus`, `useErrorToast`, `makeErrorHandler`, `OrgProvider`, `OptimisticProvider`, `useOrg`, `useActiveOrg`, `useMyOrgs`, `useOrgQuery`, `useOrgMutation`, `canEditResource`, `setActiveOrgCookieClient`, `buildMeta`, `getMeta`, `useDevErrors`, `OhmystackDevtools`, `SchemaPlayground`, `usePendingMutations`, `defaultOnError` |
+| `@ohmystack/convex/components`  | `Form`, `defineSteps`, `EditorsSection`, `PermissionGuard`, `OfflineIndicator`, `OrgAvatar`, `RoleBadge`, `AutoSaveIndicator`, `ConflictDialog`, `ConvexErrorBoundary`, `FileApiProvider` |
+| `@ohmystack/convex/schema`      | `child`, `cvFile`, `cvFiles`, `makeBase`, `makeOrgScoped`, `makeOwned`, `makeSingleton`, `orgSchema` |
+| `@ohmystack/convex/zod`         | `unwrapZod`, `cvFileKindOf`, `cvMetaOf`, `defaultValue`, `defaultValues`, `elementOf`, `enumToOptions`, `isArrayType`, `isBooleanType`, `isDateType`, `isNumberType`, `isOptionalField`, `isStringType`, `pickValues`, `coerceOptionals`, `requiredPartial` |
+| `@ohmystack/convex/next`        | `getActiveOrg`, `setActiveOrgCookie`, `clearActiveOrgCookie`, `getToken`, `isAuthenticated`, `makeImageRoute` |
+| `@ohmystack/convex/retry`       | `withRetry`, `fetchWithRetry` |
+
+</Tab>
+<Tab value="SpacetimeDB">
+
+| Module                               | Key Exports |
+| ------------------------------------ | ----------- |
+| `@ohmystack/spacetimedb`             | `idToWire`, `idFromWire`, `identityToHex`, `identityFromHex`, `UndefinedToOptional` |
+| `@ohmystack/spacetimedb/server`      | `ohmystackStdb`, `makePresence`, `makeFileUpload`, `makeSchema`, `setupCrud`, `ownedTable`, `orgScopedTable`, `orgTable`, `singletonTable`, `cacheTable`, `childTable`, `err`, `errValidation`, `extractErrorData`, `getErrorCode`, `getErrorMessage`, `getFirstFieldError`, `identityEquals`, `identityToHex`, `identityFromHex`, `composeMiddleware`, `auditLog`, `inputSanitize`, `slowQueryWarn`, `createS3UploadPresignedUrl`, `createS3DownloadPresignedUrl`, `InferRow`, `InferCreate`, `InferUpdate`, `InferRows`, `InferReducerArgs`, `InferReducerReturn`, `TypedFieldErrors`, `getFieldErrors`, `schemaVariants` |
+| `@ohmystack/spacetimedb/react`       | `createOrgHooks`, `useForm`, `useFormMutation`, `useList`, `useOwnRows`, `useSearch`, `useInfiniteList`, `usePresence`, `useOptimisticMutation`, `useSoftDelete`, `useUpload`, `useBulkSelection`, `useBulkMutate`, `useCacheEntry`, `useMutate`, `useMutation`, `useMut`, `relax`, `useOnlineStatus`, `useErrorToast`, `makeErrorHandler`, `OrgProvider`, `useOrg`, `useActiveOrg`, `useMyOrgs`, `useOrgQuery`, `useOrgMutation`, `toastFieldError`, `defaultOnError`, `OhmystackDevtools`, `SchemaPlayground`, `buildMeta`, `injectError`, `createFileUploader`, `createSpacetimeClient`, `createTokenStore`, `toWsUri` |
+| `@ohmystack/spacetimedb/components`  | `Form`, `defineSteps`, `EditorsSection`, `PermissionGuard`, `OfflineIndicator`, `OrgAvatar`, `RoleBadge`, `AutoSaveIndicator`, `ConflictDialog`, `ErrorBoundary`, `FileApiProvider`, `fields` |
+| `@ohmystack/spacetimedb/schema`      | `schema`, `child` |
+| `@ohmystack/spacetimedb/zod`         | `partialValues`, `schemaVariants`, `zodFromTable` |
+| `@ohmystack/spacetimedb/retry`       | `withRetry`, `fetchWithRetry` |
+
+</Tab>
+</Tabs>
+
+## Server factories
+
+<Tabs groupId="db" items={['Convex', 'SpacetimeDB']} persist>
+<Tab value="Convex">
+
+### setup()
+
+The entry point. Call once in a shared file and destructure `crud`, `orgCrud`, `pq`, `q`, `m`, and other builders:
+
+```typescript
+import { setup } from '@ohmystack/convex/server'
+import { getAuthUserId } from '@convex-dev/auth/server'
+import {
+  action,
+  internalMutation,
+  internalQuery,
+  mutation,
+  query
+} from './_generated/server'
+
+const { crud, orgCrud, singletonCrud, cacheCrud, pq, q, m } = setup({
+  query,
+  mutation,
+  action,
+  internalQuery,
+  internalMutation,
+  getAuthUserId
+})
+```
+
+### crud()
+
+Generates CRUD endpoints for a user-owned table:
+
+```typescript
+export const { create, list, read, rm, update, bulkRm, bulkUpdate } = crud(
+  'blog',
+  owned.blog,
+  {
+    rateLimit: { max: 10, window: 60_000 },
+    search: 'content',
+    softDelete: true
+  }
+)
+```
+
+With public read access:
+
+```typescript
+export const {
+  create,
+  rm,
+  update,
+  pub: { list, read, search }
+} = crud('blog', owned.blog, { search: 'content' })
+```
+
+### orgCrud()
+
+Generates org-scoped CRUD with optional ACL and cascade delete:
+
+```typescript
+export const {
+  addEditor,
+  bulkRm,
+  create,
+  editors,
+  list,
+  read,
+  removeEditor,
+  rm,
+  setEditors,
+  update
+} = orgCrud('project', orgScoped.project, {
+  acl: true,
+  cascade: orgCascade(orgScoped.task, { foreignKey: 'projectId', table: 'task' })
+})
+```
+
+### singletonCrud()
+
+One row per user (profile, settings):
+
+```typescript
+export const { get, upsert } = singletonCrud('profile', singleton.profile)
+```
+
+### cacheCrud()
+
+External data cache with TTL and auto-fetch:
+
+```typescript
+export const { all, get, load, refresh, invalidate, purge } = cacheCrud({
+  table: 'movie',
+  schema: base.movie,
+  key: 'tmdb_id',
+  ttl: 86400,
+  fetcher: async (_, tmdbId) => {
+    const res = await fetch(`https://api.themoviedb.org/3/movie/${tmdbId}`)
+    return res.json()
+  }
+})
+```
+
+</Tab>
+<Tab value="SpacetimeDB">
+
+### ohmystackStdb()
+
+The primary entry point. Pass a factory function that receives `table` and `t` helpers:
+
+```typescript
+import { ohmystackStdb } from '@ohmystack/spacetimedb/server'
+import { s } from '../t'
+
+export default ohmystackStdb(({ table }) => ({
+  blog: table(s.blog, { pub: 'published' }),
+  profile: table(s.profile),
+  project: table(s.project),
+  team: table(s.team, { unique: ['slug'] }),
+  movie: table(s.movie, { key: 'tmdbId' }),
+  message: table(s.message)
+}))
+```
+
+### table() — universal interface
+
+`table()` detects the schema brand and applies the correct system fields automatically:
+
+```typescript
+const blog = table(owned.blog, { pub: 'published' })
+const project = table(orgScoped.project)
+const org = table(org.team, { unique: ['slug'] })
+const profile = table(singleton.profile)
+const message = table(children.message)
+const movie = table(base.movie, { key: 'tmdbId' })
+const file = table.file()
+```
+
+**Options by table type:**
+
+| Table type | Available options |
+| ---------- | ----------------- |
+| owned      | `index`, `unique`, `extra`, `softDelete`, `rateLimit`, `pub` |
+| orgScoped  | `index`, `unique`, `extra`, `softDelete`, `rateLimit`, `cascade`, `indexes`, `pub` |
+| org        | `index`, `unique`, `extra` |
+| base/cache | `key`, `ttl` |
+| singleton  | none |
+| child      | none |
+
+**Generated reducers for owned tables:**
+
+| Reducer              | Parameters | Description |
+| -------------------- | ---------- | ----------- |
+| `create_{tableName}` | All fields | Insert a row. Sets `userId = ctx.sender`, `updatedAt = ctx.timestamp`. |
+| `update_{tableName}` | `id`, optional fields, optional `expectedUpdatedAt` | Update a row. Caller must be the owner. Throws `CONFLICT` if `expectedUpdatedAt` doesn't match. |
+| `rm_{tableName}`     | `id` | Delete a row (or soft-delete if `softDelete: true`). Caller must be the owner. |
+
+**Read-side access control (`pub` option):**
+
+```typescript
+table(s.blog, { pub: 'published' }) // visible when published=true OR own row
+table(s.chat, { pub: 'isPublic' })  // visible when isPublic=true OR own row
+table(s.chat, { pub: true })        // fully public, no RLS filter
+table(s.blog)                       // private — only own rows visible
+```
+
+### makePresence
+
+Generates presence heartbeat, leave, and cleanup reducers:
+
+```typescript
+import { makePresence } from '@ohmystack/spacetimedb/server'
+
+const presenceFns = makePresence(spacetimedb, {
+  dataField: t.string(),
+  roomIdField: t.string(),
+  pk: tbl => tbl.id,
+  table: db => db.presence,
+  tableName: 'presence'
+})
+```
+
+| Reducer | Parameters | Description |
+| ------- | ---------- | ----------- |
+| `presence_heartbeat_{tableName}` | `roomId`, optional `data` | Upsert presence row. |
+| `presence_leave_{tableName}` | `roomId` | Delete presence row for the caller. |
+| `presence_cleanup_{tableName}` | none | Delete stale presence rows (older than TTL). |
+
+Constants: `HEARTBEAT_INTERVAL_MS = 15000`, `PRESENCE_TTL_MS = 30000`.
+
+### makeFileUpload
+
+Generates reducers for registering and deleting uploaded files:
+
+```typescript
+import { makeFileUpload } from '@ohmystack/spacetimedb/server'
+
+const fileCrud = makeFileUpload(spacetimedb, {
+  fields: {
+    contentType: t.string(),
+    filename: t.string(),
+    size: t.number(),
+    storageKey: t.string()
+  },
+  idField: t.u32(),
+  namespace: 'file',
+  pk: tbl => tbl.id,
+  table: db => db.file,
+  options: {
+    maxFileSize: 10 * 1024 * 1024,
+    allowedTypes: new Set(['image/jpeg', 'image/png', 'application/pdf'])
+  }
+})
+```
+
+</Tab>
+</Tabs>
+
+## React hooks
+
+The following hooks have identical signatures across both backends. Import from the appropriate package:
+
+<Tabs groupId="db" items={['Convex', 'SpacetimeDB']} persist>
+<Tab value="Convex">
+
+```typescript
+import { useList, useOwnRows, usePresence, useInfiniteList, useSearch } from '@ohmystack/convex/react'
+```
+
+</Tab>
+<Tab value="SpacetimeDB">
+
+```typescript
+import { useList, useOwnRows, usePresence, useInfiniteList, useSearch } from '@ohmystack/spacetimedb/react'
+```
+
+</Tab>
+</Tabs>
+
+### useList
+
+Client-side filtering, sorting, and pagination over subscription data.
+
+```typescript
+const { data, hasMore, isLoading, loadMore, page, totalCount } = useList(
+  rows,
+  isReady,
+  {
+    where: {
+      published: true,
+      category: 'tech',
+      or: [{ category: 'news' }]
+    },
+    sort: { field: 'updatedAt', direction: 'desc' },
+    search: { query: 'hello', fields: ['title', 'content'] },
+    pageSize: 20
+  }
+)
+```
+
+Pass `'skip'` to disable execution:
+
+```typescript
+const list = useList(rows, ready, someCondition ? { where: { published: true } } : 'skip')
+```
+
+**Type-safe `where`** — field names are checked against the row type at compile time:
+
+```typescript
+useList(blogs, ready, { where: { publishd: true } }) // TS error: 'publishd' doesn't exist
+useList(items, ready, { where: { price: { $gt: 10 } } }) // OK
+```
+
+**Return value:**
+
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| `data` | `T[]` | Current page of filtered, sorted rows |
+| `hasMore` | `boolean` | Whether more rows exist |
+| `isLoading` | `boolean` | `true` until `isReady` is `true` |
+| `loadMore` | `() => void` | Load the next page |
+| `page` | `number` | Current page number |
+| `totalCount` | `number` | Total filtered row count |
+
+### useOwnRows
+
+Computes an `own` boolean on each row using a predicate function. Pass `null` when the current user's identity is not yet known — all rows will have `own: false`.
+
+<Tabs groupId="db" items={['Convex', 'SpacetimeDB']} persist>
+<Tab value="Convex">
+
+```typescript
+import { useOwnRows } from '@ohmystack/convex/react'
+
+const blogs = useOwnRows(allBlogs, me ? b => b.userId === me._id : null)
+```
+
+</Tab>
+<Tab value="SpacetimeDB">
+
+```typescript
+import { useOwnRows } from '@ohmystack/spacetimedb/react'
+
+const blogs = useOwnRows(
+  allBlogs,
+  identity ? b => b.userId.isEqual(identity) : null
+)
+```
+
+</Tab>
+</Tabs>
+
+Combine with `useList` and `where: { own: true }` to show only the current user's rows:
+
+```typescript
+const ownedBlogs = useOwnRows(allBlogs, isOwn)
+const { data } = useList(ownedBlogs, isReady, { where: { own: true } })
+```
+
+### usePresence
+
+Manages presence state with heartbeat and TTL-based cleanup.
+
+<Tabs groupId="db" items={['Convex', 'SpacetimeDB']} persist>
+<Tab value="Convex">
+
+```typescript
+import { usePresence } from '@ohmystack/convex/react'
+
+const { others, updatePresence } = usePresence(api.presence, {
+  room: docId,
+  initialData: { cursor: { x: 0, y: 0 }, status: 'viewing' as const }
+})
+
+updatePresence({ cursor: { x: 100, y: 200 }, status: 'editing' })
+```
+
+</Tab>
+<Tab value="SpacetimeDB">
+
+```typescript
+import { usePresence } from '@ohmystack/spacetimedb/react'
+import { useTable, useReducer } from 'spacetimedb/react'
+import { tables, reducers } from '@/generated/module_bindings'
+
+const [presenceRows, isReady] = useTable(tables.presence)
+const heartbeat = useReducer(reducers.presence_heartbeat_presence)
+
+const { users, updatePresence } = usePresence(
+  presenceRows,
+  async () => heartbeat({ roomId: 'main', data: JSON.stringify({ cursor: { x: 0, y: 0 } }) }),
+  { enabled: true, heartbeatIntervalMs: 15_000, ttlMs: 30_000 }
+)
+
+updatePresence({ cursor: { x: 100, y: 200 } })
+```
+
+</Tab>
+</Tabs>
+
+### useInfiniteList
+
+Like `useList` but designed for infinite scroll. Accepts the same type-safe `where` and `search` options. When `where` or `search.query` changes, the visible count resets automatically.
+
+```typescript
+const { data, hasMore, loadMore, totalCount } = useInfiniteList(rows, isReady, {
+  batchSize: 20,
+  sort: { field: 'updatedAt', direction: 'desc' },
+  where: { published: true },
+  search: { query: searchInput, fields: ['title', 'content'], debounceMs: 300 }
+})
+```
+
+### useSearch
+
+Client-side full-text search. `fields` is type-checked against the row type:
+
+```typescript
+const results = useSearch(posts, query, {
+  fields: ['title', 'content'] // TS error if field name is invalid
+})
+```
+
+### useSoftDelete
+
+Wraps a delete+restore reducer pair with an undo toast pattern:
+
+```typescript
+const { remove } = useSoftDelete({
+  rm: removeWiki,
+  restore: restoreWiki,
+  toast: toast,
+  label: 'Wiki page',
+  undoMs: 5000
+})
+
+await remove({ id: wikiId })
+```
+
+### useBulkSelection
+
+Multi-select state management with built-in bulk delete and optional undo:
+
+```typescript
+const { selected, toggleSelect, toggleSelectAll, clear, handleBulkDelete } =
+  useBulkSelection({
+    items: projects,
+    orgId,
+    rm: id => rmProject({ id: Number(id) }),
+    restore: args => restoreProject({ id: Number(args.id) }),
+    toast: (msg, opts) => toast(msg, opts),
+    undoLabel: 'project',
+    onSuccess: count => toast(`${count} deleted`)
+  })
+```
+
+### useBulkMutate
+
+Run a mutation against multiple rows, collecting results and calling a callback when all settle:
+
+```typescript
+const bulk = useBulkMutate(removeTask, {
+  onSuccess: () => setSelected(new Set()),
+  toast: {
+    loading: p => `Deleting: ${p.succeeded + p.failed}/${p.total}`,
+    success: count => `${count} task(s) deleted`
+  }
+})
+bulk.run([{ id: 1 }, { id: 2 }, { id: 3 }])
+```
+
+### useCacheEntry
+
+Manages a single cache entry with automatic stale detection and refresh:
+
+```typescript
+const { data, isLoading, isStale, refresh } = useCacheEntry({
+  args: { tmdbId: movieId },
+  data: cachedMovie,
+  load: async args => { await loadMovie(args) },
+  table: 'movie'
+})
+```
+
+### useOptimisticMutation
+
+Low-level optimistic mutation hook with rollback support:
+
+```typescript
+const { execute, isPending, error } = useOptimisticMutation({
+  mutate: updatePost,
+  onOptimistic: args => { /* apply optimistic update */ },
+  onRollback: (args, err) => { /* revert on failure */ },
+  onSuccess: (result, args) => { /* called when mutation resolves */ },
+  onSettled: (args, error, result) => { setSubmitting(false) }
+})
+```
+
+### useOnlineStatus
+
+Tracks browser online/offline state:
+
+```typescript
+const isOnline = useOnlineStatus()
+```
+
+### useForm
+
+Form state management integrating Zod schemas with TanStack Form. Provides auto-derived field labels, conflict detection, auto-save, and typed field errors:
+
+```typescript
+const form = useForm({
+  schema: blogSchema,
+  values: existingData,
+  onSubmit: async data => {
+    await save(data)
+    return data
+  }
+})
+```
+
+### useFormMutation
+
+Combines `useForm` with a mutation function. Handles loading state, error toasts, and field validation automatically:
+
+<Tabs groupId="db" items={['Convex', 'SpacetimeDB']} persist>
+<Tab value="Convex">
+
+```typescript
+import { useFormMutation } from '@ohmystack/convex/react'
+
+const form = useFormMutation({
+  schema: blogSchema,
+  mutate: api.blogs.create,
+  toast: { success: 'Created', error: 'Failed' }
+})
+```
+
+</Tab>
+<Tab value="SpacetimeDB">
+
+```typescript
+import { useFormMutation } from '@ohmystack/spacetimedb/react'
+
+const form = useFormMutation({
+  mutate: useReducer(reducers.createWiki),
+  toast: { success: 'Created' },
+  onSuccess: () => router.push('/wiki'),
+  schema: wiki,
+  transform: d => ({ ...d, orgId: Number(org._id) })
+})
+```
+
+</Tab>
+</Tabs>
+
+### useMutate
+
+Wraps a mutation function with optimistic updates, devtools tracking, and toast errors:
+
+```typescript
+const save = useMutate(updatePost, {
+  onSuccess: (result, args) => router.push(`/posts/${args.id}`),
+  onSettled: (args, error, result) => setSubmitting(false),
+  retry: 3,
+  toast: { success: 'Saved', error: 'Save failed' }
+})
+await save({ id: 1, title: 'Updated' })
+```
+
+**`retry` with full options:**
+
+```typescript
+const save = useMutate(updatePost, {
+  retry: {
+    maxAttempts: 5,
+    initialDelayMs: 200,
+    maxDelayMs: 5_000,
+    base: 2
+  }
+})
+```
+
+### useMutation (SpacetimeDB only)
+
+<Tabs groupId="db" items={['Convex', 'SpacetimeDB']} persist>
+<Tab value="Convex">
+
+Use `useMutation` from `convex/react` directly for raw Convex mutations.
+
+</Tab>
+<Tab value="SpacetimeDB">
+
+Combines `useReducer` + `useMutate` into a single call:
+
+```typescript
+import { useMutation } from '@ohmystack/spacetimedb/react'
+import { useReducer } from 'spacetimedb/react'
+import { reducers } from '@/generated/module_bindings'
+
+const save = useMutation(useReducer, reducers.update_blog, {
+  toast: { success: 'Saved', error: 'Save failed' }
+})
+
+save({ id: 1, title: 'New title' })
+```
+
+For the shortest form, `useMut` skips passing `useReducer` entirely:
+
+```typescript
+import { useMut } from '@ohmystack/spacetimedb/react'
+
+const save = useMut(reducers.update_blog, {
+  onSuccess: () => toast.success('Saved')
+})
+```
+
+### relax (SpacetimeDB only)
+
+Wraps a raw `useReducer` call to apply `UndefinedToOptional` to its argument type:
+
+```typescript
+import { relax } from '@ohmystack/spacetimedb/react'
+
+const updateTask = relax(useReducer(reducers.updateTask))
+updateTask({ id: 1, completed: true })
+```
+
+</Tab>
+</Tabs>
+
+## Org hooks
+
+<Tabs groupId="db" items={['Convex', 'SpacetimeDB']} persist>
+<Tab value="Convex">
+
+### useOrgQuery
+
+Wraps a query and automatically injects `orgId` from the current org context:
+
+```typescript
+import { useOrgQuery } from '@ohmystack/convex/react'
+
+const projects = useOrgQuery(api.project.read, { status: 'active' })
+const skipped = useOrgQuery(api.project.read, 'skip')
+```
+
+### useOrgMutation
+
+Wraps a mutation and automatically injects `orgId`:
+
+```typescript
+import { useOrgMutation } from '@ohmystack/convex/react'
+
+const remove = useOrgMutation(api.project.rm)
+await remove({ id: projectId })
+```
+
+</Tab>
+<Tab value="SpacetimeDB">
+
+### useOrgQuery
+
+Wraps a query function and automatically injects `orgId` from the current org context:
+
+```typescript
+import { useOrgQuery } from '@ohmystack/spacetimedb/react'
+
+const projects = useOrgQuery(queryProject, { status: 'active' })
+const skipped = useOrgQuery(queryProject, 'skip')
+```
+
+### useOrgMutation
+
+Wraps a reducer and automatically injects `orgId`:
+
+```typescript
+import { useOrgMutation } from '@ohmystack/spacetimedb/react'
+
+const createProject = useOrgMutation(useReducer(reducers.create_project))
+await createProject({ name: 'New project' })
+```
+
+</Tab>
+</Tabs>
+
+### createOrgHooks
+
+Factory that returns typed org hooks bound to a specific org type:
+
+<Tabs groupId="db" items={['Convex', 'SpacetimeDB']} persist>
+<Tab value="Convex">
+
+```typescript
+import { createOrgHooks } from '@ohmystack/convex/react'
+
+const { useActiveOrg, useMyOrgs, useOrg, useOrgMutation } = createOrgHooks<MyOrg>()
+```
+
+</Tab>
+<Tab value="SpacetimeDB">
+
+```typescript
+import { createOrgHooks } from '@ohmystack/spacetimedb/react'
+
+const { useActiveOrg, useMyOrgs, useOrg, useOrgMutation } = createOrgHooks<
+  Org & { _id: string }
+>({
+  orgIdForMutation: Number
+})
+
+const update = useOrgMutation(useReducer(reducers.orgUpdate))
+await update(d) // orgId auto-injected as Number(org._id)
+```
+
+</Tab>
+</Tabs>
+
+## Error handling
+
+### Error codes
+
+<Tabs groupId="db" items={['Convex', 'SpacetimeDB']} persist>
+<Tab value="Convex">
+
+| Code | Meaning |
+| ---- | ------- |
+| `NOT_AUTHENTICATED` | Not logged in |
+| `NOT_FOUND` | Doesn't exist or not owned |
+| `NOT_AUTHORIZED` | No permission |
+| `CONFLICT` | Concurrent edit detected |
+| `RATE_LIMITED` | Too many requests |
+| `EDITOR_REQUIRED` | ACL edit permission required |
+| `FILE_TOO_LARGE` | File exceeds size limit |
+| `INVALID_FILE_TYPE` | File type not in allowlist |
+| `VALIDATION_FAILED` | Zod validation error |
+| `INSUFFICIENT_ORG_ROLE` | User lacks required org role |
+| `ALREADY_ORG_MEMBER` | User is already an org member |
+| `INVITE_EXPIRED` | Invite token has expired |
+| `INVALID_INVITE` | Invite token is invalid |
+| `ORG_SLUG_TAKEN` | Org slug already in use |
+
+```typescript
+import { handleConvexError } from '@ohmystack/convex/server'
+
+handleConvexError(error, {
+  NOT_AUTHENTICATED: () => router.push('/login'),
+  CONFLICT: () => toast.error('Someone else edited this'),
+  default: () => toast.error('Something went wrong')
+})
+```
+
+**Rate limit metadata:**
+
+```typescript
+import { getErrorDetail } from '@ohmystack/convex/server'
+
+handleConvexError(error, {
+  RATE_LIMITED: e => {
+    const detail = getErrorDetail(e)
+    if (detail?.retryAfter) {
+      toast.error(`Too many requests. Try again in ${Math.ceil(detail.retryAfter / 1000)}s`)
+    }
+  }
+})
+```
+
+**Error boundary:**
+
+```typescript
+import { ConvexErrorBoundary } from '@ohmystack/convex/components'
+
+<ConvexErrorBoundary
+  fallback={({ error, reset }) => (
+    <div>
+      <p>Something went wrong</p>
+      <button onClick={reset}>Try again</button>
+    </div>
+  )}
+>
+  <App />
+</ConvexErrorBoundary>
+```
+
+</Tab>
+<Tab value="SpacetimeDB">
+
+36 structured error codes. Each maps to a descriptive user-facing message:
+
+| Code | Description |
+| ---- | ----------- |
+| `NOT_AUTHENTICATED` | Please log in to continue |
+| `NOT_FOUND` | The requested resource could not be found |
+| `FORBIDDEN` | You do not have permission to perform this action |
+| `CONFLICT` | This record was modified by someone else — please review and try again |
+| `RATE_LIMITED` | Too many requests — please wait before trying again |
+| `VALIDATION_FAILED` | One or more fields failed validation — check your input |
+| `INSUFFICIENT_ORG_ROLE` | Insufficient permissions for this organization role |
+| `ALREADY_ORG_MEMBER` | Already a member of this organization |
+| `INVITE_EXPIRED` | Invite has expired |
+| `INVALID_INVITE` | Invalid invite |
+| `ORG_SLUG_TAKEN` | Organization slug already taken |
+| `FILE_TOO_LARGE` | File exceeds the maximum allowed size |
+| `INVALID_FILE_TYPE` | Invalid file type |
+| `EDITOR_REQUIRED` | Editor permission required |
+
+Parse errors on the client:
+
+```typescript
+import { extractErrorData, getErrorCode, getErrorMessage } from '@ohmystack/spacetimedb/server'
+
+try {
+  await createPost(data)
+} catch (error) {
+  const code = getErrorCode(error)
+  const message = getErrorMessage(error)
+  const detail = extractErrorData(error)
+}
+```
+
+Throw errors in reducers:
+
+```typescript
+import { err, errValidation } from '@ohmystack/spacetimedb/server'
+
+err('NOT_FOUND')
+err('FORBIDDEN', 'User does not own this resource')
+errValidation({ title: 'Required', slug: 'Already taken' })
+```
+
+**Error boundary:**
+
+```typescript
+import { ErrorBoundary } from '@ohmystack/spacetimedb/components'
+
+<ErrorBoundary
+  className="p-8"
+  fallback={({ error, resetErrorBoundary }) => (
+    <div>
+      <p>{error.message}</p>
+      <button onClick={resetErrorBoundary}>Retry</button>
+    </div>
+  )}
+>
+  <MyPage />
+</ErrorBoundary>
+```
+
+</Tab>
+</Tabs>
+
+### useErrorToast
+
+Creates a stable, memoized callback that toasts errors with optional per-code handlers:
+
+<Tabs groupId="db" items={['Convex', 'SpacetimeDB']} persist>
+<Tab value="Convex">
+
+```typescript
+import { useErrorToast } from '@ohmystack/convex/react'
+
+const handleError = useErrorToast({
+  toast: toast.error,
+  handlers: {
+    NOT_AUTHENTICATED: () => router.push('/login'),
+    CONFLICT: () => toast.error('Someone else edited this')
+  }
+})
+```
+
+</Tab>
+<Tab value="SpacetimeDB">
+
+```typescript
+import { useErrorToast } from '@ohmystack/spacetimedb/react'
+
+const handleError = useErrorToast({
+  toast: toast.error,
+  handlers: {
+    NOT_AUTHENTICATED: () => router.push('/login'),
+    FORBIDDEN: () => toast.error('No permission')
+  }
+})
+```
+
+</Tab>
+</Tabs>
+
+### makeErrorHandler
+
+Creates a reusable error handler with optional per-code overrides:
+
+```typescript
+const handleError = makeErrorHandler(toast.error, {
+  FORBIDDEN: () => toast.error('You do not have permission'),
+  RATE_LIMITED: data =>
+    toast.error(`Too many requests. Retry in ${data?.retryAfter}ms`)
+})
+```
+
+### defaultOnError
+
+The default mutation error handler used by all mutation hooks. Handles `NOT_AUTHENTICATED` and `RATE_LIMITED` with user-friendly toasts, falls back to toasting the error message for all other codes.
+
+## React components
+
+### OhmystackDevtools
+
+Development panel showing active subscriptions, pending mutations, and errors:
+
+<Tabs groupId="db" items={['Convex', 'SpacetimeDB']} persist>
+<Tab value="Convex">
+
+```typescript
+import { OhmystackDevtools } from '@ohmystack/convex/react'
+
+{process.env.NODE_ENV === 'development' && <OhmystackDevtools />}
+```
+
+</Tab>
+<Tab value="SpacetimeDB">
+
+```typescript
+import { OhmystackDevtools } from '@ohmystack/spacetimedb/react'
+
+{process.env.NODE_ENV === 'development' && <OhmystackDevtools />}
+```
+
+</Tab>
+</Tabs>
+
+### SchemaPlayground
+
+Interactive schema explorer for development:
+
+<Tabs groupId="db" items={['Convex', 'SpacetimeDB']} persist>
+<Tab value="Convex">
+
+```typescript
+import { SchemaPlayground } from '@ohmystack/convex/react'
+
+<SchemaPlayground className="my-8" />
+```
+
+</Tab>
+<Tab value="SpacetimeDB">
+
+```typescript
+import { SchemaPlayground } from '@ohmystack/spacetimedb/react'
+
+<SchemaPlayground tables={tables} />
+```
+
+</Tab>
+</Tabs>
+
+### Form and field components
+
+The `<Form>` component renders a typed form with automatic field layout:
+
+```typescript
+import { Form, useForm } from '@ohmystack/convex/components'
+// or: import { Form, useForm } from '@ohmystack/spacetimedb/components'
+
+const form = useForm({ schema, values, onSubmit })
+
+<Form form={form} render={f => (
+  <>
+    <f.Text name="title" />
+    <f.Toggle name="published" />
+    <f.Num name="rating" />
+  </>
+)} />
+```
+
+14 built-in field components: `Text`, `Num`, `Toggle`, `Datepick`, `Timepick`, `Colorpick`, `Slider`, `Rating`, `Choose`, `Combobox`, `MultiSelect`, `File`, `Files`, `Arr`. Each accepts the field name as a typed prop — misspelling a field name is a type error.
+
+All field components accept shared accessibility props:
+
+| Prop | Type | Description |
+| ---- | ---- | ----------- |
+| `disabled` | `boolean` | Disables the input |
+| `helpText` | `string` | Renders a hint below the field |
+| `required` | `boolean` | Appends a red `*` to the field label |
+
+### defineSteps
+
+Creates a type-safe multi-step form with per-step Zod schemas:
+
+<Tabs groupId="db" items={['Convex', 'SpacetimeDB']} persist>
+<Tab value="Convex">
+
+```typescript
+import { defineSteps } from '@ohmystack/convex/components'
+
+const { StepForm, useStepper } = defineSteps(
+  { id: 'profile', label: 'Profile', schema: profileStep },
+  { id: 'org', label: 'Organization', schema: orgStep }
+)
+```
+
+</Tab>
+<Tab value="SpacetimeDB">
+
+```typescript
+import { defineSteps } from '@ohmystack/spacetimedb/components'
+
+const { StepForm, useStepper, steps } = defineSteps([
+  { id: 'profile', label: 'Profile', schema: profileSchema },
+  { id: 'org', label: 'Organization', schema: orgSchema }
+] as const)
+```
+
+</Tab>
+</Tabs>
+
+### EditorsSection
+
+Renders a card with the current editors list and a dropdown to add/remove editors:
+
+```typescript
+<EditorsSection
+  editorsList={editors}
+  members={orgMembers}
+  onAdd={userId => addEditor({ id: resourceId, editorId: userId })}
+  onRemove={userId => removeEditor({ id: resourceId, editorId: userId })}
+/>
+```
+
+### PermissionGuard
+
+Conditionally renders children based on org role or a custom access check:
+
+```typescript
+<PermissionGuard
+  role={membership.role}
+  allowedRoles={['owner', 'admin']}
+  resource="wiki page"
+  backHref="/wiki"
+  backLabel="wiki"
+>
+  <EditForm />
+</PermissionGuard>
+```
+
+### OfflineIndicator
+
+Renders a fixed-position banner when the backend connection is inactive:
+
+```typescript
+<OfflineIndicator className="z-50" />
+```
+
+## Server utilities
+
+### Middleware
+
+<Tabs groupId="db" items={['Convex', 'SpacetimeDB']} persist>
+<Tab value="Convex">
+
+```typescript
+import { auditLog, inputSanitize, slowQueryWarn } from '@ohmystack/convex/server'
+
+const { crud } = setup({
+  // ...
+  middleware: [inputSanitize(), auditLog(), slowQueryWarn({ threshold: 200 })]
+})
+```
+
+</Tab>
+<Tab value="SpacetimeDB">
+
+```typescript
+import { ohmystackStdb, auditLog, inputSanitize, slowQueryWarn } from '@ohmystack/spacetimedb/server'
+
+export default ohmystackStdb(
+  ({ table }) => ({ blog: table(s.blog, { pub: 'published' }) }),
+  { middleware: [inputSanitize(), auditLog(), slowQueryWarn({ threshold: 200 })] }
+)
+```
+
+</Tab>
+</Tabs>
+
+| Middleware | Description |
+| ---------- | ----------- |
+| `inputSanitize(opts?)` | Strips `<script>` tags and inline event handlers from string fields |
+| `auditLog(opts?)` | Logs structured audit entries for every create, update, and delete |
+| `slowQueryWarn(opts?)` | Emits a warning when any operation exceeds the time threshold |
+
+### Type utilities (SpacetimeDB)
+
+<Tabs groupId="db" items={['Convex', 'SpacetimeDB']} persist>
+<Tab value="Convex">
+
+```typescript
+import { pickValues } from '@ohmystack/convex/zod'
+
+const values = pickValues(singleton.profile, profile)
+```
+
+</Tab>
+<Tab value="SpacetimeDB">
+
+```typescript
+import type { InferRow, InferCreate, InferUpdate } from '@ohmystack/spacetimedb/server'
+import { schemaVariants } from '@ohmystack/spacetimedb/zod'
+import { partialValues } from '@ohmystack/spacetimedb/zod'
+
+type PostRow = InferRow<typeof s.post>
+type PostCreate = InferCreate<typeof s.post>
+type PostUpdate = InferUpdate<typeof s.post>
+
+const { create: createSchema, update: updateSchema } = schemaVariants(postSchema, ['title'])
+
+update(partialValues(editSchema, { id, published: true }))
+```
+
+Or use phantom type accessors (no import needed):
+
+```typescript
+type PostRow = typeof s.post.$inferRow
+type PostCreate = typeof s.post.$inferCreate
+type PostUpdate = typeof s.post.$inferUpdate
+```
+
+</Tab>
+</Tabs>
+
+## Known limitations
+
+<Tabs groupId="db" items={['Convex', 'SpacetimeDB']} persist>
+<Tab value="Convex">
+
+- **Where clauses use runtime filtering** — `$gt`, `$lt`, `$between`, `or` use `.filter()`, not index lookups. Fine for fewer than 1,000 docs. For high-volume tables, use `pubIndexed`/`authIndexed` with Convex indexes. Pass `strictFilter: true` to `setup()` to throw instead of warn.
+- **Search requires schema index setup** — define `search` in `crud(...)` and add a matching `searchIndex` to the table schema.
+- **Bulk operations cap at 100 items** per call.
+- **`anyApi` Proxy accepts arbitrary property names at runtime** — TypeScript won't flag `api.blogprofile` (wrong casing) even if only `api.blogProfile` exists. Typos in module paths silently construct invalid function references that crash at runtime. Rely on E2E tests and Convex deploy errors to catch these.
+
+</Tab>
+<Tab value="SpacetimeDB">
+
+- **Client-side filtering** — `useList` `where` clauses filter in the browser over subscription data. For large datasets, use server-side `WHERE` subscriptions via `useTable(tables.post.where(...))`.
+- **No built-in rate limiting** — implement manually with a tracking table.
+- **`ctx.http.fetch()` panics in local Docker** — use Next.js API routes for external HTTP calls.
+- **Optimistic updates** — not needed at ~39ms local latency; `useOptimisticMutation` is available for cases where you need it.
+- **Full OAuth** — requires Maincloud; local dev uses anonymous identity.
+
+</Tab>
+</Tabs>

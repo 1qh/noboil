@@ -1,0 +1,798 @@
+---
+title: Forms
+description: Typesafe form components, validation, file uploads, and error handling.
+---
+
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs'
+
+This guide walks through building a blog post editor, starting simple and adding features incrementally.
+
+## A basic create form
+
+<Tabs groupId="db" items={['Convex', 'SpacetimeDB']} persist>
+<Tab value="Convex">
+
+You have a blog schema and a `crud('blog', owned.blog)` call. Let's build a form to create posts.
+
+```tsx
+import { Form, useForm } from '@ohmystack/convex/components'
+import { useMutation } from 'convex/react'
+import { api } from '../../convex/_generated/api'
+import { owned } from '../../convex/t'
+
+const CreatePost = () => {
+  const create = useMutation(api.blog.create)
+  const form = useForm({
+    schema: owned.blog,
+    onSubmit: async d => {
+      await create({ ...d, published: false })
+      return d
+    }
+  })
+
+  return (
+    <Form
+      form={form}
+      render={({ Text, Choose, Toggle, Submit }) => (
+        <>
+          <Text name="title" label="Title" />
+          <Text name="content" label="Content" multiline />
+          <Choose name="category" label="Category" />
+          <Toggle name="published" label="Published" />
+          <Submit>Create</Submit>
+        </>
+      )}
+    />
+  )
+}
+```
+
+What's happening:
+
+- `useForm` takes your Zod schema and generates typed field props
+- `name='title'` is checked at compile time — `name='titl'` is a type error
+- `Choose` auto-generates options from the Zod enum
+- `Toggle` knows `published` is a boolean field — using `<Text name='published' />` would be a type error
+- Zod validation runs on submit — `title.min(1)` enforces non-empty
+
+</Tab>
+<Tab value="SpacetimeDB">
+
+`zodFromTable` converts SpacetimeDB table column definitions into a Zod validation schema, letting you reuse your table structure for form validation.
+
+```typescript
+import { zodFromTable } from '@ohmystack/spacetimedb'
+import { tables } from '@/generated/module_bindings'
+
+const postSchema = zodFromTable(tables.post.columns)
+```
+
+Auto-excluded fields (unless explicitly included):
+
+- `identity` columns (e.g., `userId`)
+- `timestamp` columns (e.g., `updatedAt`)
+- Auto-increment primary keys (e.g., `id`)
+
+Then wire it up with `@tanstack/react-form`:
+
+```bash
+bun add @tanstack/react-form zod
+```
+
+```typescript
+'use client'
+
+import { useForm } from '@tanstack/react-form'
+import { zodValidator } from '@tanstack/zod-form-adapter'
+import { useReducer } from 'spacetimedb/react'
+import { reducers } from '@/generated/module_bindings'
+import { createPostSchema } from '@/schema-client'
+
+const CreatePostForm = () => {
+  const createPost = useReducer(reducers.create_post)
+
+  const form = useForm({
+    defaultValues: {
+      title: '',
+      content: '',
+    },
+    validatorAdapter: zodValidator(),
+    validators: {
+      onChange: createPostSchema,
+    },
+    onSubmit: async ({ value }) => {
+      await createPost({
+        ...value,
+        published: false,
+      })
+      form.reset()
+    },
+  })
+
+  return (
+    <form
+      onSubmit={e => {
+        e.preventDefault()
+        form.handleSubmit()
+      }}
+    >
+      <form.Field
+        name="title"
+        children={field => (
+          <div>
+            <label>Title</label>
+            <input
+              value={field.state.value}
+              onChange={e => field.handleChange(e.target.value)}
+              onBlur={field.handleBlur}
+            />
+            {field.state.meta.errors.map(err => (
+              <span key={err}>{err}</span>
+            ))}
+          </div>
+        )}
+      />
+      <form.Field
+        name="content"
+        children={field => (
+          <div>
+            <label>Content</label>
+            <textarea
+              value={field.state.value}
+              onChange={e => field.handleChange(e.target.value)}
+              onBlur={field.handleBlur}
+            />
+          </div>
+        )}
+      />
+      <button type="submit" disabled={form.state.isSubmitting}>
+        {form.state.isSubmitting ? 'Creating...' : 'Create post'}
+      </button>
+    </form>
+  )
+}
+
+export default CreatePostForm
+```
+
+</Tab>
+</Tabs>
+
+## zodFromTable options (SpacetimeDB)
+
+<Tabs groupId="db" items={['Convex', 'SpacetimeDB']} persist>
+<Tab value="Convex">
+
+The Zod schema you pass to `useForm` or `useFormMutation` is the same schema you defined in `convex/t.ts`. No separate derivation step needed.
+
+</Tab>
+<Tab value="SpacetimeDB">
+
+```typescript
+zodFromTable(columns, {
+  include: ['title', 'content'],
+  exclude: ['published'],
+  optional: ['content']
+})
+```
+
+Practical example:
+
+```typescript
+import { zodFromTable } from '@ohmystack/spacetimedb'
+import { tables } from '@/generated/module_bindings'
+
+const createPostSchema = zodFromTable(tables.post.columns, {
+  exclude: ['published']
+})
+
+const editPostSchema = zodFromTable(tables.post.columns).partial()
+
+const profileSchema = zodFromTable(tables.blogProfile.columns)
+
+export { createPostSchema, editPostSchema, profileSchema }
+```
+
+</Tab>
+</Tabs>
+
+## Add file upload
+
+<Tabs groupId="db" items={['Convex', 'SpacetimeDB']} persist>
+<Tab value="Convex">
+
+Your schema has `coverImage: cvFile().nullable().optional()`. The `File` field handles upload automatically:
+
+```tsx
+<Form
+  form={form}
+  render={({ Text, Choose, File, Submit }) => (
+    <>
+      <Text name="title" label="Title" />
+      <Text name="content" label="Content" multiline />
+      <Choose name="category" label="Category" />
+      <File name="coverImage" label="Cover Image" accept="image/*" />
+      <Submit>Create</Submit>
+    </>
+  )}
+/>
+```
+
+- `<File name='coverImage' />` compiles because `coverImage` is a `cvFile()` field
+- `<File name='title' />` is a compile error — `title` is a string, not a file
+- Upload happens on file selection, form submission sends the storage ID
+- On delete, the uploaded file is auto-cleaned from storage
+
+</Tab>
+<Tab value="SpacetimeDB">
+
+File uploads go through a Next.js API route that generates S3/MinIO pre-signed URLs.
+
+**API route:**
+
+```typescript
+import { createS3UploadPresignedUrl } from '@ohmystack/spacetimedb/server'
+import { NextResponse } from 'next/server'
+
+const S3_CONFIG = {
+  accessKeyId: process.env.S3_ACCESS_KEY_ID!,
+  secretAccessKey: process.env.S3_SECRET_ACCESS_KEY!,
+  bucket: process.env.S3_BUCKET!,
+  endpoint: process.env.S3_ENDPOINT ?? 'http://localhost:9000',
+  region: process.env.S3_REGION ?? 'us-east-1'
+}
+
+export const POST = async (req: Request) => {
+  const { filename, contentType, size } = (await req.json()) as {
+    filename: string
+    contentType: string
+    size: number
+  }
+
+  const key = `uploads/${Date.now()}-${filename}`
+
+  const presigned = await createS3UploadPresignedUrl({
+    ...S3_CONFIG,
+    key,
+    contentType
+  })
+
+  return NextResponse.json({
+    uploadUrl: presigned.url,
+    storageKey: key,
+    headers: presigned.headers,
+    method: 'PUT'
+  })
+}
+```
+
+**`useUpload` hook:**
+
+```typescript
+'use client'
+
+import { useUpload } from '@ohmystack/spacetimedb/react'
+import { useReducer } from 'spacetimedb/react'
+import { reducers } from '@/generated/module_bindings'
+
+const FileUploadForm = () => {
+  const registerUpload = useReducer(reducers.register_upload_file)
+
+  const { upload, isUploading, progress, error } = useUpload({
+    apiEndpoint: '/api/upload/presign',
+    registerFile: async ({ contentType, filename, size, storageKey }) => {
+      await registerUpload({ contentType, filename, size, storageKey })
+      return { storageId: storageKey }
+    },
+  })
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    const result = await upload(file)
+    if (result.ok) {
+      console.log('Uploaded:', result.storageId)
+    } else {
+      console.error('Upload failed:', result.code)
+    }
+  }
+
+  return (
+    <div>
+      <input type="file" onChange={handleFileChange} disabled={isUploading} />
+      {isUploading && <progress value={progress} max={100} />}
+      {error && <span>Upload failed: {error}</span>}
+    </div>
+  )
+}
+```
+
+**Upload flow:**
+
+1. User selects a file
+2. `useUpload` calls your API route (`/api/upload/presign`) with file metadata
+3. API route generates a pre-signed S3/MinIO URL
+4. `useUpload` uploads the file directly to S3/MinIO using the pre-signed URL
+5. On success, `registerFile` is called to record the upload in SpacetimeDB via a reducer
+6. The file row is now in the database and visible to subscribers
+
+This pattern works in local dev (MinIO) and production (S3, R2, etc.) without changing client code.
+
+</Tab>
+</Tabs>
+
+## Edit an existing record
+
+<Tabs groupId="db" items={['Convex', 'SpacetimeDB']} persist>
+<Tab value="Convex">
+
+Switch to `useFormMutation` which wires up the mutation and pre-fills values:
+
+```tsx
+import { useFormMutation } from '@ohmystack/convex/react'
+import { pickValues } from '@ohmystack/convex/zod'
+
+const EditPost = ({ post }: { post: Doc<'blog'> }) => {
+  const form = useFormMutation({
+    mutation: api.blog.update,
+    schema: owned.blog,
+    values: pickValues(owned.blog, post),
+    transform: d => ({ ...d, id: post._id }),
+    onSuccess: () => toast.success('Saved')
+  })
+
+  return (
+    <Form
+      form={form}
+      render={({ Text, Choose, File, Submit }) => (
+        <>
+          <Text name="title" label="Title" />
+          <Text name="content" label="Content" multiline />
+          <Choose name="category" label="Category" />
+          <File name="coverImage" label="Cover Image" accept="image/*" />
+          <Submit>Save</Submit>
+        </>
+      )}
+    />
+  )
+}
+```
+
+- `pickValues` extracts schema-matching fields from the doc (ignores `_id`, `_creationTime`, `userId`)
+- `transform` adds the `id` field before submitting — the schema doesn't have `id` but the mutation needs it
+- Empty optional strings auto-coerce to `undefined`
+
+</Tab>
+<Tab value="SpacetimeDB">
+
+Pre-fill form values from an existing row:
+
+```typescript
+const EditPost = ({ post }: { post: PostRow }) => {
+  const updatePost = useReducer(reducers.update_post)
+
+  const form = useForm({
+    defaultValues: {
+      title: post.title,
+      content: post.content,
+    },
+    validatorAdapter: zodValidator(),
+    validators: { onChange: editPostSchema },
+    onSubmit: async ({ value }) => {
+      await updatePost({
+        id: post.id,
+        ...value,
+        expectedUpdatedAt: post.updatedAt,
+      })
+    },
+  })
+
+  return (
+    <form onSubmit={e => { e.preventDefault(); form.handleSubmit() }}>
+      <form.Field
+        name="title"
+        children={field => (
+          <input
+            value={field.state.value}
+            onChange={e => field.handleChange(e.target.value)}
+          />
+        )}
+      />
+      <button type="submit">Save</button>
+    </form>
+  )
+}
+```
+
+</Tab>
+</Tabs>
+
+## Conflict detection
+
+Both databases support optimistic concurrency control via `expectedUpdatedAt`.
+
+<Tabs groupId="db" items={['Convex', 'SpacetimeDB']} persist>
+<Tab value="Convex">
+
+```tsx
+const form = useFormMutation({
+  mutation: api.blog.update,
+  schema: owned.blog,
+  values: pickValues(owned.blog, post),
+  transform: d => ({ ...d, id: post._id, expectedUpdatedAt: post.updatedAt }),
+  onSuccess: () => toast.success('Saved')
+})
+```
+
+When the server detects a stale `expectedUpdatedAt`, a `ConflictDialog` appears automatically with three options:
+
+- **Cancel** — discard your changes
+- **Reload** — fetch the latest version
+- **Overwrite** — force your changes through
+
+No extra UI code needed — the dialog is built into the `Form` component.
+
+</Tab>
+<Tab value="SpacetimeDB">
+
+Pass `expectedUpdatedAt` when calling the update reducer:
+
+```typescript
+await updatePost({
+  id: post.id,
+  title: newTitle,
+  expectedUpdatedAt: post.updatedAt,
+})
+```
+
+If the row was modified since the client last read it, the reducer returns `CONFLICT`. Handle it in the form's `onSubmit`:
+
+```typescript
+onSubmit: async ({ value }) => {
+  try {
+    await updatePost({ id: post.id, ...value, expectedUpdatedAt: post.updatedAt })
+  } catch (error) {
+    const data = extractErrorData(error)
+    if (data?.code === 'CONFLICT') {
+      toast.error('Someone else edited this post. Reload to see the latest version.')
+    }
+  }
+}
+```
+
+</Tab>
+</Tabs>
+
+## Auto-save
+
+<Tabs groupId="db" items={['Convex', 'SpacetimeDB']} persist>
+<Tab value="Convex">
+
+For a document editor experience, enable auto-save with debounce:
+
+```tsx
+const form = useForm({
+  schema: owned.blog,
+  onSubmit: d => update({ id: post._id, ...d }),
+  autoSave: { enabled: true, debounceMs: 1000 }
+})
+```
+
+Add a save indicator:
+
+```tsx
+import { AutoSaveIndicator } from '@ohmystack/convex/components'
+;<AutoSaveIndicator lastSaved={form.lastSaved} />
+```
+
+This shows "Saved 5s ago" that updates in real-time.
+
+</Tab>
+<Tab value="SpacetimeDB">
+
+Implement auto-save with a `useEffect` and debounce:
+
+```typescript
+import { useEffect, useRef } from 'react'
+import { useReducer } from 'spacetimedb/react'
+import { reducers } from '@/generated/module_bindings'
+
+const useAutoSave = (post: PostRow, value: { title: string; content: string }) => {
+  const updatePost = useReducer(reducers.update_post)
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    if (timerRef.current) clearTimeout(timerRef.current)
+    timerRef.current = setTimeout(() => {
+      updatePost({ id: post.id, ...value, expectedUpdatedAt: post.updatedAt })
+    }, 1000)
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current)
+    }
+  }, [value.title, value.content])
+}
+```
+
+</Tab>
+</Tabs>
+
+## Async validation
+
+<Tabs groupId="db" items={['Convex', 'SpacetimeDB']} persist>
+<Tab value="Convex">
+
+Check if a slug is already taken while the user types:
+
+```tsx
+export const isSlugAvailable = uniqueCheck(orgScoped.wiki, 'wiki', 'slug')
+
+<Text name='slug' asyncValidate={async v => {
+  const ok = await isSlugAvailable({ value: v, exclude: id })
+  return ok ? undefined : 'Slug already taken'
+}} asyncDebounceMs={500} />
+```
+
+The validation runs 500ms after the user stops typing and shows inline feedback.
+
+</Tab>
+<Tab value="SpacetimeDB">
+
+Use `@tanstack/react-form`'s async validators:
+
+```typescript
+<form.Field
+  name="slug"
+  asyncDebounceMs={500}
+  validators={{
+    onChangeAsync: async ({ value }) => {
+      const posts = [...conn.db.post.iter()]
+      const taken = posts.some(p => p.slug === value && p.id !== currentId)
+      return taken ? 'Slug already taken' : undefined
+    }
+  }}
+  children={field => (
+    <input
+      value={field.state.value}
+      onChange={e => field.handleChange(e.target.value)}
+    />
+  )}
+/>
+```
+
+</Tab>
+</Tabs>
+
+## Multi-step wizard
+
+<Tabs groupId="db" items={['Convex', 'SpacetimeDB']} persist>
+<Tab value="Convex">
+
+For complex forms like onboarding, use `defineSteps` to split into typed steps:
+
+```tsx
+import { defineSteps } from '@ohmystack/convex/components'
+
+const { StepForm, useStepper } = defineSteps(
+  { id: 'profile', label: 'Profile', schema: profileStep },
+  { id: 'org', label: 'Organization', schema: orgStep },
+  { id: 'preferences', label: 'Preferences', schema: preferencesStep }
+)
+
+const stepper = useStepper({
+  onSubmit: async d => {
+    await upsert({ ...d.profile, ...d.preferences })
+    await createOrg({ name: d.org.name, slug: d.org.slug })
+  },
+  onSuccess: () => toast.success('Done!')
+})
+
+<StepForm stepper={stepper} submitLabel='Complete'>
+  <StepForm.Step id='profile' render={({ Text, File }) => (
+    <>
+      <Text name='displayName' label='Name' />
+      <File name='avatar' label='Avatar' accept='image/*' />
+    </>
+  )} />
+  <StepForm.Step id='org' render={({ Text }) => (
+    <>
+      <Text name='name' label='Org Name' />
+      <Text name='slug' label='URL Slug' />
+    </>
+  )} />
+  <StepForm.Step id='preferences' render={({ Choose }) => (
+    <Choose name='theme' label='Theme' />
+  )} />
+</StepForm>
+```
+
+Each step has its own Zod schema and independent validation. `name='displayName'` compiles on the profile step but errors on the org step.
+
+</Tab>
+<Tab value="SpacetimeDB">
+
+Implement multi-step forms with local state:
+
+```typescript
+const [step, setStep] = useState<'profile' | 'org' | 'preferences'>('profile')
+const [profileData, setProfileData] = useState<ProfileData | null>(null)
+const [orgData, setOrgData] = useState<OrgData | null>(null)
+
+const profileForm = useForm({
+  defaultValues: { displayName: '', bio: '' },
+  validatorAdapter: zodValidator(),
+  validators: { onChange: profileSchema },
+  onSubmit: async ({ value }) => {
+    setProfileData(value)
+    setStep('org')
+  },
+})
+
+const orgForm = useForm({
+  defaultValues: { name: '', slug: '' },
+  validatorAdapter: zodValidator(),
+  validators: { onChange: orgSchema },
+  onSubmit: async ({ value }) => {
+    setOrgData(value)
+    setStep('preferences')
+  },
+})
+```
+
+</Tab>
+</Tabs>
+
+## Optimistic deletes
+
+<Tabs groupId="db" items={['Convex', 'SpacetimeDB']} persist>
+<Tab value="Convex">
+
+For instant-feeling delete buttons:
+
+```tsx
+import { useOptimisticMutation } from '@ohmystack/convex/react'
+
+const { execute, isPending } = useOptimisticMutation({
+  mutation: api.blog.rm,
+  onOptimistic: () => onOptimisticRemove?.(),
+  onRollback: () => toast.error('Failed to delete'),
+  onSuccess: () => toast.success('Deleted')
+})
+```
+
+The item disappears immediately. If the server rejects, it reappears with an error toast.
+
+</Tab>
+<Tab value="SpacetimeDB">
+
+SpacetimeDB's ~39ms latency makes optimistic updates unnecessary in most cases. The subscription update arrives before the user notices. For higher-latency deployments, use `useOptimisticMutation` from `@ohmystack/spacetimedb/react`.
+
+</Tab>
+</Tabs>
+
+## Available field components (Convex)
+
+<Tabs groupId="db" items={['Convex', 'SpacetimeDB']} persist>
+<Tab value="Convex">
+
+| Component  | Zod types                      | Renders                          |
+| ---------- | ------------------------------ | -------------------------------- |
+| `Text`     | `string()`, `string().email()` | Input or textarea (`multiline`)  |
+| `Num`      | `number()`                     | Number input                     |
+| `Choose`   | `enum()`                       | Select dropdown                  |
+| `Toggle`   | `boolean()`                    | Checkbox or switch               |
+| `File`     | `cvFile()`                     | File picker with upload          |
+| `Files`    | `cvFiles()`                    | Multi-file picker                |
+| `Arr`      | `array(string())`              | Tag input                        |
+| `Datepick` | `date()`                       | Date picker                      |
+| `Combobox` | `string()` with options        | Searchable dropdown              |
+| `Submit`   | —                              | Submit button with loading state |
+
+All components accept `label`, `placeholder`, `disabled`, and `className` props.
+
+</Tab>
+<Tab value="SpacetimeDB">
+
+With `@tanstack/react-form`, you build your own field components. The `zodFromTable` schema drives validation — field types come from your SpacetimeDB column definitions.
+
+Lower-level utilities are available from `@ohmystack/spacetimedb/react`:
+
+```typescript
+import { buildMeta, getMeta, useForm, useFormMutation } from '@ohmystack/spacetimedb/react'
+```
+
+For most cases, `@tanstack/react-form` with `zodFromTable` is the recommended approach.
+
+</Tab>
+</Tabs>
+
+## Error handling
+
+<Tabs groupId="db" items={['Convex', 'SpacetimeDB']} persist>
+<Tab value="Convex">
+
+**Validation errors** — Zod validation runs on submit. Field-level errors appear automatically:
+
+```tsx
+const form = useForm({
+  schema: owned.blog,
+  onSubmit: async d => {
+    await create(d)
+    return d
+  }
+})
+```
+
+When `title.min(1)` fails, the `<Text name='title' />` field shows "Required" inline — no manual error wiring needed.
+
+**Mutation errors** — `useMutate` and `useFormMutation` show error toasts by default:
+
+```tsx
+const form = useFormMutation({
+  mutation: api.blog.create,
+  schema: owned.blog,
+  onError: e => toast.error(`Failed: ${e.message}`)
+})
+
+const form = useFormMutation({
+  mutation: api.blog.create,
+  schema: owned.blog,
+  onError: false
+})
+```
+
+**Rate limit errors** — when `RATE_LIMITED` is returned, the default error toast shows "Too many requests". For custom UX:
+
+```tsx
+import { handleConvexError } from '@ohmystack/convex/server'
+
+const form = useFormMutation({
+  mutation: api.blog.create,
+  schema: owned.blog,
+  onError: e =>
+    handleConvexError(e, {
+      RATE_LIMITED: () => toast.error('Slow down — try again in a minute'),
+      CONFLICT: () => toast.error('Someone else edited this'),
+      default: () => toast.error('Something went wrong')
+    })
+})
+```
+
+**Error boundary** — wrap pages with `ConvexErrorBoundary` to catch unhandled errors:
+
+```tsx
+import { ConvexErrorBoundary } from '@ohmystack/convex/components'
+;<ConvexErrorBoundary>
+  <BlogEditor />
+</ConvexErrorBoundary>
+```
+
+</Tab>
+<Tab value="SpacetimeDB">
+
+Reducer errors use the `SenderError('CODE: message')` convention. Parse them to show field-level errors:
+
+```typescript
+import { extractErrorData } from '@ohmystack/spacetimedb/server'
+
+const form = useForm({
+  onSubmit: async ({ value }) => {
+    try {
+      await createPost(value)
+    } catch (error) {
+      const data = extractErrorData(error)
+      if (data?.code === 'CONFLICT') {
+        form.setFieldMeta('title', meta => ({
+          ...meta,
+          errors: ['A post with this title already exists']
+        }))
+      }
+    }
+  }
+})
+```
+
+`useMut` and `useFormMutation` from `@ohmystack/spacetimedb/react` automatically parse these errors and surface them as toasts or field-level validation messages.
+
+</Tab>
+</Tabs>
