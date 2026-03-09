@@ -1,4 +1,3 @@
-/* eslint-disable @next/next/no-img-element */
 // biome-ignore-all lint/correctness/useImageSize: x
 // biome-ignore-all lint/style/noProcessEnv: intentional process.env access
 // biome-ignore-all lint/performance/noImgElement: external images

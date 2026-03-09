@@ -1,8 +1,8 @@
 import type { OrgRole } from '@ohmystack/convex'
 
 import { api } from '@a/be-convex'
-import { fetchQuery } from 'convex/nextjs'
 import { getToken, isAuthenticated } from '@ohmystack/convex/next'
+import { fetchQuery } from 'convex/nextjs'
 import { redirect } from 'next/navigation'
 import { connection } from 'next/server'
 

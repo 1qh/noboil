@@ -24,7 +24,6 @@ const ORG_PATHS = ['/dashboard', '/members', '/projects', '/wiki', '/settings'],
     return false
   },
   toOrgId = (id: number) => `${id}`,
-  /* eslint-disable react/no-danger, @eslint-react/dom/no-dangerously-set-innerhtml */
   OrgRedirect = ({ orgId, slug, to }: { orgId: string; slug: string; to: string }) => (
     <script
       // oxlint-disable-next-line react/no-danger, react-perf/jsx-no-new-object-as-prop
@@ -33,7 +32,6 @@ const ORG_PATHS = ['/dashboard', '/members', '/projects', '/wiki', '/settings'],
       }}
     />
   ),
-  /* eslint-enable react/no-danger, @eslint-react/dom/no-dangerously-set-innerhtml */
   readActiveOrgId = () => {
     if (typeof document === 'undefined') return null
     const cookies = document.cookie.split('; ')

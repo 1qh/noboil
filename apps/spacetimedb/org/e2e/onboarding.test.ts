@@ -1,6 +1,6 @@
 // biome-ignore-all lint/performance/useTopLevelRegex: test file
 // biome-ignore-all lint/nursery/useGlobalThis: browser API
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+
 import { login } from '@a/e2e/helpers'
 import { api, createTestOrg, ensureTestUser, makeOrgTestUtils, tc } from '@a/e2e/org-helpers'
 import path from 'node:path'
@@ -287,7 +287,7 @@ test.describe
       expect(typeof profile?.displayName).toBe('string')
 
       const orgs = await tc.query(api.org.myOrgs, {})
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+
       expect(orgs.length).toBeGreaterThan(0)
     })
 

@@ -76,6 +76,7 @@ export default eslint({
   ],
   ignores: [
     '*.config.ts',
+    'apps/**',
     'packages/be-convex/**',
     'packages/be-spacetimedb/**',
     'packages/fe/**',

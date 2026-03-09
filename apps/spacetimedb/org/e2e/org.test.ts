@@ -1,5 +1,5 @@
 // biome-ignore-all lint/performance/useTopLevelRegex: test file
-/* eslint-disable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment */
+
 import { login } from '@a/e2e/helpers'
 import {
   addTestOrgMember,

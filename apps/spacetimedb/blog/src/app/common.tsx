@@ -228,7 +228,6 @@ const isPlaywrightTest = process.env.NEXT_PUBLIC_PLAYWRIGHT === '1',
       />
       <Link className='mt-1 block' data-testid='blog-card-link' href={`/${id}`}>
         {coverImage ? (
-          // eslint-disable-next-line @next/next/no-img-element
           <img
             alt={title}
             className='my-1 w-full rounded-lg object-cover'

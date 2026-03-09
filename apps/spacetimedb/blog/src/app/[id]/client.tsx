@@ -26,7 +26,6 @@ const Client = ({ blog }: { blog: Blog | null }) => {
     <div data-testid='blog-detail-page'>
       <Author {...blog} />
       {blog.coverImage ? (
-        // eslint-disable-next-line @next/next/no-img-element
         <img
           alt=''
           className='mt-3 w-full rounded-lg object-cover'

@@ -10,9 +10,8 @@ class BlogPage extends BasePage {
     await tagsInput.scrollIntoViewIfNeeded()
     await tagsInput.waitFor({ state: 'visible', timeout: 5000 })
     for (const tag of tags) {
-      // eslint-disable-next-line no-await-in-loop
       await tagsInput.fill(tag)
-      // eslint-disable-next-line no-await-in-loop
+
       await tagsInput.press('Enter')
     }
   }

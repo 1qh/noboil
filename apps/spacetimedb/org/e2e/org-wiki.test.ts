@@ -1,7 +1,7 @@
 // biome-ignore-all lint/performance/useTopLevelRegex: test file
 // biome-ignore-all lint/performance/noAwaitInLoops: e2e sequential
 // oxlint-disable no-await-in-loop
-/* eslint-disable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment */
+
 import type { Page } from '@playwright/test'
 
 import { login } from '@a/e2e/helpers'
@@ -371,7 +371,7 @@ test.describe
     const restoreAllViaBackend = async () => {
         const { page: wikis } = await tc.query(api.wiki.list, { orgId, paginationOpts: { cursor: null, numItems: 100 } }),
           titles = new Set<string>()
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+
         for (const wiki of wikis) if (typeof wiki.title === 'string') titles.add(wiki.title)
 
         const required = ['Undo Wiki 1', 'Undo Wiki 2', 'Undo Wiki 3']
@@ -379,7 +379,7 @@ test.describe
           const title = required[i]
           if (title && !titles.has(title)) {
             const suffix = Date.now() + i
-            // eslint-disable-next-line no-await-in-loop
+
             await tc.mutation(api.wiki.create, {
               orgId,
               slug: `${testPrefix}-undo-${i + 1}-${suffix}`,

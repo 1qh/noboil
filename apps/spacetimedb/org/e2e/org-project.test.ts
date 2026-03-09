@@ -1,5 +1,5 @@
 // biome-ignore-all lint/performance/useTopLevelRegex: test file
-/* eslint-disable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call */
+
 import { login } from '@a/e2e/helpers'
 import {
   addTestOrgMember,
@@ -250,7 +250,7 @@ test.describe
       testOrgId = created.orgId
 
       const memberEmail = `${testPrefix}-proj-member@test.local`
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+
       memberUserId = (await createTestUser(memberEmail, 'Project Member')) ?? ''
       await addTestOrgMember(testOrgId, memberUserId, false)
     })

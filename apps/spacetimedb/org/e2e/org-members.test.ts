@@ -29,7 +29,6 @@ test.describe
       testOrgId = created.orgId
 
       const memberEmail = `${testPrefix}-member@test.local`,
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         memberUserId = (await createTestUser(memberEmail, 'UI Test Member')) ?? ''
       await addTestOrgMember(testOrgId, memberUserId, false)
     })
@@ -68,7 +67,6 @@ test.describe
         created = await createTestOrg(slug, 'Invites UI Test Org')
       testOrgId = created.orgId
 
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       await tc.mutation(api.org.invite, {
         email: `${testPrefix}-pending@test.local`,
         isAdmin: false,
@@ -124,7 +122,6 @@ test.describe
 
     test('admin sees pending requests on members page', async ({ page }) => {
       const joinerEmail = `${testPrefix}-joiner@test.local`,
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         joinerUserId = (await createTestUser(joinerEmail, 'Join Requester')) ?? ''
       await tc.raw.mutation('testauth:requestJoinAsUser', {
         message: 'I want to join',
