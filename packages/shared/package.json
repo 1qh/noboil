@@ -1,5 +1,14 @@
 {
   "name": "@a/shared",
   "private": true,
-  "type": "module"
+  "type": "module",
+  "exports": {
+    "./constants": "./src/constants.ts",
+    "./components/*": "./src/components/*.tsx",
+    "./react/*": "./src/react/*.ts"
+  },
+  "dependencies": {
+    "lucide-react": "latest",
+    "react": "latest"
+  }
 }
