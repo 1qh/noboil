@@ -14,7 +14,7 @@ const bold = (s: string) => `\u001B[1m${s}\u001B[0m`,
     docs: { description: 'Generate API documentation', script: 'docs-gen.ts' },
     doctor: { description: 'Run project diagnostics', script: 'doctor.ts' },
     generate: { description: 'Generate project files (docker-compose, etc.)', script: '' },
-    init: { description: 'Scaffold a new @ohmystack/spacetimedb project', script: '' },
+
     migrate: { description: 'Schema diff and publish migration plans', script: 'migrate.ts' },
     use: { description: 'Switch SpacetimeDB target (local / cloud)', script: '' },
     validate: { description: 'Lint schema, reducers, indexes, and access control', script: 'check.ts' },
@@ -36,8 +36,8 @@ else if (!(cmd in COMMANDS)) {
   printHelp()
   process.exit(1)
 } else if (cmd === 'init') {
-  const { init } = await import('./create')
-  init(rest)
+  console.log(`\n${bold('init')} has moved to the ${bold('ohmystack')} CLI.\n`)
+  console.log(`Run: ${dim('bunx ohmystack init')}\n`)
 } else if (cmd === 'add') {
   const { add } = await import('./add')
   await add(rest)
