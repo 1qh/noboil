@@ -41,6 +41,9 @@
     "./test/discover": "./src/server/test-discover.ts",
     "./seed": "./src/seed.ts"
   },
+  "bin": {
+    "ohmystack-convex": "./src/cli.ts"
+  },
   "files": [
     "src",
     "!src/__tests__"
