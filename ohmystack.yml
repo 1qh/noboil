@@ -1,0 +1,147 @@
+services:
+  postgres:
+    image: postgres:alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: convex_self_hosted
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d convex_self_hosted"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - convex-net
+
+  convex-minio:
+    image: minio/minio:latest
+    restart: unless-stopped
+    entrypoint: /bin/sh -c "mkdir -p /data/exports /data/imports /data/modules /data/files /data/search && minio server /data --console-address ':9001'"
+    environment:
+      MINIO_ROOT_USER: sss
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_ACCESS_KEY}
+    volumes:
+      - convex_minio_data:/data
+    ports:
+      - 9000:9000
+      - 9001:9001
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - convex-net
+
+  backend:
+    image: ghcr.io/get-convex/convex-backend:latest
+    restart: unless-stopped
+    stop_grace_period: 10s
+    stop_signal: SIGINT
+    depends_on:
+      postgres:
+        condition: service_healthy
+      convex-minio:
+        condition: service_healthy
+    ports:
+      - 3212:3210
+      - 3211:3211
+    volumes:
+      - convex_data:/convex/data
+    environment:
+      AWS_ACCESS_KEY_ID: sss
+      AWS_REGION: us-east-1
+      AWS_S3_DISABLE_CHECKSUMS: "true"
+      AWS_S3_DISABLE_SSE: "true"
+      AWS_S3_FORCE_PATH_STYLE: "true"
+      AWS_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY}
+      CONVEX_CLOUD_ORIGIN: http://127.0.0.1:3212
+      CONVEX_SITE_ORIGIN: http://127.0.0.1:3211
+      DOCUMENT_RETENTION_DELAY: "172800"
+      DO_NOT_REQUIRE_SSL: 1
+      POSTGRES_URL: postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432
+      RUST_LOG: info
+      S3_ENDPOINT_URL: http://convex-minio:9000
+      S3_STORAGE_EXPORTS_BUCKET: exports
+      S3_STORAGE_FILES_BUCKET: files
+      S3_STORAGE_MODULES_BUCKET: modules
+      S3_STORAGE_SEARCH_BUCKET: search
+      S3_STORAGE_SNAPSHOT_IMPORTS_BUCKET: imports
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3210/version"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - convex-net
+
+  dashboard:
+    image: ghcr.io/get-convex/convex-dashboard:latest
+    restart: unless-stopped
+    stop_grace_period: 10s
+    stop_signal: SIGINT
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - 6791:6791
+    environment:
+      NEXT_PUBLIC_DEPLOYMENT_URL: http://127.0.0.1:3210
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6791"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - convex-net
+
+  spacetimedb:
+    image: clockworklabs/spacetime:latest
+    command: start --listen-addr 0.0.0.0:3000
+    ports:
+      - "3000:3000"
+      - "5432:5432"
+    volumes:
+      - spacetimedb_data:/stdb
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:3000/v1/ping 2>/dev/null || curl -fsS http://localhost:3000/database/ping 2>/dev/null || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+
+  stdb-minio:
+    image: minio/minio
+    command: server /data --console-address ":9003"
+    ports:
+      - "9002:9000"
+      - "9003:9003"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    volumes:
+      - stdb_minio_data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:9000/minio/health/live || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
+volumes:
+  postgres_data:
+  convex_minio_data:
+  convex_data:
+  spacetimedb_data:
+  stdb_minio_data:
+
+networks:
+  convex-net:

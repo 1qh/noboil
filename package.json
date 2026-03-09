@@ -1,0 +1,51 @@
+{
+  "name": "a",
+  "private": true,
+  "workspaces": [
+    "apps/convex/*",
+    "apps/spacetimedb/*",
+    "apps/docs",
+    "packages/*"
+  ],
+  "scripts": {
+    "build:desktop": "swift build --package-path desktop/convex/blog && swift build --package-path desktop/convex/chat && swift build --package-path desktop/convex/movie && swift build --package-path desktop/convex/org",
+    "build:mobile": "swift build --package-path mobile/convex/blog && swift build --package-path mobile/convex/chat && swift build --package-path mobile/convex/movie && swift build --package-path mobile/convex/org",
+    "build:ts": "turbo run build",
+    "check": "lintmax check",
+    "ci": "bun tsc && lintmax check && bun build:ts",
+    "clean": "git clean -xdf node_modules .turbo bun.lock",
+    "clean:desktop": "rm -rf desktop/convex/*/.build swift-core/.build",
+    "clean:mobile": "rm -rf mobile/convex/*/.build mobile/convex/*/Android/.gradle mobile/convex/*/Android/build mobile/convex/*/Android/app/build ~/Library/Developer/Xcode/DerivedData/Project-*",
+    "clean:workspaces": "turbo run clean",
+    "codegen:swift": "ohmystack codegen-swift --schema packages/be-convex/t.ts --convex packages/be-convex/convex --output swift-core/Sources/ConvexCore/Generated.swift --mobile-output mobile/convex/convex-shared/Sources/ConvexShared/MobileAPI.swift",
+    "dev:web": "f() { turbo watch dev -F @a/$1 -F @a/$2; }; f",
+    "fix": "lintmax fix && (O=$(turbo typecheck build --output-logs=errors-only 2>&1) || { echo \"$O\"; false; }) && bun format:swift && bun lint:swift",
+    "format": "lintmax fix",
+    "format:check": "lintmax check",
+    "format:swift": "(O=$(swiftformat . 2>&1) || { echo \"$O\"; false; }) && (ktlint --format '**/*.kt' > /dev/null 2>&1 || true) && (O=$(ktlint '**/*.kt' 2>&1) || { echo \"$O\"; false; })",
+    "lint:swift": "(swiftlint lint --fix > /dev/null 2>&1 || true) && (O=$(swiftlint lint --strict 2>&1) || { echo \"$O\"; false; }) && (O=$(yamllint . 2>&1) || { echo \"$O\"; false; })",
+    "lint:ts": "lintmax check",
+    "lint:ws": "sherif",
+    "postinstall": "bun lint:ws",
+    "spacetime:generate": "PATH=\"$HOME/.local/bin:$PATH\" spacetime generate --lang typescript --out-dir packages/spacetimedb/src/generated --module-path packages/be-spacetimedb",
+    "spacetime:health": "curl -fsS http://localhost:3000/v1/ping && echo ' SpacetimeDB is healthy'",
+    "spacetime:publish": "PATH=\"$HOME/.local/bin:$PATH\" spacetime publish ohmystack --module-path packages/be-spacetimedb --delete-data=on-conflict -y",
+    "spacetime:reset": "docker compose -f ohmystack.yml down spacetimedb -v && docker compose -f ohmystack.yml up spacetimedb -d",
+    "spacetime:up": "docker compose -f ohmystack.yml up spacetimedb stdb-minio -d && PATH=\"$HOME/.local/bin:$PATH\" spacetime server add local --url http://localhost:3000 --no-fingerprint --default 2>/dev/null; echo 'SpacetimeDB ready on http://localhost:3000'",
+    "test:all": "bash test-all.sh",
+    "test:desktop": "bash desktop/convex/test.sh",
+    "test:mobile": "bash mobile/convex/maestro/run-all.sh",
+    "tsc": "turbo run typecheck"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "depcheck": "latest",
+    "dotenv-cli": "latest",
+    "lintmax": "0.0.2",
+    "sherif": "latest",
+    "ts-unused-exports": "latest",
+    "turbo": "latest",
+    "typescript": "latest"
+  },
+  "packageManager": "bun@1.3.9"
+}
