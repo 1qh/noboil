@@ -137,7 +137,7 @@ const chk = (ctx: UserCtx): HookCtx => ({
       update = m({
         args: { ...partial.shape, id: zid(table).optional(), items: array(updateItemSchema).max(BULK_MAX).optional() },
         handler: typed(async (ctx: MutCtx, a: Rec) => {
-          const rawItems = a.items as Array<Rec & { id: string }> | undefined
+          const rawItems = a.items as (Rec & { id: string })[] | undefined
           if (rawItems) {
             const results: Rec[] = []
             for (const rawItem of rawItems) {

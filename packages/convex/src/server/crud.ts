@@ -1,6 +1,6 @@
 // oxlint-disable promise/prefer-await-to-then
 /* eslint-disable complexity */
-/* eslint-disable @eslint-react/no-unused-props, max-depth */
+/* eslint-disable max-depth */
 // biome-ignore-all lint/suspicious/useAwait: x
 // biome-ignore-all lint/performance/noAwaitInLoops: x
 import type { ZodObject, ZodRawShape } from 'zod/v4'
@@ -385,7 +385,7 @@ const hk = (c: CrudMCtx): HookCtx => ({ db: c.db, storage: c.storage, userId: c.
           items: array(updateItemSchema).max(BULK_MAX).optional()
         },
         handler: typed(async (c: CrudMCtx, a: Rec) => {
-          const rawItems = a.items as Array<Rec & { expectedUpdatedAt?: number; id: string }> | undefined
+          const rawItems = a.items as (Rec & { expectedUpdatedAt?: number; id: string })[] | undefined
           if (rawItems) {
             const results: unknown[] = []
             for (const rawItem of rawItems) {
@@ -401,7 +401,7 @@ const hk = (c: CrudMCtx): HookCtx => ({ db: c.db, storage: c.storage, userId: c.
           }
           const id = a.id as string | undefined
           if (!id) return err('VALIDATION_FAILED', `${table}:update`)
-          const expectedUpdatedAt = (a as { expectedUpdatedAt?: number }).expectedUpdatedAt,
+          const { expectedUpdatedAt } = a as { expectedUpdatedAt?: number },
             prev = await c.get(id)
           let patch = partial.parse(a) as Rec
           if (hooks?.beforeUpdate) patch = await hooks.beforeUpdate(hk(c), { id, patch, prev })

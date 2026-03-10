@@ -5,7 +5,8 @@
 [![npm](https://img.shields.io/npm/v/@noboil/spacetimedb)](https://www.npmjs.com/package/@noboil/spacetimedb)
 [![license](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
-One schema. Typed backend. Auto forms. Zero boilerplate.
+One schema. Typed backend.
+Auto forms. Zero boilerplate.
 
 Define a Zod schema once.
 Get authenticated CRUD, typesafe forms, file upload, real-time subscriptions,
@@ -26,8 +27,7 @@ The CLI scaffolds the full monorepo.
 
 Without noboil — ~50 lines per database for basic CRUD, no validation, no rate limiting:
 
-<details>
-<summary>Raw Convex (~50 lines)</summary>
+<details> <summary>Raw Convex (~50 lines)</summary>
 
 ```tsx
 export const list = query({
@@ -86,8 +86,7 @@ export const rm = mutation({
 
 </details>
 
-<details>
-<summary>Raw SpacetimeDB (~40 lines)</summary>
+<details> <summary>Raw SpacetimeDB (~40 lines)</summary>
 
 ```tsx
 const createPost = spacetimedb.reducer(
@@ -157,25 +156,16 @@ limiting, conflict detection — all included. Same API across databases.
 `create`, `update`, and `rm` each accept single or bulk input (up to 100 items).
 
 ## Monorepo Structure
-
 ```
-noboil/
-  apps/
-    convex/         4 Convex demo web apps (blog, chat, movie, org)
-    spacetimedb/    4 SpacetimeDB demo web apps
-    docs/           Documentation site (fumadocs)
-  packages/
-    cli/            CLI — bun noboil@latest init
-    convex/         @noboil/convex library
-    spacetimedb/    @noboil/spacetimedb library
-    be-convex/      Convex backend (schema + functions)
-    be-spacetimedb/ SpacetimeDB backend (Rust module)
-    ui/             Shared shadcn components
-    fe/             Shared frontend utilities
-    e2e/            Shared Playwright utilities
-  mobile/convex/    iOS/Android apps (Swift + Skip)
-  desktop/convex/   macOS apps (SwiftUI)
-  swift-core/       Shared Swift protocols
+
+noboil/ apps/ convex/ 4 Convex demo web apps (blog, chat, movie, org) spacetimedb/ 4
+SpacetimeDB demo web apps docs/ Documentation site (fumadocs) packages/ cli/ CLI — bun
+noboil@latest init convex/ @noboil/convex library spacetimedb/ @noboil/spacetimedb
+library be-convex/ Convex backend (schema + functions) be-spacetimedb/ SpacetimeDB
+backend (Rust module) ui/ Shared shadcn components fe/ Shared frontend utilities e2e/
+Shared Playwright utilities mobile/convex/ iOS/Android apps (Swift + Skip)
+desktop/convex/ macOS apps (SwiftUI) swift-core/ Shared Swift protocols
+
 ```
 
 ## Packages
@@ -193,3 +183,4 @@ noboil/
 ## License
 
 MIT. Author: [1qh](https://github.com/1qh/noboil).
+```

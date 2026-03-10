@@ -10976,7 +10976,7 @@ describe('UseBulkSelectionOpts rm option type', () => {
     const opts: ReactIndexTypes.UseBulkSelectionOpts = {
       items: [],
       orgId: 'org_1',
-      rm: async (args) => {
+      rm: async args => {
         captured = args.id ?? ''
       }
     }

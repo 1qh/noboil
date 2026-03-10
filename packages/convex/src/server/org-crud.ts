@@ -244,8 +244,8 @@ const getEditors = (doc: Rec): string[] => (doc.editors as string[] | undefined)
           items: array(updateItemSchema).max(BULK_MAX).optional()
         },
         handler: typed(async (c: MutCtx, a: Rec) => {
-          const orgId = (a as { orgId: string }).orgId,
-            rawItems = a.items as Array<Rec & { expectedUpdatedAt?: number; id: string }> | undefined
+          const { orgId } = a as { orgId: string },
+            rawItems = a.items as (Rec & { expectedUpdatedAt?: number; id: string })[] | undefined
           if (rawItems) {
             await requireOrgRole({ db: c.db, minRole: 'admin', orgId, userId: c.user._id as string })
             const results: Rec[] = []
@@ -265,7 +265,7 @@ const getEditors = (doc: Rec): string[] => (doc.editors as string[] | undefined)
           }
           const id = a.id as string | undefined
           if (!id) return err('VALIDATION_FAILED', `${table}:update`)
-          const expectedUpdatedAt = (a as { expectedUpdatedAt?: number }).expectedUpdatedAt,
+          const { expectedUpdatedAt } = a as { expectedUpdatedAt?: number },
             { role } = await requireOrgMember({ db: c.db, orgId, userId: c.user._id as string }),
             doc = requireOrgDoc(await c.db.get(id), orgId),
             aclDoc = await resolveAclDoc(c.db, doc, opt)
@@ -292,7 +292,7 @@ const getEditors = (doc: Rec): string[] => (doc.editors as string[] | undefined)
       rm = m({
         args: { ...orgIdArg, id: zid(table).optional(), ids: bulkIdsSchema.optional() },
         handler: typed(async (c: MutCtx, a: Rec) => {
-          const orgId = (a as { orgId: string }).orgId,
+          const { orgId } = a as { orgId: string },
             ids = a.ids as string[] | undefined
           if (ids) {
             await requireOrgRole({ db: c.db, minRole: 'admin', orgId, userId: c.user._id as string })
