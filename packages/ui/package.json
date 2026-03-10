@@ -18,7 +18,7 @@
     "@base-ui/react": "^1.2.0",
     "@hookform/resolvers": "^5.2.2",
     "@radix-ui/react-use-controllable-state": "^1.2.2",
-    "@rive-app/react-webgl2": "^4.27.0",
+    "@rive-app/react-webgl2": "^4.27.1",
     "@streamdown/cjk": "^1.0.2",
     "@streamdown/code": "^1.1.0",
     "@streamdown/math": "^1.0.2",
