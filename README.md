@@ -147,14 +147,14 @@ const owned = makeOwned({
   })
 })
 
-export const { bulkRm, bulkUpdate, create, list, read, rm, update } = crud(
+export const { create, list, read, rm, update } = crud(
   owned,
   'blog'
 )
-```
 
-8 endpoints. Auth, ownership, Zod validation, file upload, cursor pagination, rate
+5 endpoints. Auth, ownership, Zod validation, file upload, cursor pagination, rate
 limiting, conflict detection — all included. Same API across databases.
+`create`, `update`, and `rm` each accept single or bulk input (up to 100 items).
 
 ## Monorepo Structure
 

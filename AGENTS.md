@@ -505,8 +505,8 @@ It must NEVER contain:
 
 ### What codegen CAN know (from its own library code)
 
-- Factory patterns: `crud()` always produces `list`, `read`, `create`, `update`, `rm`,
-  `bulkCreate`, `bulkRm`, `bulkUpdate`
+- Factory patterns: `crud()` always produces `list`, `read`, `create`, `update`, `rm`
+  (`create`/`update`/`rm` each accept single or bulk input)
 - `orgCrud()` with `acl: true` always produces `addEditor`, `removeEditor`,
   `setEditors`, `editors`
 - `pub` option always produces `pub.list`, `pub.read`
