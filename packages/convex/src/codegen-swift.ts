@@ -1268,7 +1268,6 @@ const SAFE_ARG_TYPES = new Set(['[Bool]', '[Double]', '[String]', 'Bool', 'Doubl
     emit(`${indent(2)}try await client.mutation("${modName}:restore", args: [${argParts.join(', ')}])`)
     emit(`${indent(1)}}`)
   },
-
   // eslint-disable-next-line @typescript-eslint/max-params
   emitCustomDesktopFn = (e: (s: string) => void, modName: string, fn: CustomFnDescriptor, fnName: string): void => {
     const params = [

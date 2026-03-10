@@ -239,11 +239,7 @@ interface CrudResult<S extends ZodRawShape> {
     { index: string; key: string; value: string; where?: WhereOf<S> },
     EnrichedDoc<S>[]
   >
-  create: RegisteredMutation<
-    'public',
-    _.output<ZodObject<S>> & { items?: _.output<ZodObject<S>>[] },
-    string | string[]
-  >
+  create: RegisteredMutation<'public', _.output<ZodObject<S>> & { items?: _.output<ZodObject<S>>[] }, string | string[]>
   pub: CrudReadApi<S>
   pubIndexed: RegisteredQuery<
     'public',

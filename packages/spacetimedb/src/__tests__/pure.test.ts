@@ -4099,9 +4099,7 @@ describe('noboil-stdb-check --endpoints', () => {
   })
 
   test('childCrud produces base child endpoints', () => {
-    const eps = endpointsForFactory(
-      makeCall('makeChildCrud', 'endpoints=list,create,update,rm')
-    )
+    const eps = endpointsForFactory(makeCall('makeChildCrud', 'endpoints=list,create,update,rm'))
     expect(eps).toContain('list')
     expect(eps).toContain('create')
     expect(eps).toContain('update')
