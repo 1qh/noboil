@@ -23,7 +23,7 @@
     "format": "lintmax fix",
     "format:check": "lintmax check",
     "format:swift": "(ls **/*.swift &>/dev/null && { O=$(swiftformat . 2>&1) || { echo \"$O\"; false; }; } || true) && (ls **/*.kt &>/dev/null && { ktlint --format '**/*.kt' > /dev/null 2>&1 || true; O=$(ktlint '**/*.kt' 2>&1) || { echo \"$O\"; false; }; } || true)",
-    "gha:rerun-current": "bun scripts/rerun-current-actions.ts",
+    "gha:run-ci-full": "b=$(git branch --show-current); gh workflow run CI --ref \"$b\" -f force_full=true && gh run list --workflow CI --branch \"$b\" --limit 3",
     "postinstall": "bun lint:ws",
     "lint:swift": "(ls **/*.swift &>/dev/null && { swiftlint lint --fix > /dev/null 2>&1 || true; O=$(swiftlint lint --strict 2>&1) || { echo \"$O\"; false; }; } || true) && (O=$(yamllint . 2>&1) || { echo \"$O\"; false; })",
     "lint:ts": "lintmax check",
