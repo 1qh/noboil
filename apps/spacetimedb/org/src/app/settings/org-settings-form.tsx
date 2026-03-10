@@ -11,8 +11,16 @@ import { pickValues } from '@noboil/spacetimedb/zod'
 import { useRouter } from 'next/navigation'
 import { useRef } from 'react'
 import { useReducer } from 'spacetimedb/react'
+import type { output } from 'zod'
 
 import { orgTeam } from '~/schema'
+
+type OrgFormValues = output<typeof orgTeam>
+
+const orgKeys = {
+  name: 'name',
+  slug: 'slug'
+} as const satisfies Record<'name' | 'slug', keyof OrgFormValues>
 
 interface OrgSettingsFormProps {
   org: Org & { _id: string }
@@ -36,7 +44,7 @@ const OrgSettingsForm = ({ org: o }: OrgSettingsFormProps) => {
       },
       values: pickValues(orgTeam, o)
     }),
-    slug = form.watch('slug')
+    slug = form.watch(orgKeys.slug)
 
   return (
     <Card>
@@ -51,8 +59,8 @@ const OrgSettingsForm = ({ org: o }: OrgSettingsFormProps) => {
           render={({ Submit, Text }) => (
             <>
               <FieldGroup>
-                <Text helpText='Public organization name.' name='name' required />
-                <Text helpText='Lowercase letters, numbers, and dashes.' name='slug' required />
+                <Text helpText='Public organization name.' name={orgKeys.name} required />
+                <Text helpText='Lowercase letters, numbers, and dashes.' name={orgKeys.slug} required />
               </FieldGroup>
               <p className='text-xs text-muted-foreground'>/{slug}</p>
               <Submit>Save changes</Submit>

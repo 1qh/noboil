@@ -11,8 +11,16 @@ import { pickValues } from '@noboil/convex/zod'
 import { useMutation } from 'convex/react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
+import type { output } from 'zod'
 
 import { orgTeam } from '~/schema'
+
+type OrgFormValues = output<typeof orgTeam>
+
+const orgKeys = {
+  name: 'name',
+  slug: 'slug'
+} as const satisfies Record<'name' | 'slug', keyof OrgFormValues>
 
 interface OrgSettingsFormProps {
   org: Doc<'org'>
@@ -33,7 +41,7 @@ const OrgSettingsForm = ({ org: o }: OrgSettingsFormProps) => {
       schema: orgTeam,
       values: pickValues(orgTeam, o)
     }),
-    slug = form.watch('slug')
+    slug = form.watch(orgKeys.slug)
 
   return (
     <Card>
@@ -48,8 +56,8 @@ const OrgSettingsForm = ({ org: o }: OrgSettingsFormProps) => {
           render={({ Submit, Text }) => (
             <>
               <FieldGroup>
-                <Text name='name' />
-                <Text name='slug' />
+                <Text name={orgKeys.name} />
+                <Text name={orgKeys.slug} />
               </FieldGroup>
               <p className='text-xs text-muted-foreground'>/{slug}</p>
               <Submit>Save changes</Submit>

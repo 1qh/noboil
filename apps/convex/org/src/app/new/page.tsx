@@ -9,8 +9,16 @@ import { useMutation } from 'convex/react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useRef } from 'react'
 import { toast } from 'sonner'
+import type { output } from 'zod'
 
 import { orgTeam } from '~/schema'
+
+type OrgFormValues = output<typeof orgTeam>
+
+const orgKeys = {
+  name: 'name',
+  slug: 'slug'
+} as const satisfies Record<'name' | 'slug', keyof OrgFormValues>
 
 const NewOrgPage = () => {
   const router = useRouter(),
@@ -25,12 +33,12 @@ const NewOrgPage = () => {
       resetOnSuccess: true,
       schema: orgTeam
     }),
-    name = form.watch('name'),
-    slug = form.watch('slug'),
+    name = form.watch(orgKeys.name),
+    slug = form.watch(orgKeys.slug),
     autoSlugRef = useRef(true)
 
   useEffect(() => {
-    if (autoSlugRef.current) form.instance.setFieldValue('slug', slugify(name))
+    if (autoSlugRef.current) form.instance.setFieldValue(orgKeys.slug, slugify(name))
   }, [name, form.instance])
 
   return (
@@ -47,8 +55,8 @@ const NewOrgPage = () => {
             render={({ Submit, Text }) => (
               <>
                 <FieldGroup>
-                  <Text name='name' placeholder='Acme Inc' />
-                  <Text label='URL slug' name='slug' placeholder='acme-inc' />
+                  <Text name={orgKeys.name} placeholder='Acme Inc' />
+                  <Text label='URL slug' name={orgKeys.slug} placeholder='acme-inc' />
                 </FieldGroup>
                 <p className='text-xs text-muted-foreground'>/{slug || 'your-slug'}</p>
                 <Submit className='w-full'>Create organization</Submit>
