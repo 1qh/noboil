@@ -5,14 +5,13 @@
 [![npm](https://img.shields.io/npm/v/@noboil/spacetimedb)](https://www.npmjs.com/package/@noboil/spacetimedb)
 [![license](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
-Schema-first, zero-boilerplate fullstack.
-Pick your database.
+One schema. Typed backend. Auto forms. Zero boilerplate.
 
 Define a Zod schema once.
 Get authenticated CRUD, typesafe forms, file upload, real-time subscriptions,
 pagination, search, soft delete, org multi-tenancy with ACL, rate limiting, and conflict
 detection — all generated.
-Works with Convex or SpacetimeDB.
+Currently supports Convex and SpacetimeDB.
 
 ## Quick Start
 
@@ -25,9 +24,10 @@ The CLI scaffolds the full monorepo.
 
 ## Before / After
 
-### Convex
+Without noboil — ~50 lines per database for basic CRUD, no validation, no rate limiting:
 
-Raw Convex — ~50 lines for 4 endpoints, no validation, no rate limiting:
+<details>
+<summary>Raw Convex (~50 lines)</summary>
 
 ```tsx
 export const list = query({
@@ -84,21 +84,10 @@ export const rm = mutation({
 })
 ```
 
-With `@noboil/convex`:
+</details>
 
-```tsx
-export const { bulkRm, bulkUpdate, create, list, read, rm, update } = crud(
-  schema,
-  'blog'
-)
-```
-
-8 endpoints. Auth, ownership, Zod validation, file upload, cursor pagination, rate
-limiting, conflict detection — all included.
-
-### SpacetimeDB
-
-Raw SpacetimeDB — ~40 lines for 3 reducers, no validation, no conflict detection:
+<details>
+<summary>Raw SpacetimeDB (~40 lines)</summary>
 
 ```tsx
 const createPost = spacetimedb.reducer(
@@ -142,42 +131,30 @@ const deletePost = spacetimedb.reducer(
 )
 ```
 
-With `@noboil/spacetimedb`:
+</details>
+
+With noboil — define your schema, get everything:
 
 ```tsx
+const owned = makeOwned({
+  blog: object({
+    title: string().min(1, 'Required'),
+    content: string().min(3),
+    category: zenum(['tech', 'life', 'tutorial']),
+    published: boolean(),
+    coverImage: cvFile().nullable().optional(),
+    tags: array(string()).max(5).optional()
+  })
+})
+
 export const { bulkRm, bulkUpdate, create, list, read, rm, update } = crud(
-  schema,
+  owned,
   'blog'
 )
 ```
 
-Same API. Different database.
-The schema is the only thing that changes.
-
-## Convex vs SpacetimeDB
-
-| Feature                      | `@noboil/convex` | `@noboil/spacetimedb`    |
-| ---------------------------- | ---------------- | ------------------------ |
-| CRUD from Zod schema         | yes              | yes                      |
-| Typesafe forms + validation  | yes              | yes                      |
-| File upload with compression | yes              | yes                      |
-| Pagination, search, sort     | yes              | yes                      |
-| Soft delete with restore     | yes              | yes                      |
-| Bulk operations              | yes              | yes                      |
-| Org multi-tenancy with ACL   | yes              | yes                      |
-| Rate limiting                | yes              | yes                      |
-| Conflict detection           | yes              | yes                      |
-| Real-time subscriptions      | yes              | yes                      |
-| Devtools                     | yes              | yes                      |
-| ESLint plugin (16 rules)     | yes              | yes                      |
-| CLI tools                    | yes              | yes                      |
-| Hosting                      | Convex cloud     | Self-hosted              |
-| Runtime                      | Server functions | In-memory WASM           |
-| Row-Level Security           | ownership + ACL  | `clientVisibilityFilter` |
-| File storage                 | Convex storage   | S3                       |
-| Backend tests                | `convex-test`    |                          |
-| Swift codegen                | yes              |                          |
-| WebSocket transport          |                  | native                   |
+8 endpoints. Auth, ownership, Zod validation, file upload, cursor pagination, rate
+limiting, conflict detection — all included. Same API across databases.
 
 ## Monorepo Structure
 
