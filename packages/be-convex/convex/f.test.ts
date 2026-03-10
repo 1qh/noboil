@@ -495,8 +495,8 @@ describe('crud factory', () => {
     })
   })
 
-  describe('bulk operations', () => {
-    test('bulkRm deletes multiple posts', async () => {
+  describe('multi-item operations', () => {
+    test('rm deletes multiple posts', async () => {
       const ctx = t(),
         { asUser, userIds } = await createTestContext(ctx),
         [userId] = userIds,
@@ -515,7 +515,7 @@ describe('crud factory', () => {
           }
           return results
         }),
-        deleted = await asUser(0).mutation(api.blog.bulkRm, { ids })
+        deleted = await asUser(0).mutation(api.blog.rm, { ids })
 
       expect(deleted).toBe(3)
 
@@ -526,7 +526,7 @@ describe('crud factory', () => {
       expect(remaining.length).toBe(0)
     })
 
-    test('bulkUpdate updates multiple posts', async () => {
+    test('update updates multiple posts', async () => {
       const ctx = t(),
         { asUser, userIds } = await createTestContext(ctx),
         [userId] = userIds,
@@ -545,9 +545,8 @@ describe('crud factory', () => {
           }
           return results
         }),
-        updated = await asUser(0).mutation(api.blog.bulkUpdate, {
-          data: { title: 'Updated' },
-          ids
+        updated = await asUser(0).mutation(api.blog.update, {
+          items: ids.map(id => ({ id, title: 'Updated' }))
         })
 
       expect(updated.length).toBe(3)

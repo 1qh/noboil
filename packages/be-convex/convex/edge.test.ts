@@ -381,17 +381,17 @@ describe('child CRUD auth', () => {
 })
 
 describe('blog CRUD edge cases', () => {
-  test('bulk delete with empty array', async () => {
+  test('delete with empty array', async () => {
     const ctx = t(),
       { asUser } = await createTestContext(ctx),
-      result = await asUser(0).mutation(api.blog.bulkRm, { ids: [] })
+      result = await asUser(0).mutation(api.blog.rm, { ids: [] })
     expect(result).toBeDefined()
   })
 
-  test('bulk update with empty array', async () => {
+  test('update with empty array', async () => {
     const ctx = t(),
       { asUser } = await createTestContext(ctx),
-      result = await asUser(0).mutation(api.blog.bulkUpdate, { data: { published: true }, ids: [] })
+      result = await asUser(0).mutation(api.blog.update, { items: [] })
     expect(result).toBeDefined()
   })
 
