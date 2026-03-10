@@ -19,7 +19,7 @@
     "clean:workspaces": "turbo run clean",
     "codegen:swift": "bun packages/convex/src/cli.ts codegen-swift --schema packages/be-convex/t.ts --convex packages/be-convex/convex --output swift-core/Sources/ConvexCore/Generated.swift --mobile-output mobile/convex/convex-shared/Sources/ConvexShared/MobileAPI.swift",
     "dev:web": "f() { turbo watch dev -F @a/$1 -F @a/$2; }; f",
-    "fix": "lintmax fix && (O=$(turbo typecheck build --filter='!@a/convex-*' --filter='!@a/stdb-*' --filter='!@a/docs' --output-logs=errors-only 2>&1) || { echo \"$O\"; false; }) && bun format:swift && bun lint:swift",
+    "fix": "lintmax fix && (O=$(turbo typecheck build --filter='!@a/convex-*' --filter='!@a/stdb-*' --filter='!@a/docs' --filter='!@a/ui' --output-logs=errors-only 2>&1) || { echo \"$O\"; false; }) && bun format:swift && bun lint:swift",
     "format": "lintmax fix",
     "format:check": "lintmax check",
     "format:swift": "(ls **/*.swift &>/dev/null && { O=$(swiftformat . 2>&1) || { echo \"$O\"; false; }; } || true) && (ls **/*.kt &>/dev/null && { ktlint --format '**/*.kt' > /dev/null 2>&1 || true; O=$(ktlint '**/*.kt' 2>&1) || { echo \"$O\"; false; }; } || true)",
@@ -37,7 +37,9 @@
     "test:all": "bash test-all.sh",
     "test:desktop": "bash desktop/convex/test.sh",
     "test:mobile": "bash mobile/convex/maestro/run-all.sh",
-    "tsc": "turbo run typecheck"
+    "tsc": "turbo run typecheck --filter='!@a/ui'",
+    "ui:sync": "bun scripts/sync-ui.ts",
+    "ui:sync:check": "bun ui:sync && git diff --exit-code -- packages/ui"
   },
   "devDependencies": {
     "@types/bun": "latest",

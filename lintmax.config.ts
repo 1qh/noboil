@@ -2,7 +2,7 @@ import { defineConfig } from 'lintmax'
 
 export default defineConfig({
   biome: {
-    ignorePatterns: ['mobile/convex/maestro', 'apps/*/next-env.d.ts', 'apps/docs/.source'],
+    ignorePatterns: ['mobile/convex/maestro', 'apps/*/next-env.d.ts', 'apps/docs/.source', 'packages/ui/**'],
     overrides: [
       {
         disableLinter: true,

@@ -66,6 +66,7 @@ bun fix            # lint + format + typecheck + build (must pass before commit)
 bun dev:web        # start all web demo apps
 bun test           # run library unit tests
 bun test:all       # run ALL tests (unit + backend + e2e + native)
+bun ui:sync        # regenerate packages/ui from shadcn/ui + ai-elements
 ```
 
 ## Pre-Push Verification (MANDATORY)
@@ -98,7 +99,7 @@ bun test:all
 # PROHIBITIONS
 
 - NEVER write comments at all (lint ignores are allowed)
-- NEVER touch files inside `packages/ui` (shared frontend components, read-only)
+- NEVER touch files inside `packages/ui` manually (regenerate with `bun ui:sync`)
 - NEVER use `Array#reduce()`, use `for` loops instead
 - NEVER use `forEach()`, use `for` loops instead
 - NEVER use non-null assertion operator (`!`)
