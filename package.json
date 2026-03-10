@@ -27,6 +27,7 @@
     "lint:swift": "(ls **/*.swift &>/dev/null && { swiftlint lint --fix > /dev/null 2>&1 || true; O=$(swiftlint lint --strict 2>&1) || { echo \"$O\"; false; }; } || true) && (O=$(yamllint . 2>&1) || { echo \"$O\"; false; })",
     "lint:ts": "lintmax check",
     "lint:ws": "sherif",
+    "publish:all": "npm publish --access public --cwd packages/cli && npm publish --access public --cwd packages/convex && npm publish --access public --cwd packages/spacetimedb",
     "spacetime:generate": "PATH=\"$HOME/.local/bin:$PATH\" spacetime generate --lang typescript --out-dir packages/spacetimedb/src/generated --module-path packages/be-spacetimedb",
     "spacetime:health": "curl -fsS http://localhost:3000/v1/ping && echo ' SpacetimeDB is healthy'",
     "spacetime:publish": "PATH=\"$HOME/.local/bin:$PATH\" spacetime publish ohmystack --module-path packages/be-spacetimedb --delete-data=on-conflict -y",

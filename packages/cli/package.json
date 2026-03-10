@@ -12,7 +12,15 @@
     "react",
     "nextjs"
   ],
+  "homepage": "https://github.com/1qh/ohmystack",
+  "bugs": "https://github.com/1qh/ohmystack/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/1qh/ohmystack.git",
+    "directory": "packages/cli"
+  },
   "license": "MIT",
+  "author": "1qh",
   "type": "module",
   "bin": {
     "ohmystack": "./src/index.ts"
