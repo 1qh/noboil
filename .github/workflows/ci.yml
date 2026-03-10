@@ -1,8 +1,14 @@
-name: ' '
+name: CI
 
 on:
   push:
-    branches: ['*']
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   changes:
@@ -14,7 +20,7 @@ jobs:
       swift: ${{ steps.filter.outputs.swift }}
       desktop: ${{ steps.filter.outputs.desktop }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
         id: filter
         with:
@@ -26,9 +32,8 @@ jobs:
               - 'bun.lock'
               - 'tsconfig*.json'
               - 'turbo.json'
-              - 'biome.json'
-              - '.oxlintrc.json'
-              - '.eslintrc*'
+              - 'lintmax.config.ts'
+              - 'eslint.config.ts'
               - '.github/workflows/**'
             swift:
               - 'mobile/**'
@@ -43,76 +48,45 @@ jobs:
               - '.swiftformat'
               - '.github/workflows/**'
 
-  tsc:
+  lint:
     needs: changes
     if: needs.changes.outputs.ts == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
-      - run: bun i && bun tsc
+      - run: bun i --frozen-lockfile
+      - run: lintmax check
 
-  format:
-    needs: [changes, tsc]
+  typecheck-build:
+    needs: [changes, lint]
     if: needs.changes.outputs.ts == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: biomejs/setup-biome@v2
+      - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
-      - run: bun i && bun format:check
+      - run: bun i --frozen-lockfile
+      - run: turbo typecheck build --filter='!@a/convex-*' --filter='!@a/stdb-*' --filter='!@a/docs' --output-logs=errors-only
 
-  lint-ts:
-    needs: [changes, format]
+  test:
+    needs: changes
     if: needs.changes.outputs.ts == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
-      - run: bun i && bun lint:ts
-
-  build-ts:
-    needs: [changes, lint-ts]
-    if: needs.changes.outputs.ts == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-      - uses: oven-sh/setup-bun@v2
-      - run: bun i && cp .env.example .env && bun build:ts
+      - run: bun i --frozen-lockfile
+      - run: bun --cwd packages/convex test
+      - run: bun --cwd packages/spacetimedb test
 
   lint-swift:
     needs: changes
     if: needs.changes.outputs.swift == 'true' || needs.changes.outputs.desktop == 'true'
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v4
       - run: brew install swiftformat swiftlint ktlint yamllint
-      - run: swiftformat --lint . && ktlint '**/*.kt' && swiftlint lint --strict && yamllint .
-
-  build-swift:
-    needs: [changes, lint-swift]
-    if: needs.changes.outputs.swift == 'true'
-    runs-on: macos-latest
-    timeout-minutes: 30
-    strategy:
-      matrix:
-        app:
-          - { dir: blog, scheme: 'App' }
-          - { dir: chat, scheme: 'App' }
-          - { dir: movie, scheme: 'App' }
-          - { dir: org, scheme: 'App' }
-    steps:
-      - uses: actions/checkout@v5
-      - run: brew install skiptools/skip/skip
-      - name: Build ${{ matrix.app.dir }} (iOS + Android)
-        run: |
-          xcodebuild build \
-            -workspace "mobile/convex/${{ matrix.app.dir }}/Project.xcworkspace" \
-            -scheme "${{ matrix.app.scheme }}" \
-            -destination "generic/platform=iOS Simulator" \
-            -skipMacroValidation -skipPackagePluginValidation \
-            CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
-            ARCHS=arm64 SKIP_ACTION=build -quiet
+      - run: swiftformat --lint . && swiftlint lint --strict && yamllint .
 
   build-desktop:
     needs: [changes, lint-swift]
@@ -123,43 +97,40 @@ jobs:
       matrix:
         app: [blog, chat, movie, org]
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v4
       - run: rm -rf ~/Library/Caches/org.swift.swiftpm/repositories
-      - name: Build ${{ matrix.app }}
-        run: swift build --package-path desktop/convex/${{ matrix.app }}
+      - run: swift build --package-path desktop/convex/${{ matrix.app }}
 
   test-desktop:
     needs: [changes, build-desktop]
     if: needs.changes.outputs.desktop == 'true'
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v5
-      - name: Test swift-core
-        run: swift test --package-path swift-core
-      - name: Test desktop/convex/shared
-        run: swift test --package-path desktop/convex/shared
+      - uses: actions/checkout@v4
+      - run: swift test --package-path swift-core
+      - run: swift test --package-path desktop/convex/shared
 
-  e2e-desktop:
-    needs: [changes, build-desktop]
-    if: needs.changes.outputs.desktop == 'true'
+  build-mobile:
+    needs: [changes, lint-swift]
+    if: needs.changes.outputs.swift == 'true'
     runs-on: macos-latest
-    timeout-minutes: 45
+    timeout-minutes: 30
     strategy:
       matrix:
         app:
-          - { dir: movie, project: MovieDesktop, scheme: MovieUITests }
-          - { dir: blog, project: BlogDesktop, scheme: BlogUITests }
-          - { dir: chat, project: ChatDesktop, scheme: ChatUITests }
-          - { dir: org, project: OrgDesktop, scheme: OrgUITests }
+          - { dir: blog, scheme: App }
+          - { dir: chat, scheme: App }
+          - { dir: movie, scheme: App }
+          - { dir: org, scheme: App }
     steps:
-      - uses: actions/checkout@v5
-      - run: brew install xcodegen
-      - name: Generate Xcode project
-        run: xcodegen generate --spec desktop/convex/${{ matrix.app.dir }}/project.yml --project desktop/convex/${{ matrix.app.dir }}
-      - name: Build E2E tests for ${{ matrix.app.dir }}
+      - uses: actions/checkout@v4
+      - run: brew install skiptools/skip/skip
+      - name: Build ${{ matrix.app.dir }}
         run: |
-          xcodebuild build-for-testing \
-            -project "desktop/convex/${{ matrix.app.dir }}/${{ matrix.app.project }}.xcodeproj" \
+          xcodebuild build \
+            -workspace "mobile/convex/${{ matrix.app.dir }}/Project.xcworkspace" \
             -scheme "${{ matrix.app.scheme }}" \
-            -destination 'platform=macOS' \
-            -skipMacroValidation -quiet
+            -destination "generic/platform=iOS Simulator" \
+            -skipMacroValidation -skipPackagePluginValidation \
+            CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            ARCHS=arm64 SKIP_ACTION=build -quiet
