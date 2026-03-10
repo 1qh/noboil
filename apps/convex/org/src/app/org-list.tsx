@@ -1,6 +1,7 @@
 'use client'
 import type { OrgRole } from '@noboil/convex'
 
+import { Button } from '@a/ui/button'
 import { OrgAvatar, RoleBadge } from '@noboil/convex/components'
 import { setActiveOrgCookieClient } from '@noboil/convex/react'
 import { useRouter } from 'next/navigation'
@@ -18,13 +19,14 @@ const OrgList = ({ orgs }: { orgs: OrgItem[] }) => {
   return (
     <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-3'>
       {orgs.map(o => (
-        <button
-          className='flex items-center gap-3 rounded-lg border p-4 text-left transition-colors hover:bg-muted'
+        <Button
+          className='h-auto justify-start gap-3 rounded-lg border p-4 text-left transition-colors hover:bg-muted'
           key={o.id}
           onClick={() => {
             setActiveOrgCookieClient({ orgId: o.id, slug: o.slug })
             router.push('/dashboard')
           }}
+          variant='ghost'
           type='button'>
           <OrgAvatar name={o.name} size='lg' src={o.avatarId ? `/api/image?id=${o.avatarId}` : undefined} />
           <div className='flex-1'>
@@ -32,7 +34,7 @@ const OrgList = ({ orgs }: { orgs: OrgItem[] }) => {
             <div className='text-sm text-muted-foreground'>/{o.slug}</div>
           </div>
           <RoleBadge role={o.role} />
-        </button>
+        </Button>
       ))}
     </div>
   )

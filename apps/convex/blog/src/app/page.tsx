@@ -1,6 +1,7 @@
 'use client'
 
 import { api } from '@a/be-convex'
+import { Button } from '@a/ui/button'
 import { Input } from '@a/ui/input'
 import { useList } from '@noboil/convex/react'
 import { Search } from 'lucide-react'
@@ -41,12 +42,13 @@ const Page = () => {
       </div>
       <List blogs={filtered} onRemove={handleRemove} />
       {!deferredQuery && status === 'CanLoadMore' ? (
-        <button
+        <Button
           className='mx-auto mt-4 block text-sm text-muted-foreground hover:text-foreground'
           onClick={() => loadMore()}
-          type='button'>
+          size='sm'
+          variant='ghost'>
           Load more
-        </button>
+        </Button>
       ) : null}
     </div>
   )

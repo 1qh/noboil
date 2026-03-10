@@ -1,6 +1,7 @@
 'use client'
 
 import { tables } from '@a/be-spacetimedb/spacetimedb'
+import { Button } from '@a/ui/button'
 import { Input } from '@a/ui/input'
 import { useList, useOwnRows } from '@noboil/spacetimedb/react'
 import { Search } from 'lucide-react'
@@ -45,12 +46,13 @@ const Page = () => {
       </div>
       <List blogs={filtered} onRemove={handleRemove} />
       {!query && hasMore && !isLoading ? (
-        <button
+        <Button
           className='mx-auto mt-4 block text-sm text-muted-foreground hover:text-foreground'
           onClick={() => loadMore()}
-          type='button'>
+          size='sm'
+          variant='ghost'>
           Load more
-        </button>
+        </Button>
       ) : null}
     </div>
   )

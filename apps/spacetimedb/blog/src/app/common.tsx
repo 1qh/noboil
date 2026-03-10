@@ -17,8 +17,10 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger
 } from '@a/ui/alert-dialog'
+import { Button } from '@a/ui/button'
 import { Dialog, DialogContent, DialogTrigger } from '@a/ui/dialog'
 import { FieldGroup } from '@a/ui/field'
+import { Separator } from '@a/ui/separator'
 import { Spinner } from '@a/ui/spinner'
 import { Form, useFormMutation } from '@noboil/spacetimedb/components'
 import { useMut, useOptimisticMutation } from '@noboil/spacetimedb/react'
@@ -53,13 +55,15 @@ const isPlaywrightTest = process.env.NEXT_PUBLIC_PLAYWRIGHT === '1',
     ) : (
       <AlertDialog>
         <AlertDialogTrigger asChild>
-          <button
+          <Button
             aria-label='Delete blog'
-            className='size-8 rounded-lg p-1.5 group-hover:block hover:bg-destructive/10 hover:text-destructive'
+            className='group-hover:block hover:bg-destructive/10 hover:text-destructive'
             data-testid='delete-blog-trigger'
-            type='button'>
+            size='icon'
+            type='button'
+            variant='ghost'>
             <Trash className='size-full stroke-1' />
-          </button>
+          </Button>
         </AlertDialogTrigger>
         <AlertDialogContent data-testid='delete-dialog'>
           <AlertDialogHeader>
@@ -98,13 +102,15 @@ const isPlaywrightTest = process.env.NEXT_PUBLIC_PLAYWRIGHT === '1',
         }}
         open={open}>
         <DialogTrigger asChild>
-          <button
+          <Button
             aria-label='Create blog post'
             className='fixed top-2 right-2 size-10 rounded-full bg-muted p-2 transition-all duration-300 hover:scale-110 hover:bg-border active:scale-75'
             data-testid='create-blog-trigger'
-            type='button'>
+            size='icon'
+            type='button'
+            variant='ghost'>
             <Plus className='size-full' />
-          </button>
+          </Button>
         </DialogTrigger>
         <DialogContent
           className='max-h-[90%] max-w-lg overflow-auto'
@@ -205,9 +211,11 @@ const isPlaywrightTest = process.env.NEXT_PUBLIC_PLAYWRIGHT === '1',
         {own ? (
           <>
             <Publish className='mr-2 ml-auto' id={id} published={published} />
-            <Link href={`/${id}/edit`}>
-              <Pencil className='size-8 rounded-lg stroke-1 p-1.5 group-hover:block hover:bg-muted' />
-            </Link>
+            <Button asChild className='group-hover:block' size='icon' variant='ghost'>
+              <Link href={`/${id}/edit`}>
+                <Pencil className='size-full stroke-1' />
+              </Link>
+            </Button>
             <Delete id={id} onOptimisticRemove={onOptimisticRemove} />
           </>
         ) : null}
@@ -244,7 +252,7 @@ const isPlaywrightTest = process.env.NEXT_PUBLIC_PLAYWRIGHT === '1',
           {content}
         </p>
       </Link>
-      <hr className='mx-3 mt-2.5 translate-y-px transition-all duration-500 group-hover:opacity-0' />
+      <Separator className='mx-3 mt-2.5 translate-y-px transition-all duration-500 group-hover:opacity-0' />
     </div>
   ),
   List = ({ blogs, onRemove }: { blogs: Blog[]; onRemove?: (id: number) => void }) =>
