@@ -1,5 +1,5 @@
 'use client'
 
-import EmailLoginPage from '@a/fe/email-login-page'
+import EmailLoginPage from '@a/fe/spacetimedb-email-login-page'
 
 export default EmailLoginPage

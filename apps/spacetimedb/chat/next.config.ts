@@ -1,3 +1,3 @@
-import { createNextConfig } from '@a/fe/next-config'
+import { createNextConfig } from '@a/fe/spacetimedb-next-config'
 
 export default createNextConfig()

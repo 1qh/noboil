@@ -4,7 +4,7 @@ import type { ReactNode } from 'react'
 
 import AuthLayout from '@a/fe/spacetimedb-auth-layout'
 import SpacetimeProvider from '@a/fe/spacetimedb-provider'
-import Logout from '@a/fe/user-menu'
+import Logout from '@a/fe/spacetimedb-user-menu'
 import { BetterspaceDevtools } from '@ohmystack/spacetimedb/react'
 import { UserRound } from 'lucide-react'
 import { headers } from 'next/headers'
