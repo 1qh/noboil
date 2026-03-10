@@ -2,27 +2,25 @@
 
 'use client'
 
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useState } from 'react'
 
 import type { ToastFn } from './use-soft-delete'
 
 import { UNDO_MS } from '../constants'
 
 interface UseBulkSelectionOpts {
-  bulkRm?: (args: { ids: string[]; orgId: string }) => Promise<unknown>
   items: { _id: string }[]
   onError?: (error: unknown) => void
   onSuccess?: (count: number) => void
   orgId: string
   restore?: (args: { id: string }) => Promise<unknown>
-  rm?: (id: string) => Promise<unknown>
+  rm?: (args: { id?: string; ids?: string[]; orgId: string }) => Promise<unknown>
   toast?: ToastFn
   undoLabel?: string
   undoMs?: number
 }
 
 const useBulkSelection = ({
-  bulkRm,
   items,
   onError,
   onSuccess,
@@ -33,18 +31,6 @@ const useBulkSelection = ({
   undoLabel,
   undoMs = UNDO_MS
 }: UseBulkSelectionOpts) => {
-  const effectiveBulkRm = useMemo(
-      () =>
-        bulkRm ??
-        (rm
-          ? async ({ ids }: { ids: string[] }) => {
-              const tasks: Promise<unknown>[] = []
-              for (const id of ids) tasks.push(rm(id))
-              await Promise.all(tasks)
-            }
-          : undefined),
-      [bulkRm, rm]
-    ),
     [selected, setSelected] = useState<Set<string>>(() => new Set()),
     clear = useCallback(() => {
       setSelected(new Set<string>())
@@ -67,11 +53,11 @@ const useBulkSelection = ({
       setSelected(next)
     }, [items, selected.size]),
     handleBulkDelete = useCallback(async () => {
-      if (selected.size === 0 || !effectiveBulkRm) return
+      if (selected.size === 0 || !rm) return
       const ids = [...selected],
         count = ids.length
       try {
-        await effectiveBulkRm({ ids, orgId })
+        await rm({ ids, orgId })
         setSelected(new Set<string>())
         if (!(t && restore)) {
           onSuccess?.(count)
@@ -100,7 +86,7 @@ const useBulkSelection = ({
       } catch (error) {
         onError?.(error)
       }
-    }, [effectiveBulkRm, onError, onSuccess, orgId, restore, selected, t, undoLabel, undoMs])
+    }, [onError, onSuccess, orgId, restore, rm, selected, t, undoLabel, undoMs])
 
   return { clear, handleBulkDelete, selected, toggleSelect, toggleSelectAll }
 }

@@ -1,7 +1,7 @@
 // biome-ignore-all lint/nursery/noFloatingPromises: event handler
 'use client'
 
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useState } from 'react'
 
 import type { ToastFn } from './use-soft-delete'
 
