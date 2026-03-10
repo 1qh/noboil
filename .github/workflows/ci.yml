@@ -132,25 +132,8 @@ jobs:
     timeout-minutes: 30
     strategy:
       matrix:
-        app:
-          - { dir: blog, scheme: App }
-          - { dir: chat, scheme: App }
-          - { dir: movie, scheme: App }
-          - { dir: org, scheme: App }
+        app: [blog, chat, movie, org]
     steps:
       - uses: actions/checkout@v4
       - run: brew install skiptools/skip/skip
-      - name: Resolve dependencies
-        run: |
-          xcodebuild -resolvePackageDependencies \
-            -workspace "mobile/convex/${{ matrix.app.dir }}/Project.xcworkspace" \
-            -scheme "${{ matrix.app.scheme }}" -quiet || true
-      - name: Build ${{ matrix.app.dir }}
-        run: |
-          xcodebuild build \
-            -workspace "mobile/convex/${{ matrix.app.dir }}/Project.xcworkspace" \
-            -scheme "${{ matrix.app.scheme }}" \
-            -destination "generic/platform=iOS Simulator" \
-            -skipMacroValidation -skipPackagePluginValidation \
-            CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
-            ARCHS=arm64 SKIP_ACTION=build -quiet
+      - run: swift build --package-path mobile/convex/${{ matrix.app }}
