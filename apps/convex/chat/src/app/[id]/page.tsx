@@ -2,6 +2,7 @@ import type { Id } from '@a/be-convex/model'
 import type { UIMessage } from 'ai'
 
 import { api } from '@a/be-convex'
+import { toUIMessage } from '@a/fe/ui-message'
 import { getToken, isAuthenticated } from '@noboil/convex/next'
 import { fetchQuery } from 'convex/nextjs'
 import { redirect } from 'next/navigation'
@@ -18,11 +19,7 @@ const tryFetch = async <T,>(fn: () => Promise<T>): Promise<null | T> => {
     }
   },
   toUIMessages = (messages: { _id: string; parts: unknown; role: 'assistant' | 'system' | 'user' }[]): UIMessage[] =>
-    messages.map(m => ({
-      id: m._id,
-      parts: m.parts as UIMessage['parts'],
-      role: m.role
-    })),
+    messages.map(m => toUIMessage({ id: m._id, parts: m.parts, role: m.role })),
   Page = async ({ params }: { params: Promise<{ id: string }> }) => {
     await connection()
     const { id } = await params,

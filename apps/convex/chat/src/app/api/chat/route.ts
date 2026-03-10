@@ -4,6 +4,7 @@ import type { UIMessage } from 'ai'
 
 import { api } from '@a/be-convex'
 import { getModel } from '@a/be-convex/ai'
+import { toUIMessage } from '@a/fe/ui-message'
 import { convexAuthNextjsToken } from '@convex-dev/auth/nextjs/server'
 import { getToken, isAuthenticated } from '@noboil/convex/next'
 import {
@@ -110,11 +111,7 @@ const filterSupportedParts = (parts: Record<string, unknown>[]) =>
     let existingMessages: UIMessage[] = []
     if (!isToolApprovalFlow) {
       const dbMessages = await fetchQuery(api.message.list, { chatId }, opts)
-      existingMessages = dbMessages.map(m => ({
-        id: m._id,
-        parts: m.parts as UIMessage['parts'],
-        role: m.role
-      }))
+      existingMessages = dbMessages.map(m => toUIMessage({ id: m._id, parts: m.parts, role: m.role }))
     }
     const uiMessages: UIMessage[] = isToolApprovalFlow
       ? (messages as UIMessage[])
