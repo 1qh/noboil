@@ -29,10 +29,8 @@ import type {
   CacheHooks,
   CacheOptions,
   CascadeOption,
-  ChildCrudResult,
   CrudHooks,
   CrudOptions,
-  CrudResult,
   DetectBrand,
   ErrorCode,
   GlobalHookCtx,
@@ -41,7 +39,6 @@ import type {
   Middleware,
   MiddlewareCtx,
   OrgCascadeTableConfig,
-  OrgCrudResult,
   OrgSchema,
   OwnedSchema,
   RateLimitConfig,
@@ -3634,9 +3631,6 @@ describe('noboil-convex-check --endpoints', () => {
     expect(eps).toContain('create')
     expect(eps).toContain('update')
     expect(eps).toContain('rm')
-    expect(eps).toContain('bulkRm')
-    expect(eps).toContain('bulkUpdate')
-    expect(eps).toContain('bulkCreate')
     expect(eps).toContain('pub.list')
     expect(eps).toContain('pub.read')
   })
@@ -3658,9 +3652,6 @@ describe('noboil-convex-check --endpoints', () => {
     expect(eps).toContain('create')
     expect(eps).toContain('update')
     expect(eps).toContain('rm')
-    expect(eps).toContain('bulkCreate')
-    expect(eps).toContain('bulkRm')
-    expect(eps).toContain('bulkUpdate')
   })
 
   test('orgCrud with acl adds editor endpoints', () => {
@@ -3690,9 +3681,6 @@ describe('noboil-convex-check --endpoints', () => {
     expect(eps).toContain('create')
     expect(eps).toContain('update')
     expect(eps).toContain('rm')
-    expect(eps).toContain('bulkCreate')
-    expect(eps).toContain('bulkRm')
-    expect(eps).toContain('bulkUpdate')
   })
 
   test('childCrud with pub adds pub.list and pub.get', () => {
@@ -4248,93 +4236,8 @@ describe('security ESLint rules', () => {
 })
 
 describe('bulk operations', () => {
-  const blogSchema = object({
-    content: string(),
-    published: boolean(),
-    title: string()
-  })
-
-  test('CrudResult includes bulkCreate', () => {
-    expect(blogSchema.shape).toBeDefined()
-    type R = CrudResult<typeof blogSchema.shape>
-    type HasBulkCreate = 'bulkCreate' extends keyof R ? true : false
-    const _check: HasBulkCreate = true
-    expect(_check).toBe(true)
-  })
-
-  test('OrgCrudResult includes bulkCreate', () => {
-    type R = OrgCrudResult<typeof blogSchema.shape>
-    type HasBC = 'bulkCreate' extends keyof R ? true : false
-    const _exists: HasBC = true
-    expect(_exists).toBe(true)
-  })
-
-  test('ChildCrudResult includes bulkCreate, bulkRm, and bulkUpdate', () => {
-    type R = ChildCrudResult<typeof blogSchema.shape>
-    type HasBC = 'bulkCreate' extends keyof R ? true : false
-    type HasBR = 'bulkRm' extends keyof R ? true : false
-    type HasBU = 'bulkUpdate' extends keyof R ? true : false
-    const _bcExists: HasBC = true,
-      _brExists: HasBR = true,
-      _buExists: HasBU = true
-    expect(_bcExists).toBe(true)
-    expect(_brExists).toBe(true)
-    expect(_buExists).toBe(true)
-  })
-
-  test('endpointsForFactory includes bulkCreate for crud', () => {
-    const eps = endpointsForFactory({ factory: 'crud', file: 'test.ts', options: '', table: 'test' })
-    expect(eps).toContain('bulkCreate')
-    expect(eps).toContain('bulkRm')
-    expect(eps).toContain('bulkUpdate')
-  })
-
-  test('endpointsForFactory includes bulkCreate for orgCrud', () => {
-    const eps = endpointsForFactory({ factory: 'orgCrud', file: 'test.ts', options: '', table: 'test' })
-    expect(eps).toContain('bulkCreate')
-    expect(eps).toContain('bulkRm')
-    expect(eps).toContain('bulkUpdate')
-  })
-
-  test('endpointsForFactory includes bulk ops for childCrud', () => {
-    const eps = endpointsForFactory({ factory: 'childCrud', file: 'test.ts', options: '', table: 'test' })
-    expect(eps).toContain('bulkCreate')
-    expect(eps).toContain('bulkRm')
-    expect(eps).toContain('bulkUpdate')
-  })
-
   test('BULK_MAX limits array size to 100', () => {
     expect(BULK_MAX).toBe(100)
-  })
-
-  test('bulk operations not added to singletonCrud', () => {
-    const eps = endpointsForFactory({ factory: 'singletonCrud', file: 'test.ts', options: '', table: 'test' })
-    expect(eps).not.toContain('bulkCreate')
-    expect(eps).not.toContain('bulkRm')
-    expect(eps).not.toContain('bulkUpdate')
-  })
-
-  test('CrudResult bulkCreate key exists alongside bulkRm', () => {
-    type R = CrudResult<typeof blogSchema.shape>
-    type HasBC = 'bulkCreate' extends keyof R ? true : false
-    type HasBR = 'bulkRm' extends keyof R ? true : false
-    const _bc: HasBC = true,
-      _br: HasBR = true
-    expect(_bc).toBe(true)
-    expect(_br).toBe(true)
-  })
-
-  test('ChildCrudResult has all 3 bulk ops', () => {
-    type R = ChildCrudResult<typeof blogSchema.shape>
-    type HasBC = 'bulkCreate' extends keyof R ? true : false
-    type HasBR = 'bulkRm' extends keyof R ? true : false
-    type HasBU = 'bulkUpdate' extends keyof R ? true : false
-    const _bc: HasBC = true,
-      _br: HasBR = true,
-      _bu: HasBU = true
-    expect(_bc).toBe(true)
-    expect(_br).toBe(true)
-    expect(_bu).toBe(true)
   })
 })
 
@@ -5528,24 +5431,21 @@ describe('accessForFactory', () => {
     expect(pub?.endpoints).not.toContain('pub.search')
   })
 
-  test('crud Authenticated includes create and bulkCreate', () => {
+  test('crud Authenticated includes create', () => {
     const call: FactoryCall = { factory: 'crud', file: 'blog.ts', options: '', table: 'blog' },
       result = accessForFactory(call),
       auth = result.find((e: AccessEntry) => e.level === 'Authenticated')
     expect(auth).toBeDefined()
     expect(auth?.endpoints).toContain('create')
-    expect(auth?.endpoints).toContain('bulkCreate')
   })
 
-  test('crud Owner includes update, rm, bulkRm, bulkUpdate', () => {
+  test('crud Owner includes update and rm', () => {
     const call: FactoryCall = { factory: 'crud', file: 'blog.ts', options: '', table: 'blog' },
       result = accessForFactory(call),
       owner = result.find((e: AccessEntry) => e.level === 'Owner')
     expect(owner).toBeDefined()
     expect(owner?.endpoints).toContain('update')
     expect(owner?.endpoints).toContain('rm')
-    expect(owner?.endpoints).toContain('bulkRm')
-    expect(owner?.endpoints).toContain('bulkUpdate')
   })
 
   test('crud with softDelete adds restore to Owner', () => {
@@ -5591,16 +5491,13 @@ describe('accessForFactory', () => {
     expect(allMemberEps).toContain('search')
   })
 
-  test('orgCrud Org Admin includes rm, bulkCreate, bulkRm, bulkUpdate', () => {
+  test('orgCrud Org Admin includes rm', () => {
     const call: FactoryCall = { factory: 'orgCrud', file: 'wiki.ts', options: '', table: 'wiki' },
       result = accessForFactory(call),
       adminEntries = result.filter((e: AccessEntry) => e.level === 'Org Admin'),
       allAdminEps: string[] = []
     for (const entry of adminEntries) for (const ep of entry.endpoints) allAdminEps.push(ep)
     expect(allAdminEps).toContain('rm')
-    expect(allAdminEps).toContain('bulkCreate')
-    expect(allAdminEps).toContain('bulkRm')
-    expect(allAdminEps).toContain('bulkUpdate')
   })
 
   test('orgCrud with acl adds ACL endpoints to Org Admin', () => {
@@ -5640,7 +5537,7 @@ describe('accessForFactory', () => {
     expect(levels).toContain('Parent Owner')
   })
 
-  test('childCrud Parent Owner includes list, create, update, rm, bulkCreate, bulkRm, bulkUpdate', () => {
+  test('childCrud Parent Owner includes list, create, update, rm', () => {
     const call: FactoryCall = { factory: 'childCrud', file: 'message.ts', options: '', table: 'message' },
       result = accessForFactory(call),
       owner = result.find((e: AccessEntry) => e.level === 'Parent Owner')
@@ -5649,9 +5546,6 @@ describe('accessForFactory', () => {
     expect(owner?.endpoints).toContain('create')
     expect(owner?.endpoints).toContain('update')
     expect(owner?.endpoints).toContain('rm')
-    expect(owner?.endpoints).toContain('bulkCreate')
-    expect(owner?.endpoints).toContain('bulkRm')
-    expect(owner?.endpoints).toContain('bulkUpdate')
   })
 
   test('childCrud with pub adds Public level with pub.list and pub.get', () => {
