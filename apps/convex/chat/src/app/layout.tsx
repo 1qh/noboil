@@ -4,7 +4,7 @@ import type { ReactNode } from 'react'
 import AuthLayout from '@a/fe/auth-layout'
 import ConvexProvider from '@a/fe/convex-provider'
 import { SidebarInset, SidebarProvider } from '@a/ui/sidebar'
-import { isAuthenticated } from '@ohmystack/convex/next'
+import { isAuthenticated } from '@noboil/convex/next'
 import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 

@@ -3,7 +3,7 @@ import '@a/ui/globals.css'
 import type { ReactNode } from 'react'
 
 import { Toaster } from '@a/ui/sonner'
-import { OfflineIndicator } from '@ohmystack/spacetimedb/components'
+import { OfflineIndicator } from '@noboil/spacetimedb/components'
 import { ThemeProvider } from 'next-themes'
 import { Suspense } from 'react'
 

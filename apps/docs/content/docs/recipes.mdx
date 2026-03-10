@@ -15,7 +15,7 @@ import { Tab, Tabs } from 'fumadocs-ui/components/tabs'
 ### Schema
 
 ```tsx
-import { cvFile, makeOwned } from '@ohmystack/convex/schema'
+import { cvFile, makeOwned } from '@noboil/convex/schema'
 import { boolean, object, string, enum as zenum } from 'zod/v4'
 
 const owned = makeOwned({
@@ -48,8 +48,8 @@ export const {
 ### Frontend
 
 ```tsx
-import { useList } from '@ohmystack/convex/react'
-import { Form, useForm } from '@ohmystack/convex/components'
+import { useList } from '@noboil/convex/react'
+import { Form, useForm } from '@noboil/convex/components'
 
 const BlogPage = () => {
   const { items, loadMore, status } = useList(api.blog.list, {
@@ -119,7 +119,7 @@ SpacetimeDB doesn't have a direct equivalent for this recipe. For blog-style own
 ### Schema
 
 ```tsx
-import { makeOrgScoped } from '@ohmystack/convex/schema'
+import { makeOrgScoped } from '@noboil/convex/schema'
 import { array, boolean, number, object, string, enum as zenum } from 'zod/v4'
 
 const orgScoped = makeOrgScoped({
@@ -142,7 +142,7 @@ const orgScoped = makeOrgScoped({
 ### Backend
 
 ```tsx
-import { orgCascade } from '@ohmystack/convex/server'
+import { orgCascade } from '@noboil/convex/server'
 
 export const {
   addEditor,
@@ -178,8 +178,8 @@ export const {
 ### Frontend
 
 ```tsx
-import { useOrgQuery, useOrgMutation } from '@ohmystack/convex/react'
-import { EditorsSection, PermissionGuard } from '@ohmystack/convex/components'
+import { useOrgQuery, useOrgMutation } from '@noboil/convex/react'
+import { EditorsSection, PermissionGuard } from '@noboil/convex/components'
 
 const ProjectPage = ({ projectId }: { projectId: Id<'project'> }) => {
   const project = useOrgQuery(api.project.read, { id: projectId })
@@ -212,7 +212,7 @@ const ProjectPage = ({ projectId }: { projectId: Id<'project'> }) => {
 `t.ts`:
 
 ```typescript
-import { schema } from '@ohmystack/spacetimedb/schema'
+import { schema } from '@noboil/spacetimedb/schema'
 import { object, string } from 'zod/v4'
 
 const s = schema({
@@ -227,10 +227,10 @@ export { s }
 `index.ts`:
 
 ```typescript
-import { ohmystackStdb } from '@ohmystack/spacetimedb/server'
+import { noboilStdb } from '@noboil/spacetimedb/server'
 import { s } from '../t'
 
-export default ohmystackStdb(({ table }) => ({
+export default noboilStdb(({ table }) => ({
   project: table(s.project)
 }))
 ```
@@ -241,7 +241,7 @@ export default ohmystackStdb(({ table }) => ({
 'use client'
 
 import { useTable, useReducer } from 'spacetimedb/react'
-import { useList, useOrg, useOrgMutation } from '@ohmystack/spacetimedb/react'
+import { useList, useOrg, useOrgMutation } from '@noboil/spacetimedb/react'
 import { tables, reducers } from '@/generated/module_bindings'
 
 const ProjectList = () => {
@@ -287,7 +287,7 @@ const ProjectList = () => {
 ### Schema
 
 ```tsx
-import { makeBase } from '@ohmystack/convex/schema'
+import { makeBase } from '@noboil/convex/schema'
 import { number, object, string } from 'zod/v4'
 
 const base = makeBase({
@@ -354,7 +354,7 @@ const MoviePage = ({ tmdbId }: { tmdbId: number }) => {
 `t.ts`:
 
 ```typescript
-import { schema } from '@ohmystack/spacetimedb/schema'
+import { schema } from '@noboil/spacetimedb/schema'
 import { number, object, string } from 'zod/v4'
 
 const s = schema({
@@ -374,10 +374,10 @@ export { s }
 `index.ts`:
 
 ```typescript
-import { ohmystackStdb } from '@ohmystack/spacetimedb/server'
+import { noboilStdb } from '@noboil/spacetimedb/server'
 import { s } from '../t'
 
-export default ohmystackStdb(({ table }) => ({
+export default noboilStdb(({ table }) => ({
   movie: table(s.movie, { key: 'tmdbId' })
 }))
 ```
@@ -430,7 +430,7 @@ export const GET = async (
 'use client'
 
 import { useTable } from 'spacetimedb/react'
-import { useList } from '@ohmystack/spacetimedb/react'
+import { useList } from '@noboil/spacetimedb/react'
 import { tables } from '@/generated/module_bindings'
 
 const MovieList = () => {
@@ -479,7 +479,7 @@ export const {
 Filter active vs deleted rows using `where`:
 
 ```tsx
-import { useList } from '@ohmystack/convex/react'
+import { useList } from '@noboil/convex/react'
 
 const { items: activeTasks } = useList(api.task.listTasks, {
   where: { deletedAt: undefined }
@@ -494,7 +494,7 @@ const { items: activeTasks } = useList(api.task.listTasks, {
 `t.ts`:
 
 ```typescript
-import { schema } from '@ohmystack/spacetimedb/schema'
+import { schema } from '@noboil/spacetimedb/schema'
 import { object, string } from 'zod/v4'
 
 const s = schema({
@@ -509,10 +509,10 @@ export { s }
 `index.ts`:
 
 ```typescript
-import { ohmystackStdb } from '@ohmystack/spacetimedb/server'
+import { noboilStdb } from '@noboil/spacetimedb/server'
 import { s } from '../t'
 
-export default ohmystackStdb(({ table }) => ({
+export default noboilStdb(({ table }) => ({
   wiki: table(s.wiki, { softDelete: true })
 }))
 ```
@@ -556,7 +556,7 @@ const restore = async (id: number) => {
 ### Schema
 
 ```tsx
-import { presenceTable } from '@ohmystack/convex/server'
+import { presenceTable } from '@noboil/convex/server'
 
 export default defineSchema({
   ...presenceTable()
@@ -566,7 +566,7 @@ export default defineSchema({
 ### Backend
 
 ```tsx
-import { makePresence } from '@ohmystack/convex/server'
+import { makePresence } from '@noboil/convex/server'
 
 export const { heartbeat, list: listPresence } = makePresence({
   mutation,
@@ -577,7 +577,7 @@ export const { heartbeat, list: listPresence } = makePresence({
 ### Frontend
 
 ```tsx
-import { usePresence } from '@ohmystack/convex/react'
+import { usePresence } from '@noboil/convex/react'
 
 const CollaborativeEditor = ({ docId }: { docId: string }) => {
   const { others, updatePresence } = usePresence(api.presence, {
@@ -614,10 +614,10 @@ const CollaborativeEditor = ({ docId }: { docId: string }) => {
 `index.ts`:
 
 ```typescript
-import { ohmystackStdb, makePresence } from '@ohmystack/spacetimedb/server'
+import { noboilStdb, makePresence } from '@noboil/spacetimedb/server'
 import { s } from '../t'
 
-export default ohmystackStdb(({ table, t }) => {
+export default noboilStdb(({ table, t }) => {
   const presence = makePresence({
     dataField: t.string(),
     roomIdField: t.string()
@@ -637,7 +637,7 @@ export default ohmystackStdb(({ table, t }) => {
 'use client'
 
 import { useTable, useReducer } from 'spacetimedb/react'
-import { usePresence } from '@ohmystack/spacetimedb/react'
+import { usePresence } from '@noboil/spacetimedb/react'
 import { tables, reducers } from '@/generated/module_bindings'
 
 const CollaborativeRoom = ({ roomId }: { roomId: string }) => {
@@ -672,7 +672,7 @@ const CollaborativeRoom = ({ roomId }: { roomId: string }) => {
 `t.ts`:
 
 ```typescript
-import { child, schema } from '@ohmystack/spacetimedb/schema'
+import { child, schema } from '@noboil/spacetimedb/schema'
 import { boolean, object, string } from 'zod/v4'
 
 const s = schema({
@@ -690,10 +690,10 @@ export { s }
 `index.ts`:
 
 ```typescript
-import { ohmystackStdb, makePresence } from '@ohmystack/spacetimedb/server'
+import { noboilStdb, makePresence } from '@noboil/spacetimedb/server'
 import { s } from '../t'
 
-export default ohmystackStdb(({ table, t }) => {
+export default noboilStdb(({ table, t }) => {
   const presence = makePresence({
     dataField: t.string(),
     roomIdField: t.string()
@@ -713,7 +713,7 @@ export default ohmystackStdb(({ table, t }) => {
 'use client'
 
 import { useTable, useReducer } from 'spacetimedb/react'
-import { useList, usePresence } from '@ohmystack/spacetimedb/react'
+import { useList, usePresence } from '@noboil/spacetimedb/react'
 import { tables, reducers } from '@/generated/module_bindings'
 
 const ChatRoom = ({ chatId }: { chatId: number }) => {
@@ -762,7 +762,7 @@ Upload files to MinIO/S3 and register them in SpacetimeDB.
 ### API route
 
 ```typescript
-import { createS3UploadPresignedUrl } from '@ohmystack/spacetimedb/server'
+import { createS3UploadPresignedUrl } from '@noboil/spacetimedb/server'
 import { NextResponse } from 'next/server'
 
 export const POST = async (req: Request) => {
@@ -799,7 +799,7 @@ export const POST = async (req: Request) => {
 ```typescript
 'use client'
 
-import { useUpload } from '@ohmystack/spacetimedb/react'
+import { useUpload } from '@noboil/spacetimedb/react'
 import { useReducer } from 'spacetimedb/react'
 import { reducers } from '@/generated/module_bindings'
 
@@ -841,7 +841,7 @@ const FileUploader = () => {
 ### Schema
 
 ```tsx
-import { cvFile } from '@ohmystack/convex/schema'
+import { cvFile } from '@noboil/convex/schema'
 import { object, string, enum as zenum } from 'zod/v4'
 
 const profileStep = object({
@@ -878,7 +878,7 @@ export const { create: createOrg } = orgFns({
 ### Frontend
 
 ```tsx
-import { defineSteps } from '@ohmystack/convex/components'
+import { defineSteps } from '@noboil/convex/components'
 import { useMutation } from 'convex/react'
 
 const { StepForm, useStepper } = defineSteps(
@@ -947,7 +947,7 @@ const Onboarding = () => {
 ### Schema
 
 ```tsx
-import { cvFile, makeSingleton } from '@ohmystack/convex/schema'
+import { cvFile, makeSingleton } from '@noboil/convex/schema'
 import { object, string, enum as zenum } from 'zod/v4'
 
 const singleton = makeSingleton({
@@ -970,8 +970,8 @@ export const { get, upsert } = singletonCrud('profile', singleton.profile)
 
 ```tsx
 import { useQuery } from 'convex/react'
-import { Form, useForm } from '@ohmystack/convex/components'
-import { pickValues } from '@ohmystack/convex/zod'
+import { Form, useForm } from '@noboil/convex/components'
+import { pickValues } from '@noboil/convex/zod'
 
 const ProfilePage = () => {
   const profile = useQuery(api.profile.get)
@@ -1053,7 +1053,7 @@ export const { create, list, read, rm, update } = crud('blog', owned.blog, {
 
 ```tsx
 import { useQuery } from 'convex/react'
-import { useList } from '@ohmystack/convex/react'
+import { useList } from '@noboil/convex/react'
 
 const Dashboard = () => {
   const stats = useQuery(api.blog.stats, { category: 'tech' })
@@ -1088,7 +1088,7 @@ Uses the `bulkRm` export from any `crud()` call. No extra backend code needed.
 
 ```tsx
 import { useMutation } from 'convex/react'
-import { useBulkMutate } from '@ohmystack/convex/react'
+import { useBulkMutate } from '@noboil/convex/react'
 
 const BulkActions = ({ selectedIds }: { selectedIds: string[] }) => {
   const rm = useMutation(api.blog.rm)
@@ -1133,7 +1133,7 @@ const BulkActions = ({ selectedIds }: { selectedIds: string[] }) => {
 
 ```tsx
 import { useQuery } from 'convex/react'
-import { useList, useOwnRows } from '@ohmystack/convex/react'
+import { useList, useOwnRows } from '@noboil/convex/react'
 
 const BlogList = () => {
   const me = useQuery(api.users.viewer)
@@ -1188,7 +1188,7 @@ const CreatePost = () => {
 ```typescript
 'use client'
 
-import { useMut } from '@ohmystack/spacetimedb/react'
+import { useMut } from '@noboil/spacetimedb/react'
 import { useRouter } from 'next/navigation'
 import { reducers } from '@/generated/module_bindings'
 
@@ -1237,8 +1237,8 @@ const CreatePostForm = () => {
 Derive prop types from your schema brands instead of duplicating type definitions.
 
 ```typescript
-import type { InferRow, InferCreate, InferUpdate } from '@ohmystack/spacetimedb/server'
-import { schema } from '@ohmystack/spacetimedb/schema'
+import type { InferRow, InferCreate, InferUpdate } from '@noboil/spacetimedb/server'
+import { schema } from '@noboil/spacetimedb/schema'
 import { boolean, object, string } from 'zod/v4'
 
 const s = schema({
@@ -1281,7 +1281,7 @@ const EditPostForm = ({ post, onSubmit }: { post: PostRow; onSubmit: (data: Post
 > Available for SpacetimeDB only. Branded schemas expose `$inferRow`, `$inferCreate`, and `$inferUpdate` as readable properties. No import needed.
 
 ```typescript
-import { schema } from '@ohmystack/spacetimedb/schema'
+import { schema } from '@noboil/spacetimedb/schema'
 import { boolean, object, string } from 'zod/v4'
 
 const s = schema({
@@ -1325,10 +1325,10 @@ const PostCard = ({ post }: { post: typeof s.post.$inferRow }) => (
 
 ## Global Error Type with Register
 
-> Available for SpacetimeDB only. Use declaration merging to set a project-wide default error type. All `@ohmystack/spacetimedb` hooks and utilities will use your type instead of the default `Error`.
+> Available for SpacetimeDB only. Use declaration merging to set a project-wide default error type. All `@noboil/spacetimedb` hooks and utilities will use your type instead of the default `Error`.
 
 ```typescript
-declare module '@ohmystack/spacetimedb/server' {
+declare module '@noboil/spacetimedb/server' {
   interface Register {
     defaultError: AppError
   }
@@ -1344,7 +1344,7 @@ interface AppError {
 After augmenting `Register`, `RegisteredDefaultError` resolves to `AppError`:
 
 ```typescript
-import type { RegisteredDefaultError } from '@ohmystack/spacetimedb/server'
+import type { RegisteredDefaultError } from '@noboil/spacetimedb/server'
 
 const handleError = (error: RegisteredDefaultError) => {
   console.error(`[${error.requestId}] ${error.code}: ${error.message}`)
@@ -1355,12 +1355,12 @@ const handleError = (error: RegisteredDefaultError) => {
 
 ## Create and Update Forms with schemaVariants
 
-> Available for SpacetimeDB only. Convex users can use Zod's `.partial()` directly or `pickValues` from `@ohmystack/convex/zod`.
+> Available for SpacetimeDB only. Convex users can use Zod's `.partial()` directly or `pickValues` from `@noboil/convex/zod`.
 
 Define one base schema and derive both create and update variants from it.
 
 ```typescript
-import { schemaVariants } from '@ohmystack/spacetimedb/zod'
+import { schemaVariants } from '@noboil/spacetimedb/zod'
 import { boolean, object, string } from 'zod/v4'
 
 const postSchema = object({
@@ -1418,8 +1418,8 @@ const EditPost = ({ post }: { post: PostRow }) => {
 ```typescript
 'use client'
 
-import { getFieldErrors } from '@ohmystack/spacetimedb/server'
-import { useMut } from '@ohmystack/spacetimedb/react'
+import { getFieldErrors } from '@noboil/spacetimedb/server'
+import { useMut } from '@noboil/spacetimedb/react'
 import { useState } from 'react'
 import { reducers } from '@/generated/module_bindings'
 import { z } from 'zod/v4'
@@ -1479,7 +1479,7 @@ const CreatePost = () => {
 Before:
 
 ```typescript
-import { useMutate } from '@ohmystack/spacetimedb/react'
+import { useMutate } from '@noboil/spacetimedb/react'
 import { useReducer } from 'spacetimedb/react'
 import { reducers } from '@/generated/module_bindings'
 
@@ -1490,7 +1490,7 @@ const save = useMutate(raw, { onSuccess: () => toast.success('Saved') })
 With `useMutation`:
 
 ```typescript
-import { useMutation } from '@ohmystack/spacetimedb/react'
+import { useMutation } from '@noboil/spacetimedb/react'
 import { useReducer } from 'spacetimedb/react'
 import { reducers } from '@/generated/module_bindings'
 
@@ -1502,7 +1502,7 @@ const save = useMutation(useReducer, reducers.update_blog, {
 With `useMut` (simplest):
 
 ```typescript
-import { useMut } from '@ohmystack/spacetimedb/react'
+import { useMut } from '@noboil/spacetimedb/react'
 import { reducers } from '@/generated/module_bindings'
 
 const save = useMut(reducers.update_blog, {
@@ -1521,7 +1521,7 @@ All `MutateOptions` work the same way: `onSuccess`, `onSettled`, `onError`, `ret
 Before:
 
 ```typescript
-import { useMutation } from '@ohmystack/spacetimedb/react'
+import { useMutation } from '@noboil/spacetimedb/react'
 import { useReducer } from 'spacetimedb/react'
 import { reducers } from '@/generated/module_bindings'
 
@@ -1567,8 +1567,8 @@ const form = useFormMutation({
 ```typescript
 'use client'
 
-import { toastFieldError } from '@ohmystack/spacetimedb/react'
-import { useMutation } from '@ohmystack/spacetimedb/react'
+import { toastFieldError } from '@noboil/spacetimedb/react'
+import { useMutation } from '@noboil/spacetimedb/react'
 import { useReducer } from 'spacetimedb/react'
 import { reducers } from '@/generated/module_bindings'
 
@@ -1595,10 +1595,10 @@ const BlogEditor = () => {
 
 ## Error Discrimination with SenderError._tag
 
-> Available for SpacetimeDB only. `SenderError` carries `_tag: 'SenderError'` as a const property. Use it to narrow errors in catch blocks when you need to distinguish `@ohmystack/spacetimedb` reducer errors from other thrown values.
+> Available for SpacetimeDB only. `SenderError` carries `_tag: 'SenderError'` as a const property. Use it to narrow errors in catch blocks when you need to distinguish `@noboil/spacetimedb` reducer errors from other thrown values.
 
 ```typescript
-import { extractErrorData } from '@ohmystack/spacetimedb/server'
+import { extractErrorData } from '@noboil/spacetimedb/server'
 
 try {
   await save(data)
@@ -1614,4 +1614,4 @@ try {
 }
 ```
 
-For most cases, `handleError` or `matchError` is simpler. They parse the error internally without the `_tag` check. Use `_tag` when you need to re-throw non-`@ohmystack/spacetimedb` errors or integrate with an external error boundary that inspects error shape.
+For most cases, `handleError` or `matchError` is simpler. They parse the error internally without the `_tag` check. Use `_tag` when you need to re-throw non-`@noboil/spacetimedb` errors or integrate with an external error boundary that inspects error shape.

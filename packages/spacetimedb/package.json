@@ -1,5 +1,5 @@
 {
-  "name": "@ohmystack/spacetimedb",
+  "name": "@noboil/spacetimedb",
   "version": "0.0.0",
   "description": "Schema-first, zero-boilerplate fullstack with SpacetimeDB.",
   "keywords": [
@@ -18,11 +18,11 @@
     "soft-delete",
     "rate-limiting"
   ],
-  "homepage": "https://github.com/1qh/ohmystack",
-  "bugs": "https://github.com/1qh/ohmystack/issues",
+  "homepage": "https://github.com/1qh/noboil",
+  "bugs": "https://github.com/1qh/noboil/issues",
   "repository": {
     "type": "git",
-    "url": "https://github.com/1qh/ohmystack.git",
+    "url": "https://github.com/1qh/noboil.git",
     "directory": "packages/spacetimedb"
   },
   "license": "MIT",

@@ -228,10 +228,10 @@ const schemaMarkers = ['schema(', 'table(', 't.'],
       flags = new Set(process.argv.slice(2)),
       args = process.argv.slice(2).filter(a => !a.startsWith('--'))
 
-    console.log(bold('\nohmystack-stdb migrate\n'))
+    console.log(bold('\nnoboil-stdb migrate\n'))
 
     if (flags.has('--help') || flags.has('-h')) {
-      console.log(`Usage: ohmystack-stdb migrate [options]
+      console.log(`Usage: noboil-stdb migrate [options]
 
 Compare SpacetimeDB schema versions and generate publish plans.
 
@@ -242,9 +242,9 @@ Options:
    --help, -h      Show this help
 
 Examples:
-   ohmystack-stdb migrate                    Compare HEAD vs working tree
-   ohmystack-stdb migrate --from HEAD~3      Compare 3 commits ago vs now
-   ohmystack-stdb migrate --snapshot         Print current schema tables & fields
+   noboil-stdb migrate                    Compare HEAD vs working tree
+   noboil-stdb migrate --from HEAD~3      Compare 3 commits ago vs now
+   noboil-stdb migrate --snapshot         Print current schema tables & fields
 `)
       return
     }

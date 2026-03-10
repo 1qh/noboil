@@ -21,12 +21,12 @@ const bold = (s: string) => `\u001B[1m${s}\u001B[0m`,
     viz: { description: 'Visualize schema relationships', script: 'viz.ts' }
   },
   printHelp = () => {
-    console.log(`\n${bold('ohmystack-stdb')} — Zod schema → fullstack app\n`)
+    console.log(`\n${bold('noboil-stdb')} — Zod schema → fullstack app\n`)
     console.log(bold('Usage:'))
-    console.log('  ohmystack-stdb <command> [options]\n')
+    console.log('  noboil-stdb <command> [options]\n')
     console.log(bold('Commands:'))
     for (const [name, { description }] of Object.entries(COMMANDS)) console.log(`  ${name.padEnd(16)} ${dim(description)}`)
-    console.log(`\nRun ${dim('ohmystack-stdb <command> --help')} for command-specific options.\n`)
+    console.log(`\nRun ${dim('noboil-stdb <command> --help')} for command-specific options.\n`)
   },
   [cmd, ...rest] = process.argv.slice(2)
 
@@ -36,8 +36,8 @@ else if (!(cmd in COMMANDS)) {
   printHelp()
   process.exit(1)
 } else if (cmd === 'init') {
-  console.log(`\n${bold('init')} has moved to the ${bold('ohmystack')} CLI.\n`)
-  console.log(`Run: ${dim('bunx ohmystack init')}\n`)
+  console.log(`\n${bold('init')} has moved to the ${bold('noboil')} CLI.\n`)
+  console.log(`Run: ${dim('bunx noboil init')}\n`)
 } else if (cmd === 'add') {
   const { add } = await import('./add')
   await add(rest)

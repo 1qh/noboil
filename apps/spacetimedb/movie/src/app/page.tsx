@@ -4,7 +4,7 @@
 'use client'
 
 import { Input } from '@a/ui/input'
-import { useErrorToast, useOnlineStatus } from '@ohmystack/spacetimedb/react'
+import { useErrorToast, useOnlineStatus } from '@noboil/spacetimedb/react'
 import Link from 'next/link'
 import { useState, useTransition } from 'react'
 import { toast } from 'sonner'

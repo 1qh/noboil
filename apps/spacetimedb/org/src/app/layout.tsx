@@ -4,14 +4,14 @@
 'use client'
 
 import type { Org, OrgMember } from '@a/be-spacetimedb/spacetimedb/types'
-import type { OrgRole } from '@ohmystack/spacetimedb'
+import type { OrgRole } from '@noboil/spacetimedb'
 import type { ReactNode } from 'react'
 
 import { tables } from '@a/be-spacetimedb/spacetimedb'
 import AuthLayout from '@a/fe/spacetimedb-auth-layout'
 import SpacetimeProvider from '@a/fe/spacetimedb-provider'
 import { sameIdentity } from '@a/fe/utils'
-import { BetterspaceDevtools } from '@ohmystack/spacetimedb/react'
+import { BetterspaceDevtools } from '@noboil/spacetimedb/react'
 import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { useSpacetimeDB, useTable } from 'spacetimedb/react'

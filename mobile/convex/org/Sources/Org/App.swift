@@ -3,7 +3,7 @@ import Foundation
 import OSLog
 import SwiftUI
 
-internal let logger = Logger(subsystem: "dev.ohmystack.org", category: "Org")
+internal let logger = Logger(subsystem: "dev.noboil.org", category: "Org")
 
 internal struct ContentView: View {
     @State private var showOnboarding = false

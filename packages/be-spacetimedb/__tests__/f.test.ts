@@ -1,4 +1,4 @@
-import { callReducer } from '@ohmystack/spacetimedb/test'
+import { callReducer } from '@noboil/spacetimedb/test'
 import { describe, expect, test } from 'bun:test'
 
 import { reducers, tables } from '../module_bindings'

@@ -1,8 +1,8 @@
-# ohmystack
+# noboil
 
-[![npm](https://img.shields.io/npm/v/ohmystack)](https://www.npmjs.com/package/ohmystack)
-[![npm](https://img.shields.io/npm/v/@ohmystack/convex)](https://www.npmjs.com/package/@ohmystack/convex)
-[![npm](https://img.shields.io/npm/v/@ohmystack/spacetimedb)](https://www.npmjs.com/package/@ohmystack/spacetimedb)
+[![npm](https://img.shields.io/npm/v/noboil)](https://www.npmjs.com/package/noboil)
+[![npm](https://img.shields.io/npm/v/@noboil/convex)](https://www.npmjs.com/package/@noboil/convex)
+[![npm](https://img.shields.io/npm/v/@noboil/spacetimedb)](https://www.npmjs.com/package/@noboil/spacetimedb)
 [![license](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
 Schema-first, zero-boilerplate fullstack.
@@ -17,7 +17,7 @@ Works with Convex or SpacetimeDB.
 ## Quick Start
 
 ```sh
-bun ohmystack@latest init
+bun noboil@latest init
 ```
 
 Pick a database, name your project, done.
@@ -84,7 +84,7 @@ export const rm = mutation({
 })
 ```
 
-With `@ohmystack/convex`:
+With `@noboil/convex`:
 
 ```tsx
 export const { bulkRm, bulkUpdate, create, list, read, rm, update } = crud(
@@ -142,7 +142,7 @@ const deletePost = spacetimedb.reducer(
 )
 ```
 
-With `@ohmystack/spacetimedb`:
+With `@noboil/spacetimedb`:
 
 ```tsx
 export const { bulkRm, bulkUpdate, create, list, read, rm, update } = crud(
@@ -156,41 +156,41 @@ The schema is the only thing that changes.
 
 ## Convex vs SpacetimeDB
 
-| Feature                      | `@ohmystack/convex` | `@ohmystack/spacetimedb` |
-| ---------------------------- | ------------------- | ------------------------ |
-| CRUD from Zod schema         | yes                 | yes                      |
-| Typesafe forms + validation  | yes                 | yes                      |
-| File upload with compression | yes                 | yes                      |
-| Pagination, search, sort     | yes                 | yes                      |
-| Soft delete with restore     | yes                 | yes                      |
-| Bulk operations              | yes                 | yes                      |
-| Org multi-tenancy with ACL   | yes                 | yes                      |
-| Rate limiting                | yes                 | yes                      |
-| Conflict detection           | yes                 | yes                      |
-| Real-time subscriptions      | yes                 | yes                      |
-| Devtools                     | yes                 | yes                      |
-| ESLint plugin (16 rules)     | yes                 | yes                      |
-| CLI tools                    | yes                 | yes                      |
-| Hosting                      | Convex cloud        | Self-hosted              |
-| Runtime                      | Server functions    | In-memory WASM           |
-| Row-Level Security           | ownership + ACL     | `clientVisibilityFilter` |
-| File storage                 | Convex storage      | S3                       |
-| Backend tests                | `convex-test`       |                          |
-| Swift codegen                | yes                 |                          |
-| WebSocket transport          |                     | native                   |
+| Feature                      | `@noboil/convex` | `@noboil/spacetimedb`    |
+| ---------------------------- | ---------------- | ------------------------ |
+| CRUD from Zod schema         | yes              | yes                      |
+| Typesafe forms + validation  | yes              | yes                      |
+| File upload with compression | yes              | yes                      |
+| Pagination, search, sort     | yes              | yes                      |
+| Soft delete with restore     | yes              | yes                      |
+| Bulk operations              | yes              | yes                      |
+| Org multi-tenancy with ACL   | yes              | yes                      |
+| Rate limiting                | yes              | yes                      |
+| Conflict detection           | yes              | yes                      |
+| Real-time subscriptions      | yes              | yes                      |
+| Devtools                     | yes              | yes                      |
+| ESLint plugin (16 rules)     | yes              | yes                      |
+| CLI tools                    | yes              | yes                      |
+| Hosting                      | Convex cloud     | Self-hosted              |
+| Runtime                      | Server functions | In-memory WASM           |
+| Row-Level Security           | ownership + ACL  | `clientVisibilityFilter` |
+| File storage                 | Convex storage   | S3                       |
+| Backend tests                | `convex-test`    |                          |
+| Swift codegen                | yes              |                          |
+| WebSocket transport          |                  | native                   |
 
 ## Monorepo Structure
 
 ```
-ohmystack/
+noboil/
   apps/
     convex/         4 Convex demo web apps (blog, chat, movie, org)
     spacetimedb/    4 SpacetimeDB demo web apps
     docs/           Documentation site (fumadocs)
   packages/
-    cli/            CLI — bun ohmystack@latest init
-    convex/         @ohmystack/convex library
-    spacetimedb/    @ohmystack/spacetimedb library
+    cli/            CLI — bun noboil@latest init
+    convex/         @noboil/convex library
+    spacetimedb/    @noboil/spacetimedb library
     be-convex/      Convex backend (schema + functions)
     be-spacetimedb/ SpacetimeDB backend (Rust module)
     ui/             Shared shadcn components
@@ -203,16 +203,16 @@ ohmystack/
 
 ## Packages
 
-| Package                  | Description                  |
-| ------------------------ | ---------------------------- |
-| `ohmystack`              | CLI — scaffold a new project |
-| `@ohmystack/convex`      | Convex library               |
-| `@ohmystack/spacetimedb` | SpacetimeDB library          |
+| Package               | Description                  |
+| --------------------- | ---------------------------- |
+| `noboil`              | CLI — scaffold a new project |
+| `@noboil/convex`      | Convex library               |
+| `@noboil/spacetimedb` | SpacetimeDB library          |
 
 ## Docs
 
-[ohmystack.dev/docs](https://ohmystack.dev/docs)
+[noboil.dev/docs](https://noboil.dev/docs)
 
 ## License
 
-MIT. Author: [1qh](https://github.com/1qh/ohmystack).
+MIT. Author: [1qh](https://github.com/1qh/noboil).

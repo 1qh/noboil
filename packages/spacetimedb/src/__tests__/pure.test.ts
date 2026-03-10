@@ -207,7 +207,7 @@ import { makeInviteToken } from '../server/org-invites'
 import { HEARTBEAT_INTERVAL_MS, PRESENCE_TTL_MS } from '../server/presence'
 import { rlsChildSql, rlsSql } from '../server/rls'
 import { baseTable, orgTable, ownedTable, singletonTable } from '../server/schema-helpers'
-import { ohmystackStdb } from '../server/setup'
+import { noboilStdb } from '../server/setup'
 import { isTestMode } from '../server/test'
 import { ERROR_MESSAGES } from '../server/types'
 import { extractChildren, extractFieldType, extractWrapperTables, generateMermaid } from '../viz'
@@ -1258,7 +1258,7 @@ describe('universal table()', () => {
     expect(typedOrgSchema).toBeDefined()
   })
 
-  test('ohmystackStdb define helpers include table helper', async () => {
+  test('noboilStdb define helpers include table helper', async () => {
     const { readFileSync } = await import('node:fs'),
       { join } = await import('node:path'),
       content = readFileSync(join(import.meta.dir, '..', 'server', 'setup.ts'), 'utf8')
@@ -3930,7 +3930,7 @@ describe('makeErrorHandler', () => {
   })
 })
 
-describe('ohmystack-stdb-viz', () => {
+describe('noboil-stdb-viz', () => {
   test('extractFieldType recognizes string', () => {
     expect(extractFieldType('t.string()')).toBe('string')
   })
@@ -4042,7 +4042,7 @@ describe('ohmystack-stdb-viz', () => {
   })
 })
 
-describe('ohmystack-stdb-check --endpoints', () => {
+describe('noboil-stdb-check --endpoints', () => {
   const makeCall = (factory: string, options = ''): FactoryCall => ({
     factory,
     file: 'test.ts',
@@ -4119,14 +4119,14 @@ describe('ohmystack-stdb-check --endpoints', () => {
 })
 
 describe('bundle verification', () => {
-  test('@ohmystack/spacetimedb/server does not export React hooks', async () => {
+  test('@noboil/spacetimedb/server does not export React hooks', async () => {
     const { readFileSync } = await import('node:fs'),
       { join } = await import('node:path'),
       content = readFileSync(join(import.meta.dir, '..', 'server', 'index.ts'), 'utf8')
     expect(EXPORT_HOOK_PATTERN.test(content)).toBe(false)
   })
 
-  test('@ohmystack/spacetimedb/schema has no React imports', async () => {
+  test('@noboil/spacetimedb/schema has no React imports', async () => {
     const { readFileSync } = await import('node:fs'),
       { join } = await import('node:path'),
       content = readFileSync(join(import.meta.dir, '..', 'schema.ts'), 'utf8')
@@ -4135,14 +4135,14 @@ describe('bundle verification', () => {
     expect(content.includes('useEffect')).toBe(false)
   })
 
-  test('@ohmystack/spacetimedb/schema has no node:fs imports', async () => {
+  test('@noboil/spacetimedb/schema has no node:fs imports', async () => {
     const { readFileSync } = await import('node:fs'),
       { join } = await import('node:path'),
       content = readFileSync(join(import.meta.dir, '..', 'schema.ts'), 'utf8')
     expect(content.includes("from 'node:fs'")).toBe(false)
   })
 
-  test('@ohmystack/spacetimedb/retry has no React or server imports', async () => {
+  test('@noboil/spacetimedb/retry has no React or server imports', async () => {
     const { readFileSync } = await import('node:fs'),
       { join } = await import('node:path'),
       content = readFileSync(join(import.meta.dir, '..', 'retry.ts'), 'utf8')
@@ -4486,11 +4486,11 @@ describe('query timing in devtools', () => {
   })
 })
 
-describe('ohmystack-stdb-docs', () => {
+describe('noboil-stdb-docs', () => {
   test('generateMarkdown produces markdown header', () => {
     const md = generateMarkdown([], new Map())
     expect(md).toContain('# API Reference')
-    expect(md).toContain('ohmystack-stdb docs')
+    expect(md).toContain('noboil-stdb docs')
   })
 
   test('generateMarkdown includes factory table', () => {
@@ -4680,10 +4680,10 @@ describe('security ESLint rules', () => {
 
   test('recommended config includes all 4 new rules', () => {
     const ruleNames = Object.keys(eslintRecommended.rules)
-    expect(ruleNames).toContain('ohmystack-stdb/require-rate-limit')
-    expect(ruleNames).toContain('ohmystack-stdb/no-unprotected-mutation')
-    expect(ruleNames).toContain('ohmystack-stdb/no-unlimited-file-size')
-    expect(ruleNames).toContain('ohmystack-stdb/no-empty-search-config')
+    expect(ruleNames).toContain('noboil-stdb/require-rate-limit')
+    expect(ruleNames).toContain('noboil-stdb/no-unprotected-mutation')
+    expect(ruleNames).toContain('noboil-stdb/no-unlimited-file-size')
+    expect(ruleNames).toContain('noboil-stdb/no-empty-search-config')
   })
 
   test('total rule count is 16', () => {
@@ -4701,19 +4701,19 @@ describe('security ESLint rules', () => {
   })
 
   test('require-rate-limit is warn level in recommended', () => {
-    expect(eslintRecommended.rules['ohmystack-stdb/require-rate-limit']).toBe('warn')
+    expect(eslintRecommended.rules['noboil-stdb/require-rate-limit']).toBe('warn')
   })
 
   test('no-empty-search-config is error level in recommended', () => {
-    expect(eslintRecommended.rules['ohmystack-stdb/no-empty-search-config']).toBe('error')
+    expect(eslintRecommended.rules['noboil-stdb/no-empty-search-config']).toBe('error')
   })
 
   test('no-unprotected-mutation is warn level in recommended', () => {
-    expect(eslintRecommended.rules['ohmystack-stdb/no-unprotected-mutation']).toBe('warn')
+    expect(eslintRecommended.rules['noboil-stdb/no-unprotected-mutation']).toBe('warn')
   })
 
   test('no-unlimited-file-size is warn level in recommended', () => {
-    expect(eslintRecommended.rules['ohmystack-stdb/no-unlimited-file-size']).toBe('warn')
+    expect(eslintRecommended.rules['noboil-stdb/no-unlimited-file-size']).toBe('warn')
   })
 })
 
@@ -5754,7 +5754,7 @@ describe('FACTORY_DEFAULT_INDEXES', () => {
   })
 })
 
-describe('ohmystack-stdb-migrate', () => {
+describe('noboil-stdb-migrate', () => {
   describe('parseSchemaContent', () => {
     test('parses owned tables', () => {
       const content = `const schemaDef = schema({
@@ -7118,7 +7118,7 @@ describe('health check', () => {
   describe('checkSchemaConsistency', () => {
     test('returns empty issues for consistent schema', async () => {
       const { mkdirSync, writeFileSync } = await import('node:fs'),
-        tmpDir = `/tmp/ohmystack-stdb-test-health-${Date.now()}`
+        tmpDir = `/tmp/noboil-stdb-test-health-${Date.now()}`
       mkdirSync(`${tmpDir}/spacetimedb/_generated`, { recursive: true })
       writeFileSync(`${tmpDir}/spacetimedb/blog.ts`, "crud('blog', owned.blog)")
       const schemaFile = {
@@ -7135,7 +7135,7 @@ describe('health check', () => {
     test('returns empty issues when no where clauses used', async () => {
       const { mkdirSync, writeFileSync } = await import('node:fs'),
         calls: FactoryCall[] = [{ factory: 'crud', file: 'blog.ts', options: '', table: 'blog' }],
-        tmpDir = `/tmp/ohmystack-stdb-test-idx-${Date.now()}`
+        tmpDir = `/tmp/noboil-stdb-test-idx-${Date.now()}`
       mkdirSync(`${tmpDir}/spacetimedb/_generated`, { recursive: true })
       writeFileSync(`${tmpDir}/spacetimedb/schema.ts`, 'export default defineSchema({})')
       const issues = checkIndexCoverage(`${tmpDir}/spacetimedb`, calls)
@@ -8253,7 +8253,7 @@ describe('SchemaPlayground (R11.4)', () => {
   })
 })
 
-describe('ohmystack-stdb add command', () => {
+describe('noboil-stdb add command', () => {
   describe('parseFieldDef', () => {
     test('parses simple string field', () => {
       const f = parseFieldDef('title:string')
@@ -8690,7 +8690,7 @@ describe('doctor', () => {
   })
 
   test('checkEslintContent — with plugin', () => {
-    expect(checkEslintContent("import { recommended } from '@ohmystack/spacetimedb/eslint'").status).toBe('pass')
+    expect(checkEslintContent("import { recommended } from '@noboil/spacetimedb/eslint'").status).toBe('pass')
   })
 
   test('checkEslintContent — without plugin', () => {
@@ -8704,7 +8704,7 @@ describe('doctor', () => {
   test('checkDeps — all present', () => {
     expect(
       checkDeps({
-        dependencies: { '@ohmystack/spacetimedb': '2', spacetimedb: '1', zod: '3' }
+        dependencies: { '@noboil/spacetimedb': '2', spacetimedb: '1', zod: '3' }
       }).status
     ).toBe('pass')
   })
@@ -8716,7 +8716,7 @@ describe('doctor', () => {
   test('checkDeps — devDependencies count', () => {
     expect(
       checkDeps({
-        devDependencies: { '@ohmystack/spacetimedb': '2', spacetimedb: '1', zod: '3' }
+        devDependencies: { '@noboil/spacetimedb': '2', spacetimedb: '1', zod: '3' }
       }).status
     ).toBe('pass')
   })
@@ -10131,7 +10131,7 @@ describe('Sprint 7 polish: buildMeta preserves field names', () => {
   })
 })
 
-describe('Sprint 7 polish: type exports from @ohmystack/spacetimedb/react', () => {
+describe('Sprint 7 polish: type exports from @noboil/spacetimedb/react', () => {
   test('SortDirection, SortMap, SortObject types are usable', () => {
     const dir: SortDirection = 'asc',
       sortMap: SortMap<{ id: number; name: string }> = { name: 'desc' },
@@ -10272,8 +10272,8 @@ describe('Sprint 8 polish: useList skip returns isLoading false', () => {
 })
 
 describe('unified schema()', () => {
-  const withUniversalTable = (run: (table: Parameters<Parameters<typeof ohmystackStdb>[0]>[0]['table']) => void): void => {
-    ohmystackStdb(({ table }) => {
+  const withUniversalTable = (run: (table: Parameters<Parameters<typeof noboilStdb>[0]>[0]['table']) => void): void => {
+    noboilStdb(({ table }) => {
       run(table)
       return {}
     })
@@ -10456,8 +10456,8 @@ describe('compoundIndex shorthand', () => {
 })
 
 describe('type-safe column references in table options', () => {
-  const withUniversalTable = (run: (table: Parameters<Parameters<typeof ohmystackStdb>[0]>[0]['table']) => void): void => {
-    ohmystackStdb(({ table }) => {
+  const withUniversalTable = (run: (table: Parameters<Parameters<typeof noboilStdb>[0]>[0]['table']) => void): void => {
+    noboilStdb(({ table }) => {
       run(table)
       return {}
     })

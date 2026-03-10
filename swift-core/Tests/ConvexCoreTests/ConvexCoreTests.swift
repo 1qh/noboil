@@ -203,14 +203,14 @@ struct ErrorTests {
 struct HTTPTests {
     @Test
     func extractOAuthCodeFromValidURL() throws {
-        let url = try #require(URL(string: "dev.ohmystack://auth?code=abc123&state=xyz"))
+        let url = try #require(URL(string: "dev.noboil://auth?code=abc123&state=xyz"))
         let code = try extractOAuthCode(from: url)
         #expect(code == "abc123")
     }
 
     @Test
     func extractOAuthCodeThrowsWhenMissing() throws {
-        let url = try #require(URL(string: "dev.ohmystack://auth?state=xyz"))
+        let url = try #require(URL(string: "dev.noboil://auth?state=xyz"))
         #expect(throws: ConvexError.self) {
             try extractOAuthCode(from: url)
         }

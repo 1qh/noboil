@@ -29,7 +29,7 @@ Set `CONVEX_TEST_MODE=true` when running tests:
 Create a test auth helper in `convex/testAuth.ts`:
 
 ```tsx
-import { makeTestAuth } from '@ohmystack/convex/test'
+import { makeTestAuth } from '@noboil/convex/test'
 import { getAuthUserId } from '@convex-dev/auth/server'
 import { mutation, query } from './_generated/server'
 
@@ -115,7 +115,7 @@ Bun's built-in test runner works for testing pure logic, schema utilities, and s
 
 ```typescript
 import { describe, expect, it } from 'bun:test'
-import { zodFromTable } from '@ohmystack/spacetimedb'
+import { zodFromTable } from '@noboil/spacetimedb'
 import { tables } from '../module_bindings'
 
 describe('zodFromTable', () => {
@@ -264,7 +264,7 @@ describe('blog CRUD', () => {
 `makeOrgTestCrud` creates test helpers for org tables with membership and ACL checks:
 
 ```tsx
-import { makeOrgTestCrud } from '@ohmystack/convex/test'
+import { makeOrgTestCrud } from '@noboil/convex/test'
 
 export const wikiTest = makeOrgTestCrud({
   acl: true,
@@ -661,8 +661,8 @@ Search is client-side via `useList`. Test it by filtering the subscription data 
 
 ```typescript
 import { describe, expect, it } from 'bun:test'
-import { zodFromTable } from '@ohmystack/spacetimedb'
-import { useList } from '@ohmystack/spacetimedb/react'
+import { zodFromTable } from '@noboil/spacetimedb'
+import { useList } from '@noboil/spacetimedb/react'
 import { tables } from '../module_bindings'
 
 describe('useList search', () => {

@@ -1,7 +1,7 @@
 'use client'
 
 import type { Org, OrgMember } from '@a/be-spacetimedb/spacetimedb/types'
-import type { OrgRole } from '@ohmystack/spacetimedb'
+import type { OrgRole } from '@noboil/spacetimedb'
 
 import { tables } from '@a/be-spacetimedb/spacetimedb'
 import { sameIdentity } from '@a/fe/utils'

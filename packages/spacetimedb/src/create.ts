@@ -32,7 +32,7 @@ const db = schema({
 
 export { db }
 `,
-  DB_TS = `import { makeCrud } from '@ohmystack/spacetimedb/server'
+  DB_TS = `import { makeCrud } from '@noboil/spacetimedb/server'
 
 import { db } from './schema'
 
@@ -158,7 +158,7 @@ NEXT_PUBLIC_SPACETIME_SERVER_URL=http://localhost:3000
     null,
     2
   ),
-  DEP_LIST = ['@ohmystack/spacetimedb', 'spacetimedb', 'zod'],
+  DEP_LIST = ['@noboil/spacetimedb', 'spacetimedb', 'zod'],
   installDeps = (cwd: string) => {
     const missing: string[] = []
     for (const dep of DEP_LIST) if (!existsSync(join(cwd, 'node_modules', dep))) missing.push(dep)
@@ -228,9 +228,9 @@ NEXT_PUBLIC_SPACETIME_SERVER_URL=http://localhost:3000
     return { appDir, help, moduleDir }
   },
   printHelp = () => {
-    console.log(`${bold('ohmystack-stdb init')} — scaffold a @ohmystack/spacetimedb SpacetimeDB project\n`)
+    console.log(`${bold('noboil-stdb init')} — scaffold a @noboil/spacetimedb SpacetimeDB project\n`)
     console.log(bold('Usage:'))
-    console.log('  ohmystack-stdb init [options]\n')
+    console.log('  noboil-stdb init [options]\n')
     console.log(bold('Options:'))
     console.log(`  --module-dir=DIR  SpacetimeDB module directory ${dim('(default: module)')}`)
     console.log(`  --app-dir=DIR     Next.js app directory ${dim('(default: src/app)')}`)
@@ -258,7 +258,7 @@ NEXT_PUBLIC_SPACETIME_SERVER_URL=http://localhost:3000
     if (existsSync(join(cwd, 'package.json'))) installDeps(cwd)
     else
       console.log(
-        `  ${yellow('⚠')} no package.json — run ${dim('bun init && bun add @ohmystack/spacetimedb spacetimedb zod')} first`
+        `  ${yellow('⚠')} no package.json — run ${dim('bun init && bun add @noboil/spacetimedb spacetimedb zod')} first`
       )
     return { created: b.created + f.created, skipped: b.skipped + f.skipped }
   },
@@ -292,13 +292,13 @@ NEXT_PUBLIC_SPACETIME_SERVER_URL=http://localhost:3000
       printHelp()
       return
     }
-    console.log(`\n${bold('Scaffolding @ohmystack/spacetimedb project...')}\n`)
+    console.log(`\n${bold('Scaffolding @noboil/spacetimedb project...')}\n`)
     preflight()
     const { created, skipped } = scaffold(process.cwd(), moduleDir, appDir)
     printSummary(created, skipped)
   }
 
-if (process.argv[1]?.endsWith('create.ts') || process.argv[1]?.endsWith('create-ohmystack-stdb-app'))
+if (process.argv[1]?.endsWith('create.ts') || process.argv[1]?.endsWith('create-noboil-stdb-app'))
   init(process.argv.slice(2))
 
 export { init }

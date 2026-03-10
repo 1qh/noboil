@@ -2,7 +2,7 @@
 
 import { api } from '@a/be-convex'
 import { Input } from '@a/ui/input'
-import { useList } from '@ohmystack/convex/react'
+import { useList } from '@noboil/convex/react'
 import { Search } from 'lucide-react'
 import { useCallback, useDeferredValue, useState } from 'react'
 

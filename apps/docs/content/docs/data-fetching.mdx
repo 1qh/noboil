@@ -47,7 +47,7 @@ const { pub, auth } = crud('blog', owned.blog, {
 Access control is handled at the subscription level via `clientVisibilityFilter` rules generated from the `pub` option on each table. These rules run inside SpacetimeDB — clients cannot bypass them.
 
 ```typescript
-export default ohmystackStdb(({ table }) => ({
+export default noboilStdb(({ table }) => ({
   blog: table(s.blog, { pub: 'published' }),
   project: table(s.project),
 }))
@@ -168,7 +168,7 @@ For filtering that doesn't map cleanly to a single WHERE clause, subscribe to th
 'use client'
 
 import { useTable } from 'spacetimedb/react'
-import { useList } from '@ohmystack/spacetimedb/react'
+import { useList } from '@noboil/spacetimedb/react'
 import { tables } from '@/generated/module_bindings'
 
 const PostList = ({ category }: { category: string }) => {
@@ -205,7 +205,7 @@ const PostList = ({ category }: { category: string }) => {
 `useList` wraps `usePaginatedQuery` with cursor management and a `loadMore` helper:
 
 ```tsx
-import { useList } from '@ohmystack/convex/react'
+import { useList } from '@noboil/convex/react'
 
 const { items, loadMore, isDone, status } = useList(api.blog.list, {
   where: { own: true }
@@ -557,7 +557,7 @@ This generates a `restore_wiki` reducer alongside `rm_wiki`. Soft-deleted rows h
 `useBulkMutate` executes a list of mutations with progress tracking, error collection, and optional toast notifications. Caps at 100 items per batch (`BULK_MAX`).
 
 ```tsx
-import { useBulkMutate } from '@ohmystack/convex/react'
+import { useBulkMutate } from '@noboil/convex/react'
 
 const { execute, progress, isRunning } = useBulkMutate({
   toast: { success: n => `${n} updated`, error: n => `${n} failed` }
@@ -601,7 +601,7 @@ const handleBulkComplete = async () => {
 `useOwnRows` annotates each row with an `own` boolean — `true` when the row belongs to the current user. Useful for showing edit/delete buttons only on owned items.
 
 ```tsx
-import { useOwnRows } from '@ohmystack/convex/react'
+import { useOwnRows } from '@noboil/convex/react'
 
 const rows = useOwnRows(items, userId)
 rows.map(r => (r.own ? <EditButton id={r._id} /> : null))
@@ -613,7 +613,7 @@ rows.map(r => (r.own ? <EditButton id={r._id} /> : null))
 `useOwnRows` filters rows by the current user's identity:
 
 ```typescript
-import { useOwnRows } from '@ohmystack/spacetimedb/react'
+import { useOwnRows } from '@noboil/spacetimedb/react'
 
 const { identity } = useSpacetimeDB()
 const ownedPosts = useOwnRows(posts, identity ? p => p.userId.isEqual(identity) : null)
@@ -655,7 +655,7 @@ const s = schema({
 })
 ```
 
-`ohmystackStdb()` generates `get_profile` and `upsert_profile` reducers automatically.
+`noboilStdb()` generates `get_profile` and `upsert_profile` reducers automatically.
 
 </Tab>
 </Tabs>
@@ -814,7 +814,7 @@ In practice:
 Use `warnLargeFilterSet` to catch unbounded data patterns during development:
 
 ```typescript
-import { warnLargeFilterSet } from '@ohmystack/spacetimedb/server'
+import { warnLargeFilterSet } from '@noboil/spacetimedb/server'
 
 warnLargeFilterSet({ count: rows.length, table: 'posts', context: 'home-feed' })
 warnLargeFilterSet({
@@ -874,7 +874,7 @@ In dev mode, the devtools panel auto-mounts inside `<Form>` components. It track
 For standalone usage:
 
 ```tsx
-import { OhmystackDevtools } from '@ohmystack/convex/react'
+import { OhmystackDevtools } from '@noboil/convex/react'
 ;<OhmystackDevtools position="bottom-right" defaultTab="subs" />
 ```
 
@@ -883,7 +883,7 @@ import { OhmystackDevtools } from '@ohmystack/convex/react'
 
 Because subscriptions push deltas, you don't need to show a loading state when a reducer runs. The UI updates within ~39ms (local Docker). Optimistic updates are unnecessary at this latency.
 
-If you're deploying to Maincloud and latency is higher, you can add optimistic updates later. The `useOptimisticMutation` hook from `@ohmystack/spacetimedb/react` provides a placeholder API for this.
+If you're deploying to Maincloud and latency is higher, you can add optimistic updates later. The `useOptimisticMutation` hook from `@noboil/spacetimedb/react` provides a placeholder API for this.
 
 </Tab>
 </Tabs>

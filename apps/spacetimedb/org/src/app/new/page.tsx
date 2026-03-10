@@ -3,7 +3,7 @@
 import { reducers } from '@a/be-spacetimedb/spacetimedb'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@a/ui/card'
 import { FieldGroup } from '@a/ui/field'
-import { Form, useFormMutation } from '@ohmystack/spacetimedb/components'
+import { Form, useFormMutation } from '@noboil/spacetimedb/components'
 import slugify from '@sindresorhus/slugify'
 import { useRouter } from 'next/navigation'
 import { useEffect, useRef } from 'react'

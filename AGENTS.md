@@ -1,4 +1,4 @@
-# ohmystack
+# noboil
 
 Schema-first, zero-boilerplate fullstack.
 Pick your database, forget about the backend.
@@ -14,15 +14,15 @@ apps/
   spacetimedb/{blog,chat,movie,org}  — SpacetimeDB demo web apps
   docs/                              — fumadocs documentation site
 packages/
-  convex/          — @ohmystack/convex (published)
-  spacetimedb/     — @ohmystack/spacetimedb (published)
+  convex/          — @noboil/convex (published)
+  spacetimedb/     — @noboil/spacetimedb (published)
   shared/          — internal shared code (NOT published)
   ui/              — shared shadcn components (READ-ONLY)
   be-convex/       — Convex backend functions + schema
   be-spacetimedb/  — SpacetimeDB module + schema
   fe/              — shared frontend utilities
   e2e/             — shared Playwright utilities
-  cli/             — ohmystack CLI (published as `ohmystack`)
+  cli/             — noboil CLI (published as `noboil`)
 mobile/convex/     — iOS/Android apps (Convex-only)
 desktop/convex/    — macOS apps (Convex-only)
 swift-core/        — shared Swift protocols
@@ -47,16 +47,16 @@ apps that happen to live in the same monorepo:
 | `packages/ui/`             | Shared UI components         | NO — read-only                   |
 
 Libraries must work for ANY project, not just these demos.
-A developer who runs `bun add @ohmystack/convex` and defines their own Zod schemas must
-get correct output without editing library source.
+A developer who runs `bun add @noboil/convex` and defines their own Zod schemas must get
+correct output without editing library source.
 
 ## npm Packages
 
-| Package                  | Purpose                                      |
-| ------------------------ | -------------------------------------------- |
-| `ohmystack`              | CLI — `bun ohmystack@latest init`            |
-| `@ohmystack/convex`      | Convex library (replaces `lazyconvex`)       |
-| `@ohmystack/spacetimedb` | SpacetimeDB library (replaces `betterspace`) |
+| Package               | Purpose                                      |
+| --------------------- | -------------------------------------------- |
+| `noboil`              | CLI — `bun noboil@latest init`               |
+| `@noboil/convex`      | Convex library (replaces `lazyconvex`)       |
+| `@noboil/spacetimedb` | SpacetimeDB library (replaces `betterspace`) |
 
 ## Commands
 
@@ -465,7 +465,7 @@ though only `api.blogProfile.get` exists.
 ### Convex Backend Setup
 
 ```bash
-docker compose -f ohmystack.yml up -d
+docker compose -f noboil.yml up -d
 bash genkey.sh
 bun genenv.ts
 ```
@@ -524,8 +524,8 @@ It must NEVER contain:
 ### Test: is this generic?
 
 If a developer runs
-`bunx @ohmystack/convex codegen-swift --schema their-schema.ts --convex their-convex/`
-on a project they built, does it produce correct output?
+`bunx @noboil/convex codegen-swift --schema their-schema.ts --convex their-convex/` on a
+project they built, does it produce correct output?
 If not, something is hardcoded that shouldn’t be.
 
 ---
@@ -577,7 +577,7 @@ export { useList } from './use-list' // DB-specific
    Add `apps/*/next-env.d.ts` to biome ignore.
 
 4. **Docker port conflicts** — Convex MinIO uses 9000/9001, SpacetimeDB also needs
-   MinIO. Assign different ports in `ohmystack.yml` to avoid conflicts.
+   MinIO. Assign different ports in `noboil.yml` to avoid conflicts.
 
 5. **Convex `genenv.ts` outputs env vars** — must be set on backend via
    `convex env set`. JWT private key needs `--` separator due to dashes.

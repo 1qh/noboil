@@ -23,7 +23,7 @@
   },
   "dependencies": {
     "@ai-sdk/google-vertex": "latest",
-    "@ohmystack/convex": "workspace:*",
+    "@noboil/convex": "workspace:*",
     "@t3-oss/env-nextjs": "latest",
     "convex": "latest",
     "convex-test": "latest",

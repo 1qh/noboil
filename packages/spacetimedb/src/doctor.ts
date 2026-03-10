@@ -133,14 +133,14 @@ const bold = (s: string) => `\u001B[1m${s}\u001B[0m`,
   checkEslintContent = (content?: string): CheckResult => {
     if (content === undefined)
       return { details: ['No eslint.config.* file found'], status: 'warn', title: 'ESLint Configuration' }
-    if (content.includes('@ohmystack/spacetimedb/eslint'))
+    if (content.includes('@noboil/spacetimedb/eslint'))
       return {
-        details: ['@ohmystack/spacetimedb/eslint plugin configured'],
+        details: ['@noboil/spacetimedb/eslint plugin configured'],
         status: 'pass',
         title: 'ESLint Configuration'
       }
     return {
-      details: ['eslint.config found but @ohmystack/spacetimedb/eslint not imported'],
+      details: ['eslint.config found but @noboil/spacetimedb/eslint not imported'],
       status: 'warn',
       title: 'ESLint Configuration'
     }
@@ -151,7 +151,7 @@ const bold = (s: string) => `\u001B[1m${s}\u001B[0m`,
       devDeps = (pkg.devDependencies ?? {}) as Record<string, string>,
       all = { ...deps, ...devDeps },
       details: string[] = [],
-      required = ['@ohmystack/spacetimedb', 'spacetimedb', 'zod']
+      required = ['@noboil/spacetimedb', 'spacetimedb', 'zod']
     let missing = 0
     for (const name of required)
       if (all[name]) details.push(`${name}: ${all[name]}`)
@@ -170,7 +170,7 @@ const bold = (s: string) => `\u001B[1m${s}\u001B[0m`,
   },
   doctor = () => {
     const root = process.cwd()
-    console.log(bold('\nohmystack-stdb doctor\n'))
+    console.log(bold('\nnoboil-stdb doctor\n'))
 
     const moduleDir = findModuleDir(root)
     if (!moduleDir) {

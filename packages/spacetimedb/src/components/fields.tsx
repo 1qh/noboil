@@ -55,7 +55,7 @@ const DEFAULT_ASYNC_DEBOUNCE_MS = 300,
     const c = use(FormContext)
     if (!c)
       throw new Error(
-        '[@ohmystack/spacetimedb] Field must be inside <Form>. Wrap your field components with <Form schema={...}> from @ohmystack/spacetimedb/components.'
+        '[@noboil/spacetimedb] Field must be inside <Form>. Wrap your field components with <Form schema={...}> from @noboil/spacetimedb/components.'
       )
     return c
   },
@@ -64,11 +64,11 @@ const DEFAULT_ASYNC_DEBOUNCE_MS = 300,
       info = ctx.meta[name]
     if (!info)
       throw new Error(
-        `[@ohmystack/spacetimedb] Unknown field: "${name}". Available fields: ${Object.keys(ctx.meta).join(', ') || '(none)'}. Check your Zod schema — the field name must match a key in the schema passed to <Form>.`
+        `[@noboil/spacetimedb] Unknown field: "${name}". Available fields: ${Object.keys(ctx.meta).join(', ') || '(none)'}. Check your Zod schema — the field name must match a key in the schema passed to <Form>.`
       )
     if (info.kind !== kind)
       throw new Error(
-        `[@ohmystack/spacetimedb] Field "${name}" has kind "${info.kind}", but <${kind.charAt(0).toUpperCase() + kind.slice(1)}> expects kind "${kind}". Use the field component that matches the schema type (e.g. z.string() → <Text>, z.number() → <Num>, z.boolean() → <Toggle>, z.enum() → <Choose>).`
+        `[@noboil/spacetimedb] Field "${name}" has kind "${info.kind}", but <${kind.charAt(0).toUpperCase() + kind.slice(1)}> expects kind "${kind}". Use the field component that matches the schema type (e.g. z.string() → <Text>, z.number() → <Num>, z.boolean() → <Toggle>, z.enum() → <Choose>).`
       )
     return { form: ctx.form, info, schema: ctx.schema, serverErrors: ctx.serverErrors }
   },
@@ -81,7 +81,7 @@ const DEFAULT_ASYNC_DEBOUNCE_MS = 300,
       return opts.map(v => ({ label: v.charAt(0).toUpperCase() + v.slice(1), value: v }))
     }
     throw new Error(
-      `[@ohmystack/spacetimedb] Choose: field "${name}" has no enum options. Define the field as z.enum(["opt1", "opt2"]) in your schema, or pass an explicit options={[{ label: "...", value: "..." }]} prop to <Choose>.`
+      `[@noboil/spacetimedb] Choose: field "${name}" has no enum options. Define the field as z.enum(["opt1", "opt2"]) in your schema, or pass an explicit options={[{ label: "...", value: "..." }]} prop to <Choose>.`
     )
   },
   /**

@@ -1,5 +1,5 @@
 {
-  "name": "@ohmystack/convex",
+  "name": "@noboil/convex",
   "version": "0.0.0",
   "description": "Schema-first, zero-boilerplate fullstack with Convex.",
   "keywords": [
@@ -17,11 +17,11 @@
     "soft-delete",
     "rate-limiting"
   ],
-  "homepage": "https://github.com/1qh/ohmystack",
-  "bugs": "https://github.com/1qh/ohmystack/issues",
+  "homepage": "https://github.com/1qh/noboil",
+  "bugs": "https://github.com/1qh/noboil/issues",
   "repository": {
     "type": "git",
-    "url": "https://github.com/1qh/ohmystack.git",
+    "url": "https://github.com/1qh/noboil.git",
     "directory": "packages/convex"
   },
   "license": "MIT",
@@ -42,7 +42,7 @@
     "./seed": "./src/seed.ts"
   },
   "bin": {
-    "ohmystack-convex": "./src/cli.ts"
+    "noboil-convex": "./src/cli.ts"
   },
   "files": [
     "src",

@@ -1,4 +1,4 @@
-import { requireOrgMember } from '@ohmystack/convex/server'
+import { requireOrgMember } from '@noboil/convex/server'
 import { zid } from 'convex-helpers/server/zod4'
 
 import { orgCrud, q, uniqueCheck } from '../lazy'
@@ -17,7 +17,7 @@ export const {
     rm,
     setEditors,
     update
-    // eslint-disable-next-line ohmystack-convex/require-rate-limit -- demo backend keeps default write throughput
+    // eslint-disable-next-line noboil-convex/require-rate-limit -- demo backend keeps default write throughput
   } = orgCrud('wiki', orgScoped.wiki, { acl: true, softDelete: true }),
   listDeleted = q({
     args: { orgId: zid('org') },

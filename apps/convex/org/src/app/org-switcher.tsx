@@ -9,8 +9,8 @@ import {
   DropdownMenuTrigger
 } from '@a/ui/dropdown-menu'
 import { Skeleton } from '@a/ui/skeleton'
-import { OrgAvatar, RoleBadge } from '@ohmystack/convex/components'
-import { setActiveOrgCookieClient } from '@ohmystack/convex/react'
+import { OrgAvatar, RoleBadge } from '@noboil/convex/components'
+import { setActiveOrgCookieClient } from '@noboil/convex/react'
 import { ChevronDown, Plus } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 

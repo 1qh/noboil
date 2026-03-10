@@ -47,10 +47,10 @@ cd my-app
 
 ```bash
 mkdir my-app && cd my-app
-bunx @ohmystack/spacetimedb init
+bunx @noboil/spacetimedb init
 ```
 
-`@ohmystack/spacetimedb init` auto-installs all required dependencies and creates a `tsconfig.json` with the right settings. No manual `bun add` step needed.
+`@noboil/spacetimedb init` auto-installs all required dependencies and creates a `tsconfig.json` with the right settings. No manual `bun add` step needed.
 
 </Tab>
 </Tabs>
@@ -61,16 +61,16 @@ bunx @ohmystack/spacetimedb init
 <Tab value="Convex">
 
 ```bash
-bun add @ohmystack/convex convex @convex-dev/auth zod
+bun add @noboil/convex convex @convex-dev/auth zod
 ```
 
 </Tab>
 <Tab value="SpacetimeDB">
 
-Dependencies are installed automatically by `@ohmystack/spacetimedb init`. To add them manually:
+Dependencies are installed automatically by `@noboil/spacetimedb init`. To add them manually:
 
 ```bash
-bun add @ohmystack/spacetimedb spacetimedb zod
+bun add @noboil/spacetimedb spacetimedb zod
 ```
 
 </Tab>
@@ -87,10 +87,10 @@ Initialize Convex — this creates the `convex/` directory with `_generated/` fi
 bunx convex dev --once
 ```
 
-Then scaffold the ohmystack files:
+Then scaffold the noboil files:
 
 ```bash
-bunx @ohmystack/convex init
+bunx @noboil/convex init
 ```
 
 This generates four files:
@@ -156,10 +156,10 @@ docker compose ps
 <Tabs groupId="db" items={['Convex', 'SpacetimeDB']} persist>
 <Tab value="Convex">
 
-`bunx @ohmystack/convex init` generates `convex/t.ts` with your Zod schemas. Edit it to define your tables:
+`bunx @noboil/convex init` generates `convex/t.ts` with your Zod schemas. Edit it to define your tables:
 
 ```typescript
-import { makeOwned } from '@ohmystack/convex/server'
+import { makeOwned } from '@noboil/convex/server'
 import { boolean, object, string } from 'zod'
 
 const owned = makeOwned({
@@ -177,12 +177,12 @@ export { owned }
 </Tab>
 <Tab value="SpacetimeDB">
 
-Define shared Zod schemas in `t.ts`, then wire everything together with `ohmystackStdb()` in `src/index.ts`.
+Define shared Zod schemas in `t.ts`, then wire everything together with `noboilStdb()` in `src/index.ts`.
 
 **`t.ts`** — field definitions:
 
 ```typescript
-import { schema } from '@ohmystack/spacetimedb/schema'
+import { schema } from '@noboil/spacetimedb/schema'
 import { boolean, object, string } from 'zod/v4'
 
 const s = schema({
@@ -200,16 +200,16 @@ export { s }
 **`src/index.ts`** — backend module:
 
 ```typescript
-import { ohmystackStdb } from '@ohmystack/spacetimedb/server'
+import { noboilStdb } from '@noboil/spacetimedb/server'
 import { s } from '../t'
 
-export default ohmystackStdb(({ table }) => ({
+export default noboilStdb(({ table }) => ({
   post: table(s.post, { pub: 'published' }),
   profile: table(s.profile)
 }))
 ```
 
-`ohmystackStdb()` builds the schema, registers CRUD reducers, and exports the module. System fields (`id`, `updatedAt`, `userId`) are added automatically.
+`noboilStdb()` builds the schema, registers CRUD reducers, and exports the module. System fields (`id`, `updatedAt`, `userId`) are added automatically.
 
 </Tab>
 </Tabs>
@@ -283,7 +283,7 @@ Wrap your app with `SpacetimeDBProvider` in `app/providers.tsx`:
 'use client'
 
 import { SpacetimeDBProvider } from 'spacetimedb/react'
-import { createSpacetimeClient, createTokenStore } from '@ohmystack/spacetimedb/react'
+import { createSpacetimeClient, createTokenStore } from '@noboil/spacetimedb/react'
 import { DbConnection } from '@/generated/module_bindings'
 
 const SPACETIMEDB_URL = process.env.NEXT_PUBLIC_SPACETIMEDB_URL ?? 'ws://localhost:3000'
@@ -318,7 +318,7 @@ export const Providers = ({ children }: { children: React.ReactNode }) => (
 
 ```tsx
 'use client'
-import { useList } from '@ohmystack/convex/react'
+import { useList } from '@noboil/convex/react'
 import { api } from '../convex/_generated/api'
 
 const BlogList = () => {
@@ -348,7 +348,7 @@ export default BlogList
 
 import { useTable } from 'spacetimedb/react'
 import { tables } from '@/generated/module_bindings'
-import { useList } from '@ohmystack/spacetimedb/react'
+import { useList } from '@noboil/spacetimedb/react'
 
 const PostList = () => {
   const [posts, isReady] = useTable(tables.post)
@@ -448,8 +448,8 @@ export default CreatePost
 <Tab value="Convex">
 
 ```tsx
-import { Form, Text, Toggle, Choose } from '@ohmystack/convex/components'
-import { useFormMutation } from '@ohmystack/convex/react'
+import { Form, Text, Toggle, Choose } from '@noboil/convex/components'
+import { useFormMutation } from '@noboil/convex/react'
 import { api } from '../convex/_generated/api'
 import { owned } from '../convex/t'
 
@@ -477,7 +477,7 @@ import { useForm } from '@tanstack/react-form'
 import { zodValidator } from '@tanstack/zod-form-adapter'
 import { useReducer } from 'spacetimedb/react'
 import { reducers, tables } from '@/generated/module_bindings'
-import { zodFromTable } from '@ohmystack/spacetimedb'
+import { zodFromTable } from '@noboil/spacetimedb'
 
 const createPostSchema = zodFromTable(tables.post.columns, {
   exclude: ['published']
@@ -551,7 +551,7 @@ From a single `crud('blog', owned.blog)` call:
 </Tab>
 <Tab value="SpacetimeDB">
 
-From a single `table(s.post)` call, `ohmystackStdb()` generates:
+From a single `table(s.post)` call, `noboilStdb()` generates:
 
 - `create_post` — validated insert with auth check
 - `update_post` — partial update with conflict detection via `expectedUpdatedAt`
@@ -573,10 +573,10 @@ The generated `api` object is fully typed. `api.blog.create` knows exactly which
 </Tab>
 <Tab value="SpacetimeDB">
 
-`@ohmystack/spacetimedb` exports utility types that derive TypeScript types directly from your schema. No manual type duplication needed:
+`@noboil/spacetimedb` exports utility types that derive TypeScript types directly from your schema. No manual type duplication needed:
 
 ```typescript
-import type { InferRow, InferCreate, InferUpdate } from '@ohmystack/spacetimedb/server'
+import type { InferRow, InferCreate, InferUpdate } from '@noboil/spacetimedb/server'
 
 type PostRow = InferRow<typeof postSchema>
 type PostCreate = InferCreate<typeof postSchema>
@@ -588,7 +588,7 @@ const PostCard = ({ post }: { post: PostRow }) => <h2>{post.title}</h2>
 For reducer types:
 
 ```typescript
-import type { InferReducerArgs, InferReducerReturn } from '@ohmystack/spacetimedb/server'
+import type { InferReducerArgs, InferReducerReturn } from '@noboil/spacetimedb/server'
 import { reducers } from '@/generated/module_bindings'
 
 type CreateArgs = InferReducerArgs<typeof reducers.create_post>

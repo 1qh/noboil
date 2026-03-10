@@ -2,7 +2,7 @@
 
 import { tables } from '@a/be-spacetimedb/spacetimedb'
 import { Input } from '@a/ui/input'
-import { useList } from '@ohmystack/spacetimedb/react'
+import { useList } from '@noboil/spacetimedb/react'
 import Link from 'next/link'
 import { useState } from 'react'
 import { useTable } from 'spacetimedb/react'

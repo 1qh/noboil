@@ -522,7 +522,7 @@ const discoveryCheck = {
   meta: {
     messages: {
       discoveryFailed:
-        '@ohmystack/convex: could not find {{missing}} (searched ./convex/ and ./packages/*/convex/). Some rules are inactive.'
+        '@noboil/convex: could not find {{missing}} (searched ./convex/ and ./packages/*/convex/). Some rules are inactive.'
     },
     type: 'suggestion' as const
   }
@@ -751,7 +751,7 @@ const noEmptySearchConfig = {
   }
 }
 
-/** Map of all ESLint rules provided by the @ohmystack/convex plugin. */
+/** Map of all ESLint rules provided by the @noboil/convex plugin. */
 const rules = {
   'api-casing': apiCasing,
   'consistent-crud-naming': consistentCrudNaming,
@@ -771,32 +771,32 @@ const rules = {
   'require-rate-limit': requireRateLimit
 }
 
-/** ESLint plugin object containing all @ohmystack/convex rules. */
+/** ESLint plugin object containing all @noboil/convex rules. */
 const plugin = { rules }
 
-/** Recommended ESLint configuration for @ohmystack/convex projects. */
+/** Recommended ESLint configuration for @noboil/convex projects. */
 const recommended = {
   files: ['**/*.ts', '**/*.tsx'],
   plugins: {
-    'ohmystack-convex': plugin
+    'noboil-convex': plugin
   },
   rules: {
-    'ohmystack-convex/api-casing': 'error' as const,
-    'ohmystack-convex/consistent-crud-naming': 'error' as const,
-    'ohmystack-convex/discovery-check': 'warn' as const,
-    'ohmystack-convex/form-field-exists': 'error' as const,
-    'ohmystack-convex/form-field-kind': 'warn' as const,
-    'ohmystack-convex/no-duplicate-crud': 'error' as const,
-    'ohmystack-convex/no-empty-search-config': 'error' as const,
-    'ohmystack-convex/no-raw-fetch-in-server-component': 'warn' as const,
-    'ohmystack-convex/no-unlimited-file-size': 'warn' as const,
-    'ohmystack-convex/no-unprotected-mutation': 'warn' as const,
-    'ohmystack-convex/no-unsafe-api-cast': 'warn' as const,
-    'ohmystack-convex/prefer-useList': 'warn' as const,
-    'ohmystack-convex/prefer-useOrgQuery': 'warn' as const,
-    'ohmystack-convex/require-connection': 'error' as const,
-    'ohmystack-convex/require-error-boundary': 'warn' as const,
-    'ohmystack-convex/require-rate-limit': 'warn' as const
+    'noboil-convex/api-casing': 'error' as const,
+    'noboil-convex/consistent-crud-naming': 'error' as const,
+    'noboil-convex/discovery-check': 'warn' as const,
+    'noboil-convex/form-field-exists': 'error' as const,
+    'noboil-convex/form-field-kind': 'warn' as const,
+    'noboil-convex/no-duplicate-crud': 'error' as const,
+    'noboil-convex/no-empty-search-config': 'error' as const,
+    'noboil-convex/no-raw-fetch-in-server-component': 'warn' as const,
+    'noboil-convex/no-unlimited-file-size': 'warn' as const,
+    'noboil-convex/no-unprotected-mutation': 'warn' as const,
+    'noboil-convex/no-unsafe-api-cast': 'warn' as const,
+    'noboil-convex/prefer-useList': 'warn' as const,
+    'noboil-convex/prefer-useOrgQuery': 'warn' as const,
+    'noboil-convex/require-connection': 'error' as const,
+    'noboil-convex/require-error-boundary': 'warn' as const,
+    'noboil-convex/require-rate-limit': 'warn' as const
   }
 }
 

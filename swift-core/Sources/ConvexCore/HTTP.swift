@@ -52,7 +52,7 @@ public func passwordAuth(
 
 public func startOAuth(
     convexURL: String,
-    redirectTo: String = "dev.ohmystack://auth"
+    redirectTo: String = "dev.noboil://auth"
 ) async throws -> (redirect: String, verifier: String) {
     guard let url = URL(string: "\(convexURL)/api/auth/signin") else {
         throw ConvexError.serverError("Invalid auth URL")

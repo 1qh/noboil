@@ -413,7 +413,7 @@ const DevtoolsAutoMount = (props: DevtoolsProps) => {
     if (autoMounted) return
     autoMounted = true
     const el = document.createElement('div')
-    el.id = 'ohmystack-stdb-devtools-portal'
+    el.id = 'noboil-stdb-devtools-portal'
     document.body.append(el)
     containerRef.current = el
     setMounted(true)

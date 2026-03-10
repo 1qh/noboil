@@ -1,4 +1,4 @@
-import { time } from '@ohmystack/convex/server'
+import { time } from '@noboil/convex/server'
 /* oxlint-disable eslint/max-statements */
 import { zid } from 'convex-helpers/server/zod4'
 
@@ -42,7 +42,7 @@ const {
       return posts.filter(p => (p as Record<string, unknown>).userId === userId)
     }
   }),
-  // eslint-disable-next-line ohmystack-convex/no-unprotected-mutation -- demo endpoint enforces ownership in handler
+  // eslint-disable-next-line noboil-convex/no-unprotected-mutation -- demo endpoint enforces ownership in handler
   togglePublish = m({
     args: { id: zid('blog') },
     handler: async (ctx, { id }) => {

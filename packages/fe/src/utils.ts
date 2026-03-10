@@ -1,6 +1,6 @@
 import type { Id, TableNames } from '@a/be-convex/model'
 
-import { getErrorMessage, handleConvexError } from '@ohmystack/convex/server'
+import { getErrorMessage, handleConvexError } from '@noboil/convex/server'
 import { toast } from 'sonner'
 
 const fail = (error: unknown) => {

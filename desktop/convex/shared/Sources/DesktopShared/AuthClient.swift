@@ -21,7 +21,7 @@ public final class AuthClient: @unchecked Sendable {
         token != nil
     }
 
-    public init(convexURL: String, keychainService: String = "dev.ohmystack.desktop") {
+    public init(convexURL: String, keychainService: String = "dev.noboil.desktop") {
         self.convexURL = convexURL
         self.keychainService = keychainService
     }

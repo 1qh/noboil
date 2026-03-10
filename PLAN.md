@@ -1,10 +1,10 @@
-# ohmystack — Migration & Implementation Plan
+# noboil — Migration & Implementation Plan
 
 ## Vision
 
 Schema-first, zero-boilerplate fullstack.
 Pick your database, forget about the backend.
-`bun ohmystack@latest init` → ship in minutes.
+`bun noboil@latest init` → ship in minutes.
 
 ## Motivation
 
@@ -14,7 +14,7 @@ Maintaining two repos with ~70% identical code is wasteful.
 Consolidating into one monorepo unlocks massive reuse.
 
 But this is not just a merge.
-ohmystack is a new home with a long-term vision.
+noboil is a new home with a long-term vision.
 Every solution it offers is easy to use, easy to adopt, easy to configure, while
 covering all concerns about scalability and security.
 The goal: any dev picks a database and ships a fullstack app in minutes, not weeks,
@@ -22,14 +22,14 @@ forgetting about backend configuration entirely.
 
 Convex and SpacetimeDB are the first two supported backends.
 More will follow — drizzle + oRPC for SQL databases is on the roadmap (to be discussed
-after ohmystack ships, multi-db support needs careful consideration).
+after noboil ships, multi-db support needs careful consideration).
 The architecture is built to grow.
 
 The repo IS the template.
 No separate template repos to maintain per library.
-The per-library `init` CLIs are removed — `bun ohmystack@latest init` handles
-everything. Clone the repo, strip library source and docs, keep the monorepo structure,
-GitHub Actions, shadcn components, strict linting, and demo apps to reference or clone.
+The per-library `init` CLIs are removed — `bun noboil@latest init` handles everything.
+Clone the repo, strip library source and docs, keep the monorepo structure, GitHub
+Actions, shadcn components, strict linting, and demo apps to reference or clone.
 Consumers get the same DX we have — a `doctor` command checks if their project is
 outdated vs upstream, and a `sync` command pulls upstream changes.
 
@@ -41,7 +41,7 @@ different databases.
 
 Both betterspace and lazyconvex remain valid on their own — they are archived as
 read-only references, not deprecated.
-ohmystack is where they grow from here.
+noboil is where they grow from here.
 
 ## Source Repos (now archived, read-only)
 
@@ -52,16 +52,16 @@ ohmystack is where they grow from here.
 
 ## npm Packages
 
-| Package                  | Purpose                                      |
-| ------------------------ | -------------------------------------------- |
-| `ohmystack`              | CLI only — `bun ohmystack@latest init`       |
-| `@ohmystack/convex`      | Convex library (replaces `lazyconvex`)       |
-| `@ohmystack/spacetimedb` | SpacetimeDB library (replaces `betterspace`) |
+| Package               | Purpose                                      |
+| --------------------- | -------------------------------------------- |
+| `noboil`              | CLI only — `bun noboil@latest init`          |
+| `@noboil/convex`      | Convex library (replaces `lazyconvex`)       |
+| `@noboil/spacetimedb` | SpacetimeDB library (replaces `betterspace`) |
 
 ## Target Monorepo Structure
 
 ```
-ohmystack/
+noboil/
 ├── apps/
 │   ├── convex/
 │   │   ├── blog/              ← from lazyconvex apps/blog
@@ -75,21 +75,21 @@ ohmystack/
 │   │   └── org/               ← from betterspace apps/org
 │   └── docs/                  ← fumadocs documentation site (NEW)
 ├── packages/
-│   ├── convex/                ← @ohmystack/convex (from lazyconvex)
-│   ├── spacetimedb/           ← @ohmystack/spacetimedb (from betterspace)
+│   ├── convex/                ← @noboil/convex (from lazyconvex)
+│   ├── spacetimedb/           ← @noboil/spacetimedb (from betterspace)
 │   ├── shared/                ← internal, NOT published — shared hooks/components/utils
 │   ├── ui/                    ← shared shadcn components (identical in both repos)
 │   ├── be-convex/             ← Convex backend functions + schema (from lazyconvex packages/be)
 │   ├── be-spacetimedb/        ← SpacetimeDB module + schema (from betterspace packages/be)
 │   ├── fe/                    ← shared frontend utilities
 │   ├── e2e/                   ← shared Playwright utilities
-│   └── cli/                   ← ohmystack CLI (published as `ohmystack`)
+│   └── cli/                   ← noboil CLI (published as `noboil`)
 ├── mobile/
 │   └── convex/                ← iOS/Android apps (from lazyconvex, Convex-only for now)
 ├── desktop/
 │   └── convex/                ← macOS apps (from lazyconvex, Convex-only for now)
 ├── swift-core/                ← shared Swift protocols (from lazyconvex)
-├── ohmystack.yml              ← Docker compose for ALL services (Convex + SpacetimeDB + MinIO)
+├── noboil.yml              ← Docker compose for ALL services (Convex + SpacetimeDB + MinIO)
 ├── lintmax.config.ts          ← unified linting config
 ├── eslint.config.ts           ← unified ESLint config
 ├── turbo.json                 ← unified Turbo config
@@ -141,7 +141,7 @@ export { useBulkMutate, useBulkSelection, useSearch } from '@a/shared/react'
 export { useList } from './use-list' // Convex-specific implementation
 ```
 
-Users see one clean import: `import { useList } from '@ohmystack/convex/react'`
+Users see one clean import: `import { useList } from '@noboil/convex/react'`
 
 ## Execution Phases
 
@@ -156,8 +156,8 @@ Users see one clean import: `import { useList } from '@ohmystack/convex/react'`
 - [ ] 0.4 — Set up `.github/workflows/ci.yml` (multi-job with path filtering from
       lazyconvex, extended for both DBs)
 - [ ] 0.5 — Copy `.vscode/` settings
-- [ ] 0.6 — Create `ohmystack.yml` docker compose (Convex services + SpacetimeDB +
-      shared MinIO on different ports)
+- [ ] 0.6 — Create `noboil.yml` docker compose (Convex services + SpacetimeDB + shared
+      MinIO on different ports)
 - [ ] 0.7 — Verify `bun i && bun fix` passes on empty workspace
 
 ### Phase 1: Shared Packages (no DB-specific code)
@@ -187,22 +187,22 @@ building.
 
 ### Phase 2: Library Packages
 
-**Goal:** `@ohmystack/convex` and `@ohmystack/spacetimedb` build and export everything.
+**Goal:** `@noboil/convex` and `@noboil/spacetimedb` build and export everything.
 
 - [ ] 2.1 — Create `packages/convex/` — copy DB-specific code from lazyconvex:
   - `crud.ts`, `use-list.ts`, `use-mutate.ts`, `types.ts`, `env.ts`
   - `codegen-swift.ts`, `setup.ts`
   - Re-export shared code from `packages/shared/`
-  - package.json with name `@ohmystack/convex`, same exports as lazyconvex
+  - package.json with name `@noboil/convex`, same exports as lazyconvex
 - [ ] 2.2 — Create `packages/spacetimedb/` — copy DB-specific code from betterspace:
   - `crud.ts`, `use-list.ts`, `use-mutate.ts`, `provider.ts`, `list-utils.ts`
   - `rls.ts`, `stdb-tables.ts`, `reducer-utils.ts`, `s3.ts`, `setup.ts`
   - Re-export shared code from `packages/shared/`
-  - package.json with name `@ohmystack/spacetimedb`, same exports as betterspace
+  - package.json with name `@noboil/spacetimedb`, same exports as betterspace
 - [ ] 2.3 — Migrate all tests:
-  - Copy lazyconvex `pure.test.ts` (934 tests) → adapt imports to `@ohmystack/convex`
+  - Copy lazyconvex `pure.test.ts` (934 tests) → adapt imports to `@noboil/convex`
   - Copy betterspace `pure.test.ts` (1,170 tests) → adapt imports to
-    `@ohmystack/spacetimedb`
+    `@noboil/spacetimedb`
 - [ ] 2.4 — `bun fix && bun typecheck && bun test` passes for both library packages
 
 ### Phase 3: Backend Packages
@@ -210,10 +210,10 @@ building.
 **Goal:** Both backend packages deploy and pass backend tests.
 
 - [ ] 3.1 — Copy `packages/be/` from lazyconvex → `packages/be-convex/`
-  - Update imports from `lazyconvex` → `@ohmystack/convex`
+  - Update imports from `lazyconvex` → `@noboil/convex`
   - Update package.json name to `@a/be-convex`
 - [ ] 3.2 — Copy `packages/be/` from betterspace → `packages/be-spacetimedb/`
-  - Update imports from `betterspace` → `@ohmystack/spacetimedb`
+  - Update imports from `betterspace` → `@noboil/spacetimedb`
   - Update package.json name to `@a/be-spacetimedb`
 - [ ] 3.3 — Docker compose: Convex (postgres + minio + backend + dashboard) on ports
       3212/6791/9000
@@ -228,12 +228,12 @@ building.
 
 - [ ] 4.1 — Copy lazyconvex `apps/{blog,chat,movie,org}` →
       `apps/convex/{blog,chat,movie,org}`
-  - Update imports from `lazyconvex` → `@ohmystack/convex`
+  - Update imports from `lazyconvex` → `@noboil/convex`
   - Update package.json names to `@a/convex-blog`, etc.
   - Update internal workspace references
 - [ ] 4.2 — Copy betterspace `apps/{blog,chat,movie,org}` →
       `apps/spacetimedb/{blog,chat,movie,org}`
-  - Update imports from `betterspace` → `@ohmystack/spacetimedb`
+  - Update imports from `betterspace` → `@noboil/spacetimedb`
   - Update package.json names to `@a/stdb-blog`, etc.
   - Update internal workspace references
 - [ ] 4.3 — All 8 apps: `bun fix && bun build` passes
@@ -270,11 +270,11 @@ building.
 - [ ] 6.5 — Remove markdown docs from library packages (docs site is the single source)
 - [ ] 6.6 — Deploy docs site (Vercel or similar)
 
-### Phase 7: CLI (`ohmystack` npm package)
+### Phase 7: CLI (`noboil` npm package)
 
-**Goal:** `bun ohmystack@latest init` creates a working project.
+**Goal:** `bun noboil@latest init` creates a working project.
 
-- [ ] 7.1 — Create `packages/cli/` with name `ohmystack`
+- [ ] 7.1 — Create `packages/cli/` with name `noboil`
 - [ ] 7.2 — `init` command:
   1. Ask: “Pick your database” → Convex | SpacetimeDB
   2. Ask: “Include demo apps?
@@ -291,8 +291,7 @@ building.
 - [ ] 7.3 — `doctor` command — check if consumer’s monorepo is outdated vs upstream
 - [ ] 7.4 — `sync` command — pull and apply upstream changes to demos and components
 - [ ] 7.5 — `eject` command — detach from upstream, convert to standalone project
-- [ ] 7.6 — Remove `init` command from `@ohmystack/convex` and `@ohmystack/spacetimedb`
-      CLIs
+- [ ] 7.6 — Remove `init` command from `@noboil/convex` and `@noboil/spacetimedb` CLIs
 
 ### Phase 8: README & Publishing
 
@@ -300,12 +299,12 @@ building.
 
 - [ ] 8.1 — Write root `README.md`:
   - Concise pitch: schema-first, zero-boilerplate, pick your DB
-  - Quick start: `bun ohmystack@latest init`
+  - Quick start: `bun noboil@latest init`
   - Link to docs site
   - Feature comparison table (Convex vs SpacetimeDB)
   - Architecture diagram
-- [ ] 8.2 — Register `@ohmystack` npm org
-- [ ] 8.3 — Publish `@ohmystack/convex`, `@ohmystack/spacetimedb`, `ohmystack` to npm
+- [ ] 8.2 — Register `@noboil` npm org
+- [ ] 8.3 — Publish `@noboil/convex`, `@noboil/spacetimedb`, `noboil` to npm
 - [ ] 8.4 — CI green on all jobs
 - [ ] 8.5 — All tests pass:
   - 934 Convex unit tests
@@ -330,10 +329,10 @@ building.
 | Risk                                         | Mitigation                                                              |
 | -------------------------------------------- | ----------------------------------------------------------------------- |
 | Import path changes break tests              | Phase 2.3 runs all existing tests with new imports before anything else |
-| Docker port conflicts (Convex + SpacetimeDB) | Assign non-overlapping ports in `ohmystack.yml`                         |
+| Docker port conflicts (Convex + SpacetimeDB) | Assign non-overlapping ports in `noboil.yml`                            |
 | Shared package extraction breaks types       | Extract one file at a time, typecheck after each                        |
 | Fumadocs learning curve                      | Phase 6 is independent — can ship Phases 0-5 first                      |
-| npm org `@ohmystack` unavailable             | Already registered `ohmystack` on npm — register org early              |
+| npm org `@noboil` unavailable                | Already registered `noboil` on npm — register org early                 |
 | CI too slow with 8 apps + native builds      | Path filtering (only run what changed) + turbo remote caching           |
 
 ## Success Criteria
@@ -343,7 +342,7 @@ building.
 - [ ] `bun test:all` passes all tests including backend + E2E
 - [ ] All 8 web demo apps build and run
 - [ ] Mobile and desktop apps build and test
-- [ ] `bun ohmystack@latest init` produces a working project for both DBs
+- [ ] `bun noboil@latest init` produces a working project for both DBs
 - [ ] Documentation site live with DB switcher
 - [ ] All three npm packages published
 - [ ] CI green with path-filtered multi-job pipeline
@@ -351,7 +350,7 @@ building.
 ## Ralph Loop Prompt
 
 ```
-/ralph-loop "Execute PLAN.md phases 0 through 8 for the ohmystack monorepo. Read PLAN.md and AGENTS.md first — they are your single source of truth for structure, tasks, constraints, and code conventions.
+/ralph-loop "Execute PLAN.md phases 0 through 8 for the noboil monorepo. Read PLAN.md and AGENTS.md first — they are your single source of truth for structure, tasks, constraints, and code conventions.
 
 Work phase by phase in order. Within each phase, work task by task. After each task, run the phase's verification command before moving on. After each phase, run full verification before starting the next phase.
 
@@ -359,11 +358,11 @@ Phase gate verification (run after completing each phase):
 - Phase 0: bun i && bun fix
 - Phase 1: bun fix && bun typecheck
 - Phase 2: bun fix && bun typecheck && bun test
-- Phase 3: docker compose -f ohmystack.yml up -d && backend tests pass for both DBs
+- Phase 3: docker compose -f noboil.yml up -d && backend tests pass for both DBs
 - Phase 4: bun fix && bun build for all 8 apps && E2E tests pass
 - Phase 5: Swift codegen && native builds && Maestro tests && Swift tests
 - Phase 6: bun fix && bun build for docs app && docs site renders with DB switcher
-- Phase 7: bun ohmystack@latest init works for both Convex and SpacetimeDB choices
+- Phase 7: bun noboil@latest init works for both Convex and SpacetimeDB choices
 - Phase 8: all npm packages published && CI green && all success criteria checked off
 
 Source repos (archived, read-only — copy from these):

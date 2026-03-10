@@ -31,7 +31,7 @@
   "dependencies": {
     "@a/be-convex": "workspace:*",
     "@convex-dev/auth": "latest",
-    "@ohmystack/convex": "workspace:*",
+    "@noboil/convex": "workspace:*",
     "@t3-oss/env-nextjs": "latest",
     "convex": "latest",
     "next-navigation-guard": "latest",

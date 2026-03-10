@@ -571,7 +571,7 @@ const discoveryCheck = {
   meta: {
     messages: {
       discoveryFailed:
-        '@ohmystack/spacetimedb: could not find {{missing}} while scanning project TypeScript sources. Some rules are inactive.'
+        '@noboil/spacetimedb: could not find {{missing}} while scanning project TypeScript sources. Some rules are inactive.'
     },
     type: 'suggestion' as const
   }
@@ -789,7 +789,7 @@ const noEmptySearchConfig = {
   }
 }
 
-/** Map of all ESLint rules provided by the ohmystack-stdb plugin. */
+/** Map of all ESLint rules provided by the noboil-stdb plugin. */
 const rules = {
   'api-casing': apiCasing,
   'consistent-crud-naming': consistentCrudNaming,
@@ -809,32 +809,32 @@ const rules = {
   'require-rate-limit': requireRateLimit
 }
 
-/** ESLint plugin object containing all ohmystack-stdb rules. */
+/** ESLint plugin object containing all noboil-stdb rules. */
 const plugin = { rules }
 
-/** Recommended ESLint configuration for ohmystack-stdb projects. */
+/** Recommended ESLint configuration for noboil-stdb projects. */
 const recommended = {
   files: ['**/*.ts', '**/*.tsx'],
   plugins: {
-    'ohmystack-stdb': plugin
+    'noboil-stdb': plugin
   },
   rules: {
-    'ohmystack-stdb/api-casing': 'error' as const,
-    'ohmystack-stdb/consistent-crud-naming': 'error' as const,
-    'ohmystack-stdb/discovery-check': 'warn' as const,
-    'ohmystack-stdb/form-field-exists': 'error' as const,
-    'ohmystack-stdb/form-field-kind': 'warn' as const,
-    'ohmystack-stdb/no-duplicate-crud': 'error' as const,
-    'ohmystack-stdb/no-empty-search-config': 'error' as const,
-    'ohmystack-stdb/no-raw-fetch-in-server-component': 'warn' as const,
-    'ohmystack-stdb/no-unlimited-file-size': 'warn' as const,
-    'ohmystack-stdb/no-unprotected-mutation': 'warn' as const,
-    'ohmystack-stdb/no-unsafe-api-cast': 'warn' as const,
-    'ohmystack-stdb/prefer-useList': 'warn' as const,
-    'ohmystack-stdb/prefer-useOrgQuery': 'warn' as const,
-    'ohmystack-stdb/require-connection': 'error' as const,
-    'ohmystack-stdb/require-error-boundary': 'warn' as const,
-    'ohmystack-stdb/require-rate-limit': 'warn' as const
+    'noboil-stdb/api-casing': 'error' as const,
+    'noboil-stdb/consistent-crud-naming': 'error' as const,
+    'noboil-stdb/discovery-check': 'warn' as const,
+    'noboil-stdb/form-field-exists': 'error' as const,
+    'noboil-stdb/form-field-kind': 'warn' as const,
+    'noboil-stdb/no-duplicate-crud': 'error' as const,
+    'noboil-stdb/no-empty-search-config': 'error' as const,
+    'noboil-stdb/no-raw-fetch-in-server-component': 'warn' as const,
+    'noboil-stdb/no-unlimited-file-size': 'warn' as const,
+    'noboil-stdb/no-unprotected-mutation': 'warn' as const,
+    'noboil-stdb/no-unsafe-api-cast': 'warn' as const,
+    'noboil-stdb/prefer-useList': 'warn' as const,
+    'noboil-stdb/prefer-useOrgQuery': 'warn' as const,
+    'noboil-stdb/require-connection': 'error' as const,
+    'noboil-stdb/require-error-boundary': 'warn' as const,
+    'noboil-stdb/require-rate-limit': 'warn' as const
   }
 }
 

@@ -116,10 +116,10 @@ const bold = (s: string) => `\u001B[1m${s}\u001B[0m`,
   checkEslintContent = (content?: string): CheckResult => {
     if (content === undefined)
       return { details: ['No eslint.config.* file found'], status: 'warn', title: 'ESLint Configuration' }
-    if (content.includes('@ohmystack/convex/eslint'))
-      return { details: ['@ohmystack/convex/eslint plugin configured'], status: 'pass', title: 'ESLint Configuration' }
+    if (content.includes('@noboil/convex/eslint'))
+      return { details: ['@noboil/convex/eslint plugin configured'], status: 'pass', title: 'ESLint Configuration' }
     return {
-      details: ['eslint.config found but @ohmystack/convex/eslint not imported'],
+      details: ['eslint.config found but @noboil/convex/eslint not imported'],
       status: 'warn',
       title: 'ESLint Configuration'
     }
@@ -130,7 +130,7 @@ const bold = (s: string) => `\u001B[1m${s}\u001B[0m`,
       devDeps = (pkg.devDependencies ?? {}) as Record<string, string>,
       all = { ...deps, ...devDeps },
       details: string[] = [],
-      required = ['convex', 'zod', '@ohmystack/convex']
+      required = ['convex', 'zod', '@noboil/convex']
     let missing = 0
     for (const name of required)
       if (all[name]) details.push(`${name}: ${all[name]}`)
@@ -151,7 +151,7 @@ const bold = (s: string) => `\u001B[1m${s}\u001B[0m`,
   },
   doctor = () => {
     const root = process.cwd()
-    console.log(bold('\n@ohmystack/convex doctor\n'))
+    console.log(bold('\n@noboil/convex doctor\n'))
 
     const convexDir = findConvexDir(root)
     if (!convexDir) {
@@ -162,7 +162,7 @@ const bold = (s: string) => `\u001B[1m${s}\u001B[0m`,
 
     const schemaFile = findSchemaFile(convexDir)
     if (!schemaFile) {
-      console.log(red('\u2717 Could not find schema file with @ohmystack/convex markers'))
+      console.log(red('\u2717 Could not find schema file with @noboil/convex markers'))
       console.log(dim('  Expected a .ts file importing makeOwned/makeOrgScoped/etc.'))
       process.exit(1)
     }

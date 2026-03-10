@@ -3,7 +3,7 @@ import type { ReactNode } from 'react'
 import { DocsLayout } from 'fumadocs-ui/layouts/docs'
 
 const Layout = ({ children }: { children: ReactNode }) => (
-  <DocsLayout nav={{ title: 'ohmystack' }} tree={source.getPageTree()}>
+  <DocsLayout nav={{ title: 'noboil' }} tree={source.getPageTree()}>
     {children}
   </DocsLayout>
 )

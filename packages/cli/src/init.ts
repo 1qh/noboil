@@ -17,7 +17,7 @@ interface InitOpts {
   includeNative: boolean
 }
 
-const REPO = '1qh/ohmystack',
+const REPO = '1qh/noboil',
   bold = (s: string) => `\u001B[1m${s}\u001B[0m`,
   dim = (s: string) => `\u001B[2m${s}\u001B[0m`,
   green = (s: string) => `\u001B[32m${s}\u001B[0m`,
@@ -155,7 +155,7 @@ const REPO = '1qh/ohmystack',
 
     console.log(`  ${dim('patching')} package.json files...`)
     patchRootPackageJson({ db, dir: fullPath, includeDemos, includeNative })
-    const lib = db === 'convex' ? '@ohmystack/convex' : '@ohmystack/spacetimedb'
+    const lib = db === 'convex' ? '@noboil/convex' : '@noboil/spacetimedb'
     walkAndPatch(fullPath, lib, fullPath)
 
     if (!args.includes('--skip-install')) {
@@ -173,13 +173,13 @@ const REPO = '1qh/ohmystack',
     else console.log(`  ${dim('$')} docker compose up -d ${dim('# start SpacetimeDB')}`)
 
     console.log(`  ${dim('$')} bun dev              ${dim('# start dev server')}`)
-    console.log(`\n${dim('Docs:')} ${yellow('https://ohmystack.dev/docs')}\n`)
+    console.log(`\n${dim('Docs:')} ${yellow('https://noboil.dev/docs')}\n`)
   },
   init = async (args: string[]) => {
     if (args.includes('--help') || args.includes('-h')) {
-      console.log(`\n${bold('ohmystack init')} — create a new ohmystack project\n`)
+      console.log(`\n${bold('noboil init')} — create a new noboil project\n`)
       console.log(bold('Usage:'))
-      console.log('  ohmystack init [directory]\n')
+      console.log('  noboil init [directory]\n')
       console.log(bold('Options:'))
       console.log(`  --db=convex|spacetimedb    ${dim('Skip database prompt')}`)
       console.log(`  --no-demos                 ${dim('Skip demo apps')}`)
@@ -188,7 +188,7 @@ const REPO = '1qh/ohmystack',
       return
     }
 
-    console.log(`\n${bold('ohmystack')} ${dim('— schema-first, zero-boilerplate fullstack')}\n`)
+    console.log(`\n${bold('noboil')} ${dim('— schema-first, zero-boilerplate fullstack')}\n`)
 
     let db: Db | undefined,
       includeDemos = true,

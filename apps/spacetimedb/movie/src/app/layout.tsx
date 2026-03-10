@@ -4,8 +4,8 @@ import type { ReactNode } from 'react'
 
 import SpacetimeProvider from '@a/fe/spacetimedb-provider'
 import { Toaster } from '@a/ui/sonner'
-import { ErrorBoundary } from '@ohmystack/spacetimedb/components'
-import { BetterspaceDevtools } from '@ohmystack/spacetimedb/react'
+import { ErrorBoundary } from '@noboil/spacetimedb/components'
+import { BetterspaceDevtools } from '@noboil/spacetimedb/react'
 import { ThemeProvider } from 'next-themes'
 import { Suspense } from 'react'
 

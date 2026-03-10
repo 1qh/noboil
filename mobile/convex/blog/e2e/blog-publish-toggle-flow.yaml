@@ -1,4 +1,4 @@
-appId: dev.ohmystack.blog
+appId: dev.noboil.blog
 ---
 - runFlow: login.yaml
 

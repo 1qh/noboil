@@ -8,7 +8,7 @@ import { Avatar, AvatarFallback } from '@a/ui/avatar'
 import { Button } from '@a/ui/button'
 import { Switch } from '@a/ui/switch'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@a/ui/table'
-import { useMut } from '@ohmystack/spacetimedb/react'
+import { useMut } from '@noboil/spacetimedb/react'
 import { Check, X } from 'lucide-react'
 import { useState } from 'react'
 

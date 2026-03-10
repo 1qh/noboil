@@ -5,14 +5,14 @@ description: Generate typed Swift wrappers from your Zod schemas and ship native
 
 Native app support currently only covers Convex. SpacetimeDB native app integration is not yet available.
 
-`@ohmystack/convex` includes a Swift codegen CLI and ships with 8 native app examples (4 mobile + 4 desktop) that consume the same Convex backend as the web demos.
+`@noboil/convex` includes a Swift codegen CLI and ships with 8 native app examples (4 mobile + 4 desktop) that consume the same Convex backend as the web demos.
 
 ## Swift Codegen
 
 Generate typed Swift models, enums, and API wrappers from your Zod schemas:
 
 ```bash
-bunx @ohmystack/convex codegen-swift --schema packages/be/t.ts --convex packages/be/convex \
+bunx @noboil/convex codegen-swift --schema packages/be/t.ts --convex packages/be/convex \
   --output swift-core/Sources/ConvexCore/Generated.swift \
   --mobile-output mobile/convex-shared/Sources/ConvexShared/MobileAPI.swift
 ```
@@ -87,7 +87,7 @@ Conform your Convex client to this protocol and the typed wrappers work automati
 swift-core/                    Shared models, enums, protocol (Foundation-only)
 desktop/                       4 SwiftCrossUI macOS apps + HTTP/WebSocket Convex client
 mobile/                        4 Skip cross-platform apps (iOS + Android)
-packages/@ohmystack/convex/    Codegen CLI (codegen-swift.ts)
+packages/@noboil/convex/    Codegen CLI (codegen-swift.ts)
 ```
 
 All native apps share the same generated `Generated.swift` via SPM dependencies and symlinks.
@@ -99,7 +99,7 @@ All native apps share the same generated `Generated.swift` via SPM dependencies 
 3. Run the codegen:
 
 ```bash
-bunx @ohmystack/convex codegen-swift \
+bunx @noboil/convex codegen-swift \
   --schema convex/t.ts \
   --convex convex/ \
   --output Generated.swift \
@@ -118,7 +118,7 @@ try await BlogAPI.create(client, category: .tech, content: "Hello", published: t
 ## When Schema Changes
 
 1. Update your Zod schema (add/remove/rename fields)
-2. Re-run `bunx @ohmystack/convex codegen-swift` with the same flags
+2. Re-run `bunx @noboil/convex codegen-swift` with the same flags
 3. Swift compiler errors show you every call site that needs updating
 
 ```
@@ -131,7 +131,7 @@ Schema changes surface as compile errors in both TypeScript and Swift. No runtim
 Add codegen to your CI pipeline or as a pre-commit hook:
 
 ```bash
-bunx @ohmystack/convex codegen-swift --schema convex/t.ts --convex convex/ --output Generated.swift
+bunx @noboil/convex codegen-swift --schema convex/t.ts --convex convex/ --output Generated.swift
 git diff --exit-code Generated.swift || echo "Generated.swift is out of date — run codegen"
 ```
 

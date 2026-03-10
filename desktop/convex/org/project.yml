@@ -1,6 +1,6 @@
 name: OrgDesktop
 options:
-  bundleIdPrefix: dev.ohmystack.desktop
+  bundleIdPrefix: dev.noboil.desktop
   deploymentTarget:
     macOS: "14.0"
   xcodeVersion: "16.0"
@@ -25,7 +25,7 @@ targets:
         product: DefaultBackend
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: dev.ohmystack.desktop.org
+        PRODUCT_BUNDLE_IDENTIFIER: dev.noboil.desktop.org
         SWIFT_VERSION: "6.0"
         MACOSX_DEPLOYMENT_TARGET: "14.0"
         GENERATE_INFOPLIST_FILE: true
@@ -38,7 +38,7 @@ targets:
       - target: Org
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: dev.ohmystack.desktop.org.uitests
+        PRODUCT_BUNDLE_IDENTIFIER: dev.noboil.desktop.org.uitests
         SWIFT_VERSION: "6.0"
         GENERATE_INFOPLIST_FILE: true
 schemes:

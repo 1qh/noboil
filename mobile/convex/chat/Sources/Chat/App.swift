@@ -3,7 +3,7 @@ import Foundation
 import OSLog
 import SwiftUI
 
-internal let logger = Logger(subsystem: "dev.ohmystack.chat", category: "Chat")
+internal let logger = Logger(subsystem: "dev.noboil.chat", category: "Chat")
 
 internal struct PublicListRoute: Hashable {}
 

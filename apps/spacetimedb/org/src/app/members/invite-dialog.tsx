@@ -3,7 +3,7 @@
 import { reducers } from '@a/be-spacetimedb/spacetimedb'
 import { Button } from '@a/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@a/ui/dialog'
-import { Form, useFormMutation } from '@ohmystack/spacetimedb/components'
+import { Form, useFormMutation } from '@noboil/spacetimedb/components'
 import { Plus } from 'lucide-react'
 import { useState } from 'react'
 import { useReducer } from 'spacetimedb/react'

@@ -1,6 +1,6 @@
 /** biome-ignore-all lint/performance/noAwaitInLoops: sequential deletes */
 import { getAuthUserId } from '@convex-dev/auth/server'
-import { getOrgMembership, makeOrgTestCrud, makeTestAuth } from '@ohmystack/convex/test'
+import { getOrgMembership, makeOrgTestCrud, makeTestAuth } from '@noboil/convex/test'
 import { v } from 'convex/values'
 
 import { mutation, query } from './_generated/server'

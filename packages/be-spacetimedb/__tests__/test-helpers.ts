@@ -1,7 +1,7 @@
-import type { TestContext, TestUser } from '@ohmystack/spacetimedb/test'
+import type { TestContext, TestUser } from '@noboil/spacetimedb/test'
 
 // oxlint-disable max-params
-import { callReducer, cleanup, createTestContext, queryTable } from '@ohmystack/spacetimedb/test'
+import { callReducer, cleanup, createTestContext, queryTable } from '@noboil/spacetimedb/test'
 
 type Row = Record<string, unknown>
 
@@ -32,7 +32,7 @@ const none = { none: [] as [] },
   },
   withCtx = async <T>(fn: (ctx: TestContext) => Promise<T>) => {
     const ctx = await createTestContext({
-      moduleName: '@ohmystack/spacetimedb',
+      moduleName: '@noboil/spacetimedb',
       userCount: 3
     })
     try {

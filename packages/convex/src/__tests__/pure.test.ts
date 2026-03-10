@@ -3530,7 +3530,7 @@ describe('makeErrorHandler', () => {
   })
 })
 
-describe('ohmystack-convex-viz', () => {
+describe('noboil-convex-viz', () => {
   test('extractFieldType recognizes string', () => {
     expect(extractFieldType('string().min(1)')).toBe('string')
   })
@@ -3626,7 +3626,7 @@ describe('ohmystack-convex-viz', () => {
   })
 })
 
-describe('ohmystack-convex-check --endpoints', () => {
+describe('noboil-convex-check --endpoints', () => {
   const makeCall = (factory: string, options = ''): FactoryCall => ({ factory, file: 'test.ts', options, table: 'test' })
 
   test('crud produces base + pub endpoints', () => {
@@ -3703,13 +3703,13 @@ describe('ohmystack-convex-check --endpoints', () => {
 })
 
 describe('bundle verification', () => {
-  test('@ohmystack/convex/server does not export React hooks', async () => {
+  test('@noboil/convex/server does not export React hooks', async () => {
     const serverExports = await import('../server/index'),
       names = Object.keys(serverExports)
     for (const name of names) expect(name.startsWith('use')).toBe(false)
   })
 
-  test('@ohmystack/convex/schema has no React imports', async () => {
+  test('@noboil/convex/schema has no React imports', async () => {
     const { readFileSync } = await import('node:fs'),
       { join } = await import('node:path'),
       content = readFileSync(join(import.meta.dir, '..', 'schema.ts'), 'utf8')
@@ -3718,14 +3718,14 @@ describe('bundle verification', () => {
     expect(content.includes('useEffect')).toBe(false)
   })
 
-  test('@ohmystack/convex/schema has no node:fs imports', async () => {
+  test('@noboil/convex/schema has no node:fs imports', async () => {
     const { readFileSync } = await import('node:fs'),
       { join } = await import('node:path'),
       content = readFileSync(join(import.meta.dir, '..', 'schema.ts'), 'utf8')
     expect(content.includes("from 'node:fs'")).toBe(false)
   })
 
-  test('@ohmystack/convex/retry has no React or server imports', async () => {
+  test('@noboil/convex/retry has no React or server imports', async () => {
     const { readFileSync } = await import('node:fs'),
       { join } = await import('node:path'),
       content = readFileSync(join(import.meta.dir, '..', 'retry.ts'), 'utf8')
@@ -4057,11 +4057,11 @@ describe('query timing in devtools', () => {
   })
 })
 
-describe('ohmystack-convex-docs', () => {
+describe('noboil-convex-docs', () => {
   test('generateMarkdown produces markdown header', () => {
     const md = generateMarkdown([], new Map())
     expect(md).toContain('# API Reference')
-    expect(md).toContain('ohmystack-convex docs')
+    expect(md).toContain('noboil-convex docs')
   })
 
   test('generateMarkdown includes factory table', () => {
@@ -4210,10 +4210,10 @@ describe('security ESLint rules', () => {
 
   test('recommended config includes all 4 new rules', () => {
     const ruleNames = Object.keys(eslintRecommended.rules)
-    expect(ruleNames).toContain('ohmystack-convex/require-rate-limit')
-    expect(ruleNames).toContain('ohmystack-convex/no-unprotected-mutation')
-    expect(ruleNames).toContain('ohmystack-convex/no-unlimited-file-size')
-    expect(ruleNames).toContain('ohmystack-convex/no-empty-search-config')
+    expect(ruleNames).toContain('noboil-convex/require-rate-limit')
+    expect(ruleNames).toContain('noboil-convex/no-unprotected-mutation')
+    expect(ruleNames).toContain('noboil-convex/no-unlimited-file-size')
+    expect(ruleNames).toContain('noboil-convex/no-empty-search-config')
   })
 
   test('total rule count is 16', () => {
@@ -4231,19 +4231,19 @@ describe('security ESLint rules', () => {
   })
 
   test('require-rate-limit is warn level in recommended', () => {
-    expect(eslintRecommended.rules['ohmystack-convex/require-rate-limit']).toBe('warn')
+    expect(eslintRecommended.rules['noboil-convex/require-rate-limit']).toBe('warn')
   })
 
   test('no-empty-search-config is error level in recommended', () => {
-    expect(eslintRecommended.rules['ohmystack-convex/no-empty-search-config']).toBe('error')
+    expect(eslintRecommended.rules['noboil-convex/no-empty-search-config']).toBe('error')
   })
 
   test('no-unprotected-mutation is warn level in recommended', () => {
-    expect(eslintRecommended.rules['ohmystack-convex/no-unprotected-mutation']).toBe('warn')
+    expect(eslintRecommended.rules['noboil-convex/no-unprotected-mutation']).toBe('warn')
   })
 
   test('no-unlimited-file-size is warn level in recommended', () => {
-    expect(eslintRecommended.rules['ohmystack-convex/no-unlimited-file-size']).toBe('warn')
+    expect(eslintRecommended.rules['noboil-convex/no-unlimited-file-size']).toBe('warn')
   })
 })
 
@@ -5155,7 +5155,7 @@ describe('FACTORY_DEFAULT_INDEXES', () => {
   })
 })
 
-describe('ohmystack-convex-migrate', () => {
+describe('noboil-convex-migrate', () => {
   describe('parseSchemaContent', () => {
     test('parses owned tables', () => {
       const content = `const owned = makeOwned({
@@ -6338,7 +6338,7 @@ describe('health check', () => {
   describe('checkSchemaConsistency', () => {
     test('returns empty issues for consistent schema', async () => {
       const { mkdirSync, writeFileSync } = await import('node:fs'),
-        tmpDir = `/tmp/ohmystack-convex-test-health-${Date.now()}`
+        tmpDir = `/tmp/noboil-convex-test-health-${Date.now()}`
       mkdirSync(`${tmpDir}/convex/_generated`, { recursive: true })
       writeFileSync(`${tmpDir}/convex/blog.ts`, "crud('blog', owned.blog)")
       const schemaFile = {
@@ -6355,7 +6355,7 @@ describe('health check', () => {
     test('returns empty issues when no where clauses used', async () => {
       const { mkdirSync, writeFileSync } = await import('node:fs'),
         calls: FactoryCall[] = [{ factory: 'crud', file: 'blog.ts', options: '', table: 'blog' }],
-        tmpDir = `/tmp/ohmystack-convex-test-idx-${Date.now()}`
+        tmpDir = `/tmp/noboil-convex-test-idx-${Date.now()}`
       mkdirSync(`${tmpDir}/convex/_generated`, { recursive: true })
       writeFileSync(`${tmpDir}/convex/schema.ts`, 'export default defineSchema({})')
       const issues = checkIndexCoverage(`${tmpDir}/convex`, calls)
@@ -7382,7 +7382,7 @@ const org = makeOrgScoped({
   })
 })
 
-describe('ohmystack-convex add command', () => {
+describe('noboil-convex add command', () => {
   describe('parseFieldDef', () => {
     test('parses simple string field', () => {
       const f = parseFieldDef('title:string')
@@ -7763,7 +7763,7 @@ describe('doctor', () => {
   })
 
   test('checkEslintContent — with plugin', () => {
-    expect(checkEslintContent("import { recommended } from '@ohmystack/convex/eslint'").status).toBe('pass')
+    expect(checkEslintContent("import { recommended } from '@noboil/convex/eslint'").status).toBe('pass')
   })
 
   test('checkEslintContent — without plugin', () => {
@@ -7775,7 +7775,7 @@ describe('doctor', () => {
   })
 
   test('checkDeps — all present', () => {
-    expect(checkDeps({ dependencies: { '@ohmystack/convex': '2', convex: '1', zod: '3' } }).status).toBe('pass')
+    expect(checkDeps({ dependencies: { '@noboil/convex': '2', convex: '1', zod: '3' } }).status).toBe('pass')
   })
 
   test('checkDeps — missing dep is fail', () => {
@@ -7783,7 +7783,7 @@ describe('doctor', () => {
   })
 
   test('checkDeps — devDependencies count', () => {
-    expect(checkDeps({ devDependencies: { '@ohmystack/convex': '2', convex: '1', zod: '3' } }).status).toBe('pass')
+    expect(checkDeps({ devDependencies: { '@noboil/convex': '2', convex: '1', zod: '3' } }).status).toBe('pass')
   })
 
   test('checkDeps — no package.json', () => {

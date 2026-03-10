@@ -1,7 +1,7 @@
 // biome-ignore-all lint/style/noProcessEnv: server-only route
 import type { NextRequest } from 'next/server'
 
-import { createS3UploadPresignedUrl } from '@ohmystack/spacetimedb/s3'
+import { createS3UploadPresignedUrl } from '@noboil/spacetimedb/s3'
 import { NextResponse } from 'next/server'
 
 interface PresignBody {

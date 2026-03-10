@@ -1,6 +1,6 @@
 'use node'
 
-import { fetchWithRetry } from '@ohmystack/convex/retry'
+import { fetchWithRetry } from '@noboil/convex/retry'
 import { v } from 'convex/values'
 import { z } from 'zod/v4'
 

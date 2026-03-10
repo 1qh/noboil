@@ -4,7 +4,7 @@ import type { ReactNode } from 'react'
 
 import { Toaster } from '@a/ui/sonner'
 import { ConvexAuthNextjsServerProvider as AuthProvider } from '@convex-dev/auth/nextjs/server'
-import { OfflineIndicator } from '@ohmystack/convex/components'
+import { OfflineIndicator } from '@noboil/convex/components'
 import { ThemeProvider } from 'next-themes'
 import { Suspense } from 'react'
 

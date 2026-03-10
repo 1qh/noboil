@@ -11,7 +11,7 @@ const bold = (s: string) => `\u001B[1m${s}\u001B[0m`,
   yellow = (s: string) => `\u001B[33m${s}\u001B[0m`,
   red = (s: string) => `\u001B[31m${s}\u001B[0m`,
   doctor = (_args: string[]) => {
-    console.log(`\n${bold('ohmystack doctor')} — project health check\n`)
+    console.log(`\n${bold('noboil doctor')} — project health check\n`)
 
     const cwd = process.cwd()
     let issues = 0,
@@ -27,15 +27,14 @@ const bold = (s: string) => `\u001B[1m${s}\u001B[0m`,
     const raw = readFileSync(pkgPath, 'utf8'),
       pkg = JSON.parse(raw) as { dependencies?: Record<string, string>; devDependencies?: Record<string, string> },
       deps = { ...pkg.dependencies, ...pkg.devDependencies },
-      hasConvex = '@ohmystack/convex' in deps,
-      hasStdb = '@ohmystack/spacetimedb' in deps
+      hasConvex = '@noboil/convex' in deps,
+      hasStdb = '@noboil/spacetimedb' in deps
 
     if (hasConvex || hasStdb) {
-      if (hasConvex) console.log(`  ${green('+')} @ohmystack/convex ${dim(deps['@ohmystack/convex'] ?? 'unknown')}`)
-      if (hasStdb)
-        console.log(`  ${green('+')} @ohmystack/spacetimedb ${dim(deps['@ohmystack/spacetimedb'] ?? 'unknown')}`)
+      if (hasConvex) console.log(`  ${green('+')} @noboil/convex ${dim(deps['@noboil/convex'] ?? 'unknown')}`)
+      if (hasStdb) console.log(`  ${green('+')} @noboil/spacetimedb ${dim(deps['@noboil/spacetimedb'] ?? 'unknown')}`)
     } else {
-      console.log(`  ${red('x')} Neither @ohmystack/convex nor @ohmystack/spacetimedb found in dependencies`)
+      console.log(`  ${red('x')} Neither @noboil/convex nor @noboil/spacetimedb found in dependencies`)
       issues += 1
     }
 

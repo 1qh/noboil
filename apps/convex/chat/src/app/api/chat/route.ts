@@ -5,7 +5,7 @@ import type { UIMessage } from 'ai'
 import { api } from '@a/be-convex'
 import { getModel } from '@a/be-convex/ai'
 import { convexAuthNextjsToken } from '@convex-dev/auth/nextjs/server'
-import { getToken, isAuthenticated } from '@ohmystack/convex/next'
+import { getToken, isAuthenticated } from '@noboil/convex/next'
 import {
   convertToModelMessages,
   createUIMessageStream,

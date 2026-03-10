@@ -1,5 +1,5 @@
 import { s } from '@a/be-spacetimedb/t'
-import { cvFile } from '@ohmystack/spacetimedb/schema'
+import { cvFile } from '@noboil/spacetimedb/schema'
 import { boolean, email, object, string } from 'zod/v4'
 
 const { project, wiki: wikiSchema } = s,

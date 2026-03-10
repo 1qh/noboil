@@ -291,10 +291,10 @@ const WRAPPER_FACTORIES = ['makeOwned', 'makeOrgScoped', 'makeSingleton', 'makeB
       flags = new Set(process.argv.slice(2)),
       args = process.argv.slice(2).filter(a => !a.startsWith('--'))
 
-    console.log(bold('\n@ohmystack/convex migrate\n'))
+    console.log(bold('\n@noboil/convex migrate\n'))
 
     if (flags.has('--help') || flags.has('-h')) {
-      console.log(`Usage: ohmystack-convex migrate [options]
+      console.log(`Usage: noboil-convex migrate [options]
 
 Compare schema versions and generate migration plans.
 
@@ -305,16 +305,16 @@ Options:
    --help, -h      Show this help
 
 Examples:
-   ohmystack-convex migrate                    Compare HEAD vs working tree
-   ohmystack-convex migrate --from HEAD~3      Compare 3 commits ago vs now
-   ohmystack-convex migrate --snapshot         Print current schema tables & fields
+   noboil-convex migrate                    Compare HEAD vs working tree
+   noboil-convex migrate --from HEAD~3      Compare 3 commits ago vs now
+   noboil-convex migrate --snapshot         Print current schema tables & fields
  `)
       return
     }
 
     const schemaFile = findSchemaFile(root)
     if (!schemaFile) {
-      console.log(red('\u2717 Could not find schema file with @ohmystack/convex markers'))
+      console.log(red('\u2717 Could not find schema file with @noboil/convex markers'))
       console.log(dim('  Expected a .ts file using makeOwned/makeOrgScoped/etc.'))
       process.exit(1)
     }

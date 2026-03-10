@@ -15,7 +15,7 @@ Both databases provide a full multi-tenant system with roles, invites, join requ
 Define org-scoped tables in `convex/t.ts`:
 
 ```tsx
-import { makeOrgScoped } from '@ohmystack/convex/server'
+import { makeOrgScoped } from '@noboil/convex/server'
 import { object, string } from 'zod'
 
 const orgScoped = makeOrgScoped({
@@ -39,7 +39,7 @@ export { orgScoped }
 Define org and org-scoped tables in `t.ts`:
 
 ```typescript
-import { schema } from '@ohmystack/spacetimedb/schema'
+import { schema } from '@noboil/spacetimedb/schema'
 import { object, string } from 'zod/v4'
 
 const s = schema({
@@ -60,10 +60,10 @@ export { s }
 Wire it up in `index.ts`:
 
 ```typescript
-import { ohmystackStdb } from '@ohmystack/spacetimedb/server'
+import { noboilStdb } from '@noboil/spacetimedb/server'
 import { s } from '../../t'
 
-export default ohmystackStdb(({ table }) => ({
+export default noboilStdb(({ table }) => ({
   org: table(s.team, { unique: ['slug'] }),
   project: table(s.project)
 }))
@@ -101,7 +101,7 @@ export const {
 `table(s.orgScopedEntry)` registers a table that belongs to an org and enforces org membership before any write:
 
 ```typescript
-export default ohmystackStdb(({ table }) => ({
+export default noboilStdb(({ table }) => ({
   project: table(s.project)
 }))
 ```
@@ -186,7 +186,7 @@ Use `OrgProvider` to make org data available throughout your component tree:
 ```typescript
 'use client'
 
-import { OrgProvider } from '@ohmystack/spacetimedb/react'
+import { OrgProvider } from '@noboil/spacetimedb/react'
 import { useTable } from 'spacetimedb/react'
 import { tables } from '@/generated/module_bindings'
 
@@ -240,7 +240,7 @@ const { orgs } = useMyOrgs()
 ```typescript
 'use client'
 
-import { useOrg, useActiveOrg, useMyOrgs } from '@ohmystack/spacetimedb/react'
+import { useOrg, useActiveOrg, useMyOrgs } from '@noboil/spacetimedb/react'
 
 const OrgHeader = () => {
   const { org, role, isAdmin, isOwner, canManageMembers } = useOrg()
@@ -280,7 +280,7 @@ await remove({ id: projectId })
 ```typescript
 'use client'
 
-import { useOrgMutation } from '@ohmystack/spacetimedb/react'
+import { useOrgMutation } from '@noboil/spacetimedb/react'
 import { useReducer } from 'spacetimedb/react'
 import { reducers } from '@/generated/module_bindings'
 
@@ -313,7 +313,7 @@ const { useOrg, useActiveOrg, useMyOrgs, useOrgQuery, useOrgMutation } = createO
 `createOrgHooks` returns typed org hooks bound to your org type. Use it when your org has extra fields or when you need `orgId` coerced to a specific type before being injected into mutations:
 
 ```typescript
-import { createOrgHooks } from '@ohmystack/spacetimedb/react'
+import { createOrgHooks } from '@noboil/spacetimedb/react'
 
 const { useActiveOrg, useMyOrgs, useOrg, useOrgMutation } = createOrgHooks<
   Org & { _id: string }
@@ -353,7 +353,7 @@ const projects = useOrgQuery(api.project.list, {
 ```typescript
 'use client'
 
-import { useOrgQuery } from '@ohmystack/spacetimedb/react'
+import { useOrgQuery } from '@noboil/spacetimedb/react'
 
 const ProjectList = () => {
   const projects = useOrgQuery(queryProject, { status: 'active' })
@@ -409,7 +409,7 @@ wiki: table(s.wiki, {
 The `editors` field stores Identity arrays. Use `canEditResource` to gate UI and server-side logic:
 
 ```typescript
-import { canEditResource } from '@ohmystack/spacetimedb/react'
+import { canEditResource } from '@noboil/spacetimedb/react'
 
 const canEdit = canEditResource({
   resource: wiki,
@@ -555,7 +555,7 @@ import {
   setActiveOrgCookie,
   getActiveOrg,
   clearActiveOrgCookie
-} from '@ohmystack/convex/next'
+} from '@noboil/convex/next'
 
 await setActiveOrgCookie(orgId)
 
@@ -567,7 +567,7 @@ await clearActiveOrgCookie()
 Client-side:
 
 ```tsx
-import { setActiveOrgCookieClient } from '@ohmystack/convex/react'
+import { setActiveOrgCookieClient } from '@noboil/convex/react'
 
 setActiveOrgCookieClient(orgId)
 ```
@@ -576,7 +576,7 @@ setActiveOrgCookieClient(orgId)
 <Tab value="SpacetimeDB">
 
 ```typescript
-import { useActiveOrg } from '@ohmystack/spacetimedb/react'
+import { useActiveOrg } from '@noboil/spacetimedb/react'
 
 const { activeOrg, setActiveOrg } = useActiveOrg()
 
@@ -636,7 +636,7 @@ Both databases use the same three-tier role model:
 <Tab value="Convex">
 
 ```tsx
-import { handleConvexError } from '@ohmystack/convex/server'
+import { handleConvexError } from '@noboil/convex/server'
 
 handleConvexError(error, {
   NOT_ORG_MEMBER: () => router.push('/orgs'),
@@ -654,7 +654,7 @@ handleConvexError(error, {
 <Tab value="SpacetimeDB">
 
 ```typescript
-import { extractErrorData } from '@ohmystack/spacetimedb/server'
+import { extractErrorData } from '@noboil/spacetimedb/server'
 
 try {
   await createProject({ name, orgId: org.id })
@@ -691,13 +691,13 @@ import {
   OrgAvatar,
   RoleBadge,
   OfflineIndicator
-} from '@ohmystack/convex/components'
+} from '@noboil/convex/components'
 ```
 
 </Tab>
 <Tab value="SpacetimeDB">
 
-Build your own org UI components using the hooks from `@ohmystack/spacetimedb/react`. The `useOrg`, `useActiveOrg`, and `useMyOrgs` hooks provide all the data you need.
+Build your own org UI components using the hooks from `@noboil/spacetimedb/react`. The `useOrg`, `useActiveOrg`, and `useMyOrgs` hooks provide all the data you need.
 
 </Tab>
 </Tabs>

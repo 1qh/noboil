@@ -1,17 +1,17 @@
 ---
 title: Ejecting
-description: Step off ohmystack's conventions and take full control of your backend, one endpoint at a time.
+description: Step off noboil's conventions and take full control of your backend, one endpoint at a time.
 ---
 
 import { Tab, Tabs } from 'fumadocs-ui/components/tabs'
 
-ohmystack is designed for incremental ejection. You can replace one factory at a time while the rest of your app keeps running. You don't have to eject everything — most apps settle somewhere in the middle.
+noboil is designed for incremental ejection. You can replace one factory at a time while the rest of your app keeps running. You don't have to eject everything — most apps settle somewhere in the middle.
 
 ## Why eject?
 
 - You need a query pattern that the generated CRUD can't express (complex joins, aggregations, graph traversals)
 - You want to remove the dependency entirely
-- You need behavior that conflicts with ohmystack's conventions (custom auth, non-standard ownership)
+- You need behavior that conflicts with noboil's conventions (custom auth, non-standard ownership)
 
 <Tabs groupId="db" items={['Convex', 'SpacetimeDB']} persist>
 
@@ -20,9 +20,9 @@ ohmystack is designed for incremental ejection. You can replace one factory at a
 ## The spectrum
 
 ```
-Full @ohmystack/convex ←──────────────────────────→ Full raw Convex
+Full @noboil/convex ←──────────────────────────→ Full raw Convex
 
-crud() for all   crud() + custom    custom only,     no @ohmystack/convex
+crud() for all   crud() + custom    custom only,     no @noboil/convex
 tables           queries on hot     keep schemas     at all
                  paths
 ```
@@ -143,7 +143,7 @@ The frontend doesn't change — it still imports `api.blog.list`.
 If you eject all factories for a table, you can also replace the branded schema with a plain Convex table definition:
 
 ```tsx
-import { ownedTable } from '@ohmystack/convex/server'
+import { ownedTable } from '@noboil/convex/server'
 import { owned } from './t'
 blog: ownedTable(owned.blog)
 ```
@@ -170,7 +170,7 @@ blog: defineTable({
 
 Replace React hooks with Convex equivalents:
 
-| @ohmystack/convex | Raw Convex |
+| @noboil/convex | Raw Convex |
 | ----------------- | ---------- |
 | `useList(api.blog.list)` | `usePaginatedQuery(api.blog.list, {}, { initialNumItems: 50 })` |
 | `useFormMutation(api.blog.create, owned.blog)` | `useMutation(api.blog.create)` + manual form state |
@@ -200,7 +200,7 @@ Replace React hooks with Convex equivalents:
 
 <Tab value="SpacetimeDB">
 
-The factories (`ohmystackStdb()` and `table()`) generate reducer definitions. Ejecting means writing those reducers manually instead of using the factories.
+The factories (`noboilStdb()` and `table()`) generate reducer definitions. Ejecting means writing those reducers manually instead of using the factories.
 
 The client-side hooks (`useList`, `usePresence`, `useUpload`) are independent utilities. You can keep using them after ejecting from the server factories.
 
@@ -209,10 +209,10 @@ The client-side hooks (`useList`, `usePresence`, `useUpload`) are independent ut
 For a setup like:
 
 ```typescript
-import { ohmystackStdb } from '@ohmystack/spacetimedb/server'
+import { noboilStdb } from '@noboil/spacetimedb/server'
 import { s } from '../t'
 
-export default ohmystackStdb(({ table }) => ({
+export default noboilStdb(({ table }) => ({
   post: table(s.post, { pub: 'published' })
 }))
 ```
@@ -272,10 +272,10 @@ spacetimedb.reducer({ name: 'rm_post' }, { id: t.u32() }, (ctx, { id }) => {
 Replace:
 
 ```typescript
-import { ohmystackStdb } from '@ohmystack/spacetimedb/server'
+import { noboilStdb } from '@noboil/spacetimedb/server'
 import { s } from '../t'
 
-export default ohmystackStdb(({ table }) => ({
+export default noboilStdb(({ table }) => ({
   post: table(s.post)
 }))
 ```
@@ -344,10 +344,10 @@ const reducers = spacetimedb.exportGroup({
 })
 ```
 
-## Step 3: Remove @ohmystack/spacetimedb from the module
+## Step 3: Remove @noboil/spacetimedb from the module
 
 ```bash
-bun remove @ohmystack/spacetimedb
+bun remove @noboil/spacetimedb
 ```
 
 Update imports in your module file:
@@ -361,11 +361,11 @@ import { schema, t, table, SenderError } from 'spacetimedb/server'
 The client-side hooks are independent of the server factories. You can keep using them:
 
 ```typescript
-import { useList, usePresence, useUpload } from '@ohmystack/spacetimedb/react'
-import { zodFromTable } from '@ohmystack/spacetimedb'
+import { useList, usePresence, useUpload } from '@noboil/spacetimedb/react'
+import { zodFromTable } from '@noboil/spacetimedb'
 ```
 
-If you want to remove `@ohmystack/spacetimedb` entirely from the client too, replace:
+If you want to remove `@noboil/spacetimedb` entirely from the client too, replace:
 
 - `useList` with your own filtering/pagination logic
 - `usePresence` with direct `useTable` + `useReducer` calls
@@ -387,12 +387,12 @@ The generated bindings are identical whether you used the factories or wrote red
 - Conflict detection via `expectedUpdatedAt` (you implement it)
 - Soft delete support (you implement it)
 - Lifecycle hooks (you inline the logic)
-- Future ohmystack improvements (you're on your own)
+- Future noboil improvements (you're on your own)
 
 ## What you gain
 
 - Full control over reducer logic
-- No dependency on ohmystack's internal types
+- No dependency on noboil's internal types
 - Ability to deviate from the standard CRUD pattern
 
 </Tab>

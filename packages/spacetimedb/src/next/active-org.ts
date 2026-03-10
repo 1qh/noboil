@@ -84,7 +84,7 @@ const isTestMode = () =>
       })
     if (!response.ok) return null
     const body = (await response.json().catch((parseError: unknown) => {
-      console.error('[@ohmystack/spacetimedb] Failed to parse SQL response as JSON (module=%s):', moduleName, parseError) // eslint-disable-line no-console
+      console.error('[@noboil/spacetimedb] Failed to parse SQL response as JSON (module=%s):', moduleName, parseError) // eslint-disable-line no-console
       return null
     })) as unknown
     if (body === null) return null

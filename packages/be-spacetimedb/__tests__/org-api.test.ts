@@ -1,4 +1,4 @@
-import { callReducer } from '@ohmystack/spacetimedb/test'
+import { callReducer } from '@noboil/spacetimedb/test'
 import { describe, expect, test } from 'bun:test'
 
 import { reducers, tables } from '../module_bindings'
@@ -21,13 +21,13 @@ describe('org api port', () => {
   })
 
   test('org management reducers are not exported by current module', () => {
-    // eslint-disable-next-line ohmystack-stdb/no-unsafe-api-cast
+    // eslint-disable-next-line noboil-stdb/no-unsafe-api-cast
     expect((reducers as Record<string, unknown>).createOrg).toBeUndefined()
-    // eslint-disable-next-line ohmystack-stdb/no-unsafe-api-cast
+    // eslint-disable-next-line noboil-stdb/no-unsafe-api-cast
     expect((reducers as Record<string, unknown>).updateOrg).toBeUndefined()
-    // eslint-disable-next-line ohmystack-stdb/no-unsafe-api-cast
+    // eslint-disable-next-line noboil-stdb/no-unsafe-api-cast
     expect((reducers as Record<string, unknown>).getOrg).toBeUndefined()
-    // eslint-disable-next-line ohmystack-stdb/no-unsafe-api-cast
+    // eslint-disable-next-line noboil-stdb/no-unsafe-api-cast
     expect((reducers as Record<string, unknown>).inviteOrg).toBeUndefined()
   })
 

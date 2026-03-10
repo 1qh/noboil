@@ -8,7 +8,7 @@ import {
   rateLimitTable,
   singletonTable,
   uploadTables
-} from '@ohmystack/convex/server'
+} from '@noboil/convex/server'
 import { zodOutputToConvexFields as z2c } from 'convex-helpers/server/zod4'
 import { defineSchema, defineTable } from 'convex/server'
 import { v } from 'convex/values'

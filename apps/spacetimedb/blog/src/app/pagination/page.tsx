@@ -2,7 +2,7 @@
 
 import { tables } from '@a/be-spacetimedb/spacetimedb'
 import { Spinner } from '@a/ui/spinner'
-import { useInfiniteList, useOwnRows } from '@ohmystack/spacetimedb/react'
+import { useInfiniteList, useOwnRows } from '@noboil/spacetimedb/react'
 import { Check } from 'lucide-react'
 import { useEffect } from 'react'
 import { useInView } from 'react-intersection-observer'

@@ -1,4 +1,4 @@
-import { makeImageRoute } from '@ohmystack/convex/next'
+import { makeImageRoute } from '@noboil/convex/next'
 
 import env from './env'
 

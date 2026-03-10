@@ -1,4 +1,4 @@
-appId: dev.ohmystack.blog
+appId: dev.noboil.blog
 ---
 - clearState
 - launchApp
@@ -17,7 +17,7 @@ appId: dev.ohmystack.blog
       - pressKey: back
 
 - launchApp:
-    appId: dev.ohmystack.blog
+    appId: dev.noboil.blog
     clearState: false
 
 - extendedWaitUntil:

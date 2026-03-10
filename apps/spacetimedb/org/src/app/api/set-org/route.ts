@@ -1,6 +1,6 @@
 import type { NextRequest } from 'next/server'
 
-import { setActiveOrgCookie } from '@ohmystack/spacetimedb/next'
+import { setActiveOrgCookie } from '@noboil/spacetimedb/next'
 import { NextResponse } from 'next/server'
 
 const GET = async (req: NextRequest) => {

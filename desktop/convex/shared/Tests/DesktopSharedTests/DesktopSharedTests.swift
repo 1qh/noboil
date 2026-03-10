@@ -18,7 +18,7 @@ struct ConvexClientTests {
 }
 
 struct AuthClientTests {
-    private let service = "dev.ohmystack.test.\(ProcessInfo.processInfo.globallyUniqueString)"
+    private let service = "dev.noboil.test.\(ProcessInfo.processInfo.globallyUniqueString)"
 
     @Test("Init and default state")
     func initDefaultState() {

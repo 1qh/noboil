@@ -3,8 +3,8 @@
 // biome-ignore-all lint/performance/noAwaitInLoops: test fixtures
 import { describe, expect, test } from 'bun:test'
 import { convexTest } from 'convex-test'
-import { createTestContext } from '@ohmystack/convex/test'
-import { discoverModules } from '@ohmystack/convex/test/discover'
+import { createTestContext } from '@noboil/convex/test'
+import { discoverModules } from '@noboil/convex/test/discover'
 
 import { api } from './_generated/api'
 import schema from './schema'
@@ -768,7 +768,7 @@ describe('cacheCrud factory', () => {
 
 describe('Zod integration', () => {
   test('unwrapZod handles optional wrapper', async () => {
-    const { unwrapZod } = await import('@ohmystack/convex/zod'),
+    const { unwrapZod } = await import('@noboil/convex/zod'),
       { z } = await import('zod/v4'),
       wrapped = z.string().optional(),
       { type } = unwrapZod(wrapped)
@@ -777,7 +777,7 @@ describe('Zod integration', () => {
   })
 
   test('unwrapZod handles nullable wrapper', async () => {
-    const { unwrapZod } = await import('@ohmystack/convex/zod'),
+    const { unwrapZod } = await import('@noboil/convex/zod'),
       { z } = await import('zod/v4'),
       wrapped = z.number().nullable(),
       { type } = unwrapZod(wrapped)
@@ -786,7 +786,7 @@ describe('Zod integration', () => {
   })
 
   test('unwrapZod handles default wrapper', async () => {
-    const { unwrapZod } = await import('@ohmystack/convex/zod'),
+    const { unwrapZod } = await import('@noboil/convex/zod'),
       { z } = await import('zod/v4'),
       wrapped = z.boolean().default(false),
       { type } = unwrapZod(wrapped)
@@ -795,7 +795,7 @@ describe('Zod integration', () => {
   })
 
   test('unwrapZod handles multiple wrappers', async () => {
-    const { unwrapZod } = await import('@ohmystack/convex/zod'),
+    const { unwrapZod } = await import('@noboil/convex/zod'),
       { z } = await import('zod/v4'),
       wrapped = z.string().optional().nullable(),
       { type } = unwrapZod(wrapped)
@@ -804,7 +804,7 @@ describe('Zod integration', () => {
   })
 
   test('unwrapZod handles array types', async () => {
-    const { unwrapZod } = await import('@ohmystack/convex/zod'),
+    const { unwrapZod } = await import('@noboil/convex/zod'),
       { z } = await import('zod/v4'),
       arr = z.array(z.string()),
       { type } = unwrapZod(arr)
@@ -813,7 +813,7 @@ describe('Zod integration', () => {
   })
 
   test('cvFileKindOf detects file meta', async () => {
-    const { cvFileKindOf } = await import('@ohmystack/convex/zod'),
+    const { cvFileKindOf } = await import('@noboil/convex/zod'),
       { z } = await import('zod/v4'),
       fileSchema = z.string().meta({ cv: 'file' }),
       kind = cvFileKindOf(fileSchema)
@@ -822,7 +822,7 @@ describe('Zod integration', () => {
   })
 
   test('cvFileKindOf detects array of files as files', async () => {
-    const { cvFileKindOf } = await import('@ohmystack/convex/zod'),
+    const { cvFileKindOf } = await import('@noboil/convex/zod'),
       { z } = await import('zod/v4'),
       filesSchema = z.array(z.string().meta({ cv: 'file' })),
       kind = cvFileKindOf(filesSchema)
@@ -831,7 +831,7 @@ describe('Zod integration', () => {
   })
 
   test('cvFileKindOf returns undefined for non-file schemas', async () => {
-    const { cvFileKindOf } = await import('@ohmystack/convex/zod'),
+    const { cvFileKindOf } = await import('@noboil/convex/zod'),
       { z } = await import('zod/v4'),
       stringSchema = z.string(),
       kind = cvFileKindOf(stringSchema)
@@ -840,7 +840,7 @@ describe('Zod integration', () => {
   })
 
   test('type detection for all primitive types', async () => {
-    const { isArrayType, isBooleanType, isDateType, isNumberType, isStringType } = await import('@ohmystack/convex/zod')
+    const { isArrayType, isBooleanType, isDateType, isNumberType, isStringType } = await import('@noboil/convex/zod')
 
     expect(isStringType('string')).toBe(true)
     expect(isStringType('enum')).toBe(true)
@@ -864,7 +864,7 @@ describe('Zod integration', () => {
   })
 
   test('enumToOptions transforms enum schema', async () => {
-    const { enumToOptions } = await import('@ohmystack/convex/zod'),
+    const { enumToOptions } = await import('@noboil/convex/zod'),
       { z } = await import('zod/v4'),
       enumSchema = z.enum(['pending', 'active', 'completed']),
       options = enumToOptions(enumSchema)
@@ -877,7 +877,7 @@ describe('Zod integration', () => {
   })
 
   test('enumToOptions with custom transform', async () => {
-    const { enumToOptions } = await import('@ohmystack/convex/zod'),
+    const { enumToOptions } = await import('@noboil/convex/zod'),
       { z } = await import('zod/v4'),
       enumSchema = z.enum(['tech', 'life']),
       options = enumToOptions(enumSchema, v => v.toUpperCase())
@@ -889,7 +889,7 @@ describe('Zod integration', () => {
   })
 
   test('requiredPartial creates partial with required fields', async () => {
-    const { requiredPartial } = await import('@ohmystack/convex/zod'),
+    const { requiredPartial } = await import('@noboil/convex/zod'),
       { z } = await import('zod/v4'),
       testSchema = z.object({
         email: z.string(),
@@ -903,7 +903,7 @@ describe('Zod integration', () => {
   })
 
   test('requiredPartial fails without required field', async () => {
-    const { requiredPartial } = await import('@ohmystack/convex/zod'),
+    const { requiredPartial } = await import('@noboil/convex/zod'),
       { z } = await import('zod/v4'),
       testSchema = z.object({
         id: z.string(),
@@ -916,7 +916,7 @@ describe('Zod integration', () => {
   })
 
   test('unwrapZod handles catch wrapper', async () => {
-    const { unwrapZod } = await import('@ohmystack/convex/zod'),
+    const { unwrapZod } = await import('@noboil/convex/zod'),
       { z } = await import('zod/v4'),
       wrapped = z.string().catch('default'),
       { type } = unwrapZod(wrapped)
@@ -925,7 +925,7 @@ describe('Zod integration', () => {
   })
 
   test('elementOf extracts array element schema', async () => {
-    const { elementOf, unwrapZod } = await import('@ohmystack/convex/zod'),
+    const { elementOf, unwrapZod } = await import('@noboil/convex/zod'),
       { z } = await import('zod/v4'),
       arraySchema = z.array(z.number()),
       { schema: unwrapped } = unwrapZod(arraySchema),
@@ -1678,7 +1678,7 @@ describe('where clause types', () => {
 
 describe('Zod introspection snapshots', () => {
   test('defaultValues returns correct defaults for all types', async () => {
-    const { defaultValues } = await import('@ohmystack/convex/zod'),
+    const { defaultValues } = await import('@noboil/convex/zod'),
       { z } = await import('zod/v4'),
       testSchema = z.object({
         active: z.boolean(),
@@ -1705,7 +1705,7 @@ describe('Zod introspection snapshots', () => {
   })
 
   test('coerceOptionals trims and nullifies empty optional strings', async () => {
-    const { coerceOptionals } = await import('@ohmystack/convex/zod'),
+    const { coerceOptionals } = await import('@noboil/convex/zod'),
       { z } = await import('zod/v4'),
       testSchema = z.object({
         bio: z.string().optional(),
@@ -1718,7 +1718,7 @@ describe('Zod introspection snapshots', () => {
   })
 
   test('coerceOptionals preserves non-empty optional strings after trim', async () => {
-    const { coerceOptionals } = await import('@ohmystack/convex/zod'),
+    const { coerceOptionals } = await import('@noboil/convex/zod'),
       { z } = await import('zod/v4'),
       testSchema = z.object({
         bio: z.string().optional()
@@ -1729,7 +1729,7 @@ describe('Zod introspection snapshots', () => {
   })
 
   test('coerceOptionals ignores non-string optional fields', async () => {
-    const { coerceOptionals } = await import('@ohmystack/convex/zod'),
+    const { coerceOptionals } = await import('@noboil/convex/zod'),
       { z } = await import('zod/v4'),
       testSchema = z.object({
         count: z.number().optional()
@@ -1740,7 +1740,7 @@ describe('Zod introspection snapshots', () => {
   })
 
   test('pickValues extracts matching fields with defaults for missing', async () => {
-    const { pickValues } = await import('@ohmystack/convex/zod'),
+    const { pickValues } = await import('@noboil/convex/zod'),
       { z } = await import('zod/v4'),
       testSchema = z.object({
         active: z.boolean(),
@@ -1755,7 +1755,7 @@ describe('Zod introspection snapshots', () => {
   })
 
   test('pickValues preserves existing values', async () => {
-    const { pickValues } = await import('@ohmystack/convex/zod'),
+    const { pickValues } = await import('@noboil/convex/zod'),
       { z } = await import('zod/v4'),
       testSchema = z.object({
         active: z.boolean(),
@@ -1768,7 +1768,7 @@ describe('Zod introspection snapshots', () => {
   })
 
   test('cvFileKindOf handles nullable optional file', async () => {
-    const { cvFileKindOf } = await import('@ohmystack/convex/zod'),
+    const { cvFileKindOf } = await import('@noboil/convex/zod'),
       { z } = await import('zod/v4'),
       field = z.string().meta({ cv: 'file' }).nullable().optional()
 
@@ -1776,7 +1776,7 @@ describe('Zod introspection snapshots', () => {
   })
 
   test('cvFileKindOf returns undefined for plain array', async () => {
-    const { cvFileKindOf } = await import('@ohmystack/convex/zod'),
+    const { cvFileKindOf } = await import('@noboil/convex/zod'),
       { z } = await import('zod/v4'),
       field = z.array(z.string())
 
@@ -1784,7 +1784,7 @@ describe('Zod introspection snapshots', () => {
   })
 
   test('isOptionalField detects optional in nested wrappers', async () => {
-    const { isOptionalField } = await import('@ohmystack/convex/zod'),
+    const { isOptionalField } = await import('@noboil/convex/zod'),
       { z } = await import('zod/v4')
 
     expect(isOptionalField(z.string().optional().nullable())).toBe(true)

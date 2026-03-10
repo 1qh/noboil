@@ -2,7 +2,7 @@
 
 import { tables } from '@a/be-spacetimedb/spacetimedb'
 import { Card, CardContent, CardHeader, CardTitle } from '@a/ui/card'
-import { RoleBadge } from '@ohmystack/spacetimedb/components'
+import { RoleBadge } from '@noboil/spacetimedb/components'
 import { FolderOpen, Users } from 'lucide-react'
 import Link from 'next/link'
 

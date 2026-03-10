@@ -1,8 +1,8 @@
 'use client'
-import type { OrgRole } from '@ohmystack/convex'
+import type { OrgRole } from '@noboil/convex'
 
-import { OrgAvatar, RoleBadge } from '@ohmystack/convex/components'
-import { setActiveOrgCookieClient } from '@ohmystack/convex/react'
+import { OrgAvatar, RoleBadge } from '@noboil/convex/components'
+import { setActiveOrgCookieClient } from '@noboil/convex/react'
 import { useRouter } from 'next/navigation'
 
 interface OrgItem {

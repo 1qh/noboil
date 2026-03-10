@@ -7,7 +7,7 @@ import {
   makeOwned,
   makeSingleton,
   orgSchema
-} from '@ohmystack/convex/schema'
+} from '@noboil/convex/schema'
 import { zid } from 'convex-helpers/server/zod4'
 import { array, boolean, number, object, string, union, enum as zenum } from 'zod/v4'
 

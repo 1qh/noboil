@@ -14,7 +14,7 @@
     "with-env": "dotenv -e ../../.env --"
   },
   "dependencies": {
-    "@ohmystack/spacetimedb": "workspace:*",
+    "@noboil/spacetimedb": "workspace:*",
     "@t3-oss/env-nextjs": "latest",
     "ky": "latest",
     "spacetimedb": "latest"

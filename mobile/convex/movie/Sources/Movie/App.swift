@@ -3,7 +3,7 @@ import Foundation
 import OSLog
 import SwiftUI
 
-internal let logger = Logger(subsystem: "dev.ohmystack.movie", category: "Movie")
+internal let logger = Logger(subsystem: "dev.noboil.movie", category: "Movie")
 
 internal enum AppTab: String, Hashable {
     case fetch

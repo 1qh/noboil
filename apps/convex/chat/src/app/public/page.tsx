@@ -1,7 +1,7 @@
 'use client'
 
 import { api } from '@a/be-convex'
-import { useList } from '@ohmystack/convex/react'
+import { useList } from '@noboil/convex/react'
 import Link from 'next/link'
 
 const Page = () => {

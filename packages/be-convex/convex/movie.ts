@@ -1,6 +1,6 @@
 import type { output } from 'zod/v4'
 
-import { withRetry } from '@ohmystack/convex/retry'
+import { withRetry } from '@noboil/convex/retry'
 import { v } from 'convex/values'
 import ky from 'ky'
 

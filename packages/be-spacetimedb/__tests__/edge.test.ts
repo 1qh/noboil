@@ -1,4 +1,4 @@
-import { callReducer, extractErrorData, getErrorCode } from '@ohmystack/spacetimedb/test'
+import { callReducer, extractErrorData, getErrorCode } from '@noboil/spacetimedb/test'
 import { describe, expect, test } from 'bun:test'
 
 import type { ErrorContext, EventContext, ReducerEventContext, SubscriptionEventContext } from '../module_bindings'

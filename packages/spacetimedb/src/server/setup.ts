@@ -1241,7 +1241,7 @@ const compoundIndexToEntry = (columns: string[]): { accessor: string; algorithm:
       table
     }
   },
-  ohmystackStdb = (
+  noboilStdb = (
     define: (helpers: {
       cacheTable: (keyFieldOrName: string | TblKey, fields: TblInput, options?: { ttl?: number }) => BsTable
       childTable: (fkOrChild: ChildLike | string, schema?: TblChild) => BsTable
@@ -1335,4 +1335,4 @@ const compoundIndexToEntry = (columns: string[]): { accessor: string; algorithm:
   }
 
 export type { CrudDefaults, OrgTypeBuilders }
-export { ohmystackStdb, setup, setupCrud }
+export { noboilStdb, setup, setupCrud }

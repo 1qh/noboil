@@ -1,6 +1,6 @@
 import type { ZodObject, ZodRawShape } from 'zod/v4'
 
-import { checkSchema } from '@ohmystack/convex/server'
+import { checkSchema } from '@noboil/convex/server'
 
 import { base, children, owned } from './t'
 

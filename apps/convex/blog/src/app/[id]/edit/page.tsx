@@ -2,7 +2,7 @@ import type { Id } from '@a/be-convex/model'
 
 import { api } from '@a/be-convex'
 import { isId } from '@a/fe/utils'
-import { getToken } from '@ohmystack/convex/next'
+import { getToken } from '@noboil/convex/next'
 import { preloadQuery } from 'convex/nextjs'
 import { notFound } from 'next/navigation'
 import { connection } from 'next/server'

@@ -38,7 +38,7 @@ const PRESENCE_TTL_FALLBACK_MS = HEARTBEAT_INTERVAL_MS * 2,
       } catch (error) {
         // eslint-disable-next-line no-console
         console.error(
-          '[@ohmystack/spacetimedb] Presence heartbeat failed — will retry on next interval. If this persists, check your SpacetimeDB connection:',
+          '[@noboil/spacetimedb] Presence heartbeat failed — will retry on next interval. If this persists, check your SpacetimeDB connection:',
           error
         )
       }

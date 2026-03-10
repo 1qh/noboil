@@ -1,13 +1,13 @@
 /** biome-ignore-all lint/suspicious/useAwait: promise-function-async conflict */
 import type { Doc } from '@a/be-convex/model'
-import type { OrgRole } from '@ohmystack/convex'
+import type { OrgRole } from '@noboil/convex'
 import type { FunctionReference } from 'convex/server'
 import type { ReactNode } from 'react'
 
 import { api } from '@a/be-convex'
 import AuthLayout from '@a/fe/auth-layout'
 import ConvexProvider from '@a/fe/convex-provider'
-import { getActiveOrg, getToken, isAuthenticated } from '@ohmystack/convex/next'
+import { getActiveOrg, getToken, isAuthenticated } from '@noboil/convex/next'
 import { fetchQuery } from 'convex/nextjs'
 import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'

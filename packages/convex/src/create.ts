@@ -12,7 +12,7 @@ const green = (s: string) => `\u001B[32m${s}\u001B[0m`,
   bold = (s: string) => `\u001B[1m${s}\u001B[0m`,
   SCHEMA_TS = `import { authTables } from '@convex-dev/auth/server'
 import { defineSchema } from 'convex/server'
-import { ownedTable, rateLimitTable, uploadTables } from '@ohmystack/convex/server'
+import { ownedTable, rateLimitTable, uploadTables } from '@noboil/convex/server'
 
 import { owned } from './t'
 
@@ -23,7 +23,7 @@ export default defineSchema({
   blog: ownedTable(owned.blog)
 })
 `,
-  T_TS = `import { cvFile, makeOwned } from '@ohmystack/convex/schema'
+  T_TS = `import { cvFile, makeOwned } from '@noboil/convex/schema'
 import { boolean, object, string, enum as zenum } from 'zod/v4'
 
 const owned = makeOwned({
@@ -39,8 +39,8 @@ const owned = makeOwned({
 export { owned }
 `,
   LAZY_TS = `import { getAuthUserId } from '@convex-dev/auth/server'
-import { makeFileUpload, setup } from '@ohmystack/convex/server'
-// import { auditLog, inputSanitize, slowQueryWarn } from '@ohmystack/convex/server'
+import { makeFileUpload, setup } from '@noboil/convex/server'
+// import { auditLog, inputSanitize, slowQueryWarn } from '@noboil/convex/server'
 
 import { action, internalMutation, internalQuery, mutation, query } from './_generated/server'
 
@@ -79,7 +79,7 @@ export const {
 
 export const { info, upload } = file
 `,
-  GUARDED_API_TS = `import { guardApi } from '@ohmystack/convex'
+  GUARDED_API_TS = `import { guardApi } from '@noboil/convex'
 
 import { api as rawApi } from './convex/_generated/api'
 
@@ -92,7 +92,7 @@ import type { ReactNode } from 'react'
 
 import { ConvexAuthProvider } from '@convex-dev/auth/react'
 import { ConvexReactClient } from 'convex/react'
-import { ConvexErrorBoundary, FileApiProvider } from '@ohmystack/convex/components'
+import { ConvexErrorBoundary, FileApiProvider } from '@noboil/convex/components'
 
 import { api } from '../convex/_generated/api'
 
@@ -128,7 +128,7 @@ export default RootLayout
 `,
   PAGE_TSX = `'use client'
 import { useMutation } from 'convex/react'
-import { useList } from '@ohmystack/convex/react'
+import { useList } from '@noboil/convex/react'
 import { useState } from 'react'
 
 import { api } from '../../convex/_generated/api'
@@ -239,9 +239,9 @@ NEXT_PUBLIC_CONVEX_URL=
     return { appDir, convexDir, help }
   },
   printHelp = () => {
-    console.log(`${bold('ohmystack-convex init')} — scaffold an @ohmystack/convex project\n`)
+    console.log(`${bold('noboil-convex init')} — scaffold an @noboil/convex project\n`)
     console.log(bold('Usage:'))
-    console.log('  ohmystack-convex init [options]\n')
+    console.log('  noboil-convex init [options]\n')
     console.log(bold('Options:'))
     console.log(`  --convex-dir=DIR  Convex directory ${dim('(default: convex)')}`)
     console.log(`  --app-dir=DIR     Next.js app directory ${dim('(default: src/app)')}`)
@@ -252,7 +252,7 @@ NEXT_PUBLIC_CONVEX_URL=
     if (created > 0) console.log(`${green('✓')} Created ${created} file${created > 1 ? 's' : ''}.`)
     if (skipped > 0) console.log(`${yellow('⚠')} Skipped ${skipped} existing file${skipped > 1 ? 's' : ''}.`)
     console.log(`\n${bold('Next steps:')}`)
-    console.log(`  ${dim('$')} bun add @ohmystack/convex convex @convex-dev/auth zod`)
+    console.log(`  ${dim('$')} bun add @noboil/convex convex @convex-dev/auth zod`)
     console.log(`  ${dim('$')} bunx convex dev & bun dev\n`)
   },
   init = (args: string[] = []) => {
@@ -261,7 +261,7 @@ NEXT_PUBLIC_CONVEX_URL=
       printHelp()
       return
     }
-    console.log(`\n${bold('Scaffolding @ohmystack/convex project...')}\n`)
+    console.log(`\n${bold('Scaffolding @noboil/convex project...')}\n`)
     const b = writeFilesToDir(join(process.cwd(), convexDir), convexDir, BACKEND_FILES),
       f = writeFilesToDir(join(process.cwd(), appDir), appDir, FRONTEND_FILES),
       envPath = join(process.cwd(), '.env.local')
@@ -273,7 +273,7 @@ NEXT_PUBLIC_CONVEX_URL=
     printSummary(b.created + f.created, b.skipped + f.skipped)
   }
 
-if (process.argv[1]?.endsWith('create.ts') || process.argv[1]?.endsWith('create-ohmystack-convex-app'))
+if (process.argv[1]?.endsWith('create.ts') || process.argv[1]?.endsWith('create-noboil-convex-app'))
   init(process.argv.slice(2))
 
 export { init }

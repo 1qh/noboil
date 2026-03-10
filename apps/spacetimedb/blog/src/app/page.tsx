@@ -2,7 +2,7 @@
 
 import { tables } from '@a/be-spacetimedb/spacetimedb'
 import { Input } from '@a/ui/input'
-import { useList, useOwnRows } from '@ohmystack/spacetimedb/react'
+import { useList, useOwnRows } from '@noboil/spacetimedb/react'
 import { Search } from 'lucide-react'
 import { useCallback, useMemo, useState } from 'react'
 import { useSpacetimeDB, useTable } from 'spacetimedb/react'

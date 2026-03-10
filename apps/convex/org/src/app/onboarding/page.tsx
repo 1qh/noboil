@@ -5,7 +5,7 @@ import { api } from '@a/be-convex'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@a/ui/card'
 import { FieldGroup } from '@a/ui/field'
 import { Spinner } from '@a/ui/spinner'
-import { defineSteps } from '@ohmystack/convex/components'
+import { defineSteps } from '@noboil/convex/components'
 import { useMutation, useQuery } from 'convex/react'
 import { toast } from 'sonner'
 

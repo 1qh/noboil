@@ -4,7 +4,7 @@
 import { reducers, tables } from '@a/be-spacetimedb/spacetimedb'
 import { FieldGroup } from '@a/ui/field'
 import { Spinner } from '@a/ui/spinner'
-import { Form, useFormMutation } from '@ohmystack/spacetimedb/components'
+import { Form, useFormMutation } from '@noboil/spacetimedb/components'
 import Link from 'next/link'
 import { useReducer, useSpacetimeDB, useTable } from 'spacetimedb/react'
 

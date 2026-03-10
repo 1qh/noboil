@@ -1,10 +1,10 @@
 'use client'
 
-import type { OrgRole } from '@ohmystack/spacetimedb'
-import type { OrgDoc } from '@ohmystack/spacetimedb/react'
+import type { OrgRole } from '@noboil/spacetimedb'
+import type { OrgDoc } from '@noboil/spacetimedb/react'
 import type { ReactNode } from 'react'
 
-import { OrgProvider } from '@ohmystack/spacetimedb/react'
+import { OrgProvider } from '@noboil/spacetimedb/react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 

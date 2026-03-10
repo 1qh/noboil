@@ -1,8 +1,8 @@
 'use client'
-import type { OrgRole } from '@ohmystack/spacetimedb'
+import type { OrgRole } from '@noboil/spacetimedb'
 
-import { OrgAvatar, RoleBadge } from '@ohmystack/spacetimedb/components'
-import { setActiveOrgCookieClient } from '@ohmystack/spacetimedb/react'
+import { OrgAvatar, RoleBadge } from '@noboil/spacetimedb/components'
+import { setActiveOrgCookieClient } from '@noboil/spacetimedb/react'
 import { useRouter } from 'next/navigation'
 
 interface OrgItem {

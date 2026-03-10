@@ -153,7 +153,7 @@ const useWithGuard = <T extends Record<string, unknown>, S extends ZodObject<Zod
     if (isDev && hasFileFields(meta) && !fileCtx)
       // eslint-disable-next-line no-console
       console.warn(
-        '[@ohmystack/convex] Form schema has file fields but no FileApiProvider found. Wrap your app in <FileApiProvider> for file uploads to work.'
+        '[@noboil/convex] Form schema has file fields but no FileApiProvider found. Wrap your app in <FileApiProvider> for file uploads to work.'
       )
     return null
   },

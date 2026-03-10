@@ -9,8 +9,8 @@ import {
   DropdownMenuTrigger
 } from '@a/ui/dropdown-menu'
 import { Skeleton } from '@a/ui/skeleton'
-import { OrgAvatar, RoleBadge } from '@ohmystack/spacetimedb/components'
-import { setActiveOrgCookieClient } from '@ohmystack/spacetimedb/react'
+import { OrgAvatar, RoleBadge } from '@noboil/spacetimedb/components'
+import { setActiveOrgCookieClient } from '@noboil/spacetimedb/react'
 import { ChevronDown, Plus } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 

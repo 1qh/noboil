@@ -3,13 +3,13 @@
 // biome-ignore-all lint/performance/noImgElement: external images
 'use client'
 import type { s } from '@a/be-spacetimedb/t'
-import type { InferCreate } from '@ohmystack/spacetimedb'
+import type { InferCreate } from '@noboil/spacetimedb'
 
 import { reducers } from '@a/be-spacetimedb/spacetimedb'
 import { Badge } from '@a/ui/badge'
 import { Input } from '@a/ui/input'
 import { Skeleton } from '@a/ui/skeleton'
-import { useMut } from '@ohmystack/spacetimedb/react'
+import { useMut } from '@noboil/spacetimedb/react'
 import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import { useState, useTransition } from 'react'

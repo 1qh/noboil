@@ -94,7 +94,7 @@ public final class AuthService: @unchecked Sendable {
     #if !SKIP
     public func signInWithGoogle(
         convexURL: String,
-        callbackScheme: String = "dev.ohmystack"
+        callbackScheme: String = "dev.noboil"
     ) async throws {
         authState = .loading
         authError = nil
@@ -136,7 +136,7 @@ public final class AuthService: @unchecked Sendable {
     public func signInWithGoogle(
         session: WebAuthenticationSession,
         convexURL: String,
-        callbackScheme: String = "dev.ohmystack"
+        callbackScheme: String = "dev.noboil"
     ) async throws {
         authState = .loading
         authError = nil

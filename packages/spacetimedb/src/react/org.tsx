@@ -142,7 +142,7 @@ const EMPTY_ORGS: OrgMembership[] = [],
     const ctx = use(OrgContext)
     if (!ctx)
       throw new Error(
-        '[@ohmystack/spacetimedb] useOrg must be used inside OrgProvider. Wrap your component tree with <OrgProvider> from createOrgHooks(), or check that the component calling useOrg is a descendant of OrgProvider.'
+        '[@noboil/spacetimedb] useOrg must be used inside OrgProvider. Wrap your component tree with <OrgProvider> from createOrgHooks(), or check that the component calling useOrg is a descendant of OrgProvider.'
       )
     return ctx as OrgContextValue<O, M>
   },
@@ -154,7 +154,7 @@ const EMPTY_ORGS: OrgMembership[] = [],
     const ctx = use(ActiveOrgContext)
     if (!ctx)
       throw new Error(
-        '[@ohmystack/spacetimedb] useActiveOrg must be used inside OrgProvider. Wrap your component tree with <OrgProvider> from createOrgHooks(), or check that the component calling useActiveOrg is a descendant of OrgProvider.'
+        '[@noboil/spacetimedb] useActiveOrg must be used inside OrgProvider. Wrap your component tree with <OrgProvider> from createOrgHooks(), or check that the component calling useActiveOrg is a descendant of OrgProvider.'
       )
     return ctx as unknown as ActiveOrgState<O>
   },

@@ -4,8 +4,8 @@
 import { reducers, tables } from '@a/be-spacetimedb/spacetimedb'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@a/ui/card'
 import { FieldGroup } from '@a/ui/field'
-import { defineSteps } from '@ohmystack/spacetimedb/components'
-import { useMut } from '@ohmystack/spacetimedb/react'
+import { defineSteps } from '@noboil/spacetimedb/components'
+import { useMut } from '@noboil/spacetimedb/react'
 import { toast } from 'sonner'
 import { useSpacetimeDB, useTable } from 'spacetimedb/react'
 

@@ -4,7 +4,7 @@ import { api } from '@a/be-convex'
 import { orgScoped } from '@a/be-convex/t'
 import { Card, CardContent, CardHeader, CardTitle } from '@a/ui/card'
 import { FieldGroup } from '@a/ui/field'
-import { Form, useFormMutation } from '@ohmystack/convex/components'
+import { Form, useFormMutation } from '@noboil/convex/components'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 

@@ -3,7 +3,7 @@ import Foundation
 import OSLog
 import SwiftUI
 
-internal let logger = Logger(subsystem: "dev.ohmystack.blog", category: "Blog")
+internal let logger = Logger(subsystem: "dev.noboil.blog", category: "Blog")
 
 internal enum Tab: String, Hashable {
     case posts

@@ -1,5 +1,5 @@
 import { org, singleton } from '@a/be-convex/t'
-import { cvFile } from '@ohmystack/convex/schema'
+import { cvFile } from '@noboil/convex/schema'
 import { boolean, email, object, string } from 'zod/v4'
 
 const orgTeam = org.team.omit({ avatarId: true }),

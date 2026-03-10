@@ -82,7 +82,7 @@ const { pub, auth } = crud('blog', owned.blog, {
 </Tab>
 <Tab value="SpacetimeDB">
 
-`@ohmystack/spacetimedb` auto-generates server-enforced `clientVisibilityFilter` rules from the `pub` option on each table:
+`@noboil/spacetimedb` auto-generates server-enforced `clientVisibilityFilter` rules from the `pub` option on each table:
 
 | Consumer config      | Generated filter                                                     |
 | -------------------- | -------------------------------------------------------------------- |
@@ -96,7 +96,7 @@ const { pub, auth } = crud('blog', owned.blog, {
 When `pub: 'fieldName'` is specified, an index on that field is created automatically.
 
 ```typescript
-export default ohmystackStdb(({ table }) => ({
+export default noboilStdb(({ table }) => ({
   blog: table(s.blog, { pub: 'published' }),
   chat: table(s.chat, { pub: 'isPublic' }),
   message: table(s.message),
@@ -295,7 +295,7 @@ inputSanitize({ fields: ['title', 'content'] })
 The `inputSanitize` middleware is applied to all generated CRUD reducers by default — no consumer configuration required. For custom reducers, apply it manually:
 
 ```typescript
-import { inputSanitize } from '@ohmystack/spacetimedb/server'
+import { inputSanitize } from '@noboil/spacetimedb/server'
 
 const myReducer = composeMiddleware(
   inputSanitize({ fields: ['title', 'content'] }),
@@ -316,7 +316,7 @@ Sanitization is applied recursively to all string values in nested objects and a
 Middleware is a composable security pipeline that runs around every CRUD operation. Configure it once in `setup()` and it applies to all factories:
 
 ```ts
-import { auditLog, inputSanitize, slowQueryWarn } from '@ohmystack/convex/server'
+import { auditLog, inputSanitize, slowQueryWarn } from '@noboil/convex/server'
 
 const { crud, orgCrud } = setup({
   query,
@@ -342,7 +342,7 @@ const { crud, orgCrud } = setup({
 **Custom middleware:**
 
 ```ts
-import type { Middleware } from '@ohmystack/convex/server'
+import type { Middleware } from '@noboil/convex/server'
 
 const notifyOnCreate: Middleware = {
   name: 'notifyOnCreate',
@@ -362,7 +362,7 @@ Middleware can also be applied per-table via `hooks` on individual factories, wh
 Middleware composes around reducers using `composeMiddleware`:
 
 ```typescript
-import { auditLog, inputSanitize } from '@ohmystack/spacetimedb/server'
+import { auditLog, inputSanitize } from '@noboil/spacetimedb/server'
 
 const myReducer = composeMiddleware(
   inputSanitize(),
@@ -397,7 +397,7 @@ All errors use discriminated `ConvexError` with a structured `code` field:
 On the client, use `matchError`, `getErrorCode`, or `handleConvexError` to handle these by code:
 
 ```ts
-import { matchError } from '@ohmystack/convex/server'
+import { matchError } from '@noboil/convex/server'
 
 const msg = matchError(error, {
   NOT_FOUND: () => 'Item not found',
@@ -433,7 +433,7 @@ interface ErrorData {
 }
 ```
 
-`useMut` and `useFormMutation` from `@ohmystack/spacetimedb/react` automatically parse these errors and surface them as toasts or field-level validation messages.
+`useMut` and `useFormMutation` from `@noboil/spacetimedb/react` automatically parse these errors and surface them as toasts or field-level validation messages.
 
 </Tab>
 </Tabs>
@@ -471,7 +471,7 @@ Enable `strictFilter: true` in `setup()` to throw instead of warn when a filter 
 Use `warnLargeFilterSet` in custom queries to catch unbounded data patterns during development:
 
 ```ts
-import { warnLargeFilterSet } from '@ohmystack/convex/server'
+import { warnLargeFilterSet } from '@noboil/convex/server'
 
 const docs = await ctx.db.query('post').collect()
 warnLargeFilterSet(docs.length, 'post', 'home-feed')

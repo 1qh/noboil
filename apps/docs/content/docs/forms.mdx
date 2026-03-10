@@ -15,7 +15,7 @@ This guide walks through building a blog post editor, starting simple and adding
 You have a blog schema and a `crud('blog', owned.blog)` call. Let's build a form to create posts.
 
 ```tsx
-import { Form, useForm } from '@ohmystack/convex/components'
+import { Form, useForm } from '@noboil/convex/components'
 import { useMutation } from 'convex/react'
 import { api } from '../../convex/_generated/api'
 import { owned } from '../../convex/t'
@@ -61,7 +61,7 @@ What's happening:
 `zodFromTable` converts SpacetimeDB table column definitions into a Zod validation schema, letting you reuse your table structure for form validation.
 
 ```typescript
-import { zodFromTable } from '@ohmystack/spacetimedb'
+import { zodFromTable } from '@noboil/spacetimedb'
 import { tables } from '@/generated/module_bindings'
 
 const postSchema = zodFromTable(tables.post.columns)
@@ -179,7 +179,7 @@ zodFromTable(columns, {
 Practical example:
 
 ```typescript
-import { zodFromTable } from '@ohmystack/spacetimedb'
+import { zodFromTable } from '@noboil/spacetimedb'
 import { tables } from '@/generated/module_bindings'
 
 const createPostSchema = zodFromTable(tables.post.columns, {
@@ -231,7 +231,7 @@ File uploads go through a Next.js API route that generates S3/MinIO pre-signed U
 **API route:**
 
 ```typescript
-import { createS3UploadPresignedUrl } from '@ohmystack/spacetimedb/server'
+import { createS3UploadPresignedUrl } from '@noboil/spacetimedb/server'
 import { NextResponse } from 'next/server'
 
 const S3_CONFIG = {
@@ -271,7 +271,7 @@ export const POST = async (req: Request) => {
 ```typescript
 'use client'
 
-import { useUpload } from '@ohmystack/spacetimedb/react'
+import { useUpload } from '@noboil/spacetimedb/react'
 import { useReducer } from 'spacetimedb/react'
 import { reducers } from '@/generated/module_bindings'
 
@@ -330,8 +330,8 @@ This pattern works in local dev (MinIO) and production (S3, R2, etc.) without ch
 Switch to `useFormMutation` which wires up the mutation and pre-fills values:
 
 ```tsx
-import { useFormMutation } from '@ohmystack/convex/react'
-import { pickValues } from '@ohmystack/convex/zod'
+import { useFormMutation } from '@noboil/convex/react'
+import { pickValues } from '@noboil/convex/zod'
 
 const EditPost = ({ post }: { post: Doc<'blog'> }) => {
   const form = useFormMutation({
@@ -482,7 +482,7 @@ const form = useForm({
 Add a save indicator:
 
 ```tsx
-import { AutoSaveIndicator } from '@ohmystack/convex/components'
+import { AutoSaveIndicator } from '@noboil/convex/components'
 ;<AutoSaveIndicator lastSaved={form.lastSaved} />
 ```
 
@@ -571,7 +571,7 @@ Use `@tanstack/react-form`'s async validators:
 For complex forms like onboarding, use `defineSteps` to split into typed steps:
 
 ```tsx
-import { defineSteps } from '@ohmystack/convex/components'
+import { defineSteps } from '@noboil/convex/components'
 
 const { StepForm, useStepper } = defineSteps(
   { id: 'profile', label: 'Profile', schema: profileStep },
@@ -650,7 +650,7 @@ const orgForm = useForm({
 For instant-feeling delete buttons:
 
 ```tsx
-import { useOptimisticMutation } from '@ohmystack/convex/react'
+import { useOptimisticMutation } from '@noboil/convex/react'
 
 const { execute, isPending } = useOptimisticMutation({
   mutation: api.blog.rm,
@@ -665,7 +665,7 @@ The item disappears immediately. If the server rejects, it reappears with an err
 </Tab>
 <Tab value="SpacetimeDB">
 
-SpacetimeDB's ~39ms latency makes optimistic updates unnecessary in most cases. The subscription update arrives before the user notices. For higher-latency deployments, use `useOptimisticMutation` from `@ohmystack/spacetimedb/react`.
+SpacetimeDB's ~39ms latency makes optimistic updates unnecessary in most cases. The subscription update arrives before the user notices. For higher-latency deployments, use `useOptimisticMutation` from `@noboil/spacetimedb/react`.
 
 </Tab>
 </Tabs>
@@ -695,10 +695,10 @@ All components accept `label`, `placeholder`, `disabled`, and `className` props.
 
 With `@tanstack/react-form`, you build your own field components. The `zodFromTable` schema drives validation — field types come from your SpacetimeDB column definitions.
 
-Lower-level utilities are available from `@ohmystack/spacetimedb/react`:
+Lower-level utilities are available from `@noboil/spacetimedb/react`:
 
 ```typescript
-import { buildMeta, getMeta, useForm, useFormMutation } from '@ohmystack/spacetimedb/react'
+import { buildMeta, getMeta, useForm, useFormMutation } from '@noboil/spacetimedb/react'
 ```
 
 For most cases, `@tanstack/react-form` with `zodFromTable` is the recommended approach.
@@ -744,7 +744,7 @@ const form = useFormMutation({
 **Rate limit errors** — when `RATE_LIMITED` is returned, the default error toast shows "Too many requests". For custom UX:
 
 ```tsx
-import { handleConvexError } from '@ohmystack/convex/server'
+import { handleConvexError } from '@noboil/convex/server'
 
 const form = useFormMutation({
   mutation: api.blog.create,
@@ -761,7 +761,7 @@ const form = useFormMutation({
 **Error boundary** — wrap pages with `ConvexErrorBoundary` to catch unhandled errors:
 
 ```tsx
-import { ConvexErrorBoundary } from '@ohmystack/convex/components'
+import { ConvexErrorBoundary } from '@noboil/convex/components'
 ;<ConvexErrorBoundary>
   <BlogEditor />
 </ConvexErrorBoundary>
@@ -773,7 +773,7 @@ import { ConvexErrorBoundary } from '@ohmystack/convex/components'
 Reducer errors use the `SenderError('CODE: message')` convention. Parse them to show field-level errors:
 
 ```typescript
-import { extractErrorData } from '@ohmystack/spacetimedb/server'
+import { extractErrorData } from '@noboil/spacetimedb/server'
 
 const form = useForm({
   onSubmit: async ({ value }) => {
@@ -792,7 +792,7 @@ const form = useForm({
 })
 ```
 
-`useMut` and `useFormMutation` from `@ohmystack/spacetimedb/react` automatically parse these errors and surface them as toasts or field-level validation messages.
+`useMut` and `useFormMutation` from `@noboil/spacetimedb/react` automatically parse these errors and surface them as toasts or field-level validation messages.
 
 </Tab>
 </Tabs>

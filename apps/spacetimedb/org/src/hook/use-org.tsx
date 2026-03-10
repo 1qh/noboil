@@ -2,7 +2,7 @@
 
 import type { Org } from '@a/be-spacetimedb/spacetimedb/types'
 
-import { createOrgHooks } from '@ohmystack/spacetimedb/react'
+import { createOrgHooks } from '@noboil/spacetimedb/react'
 
 const { useActiveOrg, useMyOrgs, useOrg, useOrgMutation } = createOrgHooks<Org & { _id: string }>({
   orgIdForMutation: Number

@@ -3,7 +3,7 @@
 import { api } from '@a/be-convex'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@a/ui/card'
 import { FieldGroup } from '@a/ui/field'
-import { Form, useForm } from '@ohmystack/convex/components'
+import { Form, useForm } from '@noboil/convex/components'
 import slugify from '@sindresorhus/slugify'
 import { useMutation } from 'convex/react'
 import { useRouter } from 'next/navigation'

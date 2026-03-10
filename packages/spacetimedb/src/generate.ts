@@ -59,9 +59,9 @@ volumes:
     }
   },
   printGenerateHelp = () => {
-    console.log(`${bold('ohmystack-stdb generate')} — generate project files\n`)
+    console.log(`${bold('noboil-stdb generate')} — generate project files\n`)
     console.log(bold('Usage:'))
-    console.log('  ohmystack-stdb generate <target> [options]\n')
+    console.log('  noboil-stdb generate <target> [options]\n')
     console.log(bold('Targets:'))
     for (const [name, { description }] of Object.entries(GENERATORS))
       console.log(`  ${name.padEnd(16)} ${dim(description)}`)
@@ -69,9 +69,9 @@ volumes:
     console.log(`  --force    ${dim('Overwrite existing files')}`)
     console.log(`  --stdout   ${dim('Print to stdout instead of writing file')}\n`)
     console.log(bold('Examples:'))
-    console.log(`  ${dim('$')} ohmystack-stdb generate docker`)
-    console.log(`  ${dim('$')} ohmystack-stdb generate docker --stdout`)
-    console.log(`  ${dim('$')} ohmystack-stdb generate docker --force\n`)
+    console.log(`  ${dim('$')} noboil-stdb generate docker`)
+    console.log(`  ${dim('$')} noboil-stdb generate docker --stdout`)
+    console.log(`  ${dim('$')} noboil-stdb generate docker --force\n`)
   },
   generate = (args: string[] = []) => {
     if (args.includes('--help') || args.includes('-h') || args.length === 0) {
@@ -108,7 +108,7 @@ volumes:
     console.log(`  ${dim(outPath)}\n`)
     console.log(bold('Next steps:'))
     console.log(`  ${dim('1.')} docker compose up -d`)
-    console.log(`  ${dim('2.')} ohmystack-stdb use local`)
+    console.log(`  ${dim('2.')} noboil-stdb use local`)
     console.log(`  ${dim('3.')} spacetime publish <your-module> --module-path <path>\n`)
   }
 

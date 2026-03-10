@@ -4,7 +4,7 @@ import type { ReactNode } from 'react'
 
 import ConvexProvider from '@a/fe/convex-provider'
 import { Toaster } from '@a/ui/sonner'
-import { ConvexErrorBoundary } from '@ohmystack/convex/components'
+import { ConvexErrorBoundary } from '@noboil/convex/components'
 import { ThemeProvider } from 'next-themes'
 import { Suspense } from 'react'
 

@@ -24,19 +24,19 @@ const DEFAULT_OPTIONS: Required<RetryOptions> = {
   validateRetryOptions = (opts: Required<RetryOptions>) => {
     if (opts.maxAttempts < 1)
       throw new Error(
-        `[@ohmystack/spacetimedb] withRetry: maxAttempts must be >= 1 (got ${opts.maxAttempts}). Default: ${DEFAULT_OPTIONS.maxAttempts}.`
+        `[@noboil/spacetimedb] withRetry: maxAttempts must be >= 1 (got ${opts.maxAttempts}). Default: ${DEFAULT_OPTIONS.maxAttempts}.`
       )
     if (opts.initialDelayMs < 0)
       throw new Error(
-        `[@ohmystack/spacetimedb] withRetry: initialDelayMs must be >= 0 (got ${opts.initialDelayMs}). Default: ${DEFAULT_OPTIONS.initialDelayMs}ms.`
+        `[@noboil/spacetimedb] withRetry: initialDelayMs must be >= 0 (got ${opts.initialDelayMs}). Default: ${DEFAULT_OPTIONS.initialDelayMs}ms.`
       )
     if (opts.maxDelayMs < 0)
       throw new Error(
-        `[@ohmystack/spacetimedb] withRetry: maxDelayMs must be >= 0 (got ${opts.maxDelayMs}). Default: ${DEFAULT_OPTIONS.maxDelayMs}ms.`
+        `[@noboil/spacetimedb] withRetry: maxDelayMs must be >= 0 (got ${opts.maxDelayMs}). Default: ${DEFAULT_OPTIONS.maxDelayMs}ms.`
       )
     if (opts.base < 1)
       throw new Error(
-        `[@ohmystack/spacetimedb] withRetry: base must be >= 1 (got ${opts.base}). Default: ${DEFAULT_OPTIONS.base}.`
+        `[@noboil/spacetimedb] withRetry: base must be >= 1 (got ${opts.base}). Default: ${DEFAULT_OPTIONS.base}.`
       )
   },
   /** Retries an async function with exponential backoff and jitter. */

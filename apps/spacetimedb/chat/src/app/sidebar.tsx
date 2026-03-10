@@ -5,7 +5,7 @@ import type { Chat } from '@a/be-spacetimedb/spacetimedb/types'
 import { reducers, tables } from '@a/be-spacetimedb/spacetimedb'
 import { toIdentityKey } from '@a/fe/utils'
 import { Spinner } from '@a/ui/spinner'
-import { useMut } from '@ohmystack/spacetimedb/react'
+import { useMut } from '@noboil/spacetimedb/react'
 import { Check } from 'lucide-react'
 import { useSpacetimeDB, useTable } from 'spacetimedb/react'
 

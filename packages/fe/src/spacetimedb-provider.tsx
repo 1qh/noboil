@@ -3,8 +3,8 @@
 import type { ReactNode } from 'react'
 
 import { DbConnection } from '@a/be-spacetimedb/spacetimedb'
-import { FileApiProvider } from '@ohmystack/spacetimedb/components'
-import { createFileUploader, createSpacetimeClient, createTokenStore } from '@ohmystack/spacetimedb/react'
+import { FileApiProvider } from '@noboil/spacetimedb/components'
+import { createFileUploader, createSpacetimeClient, createTokenStore } from '@noboil/spacetimedb/react'
 import { NavigationGuardProvider } from 'next-navigation-guard'
 import { AuthProvider as OidcProvider } from 'react-oidc-context'
 import { SpacetimeDBProvider as BaseProvider } from 'spacetimedb/react'

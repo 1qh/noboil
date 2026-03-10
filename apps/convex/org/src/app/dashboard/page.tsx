@@ -2,8 +2,8 @@
 
 import { api } from '@a/be-convex'
 import { Card, CardContent, CardHeader, CardTitle } from '@a/ui/card'
-import { RoleBadge } from '@ohmystack/convex/components'
-import { useOrgQuery } from '@ohmystack/convex/react'
+import { RoleBadge } from '@noboil/convex/components'
+import { useOrgQuery } from '@noboil/convex/react'
 import { FolderOpen, Users } from 'lucide-react'
 import Link from 'next/link'
 

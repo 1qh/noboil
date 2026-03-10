@@ -88,9 +88,9 @@ const TABLE_TYPES = new Set<TableType>(['cache', 'child', 'org', 'owned', 'singl
     return { appDir, convexDir, fields, help, name, parent, type }
   },
   printAddHelp = () => {
-    console.log(`${bold('ohmystack-convex add')} — add a new table/endpoint to your project\n`)
+    console.log(`${bold('noboil-convex add')} — add a new table/endpoint to your project\n`)
     console.log(bold('Usage:'))
-    console.log('  ohmystack-convex add <table-name> [options]\n')
+    console.log('  noboil-convex add <table-name> [options]\n')
     console.log(bold('Options:'))
     console.log(`  --type=TYPE           Table type: owned, org, singleton, cache, child ${dim('(default: owned)')}`)
     console.log(
@@ -101,13 +101,13 @@ const TABLE_TYPES = new Set<TableType>(['cache', 'child', 'org', 'owned', 'singl
     console.log(`  --app-dir=DIR         App directory ${dim('(default: src/app)')}`)
     console.log('  --help, -h            Show this help\n')
     console.log(bold('Examples:'))
-    console.log(`  ${dim('$')} ohmystack-convex add todo --fields="title:string,done:boolean"`)
+    console.log(`  ${dim('$')} noboil-convex add todo --fields="title:string,done:boolean"`)
     console.log(
-      `  ${dim('$')} ohmystack-convex add wiki --type=org --fields="title:string,content:string,status:enum(draft,published)"`
+      `  ${dim('$')} noboil-convex add wiki --type=org --fields="title:string,content:string,status:enum(draft,published)"`
     )
-    console.log(`  ${dim('$')} ohmystack-convex add message --type=child --parent=chat --fields="text:string"`)
-    console.log(`  ${dim('$')} ohmystack-convex add profile --type=singleton --fields="displayName:string,bio:string?"`)
-    console.log(`  ${dim('$')} ohmystack-convex add movie --type=cache --fields="title:string,tmdb_id:number"\n`)
+    console.log(`  ${dim('$')} noboil-convex add message --type=child --parent=chat --fields="text:string"`)
+    console.log(`  ${dim('$')} noboil-convex add profile --type=singleton --fields="displayName:string,bio:string?"`)
+    console.log(`  ${dim('$')} noboil-convex add movie --type=cache --fields="title:string,tmdb_id:number"\n`)
   },
   fieldToZod = (f: ParsedField): string => {
     const base = typeof f.type === 'object' ? `zenum([${f.type.enum.map(v => `'${v}'`).join(', ')}])` : `${f.type}()`
@@ -172,7 +172,7 @@ const TABLE_TYPES = new Set<TableType>(['cache', 'child', 'org', 'owned', 'singl
     const sortedImports = [...zodImports].toSorted()
 
     if (type === 'child')
-      return `import { child } from '@ohmystack/convex/schema'
+      return `import { child } from '@noboil/convex/schema'
 import { ${sortedImports.join(', ')} } from 'zod/v4'
 
 const ${name}Child = child({
@@ -187,7 +187,7 @@ export { ${name}Child }
 `
 
     const importFn = schemaImport(type)
-    return `import { ${importFn} } from '@ohmystack/convex/schema'
+    return `import { ${importFn} } from '@noboil/convex/schema'
 import { ${sortedImports.join(', ')} } from 'zod/v4'
 
 const ${wrapper} = ${importFn}({
@@ -279,7 +279,7 @@ export default ${title.replaceAll(/\s/gu, '')}Page
 `
 
     return `'use client'
-import { useList } from '@ohmystack/convex/react'
+import { useList } from '@noboil/convex/react'
 
 import { api } from '../../../guarded-api'
 

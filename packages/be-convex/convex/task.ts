@@ -1,4 +1,4 @@
-import { canEdit, err, requireOrgMember, requireOrgRole, time } from '@ohmystack/convex/server'
+import { canEdit, err, requireOrgMember, requireOrgRole, time } from '@noboil/convex/server'
 import { zid } from 'convex-helpers/server/zod4'
 
 import type { Doc, Id, TableNames } from './_generated/dataModel'
@@ -8,7 +8,7 @@ import { orgScoped } from '../t'
 
 type OrgDoc<T extends TableNames> = Doc<T> & { orgId: Id<'org'>; userId: Id<'users'> }
 
-// eslint-disable-next-line ohmystack-convex/require-rate-limit -- demo backend keeps default write throughput
+// eslint-disable-next-line noboil-convex/require-rate-limit -- demo backend keeps default write throughput
 const { bulkRm, bulkUpdate, create, list, read, rm, update } = orgCrud('task', orgScoped.task, {
     aclFrom: { field: 'projectId', table: 'project' }
   }),
@@ -24,7 +24,7 @@ const { bulkRm, bulkUpdate, create, list, read, rm, update } = orgCrud('task', o
       return tasks.filter(t => (t as OrgDoc<'task'>).orgId === orgId)
     }
   }),
-  // eslint-disable-next-line ohmystack-convex/no-unprotected-mutation -- demo endpoint checks org membership and ACL in handler
+  // eslint-disable-next-line noboil-convex/no-unprotected-mutation -- demo endpoint checks org membership and ACL in handler
   toggle = m({
     args: { id: zid('task'), orgId: zid('org') },
     handler: async (ctx, { id, orgId }) => {
@@ -40,7 +40,7 @@ const { bulkRm, bulkUpdate, create, list, read, rm, update } = orgCrud('task', o
       return ctx.db.get(id)
     }
   }),
-  // eslint-disable-next-line ohmystack-convex/no-unprotected-mutation -- demo endpoint checks org role and ownership in handler
+  // eslint-disable-next-line noboil-convex/no-unprotected-mutation -- demo endpoint checks org role and ownership in handler
   assign = m({
     args: {
       assigneeId: zid('users').optional(),

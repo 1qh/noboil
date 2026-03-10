@@ -2,7 +2,7 @@ import type { Id } from '@a/be-convex/model'
 import type { UIMessage } from 'ai'
 
 import { api } from '@a/be-convex'
-import { getToken, isAuthenticated } from '@ohmystack/convex/next'
+import { getToken, isAuthenticated } from '@noboil/convex/next'
 import { fetchQuery } from 'convex/nextjs'
 import { redirect } from 'next/navigation'
 import { connection } from 'next/server'

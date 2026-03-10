@@ -1,10 +1,10 @@
 'use client'
 
-import type { OrgRole } from '@ohmystack/convex'
-import type { OrgDocLike } from '@ohmystack/convex/server'
+import type { OrgRole } from '@noboil/convex'
+import type { OrgDocLike } from '@noboil/convex/server'
 import type { ReactNode } from 'react'
 
-import { OrgProvider } from '@ohmystack/convex/react'
+import { OrgProvider } from '@noboil/convex/react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
