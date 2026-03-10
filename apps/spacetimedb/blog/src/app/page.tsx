@@ -1,10 +1,9 @@
 'use client'
 
 import { tables } from '@a/be-spacetimedb/spacetimedb'
-import { Button } from '@a/ui/button'
-import { Input } from '@a/ui/input'
+import LoadMoreButton from '@a/fe/load-more-button'
+import SearchInput from '@a/fe/search-input'
 import { useList, useOwnRows } from '@noboil/spacetimedb/react'
-import { Search } from 'lucide-react'
 import { useCallback, useMemo, useState } from 'react'
 import { useSpacetimeDB, useTable } from 'spacetimedb/react'
 
@@ -33,27 +32,15 @@ const Page = () => {
   return (
     <div data-testid='crud-dynamic-page'>
       <Create />
-      <div className='relative mb-4'>
-        <Search className='absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground' />
-        <Input
-          className='pl-9'
-          data-testid='blog-search-input'
-          onChange={e => setQuery(e.target.value)}
-          placeholder='Search blogs...'
-          type='search'
-          value={query}
-        />
-      </div>
+      <SearchInput
+        className='mb-4'
+        data-testid='blog-search-input'
+        onValueChange={setQuery}
+        placeholder='Search blogs...'
+        value={query}
+      />
       <List blogs={filtered} onRemove={handleRemove} />
-      {!query && hasMore && !isLoading ? (
-        <Button
-          className='mx-auto mt-4 block text-sm text-muted-foreground hover:text-foreground'
-          onClick={() => loadMore()}
-          size='sm'
-          variant='ghost'>
-          Load more
-        </Button>
-      ) : null}
+      {!query && hasMore && !isLoading ? <LoadMoreButton onLoadMore={loadMore} /> : null}
     </div>
   )
 }
