@@ -60,7 +60,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
-      - run: bun i --frozen-lockfile
+      - run: rm -f bun.lock && bun i
       - run: bun run check
 
   typecheck-build:
@@ -70,8 +70,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
-      - run: bun i --frozen-lockfile
-      - run: bun turbo typecheck build --filter='!@a/convex-*' --filter='!@a/stdb-*' --filter='!@a/docs' --filter='!@a/ui' --output-logs=errors-only
+      - run: rm -f bun.lock && bun i
+      - run: bun turbo typecheck build --output-logs=errors-only
 
   test:
     needs: changes
@@ -80,7 +80,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
-      - run: bun i --frozen-lockfile
+      - run: rm -f bun.lock && bun i
       - run: bun --cwd packages/convex test
       - run: bun --cwd packages/spacetimedb test
 
@@ -91,7 +91,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
-      - run: bun i --frozen-lockfile
+      - run: rm -f bun.lock && bun i
       - run: bun ui:sync:check
 
   lint-swift:

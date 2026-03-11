@@ -12,6 +12,8 @@
     "with-env": "dotenv -e ../../../.env --"
   },
   "dependencies": {
+    "@ai-sdk/react": "latest",
+    "ai": "latest",
     "react-intersection-observer": "latest"
   },
   "devDependencies": {
