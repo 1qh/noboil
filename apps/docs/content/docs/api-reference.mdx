@@ -38,7 +38,7 @@ Peer dependencies: `spacetimedb`, `zod`, `@tanstack/react-form`, `react`.
 | `@noboil/convex`             | `guardApi`, `strictApi` |
 | `@noboil/convex/server`      | `setup`, `ownedTable`, `orgTable`, `baseTable`, `singletonTable`, `childTable`, `orgChildTable`, `orgTables`, `uploadTables`, `rateLimitTable`, `orgCascade`, `ownedCascade`, `canEdit`, `getOrgMember`, `getOrgRole`, `requireOrgMember`, `requireOrgRole`, `handleConvexError`, `getErrorCode`, `getErrorMessage`, `getErrorDetail`, `extractErrorData`, `isErrorCode`, `isMutationError`, `isRecord`, `matchError`, `checkRateLimit`, `checkSchema`, `makeOrg`, `makeFileUpload`, `makePresence`, `presenceTable`, `err`, `ok`, `fail`, `time`, `composeMiddleware`, `auditLog`, `inputSanitize`, `slowQueryWarn` |
 | `@noboil/convex/test`        | `makeTestAuth`, `makeOrgTestCrud`, `getOrgMembership`, `discoverModules`, `createTestContext`, `isTestMode`, `TEST_EMAIL` |
-| `@noboil/convex/react`       | `createOrgHooks`, `useForm`, `useFormMutation`, `useList`, `useOwnRows`, `useSearch`, `useInfiniteList`, `usePresence`, `useOptimisticMutation`, `useSoftDelete`, `useUpload`, `useBulkSelection`, `useBulkMutate`, `useCacheEntry`, `useMutate`, `useOnlineStatus`, `useErrorToast`, `makeErrorHandler`, `OrgProvider`, `OptimisticProvider`, `useOrg`, `useActiveOrg`, `useMyOrgs`, `useOrgQuery`, `useOrgMutation`, `canEditResource`, `setActiveOrgCookieClient`, `buildMeta`, `getMeta`, `useDevErrors`, `OhmystackDevtools`, `SchemaPlayground`, `usePendingMutations`, `defaultOnError` |
+| `@noboil/convex/react`       | `createOrgHooks`, `useForm`, `useFormMutation`, `useList`, `useOwnRows`, `useSearch`, `useInfiniteList`, `usePresence`, `useOptimisticMutation`, `useSoftDelete`, `useUpload`, `useBulkSelection`, `useBulkMutate`, `useCacheEntry`, `useMutate`, `useOnlineStatus`, `useErrorToast`, `makeErrorHandler`, `toastFieldError`, `OrgProvider`, `OptimisticProvider`, `useOrg`, `useActiveOrg`, `useMyOrgs`, `useOrgQuery`, `useOrgMutation`, `canEditResource`, `setActiveOrgCookieClient`, `buildMeta`, `getMeta`, `useDevErrors`, `LazyConvexDevtools`, `SchemaPlayground`, `usePendingMutations`, `defaultOnError` |
 | `@noboil/convex/components`  | `Form`, `defineSteps`, `EditorsSection`, `PermissionGuard`, `OfflineIndicator`, `OrgAvatar`, `RoleBadge`, `AutoSaveIndicator`, `ConflictDialog`, `ConvexErrorBoundary`, `FileApiProvider` |
 | `@noboil/convex/schema`      | `child`, `cvFile`, `cvFiles`, `makeBase`, `makeOrgScoped`, `makeOwned`, `makeSingleton`, `orgSchema` |
 | `@noboil/convex/zod`         | `unwrapZod`, `cvFileKindOf`, `cvMetaOf`, `defaultValue`, `defaultValues`, `elementOf`, `enumToOptions`, `isArrayType`, `isBooleanType`, `isDateType`, `isNumberType`, `isOptionalField`, `isStringType`, `pickValues`, `coerceOptionals`, `requiredPartial` |
@@ -52,7 +52,7 @@ Peer dependencies: `spacetimedb`, `zod`, `@tanstack/react-form`, `react`.
 | ------------------------------------ | ----------- |
 | `@noboil/spacetimedb`             | `idToWire`, `idFromWire`, `identityToHex`, `identityFromHex`, `UndefinedToOptional` |
 | `@noboil/spacetimedb/server`      | `noboilStdb`, `makePresence`, `makeFileUpload`, `makeSchema`, `setupCrud`, `ownedTable`, `orgScopedTable`, `orgTable`, `singletonTable`, `cacheTable`, `childTable`, `err`, `errValidation`, `extractErrorData`, `getErrorCode`, `getErrorMessage`, `getFirstFieldError`, `identityEquals`, `identityToHex`, `identityFromHex`, `composeMiddleware`, `auditLog`, `inputSanitize`, `slowQueryWarn`, `createS3UploadPresignedUrl`, `createS3DownloadPresignedUrl`, `InferRow`, `InferCreate`, `InferUpdate`, `InferRows`, `InferReducerArgs`, `InferReducerReturn`, `TypedFieldErrors`, `getFieldErrors`, `schemaVariants` |
-| `@noboil/spacetimedb/react`       | `createOrgHooks`, `useForm`, `useFormMutation`, `useList`, `useOwnRows`, `useSearch`, `useInfiniteList`, `usePresence`, `useOptimisticMutation`, `useSoftDelete`, `useUpload`, `useBulkSelection`, `useBulkMutate`, `useCacheEntry`, `useMutate`, `useMutation`, `useMut`, `relax`, `useOnlineStatus`, `useErrorToast`, `makeErrorHandler`, `OrgProvider`, `useOrg`, `useActiveOrg`, `useMyOrgs`, `useOrgQuery`, `useOrgMutation`, `toastFieldError`, `defaultOnError`, `OhmystackDevtools`, `SchemaPlayground`, `buildMeta`, `injectError`, `createFileUploader`, `createSpacetimeClient`, `createTokenStore`, `toWsUri` |
+| `@noboil/spacetimedb/react`       | `createOrgHooks`, `useForm`, `useFormMutation`, `useList`, `useOwnRows`, `useSearch`, `useInfiniteList`, `usePresence`, `useOptimisticMutation`, `useSoftDelete`, `useUpload`, `useBulkSelection`, `useBulkMutate`, `useCacheEntry`, `useMutate`, `useMutation`, `useMut`, `useOnlineStatus`, `useErrorToast`, `makeErrorHandler`, `OrgProvider`, `useOrg`, `useActiveOrg`, `useMyOrgs`, `useOrgQuery`, `useOrgMutation`, `toastFieldError`, `defaultOnError`, `BetterspaceDevtools`, `SchemaPlayground`, `buildMeta`, `injectError`, `createFileUploader`, `createSpacetimeClient`, `createTokenStore`, `toWsUri` |
 | `@noboil/spacetimedb/components`  | `Form`, `defineSteps`, `EditorsSection`, `PermissionGuard`, `OfflineIndicator`, `OrgAvatar`, `RoleBadge`, `AutoSaveIndicator`, `ConflictDialog`, `ErrorBoundary`, `FileApiProvider`, `fields` |
 | `@noboil/spacetimedb/schema`      | `schema`, `child` |
 | `@noboil/spacetimedb/zod`         | `partialValues`, `schemaVariants`, `zodFromTable` |
@@ -390,9 +390,14 @@ Manages presence state with heartbeat and TTL-based cleanup.
 ```typescript
 import { usePresence } from '@noboil/convex/react'
 
-const { others, updatePresence } = usePresence(api.presence, {
-  room: docId,
-  initialData: { cursor: { x: 0, y: 0 }, status: 'viewing' as const }
+const refs = {
+  heartbeat: api.presence.heartbeat,
+  leave: api.presence.leave,
+  list: api.presence.list,
+}
+
+const { users, updatePresence } = usePresence(refs, docId, {
+  data: { cursor: { x: 0, y: 0 }, status: 'viewing' as const },
 })
 
 updatePresence({ cursor: { x: 100, y: 200 }, status: 'editing' })
@@ -636,17 +641,6 @@ import { useMut } from '@noboil/spacetimedb/react'
 const save = useMut(reducers.update_blog, {
   onSuccess: () => toast.success('Saved')
 })
-```
-
-### relax (SpacetimeDB only)
-
-Wraps a raw `useReducer` call to apply `UndefinedToOptional` to its argument type:
-
-```typescript
-import { relax } from '@noboil/spacetimedb/react'
-
-const updateTask = relax(useReducer(reducers.updateTask))
-updateTask({ id: 1, completed: true })
 ```
 
 </Tab>
@@ -927,7 +921,7 @@ The default mutation error handler used by all mutation hooks. Handles `NOT_AUTH
 
 ## React components
 
-### OhmystackDevtools
+### Devtools Panels
 
 Development panel showing active subscriptions, pending mutations, and errors:
 
@@ -935,18 +929,18 @@ Development panel showing active subscriptions, pending mutations, and errors:
 <Tab value="Convex">
 
 ```typescript
-import { OhmystackDevtools } from '@noboil/convex/react'
+import { LazyConvexDevtools } from '@noboil/convex/react'
 
-{process.env.NODE_ENV === 'development' && <OhmystackDevtools />}
+{process.env.NODE_ENV === 'development' && <LazyConvexDevtools />}
 ```
 
 </Tab>
 <Tab value="SpacetimeDB">
 
 ```typescript
-import { OhmystackDevtools } from '@noboil/spacetimedb/react'
+import { BetterspaceDevtools } from '@noboil/spacetimedb/react'
 
-{process.env.NODE_ENV === 'development' && <OhmystackDevtools />}
+{process.env.NODE_ENV === 'development' && <BetterspaceDevtools />}
 ```
 
 </Tab>

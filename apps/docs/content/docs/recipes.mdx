@@ -577,9 +577,13 @@ export const { heartbeat, list: listPresence } = makePresence({
 import { usePresence } from '@noboil/convex/react'
 
 const CollaborativeEditor = ({ docId }: { docId: string }) => {
-  const { others, updatePresence } = usePresence(api.presence, {
-    room: docId,
-    initialData: { cursor: { x: 0, y: 0 }, status: 'viewing' as const }
+  const refs = {
+    heartbeat: api.presence.heartbeat,
+    leave: api.presence.leave,
+    list: api.presence.list,
+  }
+  const { users, updatePresence } = usePresence(refs, docId, {
+    data: { cursor: { x: 0, y: 0 }, status: 'viewing' as const }
   })
 
   const handleMouseMove = (e: React.MouseEvent) => {
@@ -591,7 +595,7 @@ const CollaborativeEditor = ({ docId }: { docId: string }) => {
 
   return (
     <div onMouseMove={handleMouseMove}>
-      {others.map(p => (
+      {users.map(p => (
         <div
           key={p.id}
           className="absolute size-4 rounded-full bg-blue-500"
