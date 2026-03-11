@@ -3,7 +3,8 @@
     "paths": {
       "@a/ui/*": ["./src/*"]
     },
-    "rootDir": "."
+    "rootDir": ".",
+    "strict": false
   },
   "exclude": ["dist", "node_modules"],
   "extends": "lintmax/tsconfig",

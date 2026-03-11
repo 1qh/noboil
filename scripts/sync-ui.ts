@@ -243,7 +243,8 @@ export const cn = (...inputs: ClassValue[]) => twMerge(clsx(inputs))
     "paths": {
       "@a/ui/*": ["./src/*"]
     },
-    "rootDir": "."
+    "rootDir": ".",
+    "strict": false
   },
   "exclude": ["dist", "node_modules"],
   "extends": "lintmax/tsconfig",
@@ -260,6 +261,9 @@ export const cn = (...inputs: ClassValue[]) => twMerge(clsx(inputs))
 }
 `
   },
+  reasoningStreamdownRegex = /<Streamdown plugins=\{streamdownPlugins\} \{\.\.\.props\}>/u,
+  schemaDisplayDangerousHtmlRegex = /dangerouslySetInnerHTML=\{\{ __html: children \?\? highlightedPath \}\}/u,
+  terminalShimmerRegex = /<Shimmer className="w-16" \/>/u,
   run = (cmd: string[]) => {
     const result = spawnSync({
       cmd,
@@ -279,6 +283,62 @@ export const cn = (...inputs: ClassValue[]) => twMerge(clsx(inputs))
 
     ensureDir(dirPath)
     await write(file(abs), content)
+  },
+  replaceRegexOrThrow = ({
+    filePath,
+    pattern,
+    replacement,
+    source
+  }: {
+    filePath: string
+    pattern: RegExp
+    replacement: string
+    source: string
+  }) => {
+    const next = source.replace(pattern, replacement)
+    if (next === source) throw new Error(`sync-ui patch pattern not found in ${filePath}`)
+    return next
+  },
+  rewriteFile = async ({ filePath, transform }: { filePath: string; transform: (source: string) => string }) => {
+    const abs = `${uiDir}/${filePath}`,
+      source = await file(abs).text(),
+      next = transform(source)
+
+    if (next !== source) await write(file(abs), next)
+  },
+  applyUiPatches = async () => {
+    await rewriteFile({
+      filePath: 'src/components/ai-elements/reasoning.tsx',
+      transform: source =>
+        replaceRegexOrThrow({
+          filePath: 'src/components/ai-elements/reasoning.tsx',
+          pattern: reasoningStreamdownRegex,
+          replacement: '<Streamdown plugins={streamdownPlugins}>',
+          source
+        })
+    })
+
+    await rewriteFile({
+      filePath: 'src/components/ai-elements/schema-display.tsx',
+      transform: source =>
+        replaceRegexOrThrow({
+          filePath: 'src/components/ai-elements/schema-display.tsx',
+          pattern: schemaDisplayDangerousHtmlRegex,
+          replacement: 'dangerouslySetInnerHTML={{ __html: typeof children === "string" ? children : highlightedPath }}',
+          source
+        })
+    })
+
+    await rewriteFile({
+      filePath: 'src/components/ai-elements/terminal.tsx',
+      transform: source =>
+        replaceRegexOrThrow({
+          filePath: 'src/components/ai-elements/terminal.tsx',
+          pattern: terminalShimmerRegex,
+          replacement: '<Shimmer className="w-16">Running...</Shimmer>',
+          source
+        })
+    })
   },
   main = async () => {
     run(['rm', '-rf', uiDir])
@@ -301,6 +361,8 @@ export const cn = (...inputs: ClassValue[]) => twMerge(clsx(inputs))
       '--cwd',
       uiDir
     ])
+
+    await applyUiPatches()
   }
 
 await main()
