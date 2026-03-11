@@ -129,15 +129,19 @@ const isDev = typeof process !== 'undefined' && process.env.NODE_ENV !== 'produc
       store = useOptimisticStore(),
       isOptimistic = options?.optimistic !== false,
       errorHandler = resolveToastError(options),
-      successHandler = resolveToastSuccess(options)
+      successHandler = resolveToastSuccess(options),
+      getName = options?.getName,
+      onSettled = options?.onSettled,
+      resolveId = options?.resolveId,
+      retryOptions = options?.retry,
+      type = options?.type
 
     return useCallback(
       async (args: OptionalRestArgs<T>[0]): Promise<FunctionReturnType<T>> => {
         const argsRecord = typeof args === 'object' && args !== null ? (args as Record<string, unknown>) : {},
-          type = options?.type ?? detectMutationType(ref),
-          name = options?.getName?.(args) ?? getMutationName(ref),
+          mutationType = type ?? detectMutationType(ref),
+          name = getName?.(args) ?? getMutationName(ref),
           devId = isDev ? trackMutation(name, argsRecord) : 0,
-          retryOptions = options?.retry,
           exec = retryOptions
             ? async () =>
                 withRetry(
@@ -151,7 +155,7 @@ const isDev = typeof process !== 'undefined' && process.env.NODE_ENV !== 'produc
             const result = await exec()
             if (isDev && devId) completeMutation(devId, 'success')
             successHandler?.(result, args)
-            options?.onSettled?.(args, undefined, result)
+            onSettled?.(args, undefined, result)
             return result
           } catch (error) {
             if (isDev) {
@@ -159,25 +163,25 @@ const isDev = typeof process !== 'undefined' && process.env.NODE_ENV !== 'produc
               pushError(error)
             }
             if (errorHandler) errorHandler(error)
-            options?.onSettled?.(args, error)
+            onSettled?.(args, error)
             throw error
           }
 
         const tempId = makeTempId(),
-          id = options?.resolveId?.(args) ?? (argsRecord.id as string | undefined)
+          id = resolveId?.(args) ?? (argsRecord.id as string | undefined)
         store.add({
           args: argsRecord,
           id: id ?? tempId,
           tempId,
           timestamp: Date.now(),
-          type
+          type: mutationType
         })
 
         try {
           const result = await exec()
           if (isDev && devId) completeMutation(devId, 'success')
           successHandler?.(result, args)
-          options?.onSettled?.(args, undefined, result)
+          onSettled?.(args, undefined, result)
           return result
         } catch (error) {
           if (isDev) {
@@ -185,13 +189,13 @@ const isDev = typeof process !== 'undefined' && process.env.NODE_ENV !== 'produc
             pushError(error)
           }
           if (errorHandler) errorHandler(error)
-          options?.onSettled?.(args, error)
+          onSettled?.(args, error)
           throw error
         } finally {
           store.remove(tempId)
         }
       },
-      [errorHandler, isOptimistic, mutate, options, ref, store, successHandler]
+      [errorHandler, getName, isOptimistic, mutate, onSettled, ref, resolveId, retryOptions, store, successHandler, type]
     )
   }
 

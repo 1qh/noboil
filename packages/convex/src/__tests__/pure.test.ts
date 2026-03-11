@@ -15,7 +15,7 @@ import type { MutationType, PendingMutation } from '../react/optimistic-store'
 import type { PlaygroundProps } from '../react/schema-playground'
 import type { InfiniteListOptions } from '../react/use-infinite-list'
 import type { UseListOptions } from '../react/use-list'
-import type { MutateOptions } from '../react/use-mutate'
+import type { MutateOptions, MutateToast } from '../react/use-mutate'
 import type { PresenceUser, UsePresenceOptions, UsePresenceResult } from '../react/use-presence'
 import type { UseSearchOptions, UseSearchResult } from '../react/use-search'
 import type { ConvexErrorData, MutationFail, MutationOk, MutationResult } from '../server/helpers'
@@ -102,7 +102,7 @@ import {
   updateSubscription,
   updateSubscriptionData
 } from '../react/devtools'
-import { makeErrorHandler } from '../react/error-toast'
+import { makeErrorHandler, toastFieldError } from '../react/error-toast'
 import { buildMeta, getMeta } from '../react/form'
 import { createOptimisticStore, makeTempId } from '../react/optimistic-store'
 import { canEditResource } from '../react/org'
@@ -3525,6 +3525,30 @@ describe('makeErrorHandler', () => {
     handler(new ConvexError({ code: 'NOT_FOUND', message: 'Gone' }))
     expect(messages).toEqual(['Gone'])
   })
+
+  test('toastFieldError toasts first field message', () => {
+    const messages: string[] = [],
+      didToast = toastFieldError(
+        new ConvexError({
+          code: 'VALIDATION_FAILED',
+          fieldErrors: { content: 'Content is required', title: 'Title is required' }
+        }),
+        (m: string) => {
+          messages.push(m)
+        }
+      )
+    expect(didToast).toBe(true)
+    expect(messages).toEqual(['Content is required'])
+  })
+
+  test('toastFieldError returns false without field errors', () => {
+    const messages: string[] = [],
+      didToast = toastFieldError(new ConvexError({ code: 'NOT_FOUND', message: 'Missing' }), (m: string) => {
+        messages.push(m)
+      })
+    expect(didToast).toBe(false)
+    expect(messages).toEqual([])
+  })
 })
 
 describe('noboil-convex-viz', () => {
@@ -4779,6 +4803,27 @@ describe('optimistic types', () => {
     const opts: MutateOptions = {}
     expect(opts.optimistic).toBeUndefined()
     expect(opts.type).toBeUndefined()
+  })
+
+  test('MutateOptions accepts retry and onSettled', () => {
+    const opts: MutateOptions<{ id: string }, { ok: true }> = {
+      onSettled: (args, error, result) => {
+        expect(args.id).toBe('1')
+        expect(error).toBeUndefined()
+        expect(result?.ok).toBe(true)
+      },
+      retry: { initialDelayMs: 100, maxAttempts: 3 }
+    }
+    expect(opts.retry).toBeDefined()
+    opts.onSettled?.({ id: '1' }, undefined, { ok: true })
+  })
+
+  test('MutateToast success callback is typed with result and args', () => {
+    const toastOpts: MutateToast<{ id: string }, { title: string }> = {
+        success: (result, args) => `${args.id}:${result.title}`
+      },
+      message = typeof toastOpts.success === 'function' ? toastOpts.success({ title: 'Done' }, { id: 'abc' }) : ''
+    expect(message).toBe('abc:Done')
   })
 
   test('UseListOptions accepts optimistic field', () => {
