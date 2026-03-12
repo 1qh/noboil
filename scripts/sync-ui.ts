@@ -1,6 +1,7 @@
 import { file, spawnSync, write } from 'bun'
 import { readdir } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
+import { env as nodeEnv } from 'node:process'
 
 type JsonRecord = Record<string, unknown>
 const lineBreakRegex = /\r?\n/u,
@@ -27,19 +28,21 @@ const lineBreakRegex = /\r?\n/u,
       return null
     }
   },
-  run = ({ cmd, cwd }: { cmd: string[]; cwd?: string }) => {
+  run = ({ cmd, cwd, env }: { cmd: string[]; cwd?: string; env?: NodeJS.ProcessEnv }) => {
     const result = spawnSync({
       cmd,
       cwd: cwd ?? process.cwd(),
+      env,
       stderr: 'inherit',
       stdout: 'inherit'
     })
     if (result.exitCode !== 0) throw new Error(`Command failed (${result.exitCode}): ${cmd.join(' ')}`)
   },
-  runCapture = ({ cmd, cwd }: { cmd: string[]; cwd: string }) =>
+  runCapture = ({ cmd, cwd, env }: { cmd: string[]; cwd: string; env?: NodeJS.ProcessEnv }) =>
     spawnSync({
       cmd,
       cwd,
+      env,
       stderr: 'pipe',
       stdout: 'pipe'
     }),
@@ -214,6 +217,48 @@ const lineBreakRegex = /\r?\n/u,
     run({ cmd: ['rm', '-f', absolutePath] })
     return true
   },
+  listGitTreeFiles = ({ prefix, rootDir }: { prefix: string; rootDir: string }) => {
+    const result = runCapture({ cmd: ['git', 'ls-tree', '-r', '--name-only', 'HEAD', prefix], cwd: rootDir })
+    if (result.exitCode !== 0) return []
+    const lines = decode(result.stdout).split(lineBreakRegex),
+      out: string[] = []
+    for (const line of lines) {
+      const trimmed = line.trim()
+      if (trimmed.length > 0) out.push(trimmed)
+    }
+    return out
+  },
+  restoreDirFromGitSnapshot = async ({
+    relDir,
+    rootDir,
+    uiTmpDir
+  }: {
+    relDir: string
+    rootDir: string
+    uiTmpDir: string
+  }) => {
+    const gitPrefix = `packages/ui/${relDir}`,
+      files = listGitTreeFiles({ prefix: gitPrefix, rootDir }),
+      targetDir = join(uiTmpDir, relDir)
+
+    if (files.length === 0) return
+    run({ cmd: ['rm', '-rf', targetDir] })
+    const writes: Promise<void>[] = []
+
+    for (const gitPath of files) {
+      const relPath = gitPath.startsWith('packages/ui/') ? gitPath.slice('packages/ui/'.length) : null
+      if (relPath !== null) {
+        const result = runCapture({ cmd: ['git', 'show', `HEAD:${gitPath}`], cwd: rootDir })
+        if (result.exitCode === 0) {
+          const absPath = join(uiTmpDir, relPath)
+          run({ cmd: ['mkdir', '-p', dirname(absPath)] })
+          writes.push(write(file(absPath), decode(result.stdout)))
+        }
+      }
+    }
+
+    await Promise.all(writes)
+  },
   reconcileTypecheckFailures = async ({
     errorPaths,
     rootDir,
@@ -269,6 +314,13 @@ const lineBreakRegex = /\r?\n/u,
   uiDir = join(root, 'packages/ui'),
   tmpDir = '/tmp/shadcn-sync',
   tmpUi = join(tmpDir, 'a/packages/ui'),
+  tmpBin = join(tmpDir, 'bin'),
+  withShimPath = ({ env, shimDir }: { env?: NodeJS.ProcessEnv; shimDir: string }) => {
+    const base = env ?? nodeEnv,
+      currentPath = base.PATH ?? '',
+      nextPath = currentPath ? `${shimDir}:${currentPath}` : shimDir
+    return { ...base, PATH: nextPath }
+  },
   main = async () => {
     const [fallbackComponents, fallbackPackage, fallbackTsconfig, fallbackTsconfigLint] = await Promise.all([
         readJson(join(uiDir, 'components.json')),
@@ -283,12 +335,17 @@ const lineBreakRegex = /\r?\n/u,
 
     run({ cmd: ['rm', '-rf', tmpDir] })
     run({ cmd: ['mkdir', '-p', tmpDir] })
+    run({ cmd: ['mkdir', '-p', tmpBin] })
+    await write(file(join(tmpBin, 'pnpm')), '#!/usr/bin/env sh\nexec bun "$@"\n')
+    run({ cmd: ['chmod', '+x', join(tmpBin, 'pnpm')] })
+    const shimEnv = withShimPath({ shimDir: tmpBin })
     run({
       cmd: ['bunx', '--bun', 'shadcn@latest', 'init', '-t', 'next', '-b', 'base', '--monorepo', '-p', 'vega', '-n', 'a'],
-      cwd: tmpDir
+      cwd: tmpDir,
+      env: shimEnv
     })
-    run({ cmd: ['bunx', '--bun', 'shadcn@latest', 'add', '-ayo'], cwd: tmpUi })
-    run({ cmd: ['bunx', '--bun', 'shadcn@latest', 'add', '@ai-elements/all', '-ayo'], cwd: tmpUi })
+    run({ cmd: ['bunx', '--bun', 'shadcn@latest', 'add', '-ayo'], cwd: tmpUi, env: shimEnv })
+    run({ cmd: ['bunx', '--bun', 'shadcn@latest', 'add', '@ai-elements/all', '-ayo'], cwd: tmpUi, env: shimEnv })
 
     const nextPackage = await readJson(join(tmpUi, 'package.json')),
       nextComponents = await readJson(join(tmpUi, 'components.json')),
@@ -329,6 +386,7 @@ const lineBreakRegex = /\r?\n/u,
     if (snapshotTsconfigLint) await writeJson({ filePath: join(tmpUi, 'tsconfig.lint.json'), value: snapshotTsconfigLint })
 
     await replaceImportPrefix({ fromPrefix: generatedPrefix, srcDir: join(tmpUi, 'src'), toPrefix: snapshotPrefix })
+    await restoreDirFromGitSnapshot({ relDir: 'src/components/ai-elements', rootDir: root, uiTmpDir: tmpUi })
     await ensureTypographyPluginBeforeImports({ cssPath: join(tmpUi, 'src/styles/globals.css') })
 
     run({ cmd: ['rm', '-rf', join(tmpUi, 'node_modules')] })
