@@ -1,18 +1,10 @@
 # noboil
 
-[![npm](https://img.shields.io/npm/v/noboil)](https://www.npmjs.com/package/noboil)
-[![npm](https://img.shields.io/npm/v/@noboil/convex)](https://www.npmjs.com/package/@noboil/convex)
-[![npm](https://img.shields.io/npm/v/@noboil/spacetimedb)](https://www.npmjs.com/package/@noboil/spacetimedb)
-[![license](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+[![npm](https://img.shields.io/npm/v/noboil)](https://www.npmjs.com/package/noboil) [![npm](https://img.shields.io/npm/v/@noboil/convex)](https://www.npmjs.com/package/@noboil/convex) [![npm](https://img.shields.io/npm/v/@noboil/spacetimedb)](https://www.npmjs.com/package/@noboil/spacetimedb) [![license](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
-One schema. Typed backend.
-Auto forms. Zero boilerplate.
+One schema. Typed backend. Auto forms. Zero boilerplate.
 
-Define a Zod schema once.
-Get authenticated CRUD, typesafe forms, file upload, real-time subscriptions,
-pagination, search, soft delete, org multi-tenancy with ACL, rate limiting, and conflict
-detection — all generated.
-Currently supports Convex and SpacetimeDB.
+Define a Zod schema once. Get authenticated CRUD, typesafe forms, file upload, real-time subscriptions, pagination, search, soft delete, org multi-tenancy with ACL, rate limiting, and conflict detection — all generated. Currently supports Convex and SpacetimeDB.
 
 ## Quick Start
 
@@ -20,13 +12,11 @@ Currently supports Convex and SpacetimeDB.
 bun noboil@latest init
 ```
 
-Pick a database, name your project, done.
-The CLI scaffolds the full monorepo.
+Pick a database, name your project, done. The CLI scaffolds the full monorepo.
 
 ## Before / After
 
-Without noboil — each database has its own schema syntax, validator types, and CRUD
-boilerplate:
+Without noboil — each database has its own schema syntax, validator types, and CRUD boilerplate:
 
 <details> <summary>Raw Convex (~70 lines)</summary>
 
@@ -201,10 +191,7 @@ const owned = makeOwned({
 export const { create, list, read, rm, update } = crud(owned, 'blog')
 ```
 
-5 endpoints. Auth, ownership, Zod validation, file upload, cursor pagination, rate
-limiting, conflict detection — all included.
-Same API across databases.
-`create`, `update`, and `rm` each accept single or bulk input (up to 100 items).
+5 endpoints. Auth, ownership, Zod validation, file upload, cursor pagination, rate limiting, conflict detection — all included. Same API across databases. `create`, `update`, and `rm` each accept single or bulk input (up to 100 items).
 
 ## Monorepo Structure
 

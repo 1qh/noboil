@@ -2,52 +2,26 @@
 
 ## Vision
 
-Schema-first, zero-boilerplate fullstack.
-Pick your database, forget about the backend.
-`bun noboil@latest init` → ship in minutes.
+Schema-first, zero-boilerplate fullstack. Pick your database, forget about the backend. `bun noboil@latest init` → ship in minutes.
 
 ## Motivation
 
-betterspace (SpacetimeDB) and lazyconvex (Convex) share everything — philosophy, code,
-linting, dependencies, demo apps, monorepo structure.
-Maintaining two repos with ~70% identical code is wasteful.
-Consolidating into one monorepo unlocks massive reuse.
+betterspace (SpacetimeDB) and lazyconvex (Convex) share everything — philosophy, code, linting, dependencies, demo apps, monorepo structure. Maintaining two repos with ~70% identical code is wasteful. Consolidating into one monorepo unlocks massive reuse.
 
-But this is not just a merge.
-noboil is a new home with a long-term vision.
-Every solution it offers is easy to use, easy to adopt, easy to configure, while
-covering all concerns about scalability and security.
-The goal: any dev picks a database and ships a fullstack app in minutes, not weeks,
-forgetting about backend configuration entirely.
+But this is not just a merge. noboil is a new home with a long-term vision. Every solution it offers is easy to use, easy to adopt, easy to configure, while covering all concerns about scalability and security. The goal: any dev picks a database and ships a fullstack app in minutes, not weeks, forgetting about backend configuration entirely.
 
-Convex and SpacetimeDB are the first two supported backends.
-More will follow — drizzle + oRPC for SQL databases is on the roadmap (to be discussed
-after noboil ships, multi-db support needs careful consideration).
-The architecture is built to grow.
+Convex and SpacetimeDB are the first two supported backends. More will follow — drizzle + oRPC for SQL databases is on the roadmap (to be discussed after noboil ships, multi-db support needs careful consideration). The architecture is built to grow.
 
-The repo IS the template.
-No separate template repos to maintain per library.
-The per-library `init` CLIs are removed — `bun noboil@latest init` handles everything.
-Clone the repo, strip library source and docs, keep the monorepo structure, GitHub
-Actions, shadcn components, strict linting, and demo apps to reference or clone.
-Consumers get the same DX we have — a `doctor` command checks if their project is
-outdated vs upstream, and a `sync` command pulls upstream changes.
+The repo IS the template. No separate template repos to maintain per library. The per-library `init` CLIs are removed — `bun noboil@latest init` handles everything. Clone the repo, strip library source and docs, keep the monorepo structure, GitHub Actions, shadcn components, strict linting, and demo apps to reference or clone. Consumers get the same DX we have — a `doctor` command checks if their project is outdated vs upstream, and a `sync` command pulls upstream changes.
 
-Documentation lives in a fumadocs site, not scattered markdown files.
-The root README is a concise pitch that drives people straight to the docs site.
-Devs can switch between databases in a global toggle and see the difference in consumer
-code — same UX as SDKs that show multiple language clients side by side, but for
-different databases.
+Documentation lives in a fumadocs site, not scattered markdown files. The root README is a concise pitch that drives people straight to the docs site. Devs can switch between databases in a global toggle and see the difference in consumer code — same UX as SDKs that show multiple language clients side by side, but for different databases.
 
-Both betterspace and lazyconvex remain valid on their own — they are archived as
-read-only references, not deprecated.
-noboil is where they grow from here.
+Both betterspace and lazyconvex remain valid on their own — they are archived as read-only references, not deprecated. noboil is where they grow from here.
 
 ## Source Repos (now archived, read-only)
 
 - `1qh/betterspace` — SpacetimeDB framework (~31,700 LOC library, 1,170 tests)
-- `1qh/lazyconvex` — Convex framework (~25,000 LOC library, 934 unit + 219 backend
-  tests)
+- `1qh/lazyconvex` — Convex framework (~25,000 LOC library, 934 unit + 219 backend tests)
 - `packages/ui/` is 100% identical across both repos (~12,700 LOC)
 
 ## npm Packages
@@ -150,20 +124,16 @@ Users see one clean import: `import { useList } from '@noboil/convex/react'`
 **Goal:** Empty monorepo with build/lint/test infrastructure working.
 
 - [ ] 0.1 — Initialize bun workspace with `package.json`, `turbo.json`, `tsconfig.json`
-- [ ] 0.2 — Copy and unify `lintmax.config.ts` (merge betterspace + lazyconvex
-      overrides)
+- [ ] 0.2 — Copy and unify `lintmax.config.ts` (merge betterspace + lazyconvex overrides)
 - [ ] 0.3 — Copy and unify `eslint.config.ts`
-- [ ] 0.4 — Set up `.github/workflows/ci.yml` (multi-job with path filtering from
-      lazyconvex, extended for both DBs)
+- [ ] 0.4 — Set up `.github/workflows/ci.yml` (multi-job with path filtering from lazyconvex, extended for both DBs)
 - [ ] 0.5 — Copy `.vscode/` settings
-- [ ] 0.6 — Create `noboil.yml` docker compose (Convex services + SpacetimeDB + shared
-      MinIO on different ports)
+- [ ] 0.6 — Create `noboil.yml` docker compose (Convex services + SpacetimeDB + shared MinIO on different ports)
 - [ ] 0.7 — Verify `bun i && bun fix` passes on empty workspace
 
 ### Phase 1: Shared Packages (no DB-specific code)
 
-**Goal:** `packages/shared/`, `packages/ui/`, `packages/fe/`, `packages/e2e/` all
-building.
+**Goal:** `packages/shared/`, `packages/ui/`, `packages/fe/`, `packages/e2e/` all building.
 
 - [ ] 1.1 — Copy `packages/ui/` from lazyconvex (identical in both repos)
 - [ ] 1.2 — Copy `packages/fe/` (verify identical, pick one)
@@ -201,8 +171,7 @@ building.
   - package.json with name `@noboil/spacetimedb`, same exports as betterspace
 - [ ] 2.3 — Migrate all tests:
   - Copy lazyconvex `pure.test.ts` (934 tests) → adapt imports to `@noboil/convex`
-  - Copy betterspace `pure.test.ts` (1,170 tests) → adapt imports to
-    `@noboil/spacetimedb`
+  - Copy betterspace `pure.test.ts` (1,170 tests) → adapt imports to `@noboil/spacetimedb`
 - [ ] 2.4 — `bun fix && bun typecheck && bun test` passes for both library packages
 
 ### Phase 3: Backend Packages
@@ -215,10 +184,8 @@ building.
 - [ ] 3.2 — Copy `packages/be/` from betterspace → `packages/be-spacetimedb/`
   - Update imports from `betterspace` → `@noboil/spacetimedb`
   - Update package.json name to `@a/be-spacetimedb`
-- [ ] 3.3 — Docker compose: Convex (postgres + minio + backend + dashboard) on ports
-      3212/6791/9000
-- [ ] 3.4 — Docker compose: SpacetimeDB on port 3000, MinIO on ports 9002/9003 (avoid
-      conflicts)
+- [ ] 3.3 — Docker compose: Convex (postgres + minio + backend + dashboard) on ports 3212/6791/9000
+- [ ] 3.4 — Docker compose: SpacetimeDB on port 3000, MinIO on ports 9002/9003 (avoid conflicts)
 - [ ] 3.5 — `genkey.sh` + `genenv.ts` for Convex, equivalent for SpacetimeDB
 - [ ] 3.6 — Backend tests pass: 219 (Convex) + equivalent (SpacetimeDB)
 
@@ -226,13 +193,11 @@ building.
 
 **Goal:** All 8 web demo apps build and run.
 
-- [ ] 4.1 — Copy lazyconvex `apps/{blog,chat,movie,org}` →
-      `apps/convex/{blog,chat,movie,org}`
+- [ ] 4.1 — Copy lazyconvex `apps/{blog,chat,movie,org}` → `apps/convex/{blog,chat,movie,org}`
   - Update imports from `lazyconvex` → `@noboil/convex`
   - Update package.json names to `@a/convex-blog`, etc.
   - Update internal workspace references
-- [ ] 4.2 — Copy betterspace `apps/{blog,chat,movie,org}` →
-      `apps/spacetimedb/{blog,chat,movie,org}`
+- [ ] 4.2 — Copy betterspace `apps/{blog,chat,movie,org}` → `apps/spacetimedb/{blog,chat,movie,org}`
   - Update imports from `betterspace` → `@noboil/spacetimedb`
   - Update package.json names to `@a/stdb-blog`, etc.
   - Update internal workspace references
@@ -277,15 +242,12 @@ building.
 - [ ] 7.1 — Create `packages/cli/` with name `noboil`
 - [ ] 7.2 — `init` command:
   1. Ask: “Pick your database” → Convex | SpacetimeDB
-  2. Ask: “Include demo apps?
-     (Y/n)”
-  3. Ask: “Include mobile/desktop?
-     (y/N)” (only if Convex)
+  2. Ask: “Include demo apps? (Y/n)”
+  3. Ask: “Include mobile/desktop? (y/N)” (only if Convex)
   4. Clone repo (degit, no git history)
   5. Remove other DB’s demo apps, backend, library package
   6. Remove `packages/shared/` source, `apps/docs/`, `PLAN.md`
-  7. Patch all `package.json` files to use npm-published versions instead of
-     `workspace:*`
+  7. Patch all `package.json` files to use npm-published versions instead of `workspace:*`
   8. `bun i`
   9. Print: “Done! Run `bun dev` to start.”
 - [ ] 7.3 — `doctor` command — check if consumer’s monorepo is outdated vs upstream

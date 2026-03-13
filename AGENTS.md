@@ -1,10 +1,8 @@
 # noboil
 
-Schema-first, zero-boilerplate fullstack.
-Pick your database, forget about the backend.
+Schema-first, zero-boilerplate fullstack. Pick your database, forget about the backend.
 
-If `PLAN.md` exists at the repo root, read it first for migration plan, execution
-phases, and success criteria.
+If `PLAN.md` exists at the repo root, read it first for migration plan, execution phases, and success criteria.
 
 ## Monorepo Structure
 
@@ -30,8 +28,7 @@ swift-core/        — shared Swift protocols
 
 ## Repository Architecture
 
-Library packages are **published to npm**. Everything else is **consumer code** — demo
-apps that happen to live in the same monorepo:
+Library packages are **published to npm**. Everything else is **consumer code** — demo apps that happen to live in the same monorepo:
 
 | Path                       | Role                         | Can reference library internals? |
 | -------------------------- | ---------------------------- | -------------------------------- |
@@ -46,9 +43,7 @@ apps that happen to live in the same monorepo:
 | `swift-core/`              | Shared Swift protocol        | NO — uses generated output only  |
 | `packages/ui/`             | Shared UI components         | NO — read-only                   |
 
-Libraries must work for ANY project, not just these demos.
-A developer who runs `bun add @noboil/convex` and defines their own Zod schemas must get
-correct output without editing library source.
+Libraries must work for ANY project, not just these demos. A developer who runs `bun add @noboil/convex` and defines their own Zod schemas must get correct output without editing library source.
 
 ## npm Packages
 
@@ -84,15 +79,12 @@ bun test:all
 
 - only use `bun`, `yarn/npm/npx/pnpm` are forbidden
 - `bun fix` must always pass
-- `bun test:all` to run all tests in parallel, should pass every time we add new tests,
-  new features, fix bugs or refactor code
+- `bun test:all` to run all tests in parallel, should pass every time we add new tests, new features, fix bugs or refactor code
 - only use arrow functions
 - all exports must be at end of file
 - if a `.tsx` file only exports a single component, use `export default`
-- `bun ts-unused-exports apps/<app-name>/tsconfig.json` to detect and remove unused
-  exports
-- `bun why <package>` to check if a package is already installed, no need to install
-  packages that are already dependencies of other packages
+- `bun ts-unused-exports apps/<app-name>/tsconfig.json` to detect and remove unused exports
+- `bun why <package>` to check if a package is already installed, no need to install packages that are already dependencies of other packages
 
 ---
 
@@ -105,8 +97,7 @@ bun test:all
 - NEVER use non-null assertion operator (`!`)
 - NEVER use `any` type
 - NEVER use `as any`, `@ts-ignore`, `@ts-expect-error`
-- NEVER hardcode project-specific data in library packages (`packages/convex/`,
-  `packages/spacetimedb/`, `packages/shared/`)
+- NEVER hardcode project-specific data in library packages (`packages/convex/`, `packages/spacetimedb/`, `packages/shared/`)
 - Max 3 positional args — use keyword args (destructured object) for 4+
 
 ---
@@ -116,19 +107,16 @@ bun test:all
 - consolidate into fewer files, co-locate small components
 - short names in map callbacks: `t`, `m`, `i`
 - `export default` for components, named exports for utilities/backend
-- `catch (error)` is enforced by oxlint; name state variables descriptively to avoid
-  shadow (e.g. `chatError`, `formError`)
+- `catch (error)` is enforced by oxlint; name state variables descriptively to avoid shadow (e.g. `chatError`, `formError`)
 - `for` loops instead of `reduce()` or `forEach()`
 - exhaustive `switch` with `default: never` where applicable
 - prefer existing libraries over new dependencies
 
 ### Component & Import Organization
 
-- **co-location**: if a component is only used by 1 page, it lives next to that page
-  (same folder)
+- **co-location**: if a component is only used by 1 page, it lives next to that page (same folder)
 - **shared components**: only move to `~/components` when reused across multiple pages
-- **explicit imports**: always import from the exact file path, never from barrel
-  `index.ts` files
+- **explicit imports**: always import from the exact file path, never from barrel `index.ts` files
 - **no barrel exports**: do not create `index.ts` re-export files
 
 ---
@@ -153,12 +141,9 @@ Run `bun fix` to auto-fix and verify all linters pass (zero errors, warnings all
 
 - `no-await-in-loop`, `max-statements`, `complexity` - complex handlers
 - `@typescript-eslint/no-unnecessary-condition` - type narrowing false positives
-- `@typescript-eslint/promise-function-async` - functions returning thenable (not
-  Promise)
-- `@typescript-eslint/max-params` - max 3 positional args; use keyword args (object
-  parameter) for 4+
-- `@typescript-eslint/class-methods-use-this` - React lifecycle methods
-  (componentDidCatch)
+- `@typescript-eslint/promise-function-async` - functions returning thenable (not Promise)
+- `@typescript-eslint/max-params` - max 3 positional args; use keyword args (object parameter) for 4+
+- `@typescript-eslint/class-methods-use-this` - React lifecycle methods (componentDidCatch)
 - `@next/next/no-img-element` - external images without optimization
 - `react-hooks/refs` - custom ref patterns
 
@@ -176,34 +161,25 @@ Run `bun fix` to auto-fix and verify all linters pass (zero errors, warnings all
 
 ### Philosophy
 
-Same UI, fewest DOM nodes.
-Every element must earn its place.
-If you can delete it and nothing breaks (semantics, layout, behavior, required styling)
-→ it shouldn’t exist.
-Wrappers require justification in code review.
+Same UI, fewest DOM nodes. Every element must earn its place. If you can delete it and nothing breaks (semantics, layout, behavior, required styling) → it shouldn’t exist. Wrappers require justification in code review.
 
 ### When a node is allowed ("real reasons")
 
 A DOM node is allowed only if it provides at least 1 of:
 
 - Semantics / accessibility
-  - Correct elements: `ul/li`, `button`, `label`, `form`, `fieldset/legend`, `nav`,
-    `section`, etc.
+  - Correct elements: `ul/li`, `button`, `label`, `form`, `fieldset/legend`, `nav`, `section`, etc.
   - Required relationships / focus behavior / ARIA patterns.
 
 - Layout constraint you cannot apply to an existing node
-  - Needs its own containing block / positioning context / clipping / scroll container /
-    stacking context.
-  - Examples: `relative`, `overflow-*`, `sticky`, `isolation`, `z-*`, `transform`,
-    `contain-*`, `min-w-0` (truncation), etc.
+  - Needs its own containing block / positioning context / clipping / scroll container / stacking context.
+  - Examples: `relative`, `overflow-*`, `sticky`, `isolation`, `z-*`, `transform`, `contain-*`, `min-w-0` (truncation), etc.
 
 - Behavior
-  - Measurement refs, observers, portals target, event boundary, virtualization/scroll
-    container.
+  - Measurement refs, observers, portals target, event boundary, virtualization/scroll container.
 
 - Component API necessity
-  - You truly can’t pass props/classes to the real root (and you considered `as` /
-    `asChild` / prop forwarding).
+  - You truly can’t pass props/classes to the real root (and you considered `as` / `asChild` / prop forwarding).
 
 If none apply → **no wrapper**.
 
@@ -220,13 +196,11 @@ Separators
 
 Alignment
 
-- Centering/alignment → put `flex/grid` on the existing parent that already owns the
-  layout.
+- Centering/alignment → put `flex/grid` on the existing parent that already owns the layout.
 
 Visual ownership
 
-- Padding/background/border/shadow/radius → put it on the element that visually owns the
-  box.
+- Padding/background/border/shadow/radius → put it on the element that visually owns the box.
 
 JSX-only grouping
 
@@ -283,17 +257,11 @@ JSX-only grouping
 
 ### Review checklist (strict)
 
-- **Delete test:** can I remove this node without changing
-  semantics/layout/behavior/required styling?
-  → delete.
-- **Parent control:** can `gap/space/divide` replace wrapper/margins/borders?
-  → do it.
-- **Props first:** can I pass `className` to the mapped item/component?
-  → do it.
-- **Selectors second:** can `[&>...]:` / `*:` remove repetition on direct children I
-  control? → do it.
-- **No hidden coupling:** avoid styling deep child internals unless it’s a deliberate
-  API.
+- **Delete test:** can I remove this node without changing semantics/layout/behavior/required styling? → delete.
+- **Parent control:** can `gap/space/divide` replace wrapper/margins/borders? → do it.
+- **Props first:** can I pass `className` to the mapped item/component? → do it.
+- **Selectors second:** can `[&>...]:` / `*:` remove repetition on direct children I control? → do it.
+- **No hidden coupling:** avoid styling deep child internals unless it’s a deliberate API.
 
 ---
 
@@ -301,8 +269,7 @@ JSX-only grouping
 
 ### Golden Rule: Verify Before Scaling
 
-NEVER run full test suites blindly.
-Always follow this progression:
+NEVER run full test suites blindly. Always follow this progression:
 
 #### 1. Isolate → Fix → Verify (Single Test)
 
@@ -330,8 +297,7 @@ timeout 60 bun with-env playwright test file1.test.ts file2.test.ts --timeout=80
 
 #### 5. Full Suite (ONLY WHEN USER ASKS)
 
-**AI agents: Only run specific failing tests.** Fix them, verify they pass 2-3 times,
-then stop. Run full suite ONLY when user explicitly requests it.
+**AI agents: Only run specific failing tests.** Fix them, verify they pass 2-3 times, then stop. Run full suite ONLY when user explicitly requests it.
 
 ```bash
 bun test:e2e -- --workers=1 --timeout=10000 --reporter=dot
@@ -413,8 +379,7 @@ const Page = async () => {
 
 ## react-doctor
 
-Run `bunx -y react-doctor@latest . --verbose` to scan all projects for React
-best-practice violations.
+Run `bunx -y react-doctor@latest . --verbose` to scan all projects for React best-practice violations.
 
 ### When to run
 
@@ -450,12 +415,9 @@ best-practice violations.
 
 ### `anyApi` Proxy — Type Safety Gap
 
-Convex’s generated `api` object is typed as `FilterApi<typeof fullApi, ...>` (strict,
-case-sensitive), but the runtime value is `anyApi` — a `Proxy` with `[key: string]`
-index signatures that accept ANY property name at runtime.
+Convex’s generated `api` object is typed as `FilterApi<typeof fullApi, ...>` (strict, case-sensitive), but the runtime value is `anyApi` — a `Proxy` with `[key: string]` index signatures that accept ANY property name at runtime.
 
-**Impact**: `api.blogprofile.get` (wrong casing) won’t raise a TypeScript error even
-though only `api.blogProfile.get` exists.
+**Impact**: `api.blogprofile.get` (wrong casing) won’t raise a TypeScript error even though only `api.blogProfile.get` exists.
 
 **Defense**:
 
@@ -471,8 +433,7 @@ bash genkey.sh
 bun genenv.ts
 ```
 
-Then set env vars on Convex backend with `convex env set`. JWT private key needs `--`
-separator due to dashes.
+Then set env vars on Convex backend with `convex env set`. JWT private key needs `--` separator due to dashes.
 
 ---
 
@@ -480,8 +441,7 @@ separator due to dashes.
 
 ### Module Type Safety
 
-SpacetimeDB generates TypeScript bindings from the Rust module.
-Always regenerate after schema changes:
+SpacetimeDB generates TypeScript bindings from the Rust module. Always regenerate after schema changes:
 
 ```bash
 bun spacetime:generate
@@ -496,9 +456,7 @@ bun spacetime:generate
 
 ## codegen-swift (Convex-only)
 
-`codegen-swift.ts` must derive ALL output from inputs it receives (schema file, convex
-directory, CLI flags).
-It must NEVER contain:
+`codegen-swift.ts` must derive ALL output from inputs it receives (schema file, convex directory, CLI flags). It must NEVER contain:
 
 - Hardcoded function names, parameter lists, or return types for specific tables/modules
 - Data structures that describe THIS project’s endpoints
@@ -506,15 +464,12 @@ It must NEVER contain:
 
 ### What codegen CAN know (from its own library code)
 
-- Factory patterns: `crud()` always produces `list`, `read`, `create`, `update`, `rm`
-  (`create`/`update`/`rm` each accept single or bulk input)
-- `orgCrud()` with `acl: true` always produces `addEditor`, `removeEditor`,
-  `setEditors`, `editors`
+- Factory patterns: `crud()` always produces `list`, `read`, `create`, `update`, `rm` (`create`/`update`/`rm` each accept single or bulk input)
+- `orgCrud()` with `acl: true` always produces `addEditor`, `removeEditor`, `setEditors`, `editors`
 - `pub` option always produces `pub.list`, `pub.read`
 - `softDelete` always produces `restore`
 - `singletonCrud()` always produces `get`, `upsert`
-- `cacheCrud()` always produces `get`, `all`, `list`, `create`, `update`, `rm`,
-  `invalidate`, `purge`, `load`, `refresh`
+- `cacheCrud()` always produces `get`, `all`, `list`, `create`, `update`, `rm`, `invalidate`, `purge`, `load`, `refresh`
 
 ### What codegen CANNOT know (must come from project-level config)
 
@@ -524,31 +479,22 @@ It must NEVER contain:
 
 ### Test: is this generic?
 
-If a developer runs
-`bunx @noboil/convex codegen-swift --schema their-schema.ts --convex their-convex/` on a
-project they built, does it produce correct output?
-If not, something is hardcoded that shouldn’t be.
+If a developer runs `bunx @noboil/convex codegen-swift --schema their-schema.ts --convex their-convex/` on a project they built, does it produce correct output? If not, something is hardcoded that shouldn’t be.
 
 ---
 
 ## Refactoring
 
-After any significant refactoring, verify that passing a wrong field name to a mutation
-or reducer call fails to compile.
+After any significant refactoring, verify that passing a wrong field name to a mutation or reducer call fails to compile.
 
 ---
 
 ## packages/shared/ Architecture
 
-Internal workspace package, never published.
-Contains code identical across both libraries:
+Internal workspace package, never published. Contains code identical across both libraries:
 
-- **React hooks**: `use-bulk-mutate`, `use-search`, `use-bulk-selection`,
-  `use-optimistic`, `use-soft-delete`, `use-presence`, `use-cache`, `use-upload`,
-  `use-online-status`, `error-toast`, `devtools`, `form`, `org`
-- **Server utils**: `presence`, `middleware`, `schema-helpers`, `helpers`, `file`,
-  `child`, `singleton`, `cache-crud`, `org`, `org-crud`, `org-members`, `org-invites`,
-  `org-join`
+- **React hooks**: `use-bulk-mutate`, `use-search`, `use-bulk-selection`, `use-optimistic`, `use-soft-delete`, `use-presence`, `use-cache`, `use-upload`, `use-online-status`, `error-toast`, `devtools`, `form`, `org`
+- **Server utils**: `presence`, `middleware`, `schema-helpers`, `helpers`, `file`, `child`, `singleton`, `cache-crud`, `org`, `org-crud`, `org-members`, `org-invites`, `org-join`
 - **Components**: `editors-section`, `misc`, `step-form`, `form`, `fields`
 - **ESLint plugin**: 16 shared rules
 - **CLI framework**: create, add, check commands
@@ -565,23 +511,15 @@ export { useList } from './use-list' // DB-specific
 
 ## Key Technical Discoveries
 
-1. **oxlint `eslint/sort-keys` conflicts with eslint perfectionist** — oxlint uses ASCII
-   sort, perfectionist uses natural sort.
-   Disable `eslint/sort-keys` in oxlint config.
+1. **oxlint `eslint/sort-keys` conflicts with eslint perfectionist** — oxlint uses ASCII sort, perfectionist uses natural sort. Disable `eslint/sort-keys` in oxlint config.
 
-2. **Lintmax runs biome TWICE** (biome → oxlint → eslint → biome).
-   The 2nd biome pass can undo eslint auto-fixes.
-   Disable conflicting biome rules like `noPlaywrightUselessAwait`.
+2. **Lintmax runs biome TWICE** (biome → oxlint → eslint → biome). The 2nd biome pass can undo eslint auto-fixes. Disable conflicting biome rules like `noPlaywrightUselessAwait`.
 
-3. **`next-env.d.ts` format mismatch** — Next.js generates with double quotes +
-   semicolons, biome enforces single quotes + none.
-   Add `apps/*/next-env.d.ts` to biome ignore.
+3. **`next-env.d.ts` format mismatch** — Next.js generates with double quotes + semicolons, biome enforces single quotes + none. Add `apps/*/next-env.d.ts` to biome ignore.
 
-4. **Docker port conflicts** — Convex MinIO uses 9000/9001, SpacetimeDB also needs
-   MinIO. Assign different ports in `noboil.yml` to avoid conflicts.
+4. **Docker port conflicts** — Convex MinIO uses 9000/9001, SpacetimeDB also needs MinIO. Assign different ports in `noboil.yml` to avoid conflicts.
 
-5. **Convex `genenv.ts` outputs env vars** — must be set on backend via
-   `convex env set`. JWT private key needs `--` separator due to dashes.
+5. **Convex `genenv.ts` outputs env vars** — must be set on backend via `convex env set`. JWT private key needs `--` separator due to dashes.
 
 ## Testing
 
@@ -603,8 +541,6 @@ export { useList } from './use-list' // DB-specific
 
 ## Swift Mobile API (Convex-only)
 
-- Subscription cleanup uses `cancelSubscription(&subscriptionID)` — NOT
-  `ConvexService.shared.unsubscribe()`
+- Subscription cleanup uses `cancelSubscription(&subscriptionID)` — NOT `ConvexService.shared.unsubscribe()`
 - `cancelSubscription` is a free function from `ConvexShared/SharedUI.swift`
-- Mobile subscriptions use `Sub<T>` pattern or manual `subscriptionID` +
-  `cancelSubscription`
+- Mobile subscriptions use `Sub<T>` pattern or manual `subscriptionID` + `cancelSubscription`
