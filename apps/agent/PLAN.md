@@ -975,6 +975,8 @@ The latest-message check and enqueue are combined atomically in `enqueueRunIfLat
 const maybeContinueOrchestrator = async ({ ctx, taskId }) => {
   const task = await ctx.runQuery(internal.tasks.getById, { taskId })
   if (!task || !task.completionReminderMessageId) return
+  const session = await ctx.runQuery(internal.sessions.getByThreadIdInternal, { threadId: task.parentThreadId })
+  if (session?.status === 'archived') return
   if (task.continuationEnqueuedAt) return
   const enqueued = await ctx.runMutation(internal.orchestrator.enqueueRunIfLatest, {
     expectedLatestMessageId: task.completionReminderMessageId,
@@ -990,9 +992,11 @@ const maybeContinueOrchestrator = async ({ ctx, taskId }) => {
 
 v1 limitation: if the worker action crashes between `completeTask` and `maybeContinueOrchestrator`, the completion reminder is persisted but no continuation is enqueued. The thread remains idle with no queued payload, so `timeoutStaleRuns` cannot recover this case. The user must send a new message to re-engage the orchestrator. v2 can move continuation enqueue into `completeTask` itself (mutations can use `ctx.scheduler.runAfter`) to make this fully atomic.
 
+The same crash-gap limitation applies to todo auto-continuation in `postTurnAudit`: if the action crashes between saving the system reminder and enqueuing `todo_continuation`, the reminder is persisted but no continuation is enqueued. The user must send a new message to re-engage the orchestrator.
+
 Delegation Idempotency: `@convex-dev/agent` handles retries at the agent-step execution layer. If the model emits duplicate delegate tool calls, separate tasks are intentionally created (the model delegated twice). Convex action retry behavior is absorbed by the agent framework's step-level deduplication.
 
-Worker retry side-effect safety: when `runWorker` retries a failed task, any MCP tool calls that already executed external mutations before the failure will be duplicated. This is an accepted v1 limitation — MCP tool calls are inherently non-idempotent. v2 can add tool-call-level deduplication by tracking `toolCallId` per execution attempt and skipping already-completed calls on retry.
+Worker retry side-effect safety: when `runWorker` retries a failed task, any MCP tool calls that already executed external mutations before the failure will be duplicated. Additionally, the worker re-saves the prompt message on retry, which can produce duplicate prompt entries on the worker thread. Both are accepted v1 limitations — MCP tool calls are inherently non-idempotent, and the duplicate prompt is cosmetic (only visible if inspecting the worker thread directly). v2 can add tool-call-level deduplication by tracking `toolCallId` per execution attempt, and skip prompt save if already present on the thread.
 
 ---
 
@@ -1050,6 +1054,8 @@ const postTurnAudit = async ({ ctx, threadId, turnRequestedInput }) => {
   const active = await ctx.runQuery(internal.tasks.countActiveByThread, { threadId })
   const runState = await ctx.runQuery(internal.orchestrator.getRunStateByThreadId, { threadId })
   const streak = runState?.autoContinueStreak ?? 0
+  const session = await ctx.runQuery(internal.sessions.getByThreadIdInternal, { threadId })
+  if (session?.status === 'archived') return
 
   let incomplete = 0
   for (const t of todos.todos) {
@@ -1171,7 +1177,11 @@ const enqueueRunIfLatest = internalMutation({
     threadId: v.string()
   },
   handler: async (ctx, args) => {
-    const latest = await getLatestMessageId(ctx, components.agent, { threadId: args.threadId })
+    const latestMessages = await listUIMessages(ctx, components.agent, {
+      paginationOpts: { cursor: null, numItems: 1 },
+      threadId: args.threadId
+    })
+    const latest = latestMessages.page[0]?._id ?? null
     if (latest !== args.expectedLatestMessageId) return { ok: false, reason: 'not_latest' }
     const state = await ensureRunState({ ctx, threadId: args.threadId })
     const shouldIncrement = args.incrementStreak === true
@@ -1269,6 +1279,8 @@ const finishRun = internalMutation({
   }
 })
 ```
+
+`enqueueRunIfLatest` uses `listUIMessages` from `@convex-dev/agent` to read the latest message inline. Component helper functions accept mutation `ctx` and access the component's tables through the component reference, avoiding the `ctx.runQuery` prohibition in mutations.
 
 ### Auto-Continue Streak Rules
 
@@ -1398,9 +1410,20 @@ const ensureServerToolsCache = async ({ ctx, serverId }) => {
   if (server.cachedTools && server.cachedAt && Date.now() - server.cachedAt < CACHE_TTL) {
     return server.cachedTools
   }
-  const transport = new StreamableHTTPClientTransport(new URL(server.url), {
-    requestInit: { headers: JSON.parse(server.authHeaders ?? '{}') }
-  })
+  let authHeaders = {}
+  try {
+    authHeaders = JSON.parse(server.authHeaders ?? '{}')
+  } catch {
+    return []
+  }
+  let transport
+  try {
+    transport = new StreamableHTTPClientTransport(new URL(server.url), {
+      requestInit: { headers: authHeaders }
+    })
+  } catch {
+    return []
+  }
   const client = new Client({ name: 'noboil-agent', version: '1.0.0' }, { capabilities: {} })
   try {
     await client.connect(transport)
@@ -1791,7 +1814,9 @@ const runWorker = internalAction({
     if (!marked.ok) return
 
     const heartbeatInterval = setInterval(async () => {
-      await ctx.runMutation(internal.tasks.updateHeartbeat, { taskId: args.taskId })
+      try {
+        await ctx.runMutation(internal.tasks.updateHeartbeat, { taskId: args.taskId })
+      } catch {}
     }, 30_000)
 
     try {
@@ -2051,6 +2076,7 @@ const callToolOwned = internalAction({
       userId: resolvedUserId
     })
     if (!server) return { error: 'server_not_found', ok: false }
+    if (!server.isEnabled) return { error: 'server_disabled', ok: false, retryable: false }
 
     let authHeaders = {}
     try {
@@ -2323,10 +2349,12 @@ const runOrchestrator = internalAction({
     if (!claimed.ok) return
 
     const heartbeatInterval = setInterval(async () => {
-      await ctx.runMutation(internal.orchestrator.heartbeatRun, {
-        runToken: args.runToken,
-        threadId: args.threadId
-      })
+      try {
+        await ctx.runMutation(internal.orchestrator.heartbeatRun, {
+          runToken: args.runToken,
+          threadId: args.threadId
+        })
+      } catch {}
     }, 2 * 60 * 1000)
 
     try {
@@ -2948,6 +2976,8 @@ const submitMessage = m({
   }
 })
 
+`submitMessage` is a single mutation transaction: `saveMessage` and `enqueueRunInline` execute atomically. If any step fails, the entire mutation rolls back. No race condition exists here because Convex mutations are serialized per-document.
+
 const archiveSession = m({
   args: { sessionId: v.id('session') },
   handler: async c => {
@@ -3161,6 +3191,7 @@ const getOwnedTaskStatusInternal = internalQuery({
 - active sessions become idle after 1 day of inactivity
 - idle sessions are archived after 7 days of inactivity (setting `status='archived'` and `archivedAt`)
 - archived sessions are hard-deleted after 180 days
+- internal auto-continuation (postTurnAudit, task-completion) checks session status and skips archived sessions
 - submitting a message to an archived session returns `session_archived` error
 - submitting a message to an idle session restores it to active status
 
