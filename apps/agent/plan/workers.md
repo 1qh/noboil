@@ -473,6 +473,8 @@ const runWorker = internalAction({
         messages.push({ content: m.content, role: m.role })
       }
 
+      // Worker context is built via the same `buildModelMessages` serializer as the orchestrator.
+
       const result = await generateText({
         maxSteps: WORKER_RUNTIME_CONFIG.maxSteps,
         messages,
@@ -504,6 +506,7 @@ const runWorker = internalAction({
       }
 
       const text = result.text ?? ''
+      // After `generateText` completes, the worker persists the final result as an assistant message with `parts` populated from the AI SDK response steps. If the worker called tools during its turn (webSearch, mcpCall), those tool calls and results are captured in `parts` just like orchestrator messages. The `content` field contains the final text output. This ensures worker-thread messages are viewable in the task panel with full tool-call history, and the `buildModelMessages` serializer works identically for worker threads.
       await ctx.db.insert('messages', {
         content: text,
         createdAt: Date.now(),

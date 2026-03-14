@@ -481,6 +481,8 @@ const runOrchestratorStream = async ({
     messages.push({ content: m.content, role: m.role })
   }
 
+  // Context is built via `buildModelMessages(messages, compactionSummary)` which serializes stored message rows into AI SDK `CoreMessage` format including `parts` — see `architecture.md` for the canonical serializer spec.
+
   const result = await streamText({
     maxSteps: ORCHESTRATOR_RUNTIME_CONFIG.maxSteps,
     messages,
@@ -959,6 +961,7 @@ const resetAutoContinueStreak = internalMutation({
 const getContextSize = internalQuery({
   args: { threadId: v.string() },
   handler: async (ctx, { threadId }) => {
+    // Query `messages.by_thread_createdAt` with `order('desc')`, take the first 100 (most recent), then reverse the array to chronological order before passing to `buildModelMessages`. This ensures the model always sees the latest context window in correct temporal order.
     const messages = await ctx.db
       .query('messages')
       .withIndex('by_thread_createdAt', q => q.eq('threadId', threadId))
@@ -991,6 +994,7 @@ const listMessages = query({
 
     await resolveOwnedSessionByThread({ ctx, threadId: args.threadId, userId })
 
+    // Query `messages.by_thread_createdAt` with `order('desc')`, take the first 100 (most recent), then reverse the array to chronological order before passing to `buildModelMessages`. This ensures the model always sees the latest context window in correct temporal order.
     return await ctx.db
       .query('messages')
       .withIndex('by_thread_createdAt', q => q.eq('threadId', args.threadId))
