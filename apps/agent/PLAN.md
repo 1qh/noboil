@@ -239,7 +239,6 @@ export { owned }
 ```typescript
 import { authTables } from '@convex-dev/auth/server'
 import { ownedTable, rateLimitTable } from '@noboil/convex/server'
-import { zodOutputToConvexFields as z2c } from 'convex-helpers/server/zod4'
 import { defineSchema, defineTable } from 'convex/server'
 import { v } from 'convex/values'
 
@@ -349,6 +348,7 @@ export default defineSchema({
     queuedReason: v.optional(v.union(v.literal('user_message'), v.literal('task_completion'), v.literal('todo_continuation'))),
     runClaimed: v.optional(v.boolean()),
     claimedAt: v.optional(v.number()),
+    runHeartbeatAt: v.optional(v.number()),
     status: v.union(v.literal('idle'), v.literal('active')),
     threadId: v.string()
   })
@@ -614,7 +614,7 @@ const delegateTool = createTool({
         threadId: spawn.threadId
       }
     } catch (error) {
-      return { error: String(error), ok: false }
+      return { code: 'spawn_failed', error: String(error), ok: false }
     }
   },
   inputSchema: z.object({
@@ -637,7 +637,7 @@ const todoWriteTool = createTool({
       await ctx.runMutation(internal.todos.syncOwned, { sessionThreadId: ctx.threadId, todos })
       return { updated: todos.length }
     } catch (error) {
-      return { error: String(error), ok: false }
+      return { code: 'sync_failed', error: String(error), ok: false }
     }
   },
   inputSchema: z.object({
@@ -663,7 +663,7 @@ const todoReadTool = createTool({
       const todos = await ctx.runQuery(internal.todos.listOwnedByThread, { threadId: ctx.threadId })
       return { todos }
     } catch (error) {
-      return { error: String(error), ok: false }
+      return { code: 'read_failed', error: String(error), ok: false }
     }
   },
   inputSchema: z.object({})
@@ -715,7 +715,7 @@ const webSearchTool = createTool({
       })
       return { sources: result.sources, summary: result.summary }
     } catch (error) {
-      return { error: String(error), ok: false }
+      return { code: 'search_failed', error: String(error), ok: false }
     }
   },
   inputSchema: z.object({ query: z.string() })
@@ -875,7 +875,6 @@ const completeTask = internalMutation({
       completedAt: Date.now(),
       completionNotifiedAt: Date.now(),
       completionReminderMessageId: saved.messageId,
-      continuationEnqueuedAt: Date.now(),
       result,
       status: 'completed'
     })
@@ -909,6 +908,17 @@ const failTask = internalMutation({
 ```
 
 ```typescript
+const markContinuationEnqueued = internalMutation({
+  args: { taskId: v.id('tasks') },
+  handler: async (ctx, { taskId }) => {
+    const task = await ctx.db.get(taskId)
+    if (!task) return
+    await ctx.db.patch(taskId, { continuationEnqueuedAt: Date.now() })
+  }
+})
+```
+
+```typescript
 const timeoutRunningTasks = internalMutation({
   args: { now: v.number(), staleMs: v.number() },
   handler: async (ctx, { now, staleMs }) => {
@@ -929,6 +939,7 @@ const timeoutRunningTasks = internalMutation({
 
 - `heartbeatAt`
 - `continuationEnqueuedAt`
+- `runHeartbeatAt`
 - `completedAt`
 - `completionNotifiedAt`
 - `retryCount`
@@ -953,10 +964,15 @@ const maybeContinueOrchestrator = async ({ ctx, taskId }) => {
     threadId: task.parentThreadId
   })
   if (!enqueued.ok) return
+  await ctx.runMutation(internal.tasks.markContinuationEnqueued, { taskId })
 }
 ```
 
+v1 limitation: if the worker action crashes between `completeTask` and `maybeContinueOrchestrator`, the completion reminder is persisted but no continuation is enqueued. The stale-run recovery cron (`timeoutStaleRuns`) will eventually detect the idle thread with a queued payload and schedule the missing run. v2 can move continuation enqueue into `completeTask` itself (mutations can use `ctx.scheduler.runAfter`) to make this fully atomic.
+
 Delegation Idempotency: `@convex-dev/agent` handles retries at the agent-step execution layer. If the model emits duplicate delegate tool calls, separate tasks are intentionally created (the model delegated twice). Convex action retry behavior is absorbed by the agent framework's step-level deduplication.
+
+Worker retry side-effect safety: when `runWorker` retries a failed task, any MCP tool calls that already executed external mutations before the failure will be duplicated. This is an accepted v1 limitation — MCP tool calls are inherently non-idempotent. v2 can add tool-call-level deduplication by tracking `toolCallId` per execution attempt and skipping already-completed calls on retry.
 
 ---
 
@@ -2161,7 +2177,7 @@ const finishCompaction = internalMutation({
 - worker timeout target: 10 minutes
 - cron scans running tasks
 - if no heartbeat within timeout threshold, mark `timed_out`
-- stale orchestrator-run recovery: if `threadRunState` is `active` + `runClaimed=true` and `claimedAt` is older than 15 minutes, recover to idle or immediately drain queued payload into a fresh run token
+- stale orchestrator-run recovery: if `threadRunState` is `active` and the latest heartbeat (`runHeartbeatAt`, falling back to `claimedAt`) is older than 15 minutes for claimed runs, or older than 5 minutes for unclaimed runs, recover to idle or immediately drain queued payload into a fresh run token
 
 ### MCP Failure Recovery
 
@@ -2251,7 +2267,7 @@ const listMessages = query({
     threadId: v.string()
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx)
+    const userId = await getAuthUserIdOrTest(ctx)
     if (!userId) throw new Error('unauthenticated')
     const session = await ctx.db
       .query('session')
@@ -2306,6 +2322,9 @@ Co-location rule is enforced: page-specific components stay with their page.
 ```
 apps/agent/
 ├── tsconfig.json
+├── next.config.ts
+├── middleware.ts
+├── playwright.config.ts
 ├── src/
 │   ├── app/
 │   │   ├── layout.tsx
@@ -2332,7 +2351,36 @@ apps/agent/
 │       └── session-layout.ts
 ├── e2e/
 ├── package.json
-└── PLAN.md
+├── PLAN.md
+└── SOURCES.md
+```
+
+### `apps/agent/middleware.ts`
+
+```typescript
+import { createProxy } from '@a/fe/proxy'
+
+export default createProxy()
+
+export const config = { matcher: ['/((?!_next|favicon.ico).*)'] }
+```
+
+### `apps/agent/next.config.ts`
+
+Reuses shared config from `@a/fe`:
+
+```typescript
+import { createNextConfig } from '@a/fe/next-config'
+
+export default createNextConfig({ transpilePackages: ['@a/be-agent', '@a/fe', '@a/ui'] })
+```
+
+### `apps/agent/playwright.config.ts`
+
+```typescript
+import { createPlaywrightConfig } from '@a/e2e/playwright-config'
+
+export default createPlaywrightConfig({ port: 3005 })
 ```
 
 ### Responsive Layout Spec
@@ -2484,6 +2532,7 @@ packages/be-agent/
 ├── lazy.ts
 ├── prompts.ts
 ├── t.ts
+├── models.mock.ts
 ├── SOURCES.md
 ├── package.json
 └── tsconfig.json
@@ -2541,7 +2590,7 @@ export { createTestUser, ensureTestUser, getAuthUserIdOrTest, isTestMode, TEST_E
 ```typescript
 export default {
   providers: [{
-    domain: process.env.CONVEX_SITE_URL,
+    domain: process.env.CONVEX_SITE_URL ?? '',
     applicationID: 'convex'
   }]
 }
@@ -2942,7 +2991,7 @@ Every public query and mutation follows this pattern:
 const getOwnedTaskStatus = query({
   args: { requesterThreadId: v.string(), taskId: v.string() },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx)
+    const userId = await getAuthUserIdOrTest(ctx)
     if (!userId) throw new Error('unauthenticated')
     const session = await resolveOwnedSessionByThread({
       ctx,
@@ -2995,8 +3044,8 @@ const getOwnedTaskStatusInternal = internalQuery({
 
 ### Retention Policy (v1)
 
-- session transitions to `idle` after 24h of no message or task activity (`lastActivityAt`)
-- idle sessions are archived by setting `status='archived'` and `archivedAt`
+- active sessions become idle after 1 day of inactivity
+- idle sessions are archived after 7 days of inactivity (setting `status='archived'` and `archivedAt`)
 - archived sessions are hard-deleted after 180 days
 
 ### Cleanup Scope
@@ -3012,8 +3061,7 @@ Agent thread and message data is managed by the `@convex-dev/agent` component. v
 
 ### Trigger
 
-- hourly cron marks stale active sessions to `idle`
-- nightly cron archives eligible idle sessions and cleans archived sessions
+- hourly cron transitions active→idle (1 day) and idle→archived (7 days); nightly cron hard-deletes archived sessions older than 180 days
 - manual archive action in UI remains available
 
 ### `convex/staleTaskCleanup.ts`
@@ -3047,13 +3095,19 @@ const timeoutStaleRuns = internalMutation({
   handler: async ctx => {
     const now = Date.now()
     const RUN_STALE_MS = 15 * 60 * 1000
+    const UNCLAIMED_STALE_MS = 5 * 60 * 1000
     const active = await ctx.db.query('threadRunState').withIndex('by_status', q => q.eq('status', 'active')).collect()
     for (const state of active) {
-      if (!state.runClaimed) continue
-      if (!state.claimedAt || now - state.claimedAt <= RUN_STALE_MS) continue
-
       const fresh = await ctx.db.get(state._id)
-      if (!fresh || fresh.status !== 'active' || !fresh.runClaimed) continue
+      if (!fresh || fresh.status !== 'active') continue
+
+      if (fresh.runClaimed) {
+        const lastBeat = fresh.runHeartbeatAt ?? fresh.claimedAt
+        if (!lastBeat || now - lastBeat <= RUN_STALE_MS) continue
+      } else {
+        const age = fresh.claimedAt ? now - fresh.claimedAt : RUN_STALE_MS + 1
+        if (age <= UNCLAIMED_STALE_MS) continue
+      }
 
       if (fresh.queuedPromptMessageId) {
         const runToken = crypto.randomUUID()
@@ -3069,6 +3123,7 @@ const timeoutStaleRuns = internalMutation({
           queuedPromptMessageId: undefined,
           queuedReason: undefined,
           runClaimed: false,
+          runHeartbeatAt: undefined,
           status: 'active'
         })
         continue
@@ -3078,6 +3133,7 @@ const timeoutStaleRuns = internalMutation({
         activeRunToken: undefined,
         claimedAt: undefined,
         runClaimed: undefined,
+        runHeartbeatAt: undefined,
         status: 'idle'
       })
     }
@@ -3182,6 +3238,8 @@ Run at end of Phase 5:
 - Frontend wraps auth gating with a `TestLoginProvider` that auto-authenticates in test mode.
 - This follows the existing `packages/be-convex/convex/testauth.ts` pattern.
 
+`TestLoginProvider` is a client wrapper that checks `process.env.NEXT_PUBLIC_CONVEX_TEST_MODE`. In test mode, it calls the backend `ensureTestUser` mutation on mount and stores the returned session token, bypassing the Google OAuth flow. In production mode, it renders its children directly without modification. This follows the same pattern as `packages/be-convex/convex/testauth.ts` + the existing E2E test harness.
+
 ---
 
 ## Rate Limiting
@@ -3227,8 +3285,8 @@ Phase note: rate limit enforcement is implemented in Phase 6 (Polish). The schem
 |---|---|---|---|---|
 | `CONVEX_DEPLOYMENT` | local deployment | test deployment | production deployment | Convex target for dev/deploy scripts |
 | `AUTH_SECRET` | required | required | required | Auth.js encryption/signing secret handled server-side in Convex auth |
-| `AUTH_GOOGLE_ID` | required when Google auth enabled | required | required | OAuth client id used by `@convex-dev/auth` backend |
-| `AUTH_GOOGLE_SECRET` | required when Google auth enabled | required | required | OAuth client secret used by `@convex-dev/auth` backend |
+| `AUTH_GOOGLE_ID` | required when Google auth enabled | optional | required | OAuth client id used by `@convex-dev/auth` backend |
+| `AUTH_GOOGLE_SECRET` | required when Google auth enabled | optional | required | OAuth client secret used by `@convex-dev/auth` backend |
 | `CONVEX_SITE_URL` | optional | optional | optional | Domain for auth provider configuration |
 | `GOOGLE_GENERATIVE_AI_API_KEY` | required in production | mock or test key | required | Gemini direct API path |
 
@@ -3433,7 +3491,7 @@ Per-file source comments are removed. Canonical tracking is maintained in `SOURC
   "scripts": {
     "build": "bun with-env next build --turbo",
     "clean": "git clean -xdf .cache .next .turbo node_modules",
-    "dev": "PORT=3004 bun with-env next dev --turbo",
+    "dev": "PORT=3005 bun with-env next dev --turbo",
     "lint": "eslint",
     "start": "bun with-env next start",
     "test": "CONVEX_TEST_MODE=true bun with-env playwright test --reporter=dot",
