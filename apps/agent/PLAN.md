@@ -238,7 +238,8 @@ export { owned }
 
 ```typescript
 import { authTables } from '@convex-dev/auth/server'
-import { ownedTable, rateLimitTable } from '@noboil/convex/server'
+import { ownedTable } from '@noboil/convex/server'
+import { rateLimitTables } from 'convex-helpers/server/rateLimit'
 import { defineSchema, defineTable } from 'convex/server'
 import { v } from 'convex/values'
 
@@ -246,7 +247,7 @@ import { owned } from '../t'
 
 export default defineSchema({
   ...authTables,
-  ...rateLimitTable(),
+  ...rateLimitTables,
   session: ownedTable(owned.session)
     .index('by_user_status', ['userId', 'status'])
     .index('by_user_threadId', ['userId', 'threadId'])
@@ -585,13 +586,15 @@ const WORKER_SYSTEM_PROMPT = [
   'Provide a clear, concise result with relevant data and findings.',
   'You cannot delegate further or manage todos.'
 ].join('\n')
+
+export { ORCHESTRATOR_SYSTEM_PROMPT, WORKER_SYSTEM_PROMPT }
 ```
 
 ---
 
 ## Tool Definitions
 
-`createTool` supports `execute: async (ctx, input, options)`; snippets may omit `options` when unused.
+`createTool` from `@convex-dev/agent` uses `inputSchema` (Zod schema) and `execute: async (ctx, input, options)` following the AI SDK tool pattern. The deprecated `args`/`handler` (Convex mutation style) was removed in v0.6.0 and type-errors if used. The `execute` function receives the Convex action context as its first argument (unlike plain AI SDK tools). Snippets may omit `options` when unused.
 
 ### 1. `delegate`
 
@@ -1283,6 +1286,8 @@ const finishRun = internalMutation({
 
 `enqueueRunIfLatest` uses `listUIMessages` from `@convex-dev/agent` to read the latest message inline. Component helper functions accept mutation `ctx` and access the component's tables through the component reference, avoiding the `ctx.runQuery` prohibition in mutations.
 
+Note: server-side `listUIMessages` returns raw `MessageDoc` objects from the component's internal tables (Convex documents with `_id`). Client-side `useUIMessages` returns `UIMessage` objects (AI SDK format with `key` as the stable identifier, no `_id`). All server-side code (e.g. `enqueueRunIfLatest`, compaction) correctly uses `_id` from `MessageDoc`. All client-side rendering uses `key` from `UIMessage`.
+
 ### Auto-Continue Streak Rules
 
 - Reset to `0` on new user message (`enqueueRun` with `reason='user_message'`).
@@ -1511,6 +1516,11 @@ const scheduleRetry = internalMutation({
   handler: async (ctx, { taskId }) => {
     const task = await ctx.db.get(taskId)
     if (!task || task.status !== 'running') return
+    const session = await ctx.db.get(task.sessionId)
+    if (session?.status === 'archived') {
+      await ctx.db.patch(taskId, { lastError: 'session_archived', status: 'cancelled' })
+      return
+    }
     const retryCount = task.retryCount + 1
     await ctx.db.patch(taskId, { pendingAt: Date.now(), retryCount, status: 'pending' })
     const delay = Math.min(1000 * Math.pow(2, retryCount), 30_000)
@@ -2113,7 +2123,8 @@ const callToolOwned = internalAction({
       const message = String(error)
       const retryableConnectionError =
         message.includes('ECONN') || message.includes('ETIMEDOUT') || message.includes('ENOTFOUND') ||
-        message.includes('connection') || message.includes('network') || message.includes('503')
+        message.includes('connection') || message.includes('network') || message.includes('503') ||
+        message.includes('mcp_connect_timeout') || message.includes('mcp_call_timeout')
       return { error: message, ok: false, retryable: retryableConnectionError }
     } finally {
       await client.close()
@@ -2315,8 +2326,7 @@ Tool returns structured model-readable error payload, not thrown raw exception:
 ### Server Streaming
 
 AI SDK v6 finish reasons are limited to `stop`, `length`, `content-filter`, `tool-calls`, `error`, and `other`.
-Requested-user-input inference is a documented v1 limitation: `runOrchestrator` passes `turnRequestedInput: false` on every turn.
-v2 can add structured input-request detection by inspecting tool outputs or assistant content patterns, while keeping the existing `postTurnAudit` parameter shape.
+Requested-user-input inference is a documented v1 limitation: `runOrchestrator` passes `turnRequestedInput: false` on every turn. This means auto-continue can fire even when the assistant's last message asks the user a question. The `postTurnAudit` guard at `turnRequestedInput` (line 1059) is dead code in v1 since the value is always `false`. The streak cap (max 5) bounds the worst case, and any new user message resets the streak and takes priority in the queue. v2 can add structured input-request detection by inspecting tool outputs or assistant content patterns (e.g. messages ending with `?`), while keeping the existing `postTurnAudit` parameter shape.
 
 ```typescript
 const runOrchestrator = internalAction({
@@ -2431,7 +2441,7 @@ const TaskWorkerStream = ({ threadId }: { threadId: string }) => {
   return (
     <div className="space-y-2 text-sm">
       {results.map(m => (
-        <div key={m._id}>{m.text}</div>
+        <div key={m.key}>{m.text}</div>
       ))}
     </div>
   )
@@ -2825,7 +2835,7 @@ const { createTestUser, ensureTestUser, getAuthUserIdOrTest, isTestMode, TEST_EM
 
 const signInAsTestUser = mutation({
   handler: async ctx => {
-    if (!isTestMode) throw new Error('test_mode_only')
+    if (!isTestMode()) throw new Error('test_mode_only')
     const userId = await ensureTestUser(ctx)
     return { userId }
   }
@@ -2921,9 +2931,17 @@ const createMockToolCall = ({ args, name }: { args: Record<string, unknown>, nam
 const mockModel = {
   doGenerate: async ({ tools }) => {
     if (tools && tools.length > 0) {
+      const firstTool = tools[0]
+      const mockArgs: Record<string, unknown> = firstTool.name === 'delegate'
+        ? { description: 'Test task', isBackground: true, prompt: 'Test prompt' }
+        : firstTool.name === 'webSearch'
+          ? { query: 'test' }
+          : firstTool.name === 'todoWrite'
+            ? { todos: [{ content: 'Test task', priority: 'medium', status: 'pending' }] }
+            : { input: 'test' }
       return {
         finishReason: 'tool-calls' as const,
-        toolCalls: [createMockToolCall({ args: { query: 'test' }, name: tools[0].name })],
+        toolCalls: [createMockToolCall({ args: mockArgs, name: firstTool.name })],
         usage: { completionTokens: 10, promptTokens: 5, totalTokens: 15 }
       }
     }
@@ -2945,7 +2963,7 @@ const mockModel = {
 export { mockModel }
 ```
 
-The mock model conditionally returns tool calls when tools are provided in the generation request. This enables E2E smoke tests to exercise delegation, search, and MCP flows without hitting real LLM APIs. The first available tool is always called with `{ query: 'test' }` — specific test scenarios can intercept tool execution at the tool handler level. `doStream` still returns simple text; tool-call streaming in tests is handled by `doGenerate` via `@convex-dev/agent`'s step loop.
+The mock model conditionally returns tool calls when tools are provided in the generation request. This enables E2E smoke tests to exercise delegation, search, and MCP flows without hitting real LLM APIs. The mock inspects the first available tool's name and generates schema-compatible arguments: `delegate` gets `{ description, isBackground, prompt }`, `webSearch` gets `{ query }`, `todoWrite` gets a single pending todo, and other tools get a generic `{ input }`. Specific test scenarios can intercept tool execution at the tool handler level. `doStream` still returns simple text; tool-call streaming in tests is handled by `doGenerate` via `@convex-dev/agent`'s step loop.
 
 ### `packages/be-agent/tsconfig.json`
 
@@ -3243,7 +3261,7 @@ const updateMcpServer = m({
         .unique()
       if (conflict) throw new Error('server_name_taken')
     }
-    const patch = {}
+    const patch: Record<string, unknown> = {}
     if (c.args.name !== undefined) patch.name = c.args.name
     if (c.args.url !== undefined) {
       patch.url = c.args.url
@@ -3593,16 +3611,15 @@ Optional:
 
 Implementation:
 
-- reuse `rateLimitTable()` pattern
+- use `rateLimitTables` from `convex-helpers/server/rateLimit`
 - expose limit policy config per environment
 
-Phase note: rate limit enforcement is implemented in Phase 6 (Polish). The schema already includes `rateLimitTable()` and the backend tree already includes `rateLimit.ts`. Phase 6 wires `checkRateLimit` guards into `submitMessage`, `delegateTool.execute`, `webSearchTool.execute`, and `mcpCallTool.execute` using the limits above. Phase 2-5 code intentionally omits rate-limit checks for simpler bring-up.
+Phase note: rate limit enforcement is implemented in Phase 6 (Polish). The schema already includes `rateLimitTables` and the backend tree already includes `rateLimit.ts`. Phase 6 wires `checkRateLimit` guards into `submitMessage`, `delegateTool.execute`, `webSearchTool.execute`, and `mcpCallTool.execute` using the limits above. Phase 2-5 code intentionally omits rate-limit checks for simpler bring-up.
 
 ### `convex/rateLimit.ts`
 
 ```typescript
 import { defineRateLimits } from 'convex-helpers/server/rateLimit'
-import { components } from './_generated/api'
 
 const RATE_LIMITS = {
   delegation: { kind: 'token bucket' as const, period: 60_000, rate: 10 },
@@ -3611,7 +3628,7 @@ const RATE_LIMITS = {
   submitMessage: { kind: 'token bucket' as const, period: 60_000, rate: 20 }
 }
 
-const { checkRateLimit, rateLimit, resetRateLimit } = defineRateLimits(components.rateLimiter, RATE_LIMITS)
+const { checkRateLimit, rateLimit, resetRateLimit } = defineRateLimits(RATE_LIMITS)
 
 export { checkRateLimit, rateLimit, resetRateLimit }
 ```
