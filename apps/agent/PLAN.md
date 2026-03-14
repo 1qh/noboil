@@ -197,6 +197,17 @@ runWorker action
   -> on failure mutation tasks.failTask
 ```
 
+```typescript
+const heartbeatInterval = setInterval(async () => {
+  await ctx.runMutation(internal.tasks.updateHeartbeat, { taskId })
+}, 30_000)
+try {
+  await result.consumeStream()
+} finally {
+  clearInterval(heartbeatInterval)
+}
+```
+
 ---
 
 ## Convex Schema
@@ -238,7 +249,8 @@ export default defineSchema({
   ...rateLimitTable(),
   session: ownedTable(owned.session)
     .index('by_user_status', ['userId', 'status'])
-    .index('by_user_threadId', ['userId', 'threadId']),
+    .index('by_user_threadId', ['userId', 'threadId'])
+    .index('by_threadId', ['threadId']),
   tasks: defineTable({
     agent: v.string(),
     completedAt: v.optional(v.number()),
@@ -309,9 +321,9 @@ export default defineSchema({
     .index('by_user_name', ['userId', 'name']),
   tokenUsage: defineTable({
     agentName: v.optional(v.string()),
-    inputTokens: v.number(),
+    promptTokens: v.number(),
     model: v.string(),
-    outputTokens: v.number(),
+    completionTokens: v.number(),
     provider: v.string(),
     sessionId: v.id('session'),
     threadId: v.string(),
@@ -400,6 +412,12 @@ export { getModel }
 
 ## Agent Definitions
 
+`components.agent` is imported from Convex generated API:
+
+```typescript
+import { components } from './convex/_generated/api'
+```
+
 ### Orchestrator (Sisyphus-Web)
 
 ```typescript
@@ -458,9 +476,9 @@ const worker = new Agent(components.agent, {
 const usageHandlerByThread = async (ctx, { model, provider, threadId, usage }) => {
   await ctx.runMutation(internal.tokenUsage.recordModelUsage, {
     agentName: usage.agentName,
-    inputTokens: usage.inputTokens,
+    completionTokens: usage.completionTokens,
     model,
-    outputTokens: usage.outputTokens,
+    promptTokens: usage.promptTokens,
     provider,
     threadId,
     totalTokens: usage.totalTokens
@@ -470,9 +488,9 @@ const usageHandlerByThread = async (ctx, { model, provider, threadId, usage }) =
 const recordModelUsage = internalMutation({
   args: {
     agentName: v.optional(v.string()),
-    inputTokens: v.number(),
+    completionTokens: v.number(),
     model: v.string(),
-    outputTokens: v.number(),
+    promptTokens: v.number(),
     provider: v.string(),
     threadId: v.string(),
     totalTokens: v.number()
@@ -482,9 +500,9 @@ const recordModelUsage = internalMutation({
     if (session) {
       await ctx.db.insert('tokenUsage', {
         agentName: args.agentName,
-        inputTokens: args.inputTokens,
+        completionTokens: args.completionTokens,
         model: args.model,
-        outputTokens: args.outputTokens,
+        promptTokens: args.promptTokens,
         provider: args.provider,
         sessionId: session._id,
         threadId: args.threadId,
@@ -501,9 +519,9 @@ const recordModelUsage = internalMutation({
 
     await ctx.db.insert('tokenUsage', {
       agentName: args.agentName,
-      inputTokens: args.inputTokens,
+      completionTokens: args.completionTokens,
       model: args.model,
-      outputTokens: args.outputTokens,
+      promptTokens: args.promptTokens,
       provider: args.provider,
       sessionId: ownerSession._id,
       threadId: args.threadId,
@@ -514,9 +532,36 @@ const recordModelUsage = internalMutation({
 })
 ```
 
+## System Prompts
+
+### System Prompts (`packages/be-agent/prompts.ts`)
+
+#### ORCHESTRATOR_SYSTEM_PROMPT
+
+Core directives for the orchestrator agent:
+
+1. **Identity**: You are a web-based AI assistant with background task capabilities.
+2. **Tool usage**: Use delegate tool for tasks that can run independently. Use webSearch for current information. Use mcpCall/mcpDiscover for configured MCP servers.
+3. **Todo management**: Use todoWrite to track multi-step work. Mark in_progress before starting, completed after finishing. Only one task in_progress at a time.
+4. **Background tasks**: After delegating, continue responding. Use taskStatus to check progress. When system reminders arrive about completed tasks, use taskOutput to retrieve results.
+5. **Conciseness**: Be direct. No preamble or filler.
+6. **Limitations**: You cannot access files, execute code, or run CLI commands. You can search the web and call MCP tools.
+
+#### WORKER_SYSTEM_PROMPT
+
+Core directives for worker agents:
+
+1. **Identity**: You are a focused worker agent handling a delegated task.
+2. **Scope**: Complete the specific task described in your prompt. Do not deviate.
+3. **Tools**: Use webSearch for research. Use mcpCall/mcpDiscover for MCP tools.
+4. **Output**: Provide a clear, concise result. Include relevant data, findings, or answers.
+5. **Limits**: You cannot delegate further. You cannot manage todos. Complete your task and return.
+
 ---
 
 ## Tool Definitions
+
+`createTool` supports `execute: async (ctx, input, options)`; snippets may omit `options` when unused.
 
 ### 1. `delegate`
 
@@ -692,6 +737,8 @@ pending -> running -> completed
 3. Insert task row with idempotency defaults.
 4. Schedule worker action immediately.
 
+From mutation context, `worker.createThread(ctx, ...)` returns only `{ threadId }`.
+
 ```typescript
 const spawnTask = internalMutation({
   args: {
@@ -702,10 +749,11 @@ const spawnTask = internalMutation({
   },
   handler: async (ctx, args) => {
     const session = await resolveOwnedSessionByThread({ ctx, threadId: args.parentThreadId })
-    const thread = await worker.createThread(ctx, {
+    const { threadId } = await worker.createThread(ctx, {
       title: args.description,
       userId: session.userId
     })
+
     const taskId = await ctx.db.insert('tasks', {
       agent: 'Worker',
       description: args.description,
@@ -714,15 +762,15 @@ const spawnTask = internalMutation({
       retryCount: 0,
       sessionId: session._id,
       status: 'pending',
-      threadId: thread.threadId,
+      threadId,
       userId: session.userId
     })
     await ctx.scheduler.runAfter(0, internal.agents.runWorker, {
       prompt: args.prompt,
       taskId,
-      threadId: thread.threadId
+      threadId
     })
-    return { taskId, threadId: thread.threadId }
+    return { taskId, threadId }
   }
 })
 ```
@@ -739,6 +787,15 @@ const markRunning = internalMutation({
     if (!task || task.status !== 'pending') return { ok: false }
     await ctx.db.patch(taskId, { heartbeatAt: Date.now(), startedAt: Date.now(), status: 'running' })
     return { ok: true }
+  }
+})
+
+const updateHeartbeat = internalMutation({
+  args: { taskId: v.id('tasks') },
+  handler: async (ctx, { taskId }) => {
+    const task = await ctx.db.get(taskId)
+    if (!task || task.status !== 'running') return
+    await ctx.db.patch(taskId, { heartbeatAt: Date.now() })
   }
 })
 
@@ -817,7 +874,9 @@ Reminder insertion and notification marking are unified in `completeTask` so com
 const maybeContinueOrchestrator = async ({ ctx, taskId }) => {
   const task = await ctx.db.get(taskId)
   if (!task || !task.completionReminderMessageId) return
-  const state = await ctx.runQuery(internal.orchestrator.getRunState, { threadId: task.parentThreadId })
+  const state = await ctx.runQuery(internal.orchestrator.getRunStateByThreadId, {
+    threadId: task.parentThreadId
+  })
   if (state && state.autoContinueStreak >= 5) return
   const latest = await ctx.runQuery(internal.messages.getLatestMessageId, { threadId: task.parentThreadId })
   if (latest !== task.completionReminderMessageId) return
@@ -843,14 +902,17 @@ All stream entry points use a local wrapper that accepts a single object arg.
 ```typescript
 const runAgentStream = async ({ agent, ctx, threadId, promptMessageId, systemPrefix }) => {
   const streamMessages = []
-  if (systemPrefix) streamMessages.push({ content: systemPrefix, role: 'system' })
+  if (systemPrefix) streamMessages.push({ content: systemPrefix, role: 'system' as const })
 
-  return await agent.streamText(ctx, {
-    promptMessageId,
-    saveStreamDeltas: { chunking: 'word', throttleMs: 100 },
-    thread: { threadId },
-    messages: streamMessages
-  })
+  return await agent.streamText(
+    ctx,
+    { threadId },
+    {
+      ...(promptMessageId ? { promptMessageId } : {}),
+      ...(streamMessages.length > 0 ? { messages: streamMessages } : {})
+    },
+    { saveStreamDeltas: { chunking: 'word', throttleMs: 100 } }
+  )
 }
 ```
 
@@ -1039,6 +1101,568 @@ Future upgrade:
 
 v1 intentionally favors deterministic behavior and simpler recovery.
 
+## Helper Functions
+
+```typescript
+const ensureRunState = async ({ ctx, threadId }) => {
+  const existing = await ctx.db
+    .query('threadRunState')
+    .withIndex('by_threadId', q => q.eq('threadId', threadId))
+    .unique()
+  if (existing) return existing
+  const id = await ctx.db.insert('threadRunState', {
+    autoContinueStreak: 0,
+    status: 'idle',
+    threadId
+  })
+  const created = await ctx.db.get(id)
+  return created
+}
+
+const resolveOwnedSessionByThread = async ({ ctx, threadId }) => {
+  const session = await ctx.db
+    .query('session')
+    .withIndex('by_user_threadId', q => q.eq('userId', ctx.userId).eq('threadId', threadId))
+    .unique()
+  if (!session) {
+    const task = await ctx.db
+      .query('tasks')
+      .withIndex('by_threadId', q => q.eq('threadId', threadId))
+      .unique()
+    if (!task) throw new Error('session_not_found')
+    const ownerSession = await ctx.db.get(task.sessionId)
+    if (!ownerSession || ownerSession.userId !== ctx.userId) throw new Error('session_not_found')
+    return ownerSession
+  }
+  return session
+}
+
+const buildTaskCompletionReminder = ({ taskId, description, result }) => {
+  return [
+    '<system-reminder>',
+    '[BACKGROUND TASK COMPLETED]',
+    `Task ID: ${taskId}`,
+    `Description: ${description}`,
+    `Result: ${result ?? 'completed'}`,
+    '',
+    'Use taskOutput tool with this taskId to retrieve full results.',
+    '</system-reminder>'
+  ].join('\n')
+}
+
+const buildTodoReminder = ({ todos }) => {
+  const lines = ['<system-reminder>', '[TODO CONTINUATION]', 'Incomplete tasks remain:', '']
+  for (const t of todos) {
+    if (t.status === 'completed' || t.status === 'cancelled') continue
+    lines.push(`- [${t.status}] (${t.priority}) ${t.content}`)
+  }
+  lines.push('', 'Continue working on the next pending task.', '</system-reminder>')
+  return lines.join('\n')
+}
+
+const normalizeGrounding = result => {
+  const text = result.text ?? ''
+  const sources = []
+  const metadata = result.providerMetadata?.google
+  const chunks = metadata?.groundingChunks ?? metadata?.searchEntryPoint?.renderedContent ? [] : []
+  if (metadata?.groundingChunks) {
+    for (const chunk of metadata.groundingChunks) {
+      if (chunk.web) {
+        sources.push({ title: chunk.web.title ?? '', url: chunk.web.uri ?? '' })
+      }
+    }
+  }
+  return { sources, summary: text }
+}
+
+const summarizeGroups = async ({ existingSummary, groups }) => {
+  const { generateText } = await import('ai')
+  const model = await getModel()
+  const content = []
+  if (existingSummary) content.push(`Previous summary:\n${existingSummary}`)
+  for (const g of groups) {
+    content.push(`Messages ${g.startMessageId}..${g.endMessageId}:\n${g.text}`)
+  }
+  const result = await generateText({
+    model,
+    prompt: `Summarize the following conversation context concisely, preserving key decisions, facts, and action items:\n\n${content.join('\n\n')}`,
+    system: 'You are a conversation summarizer. Preserve all important details, decisions, and context.'
+  })
+  return result.text
+}
+
+const ensureServerToolsCache = async ({ ctx, serverId }) => {
+  const server = await ctx.runQuery(internal.mcp.getServerById, { serverId })
+  if (!server) return []
+  const CACHE_TTL = 5 * 60 * 1000
+  if (server.cachedTools && server.cachedAt && Date.now() - server.cachedAt < CACHE_TTL) {
+    return server.cachedTools
+  }
+  const transport = new StreamableHTTPClientTransport(new URL(server.url), {
+    requestInit: { headers: JSON.parse(server.authHeaders ?? '{}') }
+  })
+  const client = new Client({ name: 'noboil-agent', version: '1.0.0' }, { capabilities: {} })
+  try {
+    await client.connect(transport)
+    const toolList = await client.listTools()
+    const tools = []
+    for (const t of toolList.tools) {
+      tools.push({
+        description: t.description ?? '',
+        inputSchema: JSON.stringify(t.inputSchema),
+        name: t.name
+      })
+    }
+    await ctx.runMutation(internal.mcp.updateToolCache, { serverId, tools })
+    return tools
+  } finally {
+    await client.close()
+  }
+}
+
+const mockModel = {
+  doGenerate: async () => ({
+    finishReason: 'stop',
+    text: 'Mock response for testing.',
+    usage: { completionTokens: 10, promptTokens: 5, totalTokens: 15 }
+  }),
+  doStream: async () => ({
+    stream: new ReadableStream({ start: c => { c.enqueue({ type: 'text-delta', textDelta: 'Mock.' }); c.close() } }),
+    rawCall: { rawPrompt: null, rawSettings: {} }
+  }),
+  modelId: 'mock-model',
+  provider: 'mock',
+  specificationVersion: 'v1'
+} as unknown as LanguageModel
+```
+
+## Internal Functions
+
+Use `getRunStateByThreadId` consistently as the canonical query name. Replace all `getRunState` query references.
+
+### `sessions.createSession`
+
+```typescript
+const createSession = m({
+  args: { title: v.optional(v.string()) },
+  handler: async c => {
+    const { threadId } = await orchestrator.createThread(c.ctx, {
+      title: c.args.title ?? 'New Session',
+      userId: c.userId
+    })
+    const sessionId = await c.ctx.db.insert('session', {
+      lastActivityAt: Date.now(),
+      status: 'active',
+      threadId,
+      title: c.args.title ?? 'New Session',
+      userId: c.userId
+    })
+    return { sessionId, threadId }
+  }
+})
+```
+
+### `sessions.saveUserMessage`
+
+```typescript
+const saveUserMessage = m({
+  args: { content: v.string(), sessionId: v.id('session') },
+  handler: async c => {
+    const session = await c.ctx.db.get(c.args.sessionId)
+    if (!session || session.userId !== c.userId) throw new Error('session_not_found')
+    const saved = await orchestrator.saveMessage(c.ctx, {
+      message: { content: c.args.content, role: 'user' },
+      threadId: session.threadId,
+      userId: c.userId
+    })
+    await c.ctx.db.patch(c.args.sessionId, { lastActivityAt: Date.now() })
+    return { messageId: saved.messageId, threadId: session.threadId }
+  }
+})
+```
+
+### `sessions.getByThreadIdInternal`
+
+```typescript
+const getByThreadIdInternal = internalQuery({
+  args: { threadId: v.string() },
+  handler: async (ctx, { threadId }) => {
+    return await ctx.db
+      .query('session')
+      .withIndex('by_threadId', q => q.eq('threadId', threadId))
+      .first()
+  }
+})
+```
+
+### `tasks.getByThreadIdInternal`
+
+```typescript
+const getByThreadIdInternal = internalQuery({
+  args: { threadId: v.string() },
+  handler: async (ctx, { threadId }) => {
+    return await ctx.db
+      .query('tasks')
+      .withIndex('by_threadId', q => q.eq('threadId', threadId))
+      .first()
+  }
+})
+```
+
+### `tasks.countRunningByThread`
+
+```typescript
+const countRunningByThread = internalQuery({
+  args: { threadId: v.string() },
+  handler: async (ctx, { threadId }) => {
+    const running = await ctx.db
+      .query('tasks')
+      .withIndex('by_parentThreadId_status', q =>
+        q.eq('parentThreadId', threadId).eq('status', 'running')
+      )
+      .collect()
+    return running.length
+  }
+})
+```
+
+### `tasks.getOwnedTaskOutput`
+
+```typescript
+const getOwnedTaskOutput = internalQuery({
+  args: { requesterThreadId: v.string(), taskId: v.string() },
+  handler: async (ctx, args) => {
+    const session = await ctx.db
+      .query('session')
+      .withIndex('by_threadId', q => q.eq('threadId', args.requesterThreadId))
+      .first()
+    if (!session) return null
+    const task = await ctx.db.get(args.taskId as Id<'tasks'>)
+    if (!task || task.sessionId !== session._id) return null
+    if (task.status !== 'completed') return { error: 'task_not_completed', status: task.status }
+    return { result: task.result, status: task.status }
+  }
+})
+```
+
+### `mcp.getOwnedServerByName`
+
+```typescript
+const getOwnedServerByName = internalQuery({
+  args: { name: v.string(), userId: v.string() },
+  handler: async (ctx, { name, userId }) => {
+    return await ctx.db
+      .query('mcpServers')
+      .withIndex('by_user_name', q => q.eq('userId', userId).eq('name', name))
+      .unique()
+  }
+})
+```
+
+### `mcp.listEnabledServersByUser`
+
+```typescript
+const listEnabledServersByUser = internalQuery({
+  args: { userId: v.string() },
+  handler: async (ctx, { userId }) => {
+    const all = await ctx.db
+      .query('mcpServers')
+      .withIndex('by_user', q => q.eq('userId', userId))
+      .collect()
+    const enabled = []
+    for (const s of all) {
+      if (s.isEnabled) enabled.push(s)
+    }
+    return enabled
+  }
+})
+```
+
+### `mcp.getServerById`, `mcp.updateToolCache`, `mcp.refreshToolCache`
+
+```typescript
+const getServerById = internalQuery({
+  args: { serverId: v.id('mcpServers') },
+  handler: async (ctx, { serverId }) => ctx.db.get(serverId)
+})
+
+const updateToolCache = internalMutation({
+  args: { serverId: v.id('mcpServers'), tools: v.array(v.object({ description: v.string(), inputSchema: v.string(), name: v.string() })) },
+  handler: async (ctx, { serverId, tools }) => {
+    await ctx.db.patch(serverId, { cachedAt: Date.now(), cachedTools: tools })
+  }
+})
+
+const refreshToolCache = internalMutation({
+  args: { serverId: v.id('mcpServers'), userId: v.string() },
+  handler: async (ctx, { serverId }) => {
+    await ctx.db.patch(serverId, { cachedAt: undefined, cachedTools: undefined })
+  }
+})
+```
+
+### `orchestrator.recordRunError`
+
+```typescript
+const recordRunError = internalMutation({
+  args: { error: v.string(), threadId: v.string() },
+  handler: async (ctx, { error, threadId }) => {
+    const state = await ensureRunState({ ctx, threadId })
+    await ctx.db.patch(state._id, { lastError: error })
+  }
+})
+```
+
+### `orchestrator.resetAutoContinueStreak`
+
+```typescript
+const resetAutoContinueStreak = internalMutation({
+  args: { threadId: v.string() },
+  handler: async (ctx, { threadId }) => {
+    const state = await ensureRunState({ ctx, threadId })
+    await ctx.db.patch(state._id, { autoContinueStreak: 0 })
+  }
+})
+```
+
+### `orchestrator.incrementAutoContinueStreak`
+
+```typescript
+const incrementAutoContinueStreak = internalMutation({
+  args: { threadId: v.string() },
+  handler: async (ctx, { threadId }) => {
+    const state = await ensureRunState({ ctx, threadId })
+    await ctx.db.patch(state._id, { autoContinueStreak: state.autoContinueStreak + 1 })
+  }
+})
+```
+
+### `orchestrator.getRunStateByThreadId`
+
+```typescript
+const getRunStateByThreadId = internalQuery({
+  args: { threadId: v.string() },
+  handler: async (ctx, { threadId }) => {
+    return await ctx.db
+      .query('threadRunState')
+      .withIndex('by_threadId', q => q.eq('threadId', threadId))
+      .unique()
+  }
+})
+```
+
+### `messages.getContextSize`
+
+```typescript
+const getContextSize = internalQuery({
+  args: { threadId: v.string() },
+  handler: async (ctx, { threadId }) => {
+    const messages = await listMessages(ctx, components.agent, { threadId })
+    let charCount = 0
+    for (const m of messages) {
+      charCount += JSON.stringify(m).length
+    }
+    return { charCount, messageCount: messages.length }
+  }
+})
+```
+
+### `messages.getLatestMessageId`
+
+```typescript
+const getLatestMessageId = internalQuery({
+  args: { threadId: v.string() },
+  handler: async (ctx, { threadId }) => {
+    const messages = await listMessages(ctx, components.agent, { threadId, limit: 1, order: 'desc' })
+    return messages.length > 0 ? messages[0].id : null
+  }
+})
+```
+
+### `todos.syncOwned`
+
+Replaces all todos for a session with the provided list. Resolves session from thread.
+
+```typescript
+const syncOwned = internalMutation({
+  args: {
+    sessionThreadId: v.string(),
+    todos: v.array(
+      v.object({
+        content: v.string(),
+        position: v.number(),
+        priority: v.union(v.literal('high'), v.literal('medium'), v.literal('low')),
+        status: v.union(v.literal('pending'), v.literal('in_progress'), v.literal('completed'), v.literal('cancelled'))
+      })
+    )
+  },
+  handler: async (ctx, { sessionThreadId, todos }) => {
+    const session = await ctx.db
+      .query('session')
+      .withIndex('by_threadId', q => q.eq('threadId', sessionThreadId))
+      .first()
+    if (!session) throw new Error('session_not_found')
+
+    const existing = await ctx.db
+      .query('todos')
+      .withIndex('by_session', q => q.eq('sessionId', session._id))
+      .collect()
+    for (const e of existing) {
+      await ctx.db.delete(e._id)
+    }
+
+    for (const t of todos) {
+      await ctx.db.insert('todos', {
+        content: t.content,
+        position: t.position,
+        priority: t.priority,
+        sessionId: session._id,
+        status: t.status,
+        userId: session.userId
+      })
+    }
+  }
+})
+```
+
+### `todos.listOwnedByThread`
+
+```typescript
+const listOwnedByThread = internalQuery({
+  args: { threadId: v.string() },
+  handler: async (ctx, { threadId }) => {
+    const session = await ctx.db
+      .query('session')
+      .withIndex('by_threadId', q => q.eq('threadId', threadId))
+      .first()
+    if (!session) return { todos: [] }
+    const todos = await ctx.db
+      .query('todos')
+      .withIndex('by_session_position', q => q.eq('sessionId', session._id))
+      .collect()
+    return { todos }
+  }
+})
+```
+
+### `agents.runWorker`
+
+```typescript
+const runWorker = internalAction({
+  args: { prompt: v.string(), taskId: v.id('tasks'), threadId: v.string() },
+  handler: async (ctx, args) => {
+    const marked = await ctx.runMutation(internal.tasks.markRunning, { taskId: args.taskId })
+    if (!marked.ok) return
+
+    const heartbeatInterval = setInterval(async () => {
+      await ctx.runMutation(internal.tasks.updateHeartbeat, { taskId: args.taskId })
+    }, 30_000)
+
+    try {
+      const saved = await worker.saveMessage(ctx, {
+        prompt: args.prompt,
+        threadId: args.threadId
+      })
+      const result = await runAgentStream({
+        agent: worker,
+        ctx,
+        promptMessageId: saved.messageId,
+        systemPrefix: undefined,
+        threadId: args.threadId
+      })
+      await result.consumeStream()
+
+      const text = result.text ?? ''
+      const completed = await ctx.runMutation(internal.tasks.completeTask, {
+        result: text,
+        taskId: args.taskId
+      })
+
+      if (completed.ok && completed.reminderMessageId) {
+        await maybeContinueOrchestrator({ ctx, taskId: args.taskId })
+      }
+    } catch (error) {
+      await ctx.runMutation(internal.tasks.failTask, {
+        errorMessage: String(error),
+        taskId: args.taskId
+      })
+    } finally {
+      clearInterval(heartbeatInterval)
+    }
+  }
+})
+```
+
+### `compaction.listClosedPrefixGroups`
+
+Returns compactable message groups from the thread prefix. A "closed prefix group" is a contiguous range of messages that is fully resolved (no pending tool calls, no streaming). Only messages before the current active generation are eligible.
+
+```typescript
+const listClosedPrefixGroups = internalQuery({
+  args: { threadId: v.string() },
+  handler: async (ctx, { threadId }) => {
+    const messages = await listMessages(ctx, components.agent, { threadId })
+    if (messages.length < 10) return []
+
+    const cutoff = Math.floor(messages.length * 0.6)
+    const prefix = messages.slice(0, cutoff)
+
+    let endIdx = prefix.length - 1
+    while (endIdx >= 0) {
+      const msg = prefix[endIdx]
+      if (msg.role === 'tool') {
+        endIdx -= 1
+        continue
+      }
+      break
+    }
+    if (endIdx < 0) return []
+
+    const group = {
+      endMessageId: prefix[endIdx].id,
+      startMessageId: prefix[0].id,
+      text: prefix.slice(0, endIdx + 1).map(m => `[${m.role}]: ${typeof m.content === 'string' ? m.content : JSON.stringify(m.content)}`).join('\n')
+    }
+    return [group]
+  }
+})
+```
+
+### `orchestrator.setCompactionSummary`
+
+```typescript
+const setCompactionSummary = internalMutation({
+  args: { compactionSummary: v.string(), threadId: v.string() },
+  handler: async (ctx, { compactionSummary, threadId }) => {
+    const state = await ensureRunState({ ctx, threadId })
+    await ctx.db.patch(state._id, { compactionSummary })
+  }
+})
+```
+
+### `compaction.deleteMessageRange`
+
+Uses agent component APIs to delete messages from a thread. Runs as an action since message deletion may require component calls.
+
+```typescript
+const deleteMessageRange = internalAction({
+  args: { endMessageId: v.string(), startMessageId: v.string(), threadId: v.string() },
+  handler: async (ctx, { endMessageId, startMessageId, threadId }) => {
+    const messages = await listMessages(ctx, components.agent, { threadId })
+    let collecting = false
+    const toDelete = []
+    for (const m of messages) {
+      if (m.id === startMessageId) collecting = true
+      if (collecting) toDelete.push(m.id)
+      if (m.id === endMessageId) break
+    }
+    for (const id of toDelete) {
+      await deleteMessage(ctx, components.agent, { messageId: id, threadId })
+    }
+  }
+})
+```
+
 ---
 
 ## Search Integration
@@ -1072,9 +1696,9 @@ const groundWithGemini = internalAction({
     })
     await ctx.runMutation(internal.tokenUsage.recordModelUsage, {
       agentName: 'search-bridge',
-      inputTokens: out.usage?.inputTokens ?? 0,
+      completionTokens: out.usage?.completionTokens ?? 0,
       model: model.modelId,
-      outputTokens: out.usage?.outputTokens ?? 0,
+      promptTokens: out.usage?.promptTokens ?? 0,
       provider: model.provider ?? 'google',
       threadId,
       totalTokens: out.usage?.totalTokens ?? 0
@@ -1237,6 +1861,11 @@ No trigger from cumulative token usage totals.
 6. Release compaction lock.
 
 ```typescript
+const COMPACTION_CHAR_LIMIT = 100_000
+const COMPACTION_MSG_LIMIT = 200
+```
+
+```typescript
 const compactIfNeeded = async ({ ctx, threadId }) => {
   const size = await ctx.runQuery(internal.messages.getContextSize, { threadId })
   if (size.charCount < COMPACTION_CHAR_LIMIT && size.messageCount < COMPACTION_MSG_LIMIT) return
@@ -1344,6 +1973,10 @@ Tool returns structured model-readable error payload, not thrown raw exception:
 
 ### Server Streaming
 
+AI SDK v6 finish reasons are limited to `stop`, `length`, `content-filter`, `tool-calls`, `error`, and `other`.
+Requested-user-input inference is heuristic in v1 and currently defaults to `false`.
+v2 can add structured input-request detection by inspecting last tool call outputs or assistant content patterns.
+
 ```typescript
 const runOrchestrator = internalAction({
   args: { promptMessageId: v.optional(v.string()), runToken: v.string(), threadId: v.string() },
@@ -1372,11 +2005,11 @@ const runOrchestrator = internalAction({
       })
 
       await result.consumeStream()
+
       await postTurnAudit({
         ctx,
         threadId: args.threadId,
-        turnRequestedInput:
-          result.finishReason === 'tool-call-user-confirmation' || result.finishReason === 'tool-call-task-wait'
+        turnRequestedInput: false
       })
     } catch (error) {
       await ctx.runMutation(internal.orchestrator.recordRunError, {
@@ -1476,6 +2109,49 @@ apps/agent/
 - **Mobile (`<768px`)**: chat plus tabbed drawer/sheet for tasks, todos, sources, token usage.
 - **Tablet (`md:` `>=768px`)**: one primary chat panel plus collapsible side rail.
 - **Desktop (`lg:` `>=1024px`)**: fixed three-panel layout (chat center, task/todo rail right, sources rail far-right).
+
+### Session List Page (`src/app/page.tsx`)
+
+- Client component using `'use client'`.
+- Uses `useList(api.sessions.list)` for paginated session list.
+- Includes a `New Session` button that calls `createSession` mutation, then navigates to `/${sessionId}`.
+- Session card renders title, status badge, last activity timestamp, and latest message preview.
+- Empty state shows an icon and `Start your first conversation`.
+- Loading state uses skeleton session cards.
+
+### Message Composer
+
+- Reuses `PromptInput` pattern from `@a/ui/ai-elements/prompt-input`.
+- `PromptInputTextarea` placeholder is `Send a message...`.
+- `PromptInputSubmit` supports ready and submitted states.
+- On submit, call `saveUserMessage` mutation, then call `enqueueRun` mutation.
+- Composer is disabled while orchestrator is active by checking `threadRunState.status`.
+
+### Login Page (`src/app/login/page.tsx`)
+
+- Renders Google OAuth sign-in button.
+- Uses `@convex-dev/auth` client-side auth flow.
+- Redirects to `/` after successful login.
+
+### Settings Page (`src/app/settings/page.tsx`)
+
+- Shows MCP server list with add, edit, and delete actions.
+- Form includes `name`, `url`, optional `authHeaders`, and `isEnabled` toggle.
+- Uses `useMutation` for CRUD operations on `mcpServers`.
+
+### Chat Page (`src/app/[sessionId]/page.tsx`)
+
+- Server component preloads session data via `preloadQuery`.
+- Client chat surface uses `useUIMessages` for streaming messages.
+- Responsive three-column layout: chat center, tasks+todos right, sources far-right.
+- Message rendering supports text parts, reasoning blocks, tool call cards, and source cards.
+- Message composer is bottom-anchored.
+
+### Loading, Error, and Empty States
+
+- Loading uses spinner for initial page load and skeletons for list contexts.
+- Error handling uses root `ConvexErrorBoundary` plus inline tool-call error states.
+- Empty states are explicit per context: sessions, messages, tasks, and todos.
 
 ### App Layout and Auth Wiring
 
@@ -1591,6 +2267,114 @@ app.use(agent)
 export default app
 ```
 
+## Configuration Files
+
+### `packages/be-agent/auth.config.ts`
+
+```typescript
+import Google from '@auth/core/providers/google'
+import { convexAuth } from '@convex-dev/auth/server'
+
+const { auth, isAuthenticated, signIn, signOut, store } = convexAuth({
+  providers: [Google]
+})
+
+export { auth, isAuthenticated, signIn, signOut, store }
+```
+
+### `packages/be-agent/convex/http.ts`
+
+```typescript
+import { httpRouter } from 'convex/server'
+import { auth } from './auth'
+
+const http = httpRouter()
+auth.addHttpRoutes(http)
+
+export default http
+```
+
+### `packages/be-agent/convex/crons.ts`
+
+```typescript
+import { cronJobs } from 'convex/server'
+import { internal } from './_generated/api'
+
+const crons = cronJobs()
+
+crons.interval('timeout stale tasks', { minutes: 5 }, internal.staleTaskCleanup.timeoutStaleTasks)
+crons.interval('archive idle sessions', { hours: 1 }, internal.retention.archiveIdleSessions)
+crons.cron('cleanup archived sessions', '0 3 * * *', internal.retention.cleanupArchivedSessions)
+
+export default crons
+```
+
+### `packages/be-agent/env.ts`
+
+```typescript
+import { createEnv } from '@t3-oss/env-core'
+import { z } from 'zod/v4'
+
+const env = createEnv({
+  runtimeEnv: process.env,
+  server: {
+    AUTH_SECRET: z.string().min(1),
+    GOOGLE_GENERATIVE_AI_API_KEY: z.string().min(1).optional()
+  },
+  skipValidation: Boolean(
+    process.env.CI || process.env.LINT || process.env.CONVEX_TEST_MODE
+  )
+})
+
+export { env }
+```
+
+### `packages/be-agent/check-schema.ts`
+
+```typescript
+import { checkSchema } from '@noboil/convex/server'
+import schema from './convex/schema'
+import { owned } from './t'
+
+checkSchema(schema, { owned })
+```
+
+### `packages/be-agent/models.mock.ts`
+
+```typescript
+import type { LanguageModel } from 'ai'
+
+const mockModel = {
+  doGenerate: async () => ({
+    finishReason: 'stop',
+    text: 'Mock response for testing.',
+    usage: { completionTokens: 10, promptTokens: 5, totalTokens: 15 }
+  }),
+  doStream: async () => ({
+    stream: new ReadableStream({ start: c => { c.enqueue({ type: 'text-delta', textDelta: 'Mock.' }); c.close() } }),
+    rawCall: { rawPrompt: null, rawSettings: {} }
+  }),
+  modelId: 'mock-model',
+  provider: 'mock',
+  specificationVersion: 'v1'
+} as unknown as LanguageModel
+
+export { mockModel }
+```
+
+### `packages/be-agent/tsconfig.json`
+
+```json
+{
+  "compilerOptions": {
+    "jsx": "preserve"
+  },
+  "exclude": ["node_modules"],
+  "extends": "lintmax/tsconfig",
+  "include": ["."]
+}
+```
+
 ---
 
 ## Auth and Ownership Boundary
@@ -1655,6 +2439,63 @@ When hard delete triggers for a session:
 - hourly cron marks stale active sessions to `idle`
 - nightly cron archives eligible idle sessions and cleans archived sessions
 - manual archive action in UI remains available
+
+### `convex/staleTaskCleanup.ts`
+
+```typescript
+const timeoutStaleTasks = internalMutation({
+  handler: async ctx => {
+    const now = Date.now()
+    const STALE_MS = 10 * 60 * 1000
+    const running = await ctx.db.query('tasks').withIndex('by_status', q => q.eq('status', 'running')).collect()
+    for (const task of running) {
+      const lastBeat = task.heartbeatAt ?? task.startedAt
+      if (!lastBeat) continue
+      if (now - lastBeat <= STALE_MS) continue
+      await ctx.db.patch(task._id, { lastError: 'worker_timeout', status: 'timed_out' })
+    }
+  }
+})
+```
+
+### `convex/retention.ts`
+
+```typescript
+const archiveIdleSessions = internalMutation({
+  handler: async ctx => {
+    const now = Date.now()
+    const IDLE_MS = 24 * 60 * 60 * 1000
+    const active = await ctx.db.query('session').withIndex('by_user_status').collect()
+    for (const s of active) {
+      if (s.status !== 'active') continue
+      if (now - s.lastActivityAt > IDLE_MS) {
+        await ctx.db.patch(s._id, { status: 'idle' })
+      }
+    }
+  }
+})
+
+const cleanupArchivedSessions = internalMutation({
+  handler: async ctx => {
+    const now = Date.now()
+    const ARCHIVE_TTL = 180 * 24 * 60 * 60 * 1000
+    const archived = await ctx.db.query('session').collect()
+    for (const s of archived) {
+      if (s.status !== 'archived') continue
+      if (!s.archivedAt || now - s.archivedAt <= ARCHIVE_TTL) continue
+      const tasks = await ctx.db.query('tasks').withIndex('by_session', q => q.eq('sessionId', s._id)).collect()
+      for (const t of tasks) await ctx.db.delete(t._id)
+      const todos = await ctx.db.query('todos').withIndex('by_session', q => q.eq('sessionId', s._id)).collect()
+      for (const t of todos) await ctx.db.delete(t._id)
+      const usage = await ctx.db.query('tokenUsage').withIndex('by_session', q => q.eq('sessionId', s._id)).collect()
+      for (const u of usage) await ctx.db.delete(u._id)
+      const runState = await ctx.db.query('threadRunState').withIndex('by_threadId', q => q.eq('threadId', s.threadId)).unique()
+      if (runState) await ctx.db.delete(runState._id)
+      await ctx.db.delete(s._id)
+    }
+  }
+})
+```
 
 ---
 
@@ -1904,6 +2745,7 @@ Per-file source comments are removed. Canonical tracking is maintained in `SOURC
 
 ```json
 {
+  "name": "@a/be-agent",
   "private": true,
   "exports": {
     ".": "./convex/_generated/api.js",
@@ -1927,11 +2769,17 @@ Per-file source comments are removed. Canonical tracking is maintained in `SOURC
   "dependencies": {
     "@ai-sdk/google": "latest",
     "@convex-dev/agent": "latest",
+    "@convex-dev/auth": "latest",
     "@modelcontextprotocol/client": "latest",
     "@noboil/convex": "workspace:*",
+    "@t3-oss/env-core": "latest",
     "ai": "latest",
     "convex": "latest",
+    "convex-helpers": "latest",
     "zod": "latest"
+  },
+  "devDependencies": {
+    "convex-test": "latest"
   }
 }
 ```
@@ -1940,6 +2788,7 @@ Per-file source comments are removed. Canonical tracking is maintained in `SOURC
 
 ```json
 {
+  "name": "@a/agent",
   "type": "module",
   "scripts": {
     "build": "bun with-env next build --turbo",
@@ -1953,9 +2802,19 @@ Per-file source comments are removed. Canonical tracking is maintained in `SOURC
     "with-env": "dotenv -e ../../.env --"
   },
   "dependencies": {
+    "@a/be-agent": "workspace:*",
+    "@a/fe": "workspace:*",
+    "@a/ui": "workspace:*",
     "@ai-sdk/react": "latest",
     "@convex-dev/agent": "latest",
-    "ai": "latest"
+    "@noboil/convex": "workspace:*",
+    "ai": "latest",
+    "convex": "latest",
+    "lucide-react": "latest",
+    "next": "latest",
+    "react": "latest",
+    "react-dom": "latest",
+    "react-intersection-observer": "latest"
   },
   "devDependencies": {
     "@a/e2e": "workspace:*",
@@ -1994,6 +2853,11 @@ Per-file source comments are removed. Canonical tracking is maintained in `SOURC
   "GOOGLE_VERTEX_PROJECT"
 ]
 ```
+
+### Turbo Pipeline Alignment
+
+`packages/be-agent` follows the same Turbo pipeline pattern as `packages/be-convex`.
+No special Turbo configuration is required because workspace patterns already include `packages/*`.
 
 ---
 
