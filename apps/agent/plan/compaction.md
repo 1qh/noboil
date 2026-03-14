@@ -28,8 +28,10 @@ Trigger source:
 
 - `getContextSize` over thread messages + existing summary size.
 - Trigger if either threshold is exceeded:
-  - message threshold
-  - serialized character threshold
+  - `messageCount > 200`
+  - `charCount > 100_000`
+
+Threshold checks run before every orchestrator turn via `getContextSize`. Values are tunable backend config constants.
 
 Canonical flow:
 
@@ -42,7 +44,7 @@ Canonical flow:
 
 ### Cumulative Summary Requirement
 
-Compaction MUST be cumulative: each new summary is built from `previous compactionSummary + newly compacted message groups`. The `summarizeGroups` call receives the existing `compactionSummary` (if any) as a preamble, and the model generates a combined summary covering all previously compacted history plus the new groups. `setCompactionSummary` validates that the new `lastCompactedMessageId` is strictly newer than the previous one (monotonic guard) — regressive writes are rejected.
+Compaction MUST be cumulative: each new summary is built from `previous compactionSummary + newly compacted message groups`. The `summarizeGroups` call receives the existing `compactionSummary` (if any) as a preamble, and the model generates a combined summary covering all previously compacted history plus the new groups. `setCompactionSummary` validates that `args.lastCompactedMessageId > state.lastCompactedMessageId` by `createdAt` comparison before writing (monotonic guard); regressive or equal-boundary writes return `{ ok: false }`.
 
 This prevents context loss across multiple compaction rounds: without cumulative carry-forward, the second compaction would overwrite the first summary and lose the earlier compacted history from future model context.
 
@@ -70,6 +72,8 @@ Safety rule:
 - Compaction only summarizes closed prefixes.
 - Tool-call/result pairs must remain intact within grouping boundaries.
 - No partial in-flight segment is compacted.
+
+Since tools live inside assistant `parts` (not separate rows), closed-prefix grouping only needs to verify that all `tool-call` parts within an assistant message have terminal status (`success` or `error`) before that message can cross the compaction boundary.
 
 Grouping behavior:
 

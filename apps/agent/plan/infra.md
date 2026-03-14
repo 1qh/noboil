@@ -187,7 +187,7 @@ export {
 }
 ```
 
-Production safety: `isTestMode()` returns `false` unless `CONVEX_TEST_MODE` is explicitly set as a Convex environment variable. This variable is never set in production deployments. As an additional safeguard, `env.ts` validation (imported by `auth.ts`) does not include `CONVEX_TEST_MODE` - it is only recognized by the `makeTestAuth` helper. Deploying with `CONVEX_TEST_MODE=true` in production is a configuration error that bypasses all authentication; CI/CD pipelines should assert its absence in production env sets.
+Production safety: `getAuthUserIdOrTest` calls `isTestMode()` at runtime before enabling test identity fallback. `env.ts` also contains a deployment-stage fuse: if `CONVEX_CLOUD_URL` includes `production` and `CONVEX_TEST_MODE` is set, validation throws during module load so the deployment fails immediately.
 
 ### `packages/be-agent/convex/auth.config.ts`
 
@@ -252,6 +252,11 @@ export default crons
 import { createEnv } from '@t3-oss/env-core'
 import { z } from 'zod/v4'
 
+const cloudUrl = process.env.CONVEX_CLOUD_URL ?? ''
+if (cloudUrl.toLowerCase().includes('production') && process.env.CONVEX_TEST_MODE) {
+  throw new Error('invalid_env: CONVEX_TEST_MODE must not be set for production deployments')
+}
+
 const env = createEnv({
   runtimeEnv: process.env,
   server: {
@@ -259,11 +264,11 @@ const env = createEnv({
     AUTH_GOOGLE_SECRET: z.string().min(1).optional(),
     AUTH_SECRET: z.string().min(1),
     CONVEX_SITE_URL: z.string().url().optional(),
+    CONVEX_CLOUD_URL: z.string().optional(),
+    CONVEX_TEST_MODE: z.string().optional(),
     GOOGLE_GENERATIVE_AI_API_KEY: z.string().min(1).optional()
   },
-  skipValidation: Boolean(
-    process.env.CI || process.env.LINT || process.env.CONVEX_TEST_MODE
-  )
+  skipValidation: Boolean(process.env.CI || process.env.LINT)
 })
 
 export { env }

@@ -227,6 +227,16 @@ flowchart LR
 - `todoWrite` and `todoRead` provide explicit todo persistence and retrieval over `todos` table CRUD.
 - `webSearch` is a dedicated grounding bridge action with normalized response contract.
 
+### Undefined Internal References (to be implemented)
+
+- `internal.tasks.getOwnedTaskStatusInternal({ taskId })` - Returns task status/description for the owning session. Used by `taskStatus` tool.
+- `internal.tasks.getOwnedTaskOutput({ taskId })` - Returns full task result. Used by `taskOutput` tool.
+- `internal.tasks.getById({ taskId })` - Returns raw task row. Used internally by workers.
+- `internal.tasks.countActiveByThread({ threadId })` - Counts pending+running tasks for a thread. Used by `postTurnAudit`.
+- `internal.todos.syncOwned({ sessionId, todos })` - Upserts todos for a session. Used by `todoWrite` tool.
+- `internal.todos.listOwnedByThread({ threadId })` - Lists todos via session lookup. Used by `todoRead` and `postTurnAudit`.
+- `internal.sessions.getByThreadIdInternal({ threadId })` - Finds session by threadId. Used by worker completion chain.
+
 ## Recovered: Search Integration
 
 ### Why split search tool

@@ -126,6 +126,7 @@ flowchart LR
 ## Production Safety Requirements
 
 - `CONVEX_TEST_MODE` must never be set in production deployments.
+- Runtime fuse: `getAuthUserIdOrTest` checks `isTestMode()` at call time. In addition to the env-var guard, backend `env.ts` validation includes a deployment-stage check: if `CONVEX_CLOUD_URL` contains `production` and `CONVEX_TEST_MODE` is set, validation throws at module load. This hard-fails deployment instead of silently allowing test auth in production.
 - CI/CD should enforce explicit guardrails:
   - fail deploy if `CONVEX_TEST_MODE=true` in production env set,
   - verify Google OAuth secrets are present for production,

@@ -143,7 +143,9 @@ If continue is allowed:
 1. Save system reminder message in `messages` table.
 2. Call `enqueueRun({ reason: 'todo_continuation', incrementStreak: true, promptMessageId: reminderMessageId })`.
 
-`postTurnAudit` must verify `activeRunToken === runToken` before writing reminders or enqueuing continuation. Without this check, a stale run that passes the `isStale()` check before streaming but gets superseded during streaming can still write reminders and trigger continuation after `timeoutStaleRuns` rotates the token. The token check in `postTurnAudit` is the last defense against stale-run side effects.
+`postTurnAudit` requires `runToken` and executes all side effects (reminder writes, enqueue calls, streak mutations) inside a single token-fenced mutation that verifies `activeRunToken === runToken` before proceeding. If the token has been rotated by `timeoutStaleRuns`, the entire audit is a no-op.
+
+Streak resets are performed inside that same token-fenced `postTurnAudit` mutation, not as a standalone mutation. This prevents a concurrent `enqueueRun` from incrementing the streak between reset and the next enqueue.
 
 ```mermaid
 flowchart TD
@@ -531,7 +533,7 @@ await result.consumeStream()
 There is no hook system; continuation enforcement runs in orchestrator action after streaming completes.
 
 ```typescript
-const postTurnAudit = async ({ ctx, threadId, turnRequestedInput }) => {
+const postTurnAudit = async ({ ctx, runToken, threadId, turnRequestedInput }) => {
   const todos = await ctx.runQuery(internal.todos.listOwnedByThread, {
     threadId
   })
@@ -553,37 +555,24 @@ const postTurnAudit = async ({ ctx, threadId, turnRequestedInput }) => {
     if (t.status !== 'completed' && t.status !== 'cancelled') incomplete += 1
   }
 
-  if (incomplete === 0) {
-    await ctx.runMutation(internal.orchestrator.resetAutoContinueStreak, {
-      threadId
-    })
-    return { shouldContinue: false }
-  }
-  if (active > 0) {
-    await ctx.runMutation(internal.orchestrator.resetAutoContinueStreak, {
-      threadId
-    })
-    return { shouldContinue: false }
-  }
-  if (turnRequestedInput) {
-    await ctx.runMutation(internal.orchestrator.resetAutoContinueStreak, {
-      threadId
-    })
-    return { shouldContinue: false }
-  }
-  if (streak >= 5) return { shouldContinue: false }
+  const audited = await ctx.runMutation(
+    internal.orchestrator.postTurnAuditFenced,
+    {
+      runToken,
+      sessionId: session?._id,
+      streak,
+      threadId,
+      todos: todos.todos,
+      turnRequestedInput,
+      activeTaskCount: active
+    }
+  )
+  if (!audited.ok) return { shouldContinue: false }
+  if (!audited.shouldContinue) return { shouldContinue: false }
 
-  const reminderText = buildTodoReminder({ todos: todos.todos })
-  const reminderMessageId = await ctx.db.insert('messages', {
-    content: reminderText,
-    isComplete: true,
-    role: 'system',
-    sessionId: session?._id,
-    threadId
-  })
   const enqueued = await ctx.runMutation(internal.orchestrator.enqueueRun, {
     incrementStreak: true,
-    promptMessageId: String(reminderMessageId),
+    promptMessageId: audited.reminderMessageId,
     reason: 'todo_continuation',
     threadId
   })
@@ -599,6 +588,7 @@ const postTurnAudit = async ({ ctx, threadId, turnRequestedInput }) => {
 - Reset to `0` on new user message (`enqueueRun` with `reason='user_message'`).
 - Reset to `0` when turn ends for task-wait or user-input stop conditions.
 - Reset to `0` when all todos are terminal (`completed`/`cancelled`).
+- Resets happen inside token-fenced `postTurnAuditFenced`, not through a standalone reset mutation.
 - Increment by `1` only through `enqueueRun({ incrementStreak: true, ... })` so queue and streak updates are atomic.
 - Hard cap: `5`; `enqueueRun` rejects auto-continue scheduling once cap is reached.
 - Streak is incremented at enqueue time (inside the atomic `enqueueRun` / `enqueueRunIfLatest` mutation), not when the continuation run actually starts. If multiple task completions race and each calls `enqueueRun({ incrementStreak: true })`, only the one that wins the queue slot (equal-or-higher priority) increments the counter — lower-priority enqueues that are rejected do not consume a streak slot. However, a burst of equal-priority `task_completion` events can burn the cap (each replaces the prior queued payload and increments streak). This is an accepted v1 trade-off: the cap is a safety bound, not a precision counter. v2 can move streak increment to `claimRun` (when the run actually starts) for exact counting.
@@ -672,6 +662,7 @@ const runOrchestrator = internalAction({
 
       await postTurnAudit({
         ctx,
+        runToken: args.runToken,
         threadId: args.threadId,
         turnRequestedInput: false
       })
@@ -746,6 +737,8 @@ Terminal states:
 ## Recovered: Internal Functions (Orchestrator-Related)
 
 Use `getRunStateByThreadId` consistently as the canonical query name.
+
+For compaction write safety, `setCompactionSummary` must reject regressive boundaries: it verifies `args.lastCompactedMessageId > state.lastCompactedMessageId` by message `createdAt`, and returns `{ ok: false }` for equal or older boundaries.
 
 ```typescript
 const enqueueRun = internalMutation({
@@ -830,7 +823,7 @@ const enqueueRunIfLatest = internalMutation({
   handler: async (ctx, args) => {
     const latest = await ctx.db
       .query('messages')
-      .withIndex('by_threadId', q => q.eq('threadId', args.threadId))
+      .withIndex('by_thread_createdAt', q => q.eq('threadId', args.threadId))
       .order('desc')
       .first()
     const latestMessageId = latest ? String(latest._id) : null
@@ -996,7 +989,7 @@ const getContextSize = internalQuery({
   handler: async (ctx, { threadId }) => {
     const messages = await ctx.db
       .query('messages')
-      .withIndex('by_threadId', q => q.eq('threadId', threadId))
+      .withIndex('by_thread_createdAt', q => q.eq('threadId', threadId))
       .order('desc')
       .take(500)
     const hasMore = messages.length >= 500
@@ -1028,7 +1021,7 @@ const listMessages = query({
 
     return await ctx.db
       .query('messages')
-      .withIndex('by_threadId', q => q.eq('threadId', args.threadId))
+      .withIndex('by_thread_createdAt', q => q.eq('threadId', args.threadId))
       .paginate(args.paginationOpts)
   }
 })
@@ -1079,6 +1072,12 @@ const setCompactionSummary = internalMutation({
   ) => {
     const state = await ensureRunState({ ctx, threadId })
     if (state.compactionLock !== lockToken) return { ok: false }
+    if (state.lastCompactedMessageId) {
+      const prev = await ctx.db.get(state.lastCompactedMessageId as Id<'messages'>)
+      const next = await ctx.db.get(lastCompactedMessageId as Id<'messages'>)
+      if (!next) return { ok: false }
+      if (prev && next.createdAt <= prev.createdAt) return { ok: false }
+    }
     await ctx.db.patch(state._id, { compactionSummary, lastCompactedMessageId })
     return { ok: true }
   }

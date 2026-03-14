@@ -37,6 +37,10 @@ Retention and stale-recovery jobs are wired through Convex cron jobs (`cronJobs(
 - Every hour: `archiveIdleSessions`
 - Daily at `03:00`: `cleanupArchivedSessions`
 
+### Stale Message Janitor
+
+`cleanupStaleMessages` runs every 5 minutes. It finds `messages` rows where `isComplete === false` and the owning thread has no active run (`threadRunState.status === 'idle'`) and `createdAt` is older than 5 minutes. These orphaned streaming messages are finalized by setting `isComplete = true` and copying `streamingContent` into `content` (or `[Message interrupted]` when `streamingContent` is empty). This prevents permanent ghost streaming messages from crashed runs.
+
 Operational ownership map:
 
 - `archiveIdleSessions`: transitions session state (`active -> idle`, `idle -> archived`) and clears queued run payloads for newly archived sessions.

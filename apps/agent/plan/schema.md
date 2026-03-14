@@ -25,19 +25,20 @@ The backend keeps noboil schema conventions:
 
 ### `messages` (new, replaces component storage)
 
-- Purpose: canonical thread transcript for user, assistant, system, and tool records.
+- Purpose: canonical thread transcript for user, assistant, and system records.
 - Fields:
   - `threadId`
-  - `role` (`user | assistant | system | tool`)
+  - `role` (`user | assistant | system`)
   - `content`
   - `parts` (JSON array for tool calls, reasoning, sources, and structured content)
   - `streamingContent` (mutable partial text during active streaming)
   - `isComplete`
-  - `order`
   - `createdAt`
-  - `sessionId`
+  - `sessionId` (optional)
   - `metadata` (optional JSON)
   - `tokenUsage` (optional usage payload)
+- Canonical ordering key: `createdAt` (Convex `_creationTime` or explicit `Date.now()`).
+- Worker-thread messages omit `sessionId` - ownership resolves through `tasks.threadId -> tasks.sessionId`. Orchestrator-thread messages always include `sessionId`.
 - Indexes:
   - `by_threadId`
   - `by_thread_createdAt`
@@ -67,6 +68,7 @@ The backend keeps noboil schema conventions:
   - `pendingAt`
   - `completedAt`
   - `completionNotifiedAt`
+  - `continuationEnqueuedAt`
   - `completionReminderMessageId`
   - `isBackground`
 
@@ -98,8 +100,9 @@ The backend keeps noboil schema conventions:
   - `queuedPromptMessageId`
   - `queuedReason`
   - `autoContinueStreak`
+  - `lastError`
   - `compactionLock`
-  - `compactionLockExpiresAt`
+  - `compactionLockAt`
   - `compactionSummary`
   - `lastCompactedMessageId`
 
@@ -132,7 +135,6 @@ erDiagram
       json parts
       string streamingContent
       boolean isComplete
-      number order
       number createdAt
       id sessionId
       json metadata
@@ -154,6 +156,7 @@ erDiagram
       number pendingAt
       number completedAt
       number completionNotifiedAt
+      number continuationEnqueuedAt
       string completionReminderMessageId
       boolean isBackground
     }
@@ -170,8 +173,9 @@ erDiagram
       string queuedPromptMessageId
       string queuedReason
       number autoContinueStreak
+      string lastError
       string compactionLock
-      number compactionLockExpiresAt
+      number compactionLockAt
       string compactionSummary
       string lastCompactedMessageId
     }
