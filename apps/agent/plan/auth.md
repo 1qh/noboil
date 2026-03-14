@@ -127,6 +127,7 @@ flowchart LR
 
 - `CONVEX_TEST_MODE` must never be set in production deployments.
 - Runtime fuse: `getAuthUserIdOrTest` checks `isTestMode()` at call time. In addition to the env-var guard, backend `env.ts` validation includes a deployment-stage check: if `CONVEX_CLOUD_URL` contains `production` and `CONVEX_TEST_MODE` is set, validation throws at module load. This hard-fails deployment instead of silently allowing test auth in production.
+- Defense-in-depth: the `CONVEX_CLOUD_URL` substring check is one layer. Deployments SHOULD also use Convex environment variable groups (production vs staging) where `CONVEX_TEST_MODE` is only defined in the staging/test group and physically absent from production. The CI/CD pipeline MUST assert `CONVEX_TEST_MODE` is not set in the production deployment before pushing. These three layers (runtime fuse + env groups + CI assertion) make accidental test-auth-in-production a triple-failure scenario.
 - CI/CD should enforce explicit guardrails:
   - fail deploy if `CONVEX_TEST_MODE=true` in production env set,
   - verify Google OAuth secrets are present for production,
@@ -254,14 +255,13 @@ const submitMessage = m({
     if (!session || session.userId !== c.userId) throw new Error('session_not_found')
     if (session.status === 'archived') throw new Error('session_archived')
 
-    const messageId = await c.ctx.db.insert('messages', {
-      content: c.args.content,
-      createdAt: Date.now(),
-      role: 'user',
-      sessionId: session._id,
-      threadId: session.threadId,
-      userId: c.userId
-    })
+     const messageId = await c.ctx.db.insert('messages', {
+       content: c.args.content,
+       role: 'user',
+       sessionId: session._id,
+       threadId: session.threadId,
+       userId: c.userId
+     })
 
     await c.ctx.db.patch(c.args.sessionId, {
       lastActivityAt: Date.now(),
@@ -410,11 +410,11 @@ const listMessages = q({
       if (!ownerSession || ownerSession.userId !== c.userId) throw new Error('thread_not_found')
     }
 
-    return await c.ctx.db
-      .query('messages')
-      .withIndex('by_thread_createdAt', q => q.eq('threadId', c.args.threadId))
-      .order('desc')
-      .paginate(c.args.paginationOpts)
+     return await c.ctx.db
+       .query('messages')
+       .withIndex('by_thread_creationTime', q => q.eq('threadId', c.args.threadId))
+       .order('desc')
+       .paginate(c.args.paginationOpts)
   }
 })
 

@@ -489,7 +489,7 @@ const runOrchestratorStream = async ({
 
   // Context is built via `buildModelMessages(messages, compactionSummary)` which serializes stored message rows into AI SDK `CoreMessage` format including `parts` — see `architecture.md` for the canonical serializer spec.
 
-  // The orchestrator uses `promptMessageId` (from the queued payload) as a hard upper bound when loading context. The query fetches messages where `createdAt <= promptMessage.createdAt` from `by_thread_createdAt` descending, takes the latest 100, and reverses to chronological order. This prevents the active run from seeing messages that arrived after its prompt — those belong to the next queued run. Without this boundary, an active run could process a newer user message, and then the queued follow-up run would process it again, causing duplicate responses.
+  // The orchestrator uses `promptMessageId` (from the queued payload) as a hard upper bound when loading context. The query fetches messages where `_creationTime <= promptMessage._creationTime` from `by_thread_creationTime` descending, takes the latest 100, and reverses to chronological order. This prevents the active run from seeing messages that arrived after its prompt — those belong to the next queued run. Without this boundary, an active run could process a newer user message, and then the queued follow-up run would process it again, causing duplicate responses.
 
   const result = await streamText({
     maxSteps: ORCHESTRATOR_RUNTIME_CONFIG.maxSteps,
@@ -519,12 +519,11 @@ const runOrchestratorStream = async ({
 
 System reminders are saved as `messages` rows and their inserted id is reused as next prompt anchor.
 
-All message inserts include `createdAt: Date.now()`. This is the canonical ordering field used by `by_thread_createdAt` index.
+Message ordering uses Convex's built-in `_creationTime` system field which is monotonic and unique — no manual `createdAt` needed.
 
 ```typescript
 const reminderMessageId = await ctx.db.insert('messages', {
   content: reminderText,
-  createdAt: Date.now(),
   isComplete: true,
   role: 'system',
   sessionId,
@@ -720,7 +719,7 @@ Terminal states:
 
 Use `getRunStateByThreadId` consistently as the canonical query name.
 
-For compaction write safety, `setCompactionSummary` must reject regressive boundaries: it verifies `args.lastCompactedMessageId > state.lastCompactedMessageId` by message `createdAt`, and returns `{ ok: false }` for equal or older boundaries.
+For compaction write safety, `setCompactionSummary` must reject regressive boundaries: it verifies `args.lastCompactedMessageId > state.lastCompactedMessageId` by message `_creationTime`, and returns `{ ok: false }` for equal or older boundaries.
 
 ```typescript
 const enqueueRun = internalMutation({
@@ -803,12 +802,12 @@ const enqueueRunIfLatest = internalMutation({
     threadId: v.string()
   },
   handler: async (ctx, args) => {
-    const latest = await ctx.db
-      .query('messages')
-      .withIndex('by_thread_createdAt', q => q.eq('threadId', args.threadId))
-      .order('desc')
-      .first()
-    const latestMessageId = latest ? String(latest._id) : null
+     const latest = await ctx.db
+       .query('messages')
+       .withIndex('by_thread_creationTime', q => q.eq('threadId', args.threadId))
+       .order('desc')
+       .first()
+     const latestMessageId = latest ? String(latest._id) : null
     if (latestMessageId !== args.expectedLatestMessageId)
       return { ok: false, reason: 'not_latest' }
 
@@ -969,12 +968,12 @@ const resetAutoContinueStreak = internalMutation({
 const getContextSize = internalQuery({
   args: { threadId: v.string() },
   handler: async (ctx, { threadId }) => {
-    // Query `messages.by_thread_createdAt` with `order('desc')`, take the first 100 (most recent), then reverse the array to chronological order before passing to `buildModelMessages`. This ensures the model always sees the latest context window in correct temporal order.
-    const messages = await ctx.db
-      .query('messages')
-      .withIndex('by_thread_createdAt', q => q.eq('threadId', threadId))
-      .order('desc')
-      .take(500)
+    // Query `messages.by_thread_creationTime` with `order('desc')`, take the first 100 (most recent), then reverse the array to chronological order before passing to `buildModelMessages`. This ensures the model always sees the latest context window in correct temporal order.
+     const messages = await ctx.db
+       .query('messages')
+       .withIndex('by_thread_creationTime', q => q.eq('threadId', threadId))
+       .order('desc')
+       .take(500)
     const hasMore = messages.length >= 500
     let charCount = 0
     for (const m of messages) {
@@ -1002,11 +1001,11 @@ const listMessages = query({
 
     await resolveOwnedSessionByThread({ ctx, threadId: args.threadId, userId })
 
-    // Query `messages.by_thread_createdAt` with `order('desc')`, take the first 100 (most recent), then reverse the array to chronological order before passing to `buildModelMessages`. This ensures the model always sees the latest context window in correct temporal order.
-    return await ctx.db
-      .query('messages')
-      .withIndex('by_thread_createdAt', q => q.eq('threadId', args.threadId))
-      .paginate(args.paginationOpts)
+    // Query `messages.by_thread_creationTime` with `order('desc')`, take the first 100 (most recent), then reverse the array to chronological order before passing to `buildModelMessages`. This ensures the model always sees the latest context window in correct temporal order.
+     return await ctx.db
+       .query('messages')
+       .withIndex('by_thread_creationTime', q => q.eq('threadId', args.threadId))
+       .paginate(args.paginationOpts)
   }
 })
 
@@ -1056,12 +1055,12 @@ const setCompactionSummary = internalMutation({
   ) => {
     const state = await ensureRunState({ ctx, threadId })
     if (state.compactionLock !== lockToken) return { ok: false }
-    if (state.lastCompactedMessageId) {
-      const prev = await ctx.db.get(state.lastCompactedMessageId as Id<'messages'>)
-      const next = await ctx.db.get(lastCompactedMessageId as Id<'messages'>)
-      if (!next) return { ok: false }
-      if (prev && next.createdAt <= prev.createdAt) return { ok: false }
-    }
+     if (state.lastCompactedMessageId) {
+       const prev = await ctx.db.get(state.lastCompactedMessageId as Id<'messages'>)
+       const next = await ctx.db.get(lastCompactedMessageId as Id<'messages'>)
+       if (!next) return { ok: false }
+       if (prev && next._creationTime <= prev._creationTime) return { ok: false }
+     }
     await ctx.db.patch(state._id, { compactionSummary, lastCompactedMessageId })
     return { ok: true }
   }
@@ -1154,15 +1153,14 @@ const submitMessage = mutation({
     })
     if (session.status === 'archived') throw new Error('session_archived')
 
-    const messageId = await ctx.db.insert('messages', {
-      content: args.content,
-      createdAt: Date.now(),
-      isComplete: true,
-      role: 'user',
-      sessionId: session._id,
-      threadId: session.threadId,
-      userId
-    })
+     const messageId = await ctx.db.insert('messages', {
+       content: args.content,
+       isComplete: true,
+       role: 'user',
+       sessionId: session._id,
+       threadId: session.threadId,
+       userId
+     })
 
     await ctx.db.patch(session._id, {
       lastActivityAt: Date.now(),
@@ -1202,12 +1200,12 @@ const enqueueRunIfLatest = internalMutation({
     threadId: v.string()
   },
   handler: async (ctx, args) => {
-    const latest = await ctx.db
-      .query('messages')
-      .withIndex('by_thread_createdAt', q => q.eq('threadId', args.threadId))
-      .order('desc')
-      .first()
-    if (!latest || latest._id !== args.expectedLatestMessageId)
+     const latest = await ctx.db
+       .query('messages')
+       .withIndex('by_thread_creationTime', q => q.eq('threadId', c.args.threadId))
+       .order('desc')
+       .first()
+     if (!latest || latest._id !== args.expectedLatestMessageId)
       return { ok: false, reason: 'not_latest' }
 
     const state = await ensureRunState({ ctx, threadId: args.threadId })

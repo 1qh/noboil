@@ -132,9 +132,11 @@ All model context assembly (orchestrator turns, worker turns, compaction input) 
 - **Assistant messages**: Reconstructed from BOTH `content` AND `parts`:
   - Text content from `m.content`
   - Tool calls from `parts` entries with `type: 'tool-call'` → mapped to AI SDK tool-call content parts
-  - Tool results from `parts` entries with `type: 'tool-call'` where `status === 'success'` → mapped to AI SDK tool-result content parts
+  - Tool results from `parts` entries with `type: 'tool-call'` where status is terminal (`success` OR `error`) → mapped to AI SDK tool-result content parts. Error results include the error message so follow-up turns see what failed and can decide to retry or inform the user.
   - Reasoning from `parts` entries with `type: 'reasoning'` → included as reasoning content
   - Sources are metadata-only (not sent to the model, only rendered in UI)
+
+Tool results serialization: All terminal tool outcomes (both `success` and `error`) are included in the model context. This ensures the model sees the full history of what was attempted and what failed, enabling intelligent retry decisions or user-facing error reporting in follow-up turns.
 
 This ensures the model sees the full conversation history including prior tool interactions, not just plain text. Without this, follow-up turns after tool-heavy conversations would lose all tool context.
 

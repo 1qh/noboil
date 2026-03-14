@@ -33,14 +33,14 @@ The backend keeps noboil schema conventions:
   - `parts` (JSON array for tool calls, reasoning, sources, and structured content)
   - `streamingContent` (mutable partial text during active streaming)
   - `isComplete`
-  - `createdAt`
   - `sessionId` (optional)
   - `metadata` (optional JSON)
-- Canonical ordering key: `createdAt` (Convex `_creationTime` or explicit `Date.now()`).
+- Canonical ordering key: Convex `_creationTime` system field (monotonic and unique, set by DB engine).
+- Message ordering uses Convex's built-in `_creationTime` system field which is monotonic and unique — no manual `createdAt` needed. All ordering, prompt bounding, and compaction boundary checks use `_creationTime` for strict total order with no same-millisecond ambiguity.
 - Worker-thread messages omit `sessionId` - ownership resolves through `tasks.threadId -> tasks.sessionId`. Orchestrator-thread messages always include `sessionId`.
 - Indexes:
   - `by_threadId`
-  - `by_thread_createdAt`
+  - `by_thread_creationTime`
 
 ### `session`
 
@@ -134,7 +134,6 @@ erDiagram
       json parts
       string streamingContent
       boolean isComplete
-      number createdAt
       id sessionId
       json metadata
     }
@@ -203,8 +202,8 @@ All major query paths are covered with explicit indexes.
 
 | Query Pattern                          | Index                                  |
 | -------------------------------------- | -------------------------------------- |
-| list messages by thread                | `messages.by_thread_createdAt`         |
-| read latest message for thread checks  | `messages.by_thread_createdAt`         |
+| list messages by thread                | `messages.by_thread_creationTime`      |
+| read latest message for thread checks  | `messages.by_thread_creationTime`      |
 | resolve session from thread            | `session.by_threadId`                  |
 | resolve owned session by user+thread   | `session.by_user_threadId`             |
 | list sessions for user                 | `session.by_user_status`               |
@@ -223,7 +222,7 @@ All major query paths are covered with explicit indexes.
 ```mermaid
 flowchart TB
     subgraph Messages
-      I1[by_thread_createdAt]
+      I1[by_thread_creationTime]
       I2[by_threadId]
     end
 

@@ -39,7 +39,7 @@ Retention and stale-recovery jobs are wired through Convex cron jobs (`cronJobs(
 
 ### Stale Message Janitor
 
-`cleanupStaleMessages` runs every 5 minutes. It finds `messages` rows where `isComplete === false` AND the owning thread has no active run (`threadRunState.status === 'idle'`) AND the message's `createdAt` is older than 5 minutes. For each orphaned message:
+`cleanupStaleMessages` runs every 5 minutes. It finds `messages` rows where `isComplete === false` AND the owning thread has no active run (`threadRunState.status === 'idle'`) AND the message's `_creationTime` is older than 5 minutes. For each orphaned message:
 1. Copy `streamingContent` to `content` (or set `content` to `[Message interrupted]` if empty)
 2. Terminalize any `parts` entries with `status: 'pending'` → set `status: 'error'` and `result: 'Interrupted: agent run terminated before tool completion'`
 3. Set `isComplete: true` and clear `streamingContent`

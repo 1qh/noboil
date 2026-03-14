@@ -44,7 +44,7 @@ Canonical flow:
 
 ### Cumulative Summary Requirement
 
-Compaction MUST be cumulative: each new summary is built from `previous compactionSummary + newly compacted message groups`. The `summarizeGroups` call receives the existing `compactionSummary` (if any) as a preamble, and the model generates a combined summary covering all previously compacted history plus the new groups. `setCompactionSummary` validates that `args.lastCompactedMessageId > state.lastCompactedMessageId` by `createdAt` comparison before writing (monotonic guard); regressive or equal-boundary writes return `{ ok: false }`.
+Compaction MUST be cumulative: each new summary is built from `previous compactionSummary + newly compacted message groups`. The `summarizeGroups` call receives the existing `compactionSummary` (if any) as a preamble, and the model generates a combined summary covering all previously compacted history plus the new groups. `setCompactionSummary` validates that `args.lastCompactedMessageId > state.lastCompactedMessageId` by `_creationTime` comparison before writing (monotonic guard); regressive or equal-boundary writes return `{ ok: false }`.
 
 This prevents context loss across multiple compaction rounds: without cumulative carry-forward, the second compaction would overwrite the first summary and lose the earlier compacted history from future model context.
 
