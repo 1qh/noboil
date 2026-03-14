@@ -79,6 +79,7 @@ flowchart LR
 | 12 | Prompt bound by `promptMessageId` creation time | Context query excludes newer messages (`_creationTime > prompt anchor`) |
 | 13 | `enqueueRunInline` in `submitMessage` matches `enqueueRun` CAS behavior | Both paths produce identical state transitions |
 | 14 | Prompt bound with `promptMessageId` excludes messages with later `_creationTime` | Query uses `_creationTime <= prompt._creationTime`, newer messages not in context |
+| 15 | `submitMessage` atomic rollback on enqueue failure | If inline enqueue fails, no user message or session patch commits |
 
 ### Task Lifecycle
 
@@ -104,6 +105,10 @@ flowchart LR
 | 18 | Reminder prefix `[BACKGROUND TASK TIMED OUT]` for timeout | Exact prefix string in timeout reminder |
 | 19 | Cancelled task emits NO reminder | `cancelled` status transition writes no parent-thread message |
 | 20 | `isTransientError` correctly classifies transient vs permanent | ECONN/ETIMEDOUT/503/mcp_timeout -> transient; validation/auth -> permanent |
+| 21 | `runWorker` exits when `markRunning` returns `{ ok: false }` | No model call, no message write, no state transition |
+| 22 | `runWorker` clears heartbeat loop in `finally` block | `updateHeartbeat` stops after both success and failure exits |
+| 23 | `completeTask` CAS rejects non-`running` tasks | Returns `{ ok: false }`, writes no reminder for already-completed/cancelled |
+| 24 | `finalizeWorkerOutput` success-path atomicity | Running task gets exactly one assistant message + `completed` in single mutation |
 
 ### Orchestrator Runtime
 
@@ -129,6 +134,10 @@ flowchart LR
 | 18 | `buildModelMessages` includes error tool results (not just success) | Failed tool outcomes serialized so model can decide to retry |
 | 19 | Context rebuild uses descending `_creationTime` + reverse for chronological | Latest 100 messages in correct temporal order |
 | 20 | `recordModelUsage` maps `inputTokens`/`outputTokens` correctly | Token recording persists to `tokenUsage` table with correct field names |
+| 21 | `postTurnAuditFenced` no-op on stale `runToken` | Mismatched token: no streak change, no reminder, no enqueue |
+| 22 | `runOrchestrator` always calls `finishRun` on error | Error recorded, thread not left stuck `active` |
+| 23 | Compaction summary injected as system prefix in same turn | After compaction, `streamText` receives `compactionSummary` + live tail |
+| 24 | Compaction resumes after `lastCompactedMessageId` boundary | Only messages after boundary and before unresolved segment are summarized |
 
 ### Compaction
 
@@ -147,6 +156,8 @@ flowchart LR
 | 11 | `compactionSummary` included in `getContextSize` char count | Prevents under-counting leading to deferred compaction |
 | 12 | Compaction threshold: `charCount > 100_000` OR `messageCount > 200` | Both conditions trigger independently |
 | 13 | Tool-pair integrity: assistant message with `tool-call` + matching `tool-result` never split | Closed-prefix grouping keeps tool pairs together |
+| 14 | Compaction resumes from boundary, skips already-compacted | Only new messages after `lastCompactedMessageId` are summarized |
+| 15 | Compaction 500-msg scan-window miss (v1 limitation regression) | Thread with >500 messages may miss older uncovered messages - assert no crash, note gap |
 
 ### MCP
 
@@ -166,6 +177,11 @@ flowchart LR
 | 12 | Ownership resolution from worker thread | Requester thread ownership resolves via `tasks.threadId -> session` chain |
 | 13 | `http:` URL with `authHeaders` blocked outside test mode | Prevents credential leak over unencrypted transport |
 | 14 | MCP response validation: malformed JSON handled gracefully | Returns structured error, doesn't crash action |
+| 15 | `mcpDiscover` returns flattened tools from enabled servers only | Disabled servers excluded, failed servers appear in `errors` list, discovery succeeds |
+| 16 | `mcpCallTool` happy-path returns `{ ok: true, content }` for owned server | Uses caller's server config, never crosses to another user's same-named server |
+| 17 | Non-HTTP(S) protocol rejected (`ftp:`, `file:`) | Create/update with non-HTTP protocol fails with `invalid_url_protocol` |
+| 18 | Workers cannot re-delegate or manage todos | Worker tool map excludes `delegate`, `todoRead`, `todoWrite` |
+| 19 | `webSearch` records token usage through search bridge | `tokenUsage` row written with correct thread/session attribution |
 
 ### Auth & Ownership
 
@@ -183,6 +199,13 @@ flowchart LR
 | 10 | Production fuse for test auth | Env load throws when production cloud URL and `CONVEX_TEST_MODE` both set |
 | 11 | Worker-thread ownership resolves via `tasks.threadId -> tasks.sessionId` | Worker messages queryable only by session owner |
 | 12 | Worker-thread messages omit `sessionId` field | `sessionId` is undefined on worker messages |
+| 13 | `signInAsTestUser` is idempotent (no duplicate users) | Two calls return same user ID, single user row exists |
+| 14 | `sessions.createSession` stamps auth-derived ownership + threadId | Session has authenticated `userId` and unique non-empty `threadId` |
+| 15 | `sessions.list` returns only caller's non-archived sessions | Excludes other users' and archived sessions |
+| 16 | `archiveSession` enforces ownership + clears queued work | Non-owner rejected; owner sets `archived`, clears queue fields |
+| 17 | `getRunState` ownership check | Owner gets run state; non-owner gets `null` |
+| 18 | MCP CRUD cross-user isolation | List only caller's servers; update/delete others' -> not found |
+| 19 | Parent-thread messages include `sessionId`; worker-thread messages omit it | Verified across both contexts |
 
 ### Crons & Cleanup
 
@@ -203,6 +226,9 @@ flowchart LR
 | 13 | Hard-delete cascade includes worker-thread messages | Messages on `tasks.threadId` also deleted |
 | 14 | Hard-delete order: tokenUsage -> todos -> messages -> tasks -> threadRunState -> session | No foreign key violations from order |
 | 15 | `cleanupStaleMessages` only targets messages where thread is idle | Active threads' streaming messages are not touched |
+| 16 | Stale-message age gate: messages <5min not touched | Idle-thread incomplete messages newer than 5 min unchanged |
+| 17 | 180-day hard-delete respects retention boundary | Sessions archived <180 days survive; older deleted with cascade |
+| 18 | Cron schedule wiring matches documented intervals | 5min for stale tasks/runs/messages, 1hr for archive, daily 03:00 for cleanup |
 
 ### Rate Limiting
 
@@ -234,6 +260,24 @@ flowchart LR
 | 10 | `webSearch` isolated action: no tool mixing | `groundWithGemini` called in separate action context, never mixed with function tools |
 | 11 | `normalizeGrounding` extracts sources correctly | Returns `{ summary, sources: [{ title, url, snippet }] }` |
 | 12 | Token usage recording: session-level aggregation | Multiple turns accumulate in `tokenUsage` table |
+| 13 | Mock model no-tool `doGenerate` returns text + `stop` | One text part, `finishReason='stop'` |
+| 14 | Mock model `doStream` emits correct v3 triplet | `stream-start -> text-start -> text-delta -> text-end -> finish` in order |
+| 15 | Mock model tool-enabled `doGenerate` returns `tool-call` part | Schema-valid JSON input matching tool's inputSchema |
+| 16 | `env.ts` rejects each missing required var individually | Missing `AUTH_SECRET`, `AUTH_GOOGLE_ID`, etc. each throw |
+| 17 | `CI=true` alone does NOT bypass env validation | All required vars still validated under CI |
+
+### Integration & Lifecycle (convex-test)
+
+| # | Test Case | Asserts |
+|---|-----------|---------|
+| 1 | Full delegation chain: submit -> orchestrator -> delegate -> worker -> complete -> reminder -> continuation -> taskOutput | Consistent state across `messages`, `tasks`, `threadRunState`, `tokenUsage`; orchestrator reads worker result |
+| 2 | Full lifecycle with compaction: many turns -> worker -> auto-continue -> compaction -> next turn | `compactionSummary` + live tail preserve tool outcomes and worker reminders |
+| 3 | Worker crash-gap regression: reminder persisted, no continuation queued | Thread stays idle, later user message doesn't create duplicate continuation |
+| 4 | Archived-in-flight regression: archive during active run | Current turn finishes but `finishRun`/`maybeContinueOrchestrator` don't schedule further |
+| 5 | Terminal-error propagation: worker failed -> reminder -> continuation -> parent state | Exactly one reminder, no lingering pending/running, task panel agrees |
+| 6 | Equal-priority task-completion burst burns streak cap (v1 limitation) | Burst of completions increments streak correctly, cap enforced, no infinite loop |
+| 7 | Retry-caused duplicate side effects (v1 limitation) | Duplicate tool execution noted but no terminal-state corruption |
+| 8 | Complex text->tool->text->tool serialization (v1 limitation) | `buildModelMessages` preserves all content even if mid-turn boundaries degrade |
 
 ## E2E Test Matrix (Playwright)
 
@@ -298,6 +342,25 @@ flowchart LR
 | 4 | Focus returns to composer after message submit | `document.activeElement` is the composer input |
 | 5 | Status indicators never rely on color alone | Icons/text accompany all colored states |
 | 6 | Interactive cards meet 44x44px hit target | Touch targets are accessible size |
+
+### Frontend States (E2E)
+
+| # | Test Case | Asserts |
+|---|-----------|---------|
+| 1 | Session list loading/empty/error states | Loading placeholder shown, empty state for new user, error UI on API failure |
+| 2 | Auth routing: unauthenticated -> `/login` redirect | `/`, `/chat/[id]`, `/settings` all redirect when not authenticated |
+| 3 | Auth routing: authenticated -> `/login` redirects to `/` | Logged-in user on login page goes to session list |
+| 4 | Chat-log scrollable with long conversation | Earlier messages reachable, composer stays visible |
+| 5 | Message-row metadata (role, timestamp) | Each row shows role indicator and relative timestamp |
+| 6 | Incremental structured parts appear during streaming | Reasoning/tool/source parts show on in-flight assistant message |
+| 7 | Tool-call-card details (name, inputs, outputs, status labels) | Tool name, Running/Completed/Error labels, expandable args/results |
+| 8 | Source-card link opens new tab | `target="_blank"`, chat page stays intact |
+| 9 | Token-usage panel renders and increments | Totals render, increase after activity, persist after reload |
+| 10 | MCP server delete removes from list and discovery | Deleted server gone from settings and future tool calls |
+| 11 | Keyboard toggle for reasoning/tool expand | Enter/Space toggles expand/collapse |
+| 12 | Visible focus indicator on expandable controls | Focus ring visible when tabbed |
+| 13 | Focus returns to composer after modal/drawer close | `document.activeElement` is composer after close |
+| 14 | Contrast meets WCAG AA on desktop and mobile | Interactive elements pass contrast check |
 
 ## Edge Case Tests (from Oracle reviews)
 
