@@ -3284,105 +3284,53 @@ const getTokenUsage = q({
   }
 })
 
-const listMcpServers = q({
-  args: {},
-  handler: async c => {
-    const servers = await c.ctx.db
-      .query('mcpServers')
-      .withIndex('by_user', q => q.eq('userId', c.userId))
-      .collect()
-    const redacted = []
-    for (const s of servers) {
-      redacted.push({ ...s, authHeaders: undefined, hasAuthHeaders: Boolean(s.authHeaders) })
-    }
-    return redacted
-  }
-})
+const validateMcpUrl = (url: string) => {
+  const parsed = new URL(url)
+  if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') throw new Error('invalid_url_protocol')
+  const hostname = parsed.hostname.toLowerCase()
+  const blocked = ['localhost', '127.0.0.1', '0.0.0.0', '169.254.169.254', '[::1]', 'metadata.google.internal']
+  if (blocked.includes(hostname) || hostname.endsWith('.internal') || hostname.startsWith('10.') || hostname.startsWith('192.168.') || hostname.startsWith('172.')) throw new Error('blocked_url')
+}
 
-const addMcpServer = m({
-  args: {
-    authHeaders: v.optional(v.string()),
-    isEnabled: v.optional(v.boolean()),
-    name: v.string(),
-    url: v.string()
-  },
-  handler: async c => {
-    const existing = await c.ctx.db
-      .query('mcpServers')
-      .withIndex('by_user_name', q => q.eq('userId', c.userId).eq('name', c.args.name))
-      .unique()
-    if (existing) throw new Error('server_name_taken')
-    const parsed = new URL(c.args.url)
-    if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') throw new Error('invalid_url_protocol')
-    const hostname = parsed.hostname.toLowerCase()
-    const blocked = ['localhost', '127.0.0.1', '0.0.0.0', '169.254.169.254', '[::1]', 'metadata.google.internal']
-    if (blocked.includes(hostname) || hostname.endsWith('.internal') || hostname.startsWith('10.') || hostname.startsWith('192.168.') || hostname.startsWith('172.')) throw new Error('blocked_url')
-    return await c.ctx.db.insert('mcpServers', {
-      authHeaders: c.args.authHeaders,
-      cachedAt: undefined,
-      cachedTools: undefined,
-      isEnabled: c.args.isEnabled ?? true,
-      name: c.args.name,
-      transport: 'http',
-      url: c.args.url,
-      userId: c.userId
-    })
-  }
-})
-
-const updateMcpServer = m({
-  args: {
-    authHeaders: v.optional(v.string()),
-    id: v.id('mcpServers'),
-    isEnabled: v.optional(v.boolean()),
-    name: v.optional(v.string()),
-    url: v.optional(v.string())
-  },
-  handler: async c => {
-    const server = await c.ctx.db.get(c.args.id)
-    if (!server || server.userId !== c.userId) throw new Error('not_found')
-    if (c.args.name !== undefined && c.args.name !== server.name) {
-      const conflict = await c.ctx.db
+const {
+  create: addMcpServer,
+  list: listMcpServers,
+  rm: deleteMcpServer,
+  update: updateMcpServer
+} = crud('mcpServers', owned.mcpServer, {
+  hooks: {
+    afterRead: (_ctx, { doc }) => ({ ...doc, authHeaders: undefined, hasAuthHeaders: Boolean(doc.authHeaders) }),
+    beforeCreate: async (ctx, { data }) => {
+      validateMcpUrl(data.url)
+      const existing = await ctx.db
         .query('mcpServers')
-        .withIndex('by_user_name', q => q.eq('userId', c.userId).eq('name', c.args.name))
+        .withIndex('by_user_name', q => q.eq('userId', ctx.userId).eq('name', data.name))
         .unique()
-      if (conflict) throw new Error('server_name_taken')
+      if (existing) throw new Error('server_name_taken')
+      return { ...data, cachedAt: undefined, cachedTools: undefined, isEnabled: data.isEnabled ?? true, transport: 'http' }
+    },
+    beforeUpdate: async (ctx, { id, patch }) => {
+      if (patch.url) validateMcpUrl(patch.url)
+      if (patch.name) {
+        const server = await ctx.db.get(id)
+        if (patch.name !== server?.name) {
+          const conflict = await ctx.db
+            .query('mcpServers')
+            .withIndex('by_user_name', q => q.eq('userId', ctx.userId).eq('name', patch.name))
+            .unique()
+          if (conflict) throw new Error('server_name_taken')
+        }
+      }
+      if (patch.url || patch.authHeaders) {
+        return { ...patch, cachedAt: undefined, cachedTools: undefined }
+      }
+      return patch
     }
-    if (c.args.url !== undefined) {
-      const parsed = new URL(c.args.url)
-      if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') throw new Error('invalid_url_protocol')
-      const hostname = parsed.hostname.toLowerCase()
-      const blocked = ['localhost', '127.0.0.1', '0.0.0.0', '169.254.169.254', '[::1]', 'metadata.google.internal']
-      if (blocked.includes(hostname) || hostname.endsWith('.internal') || hostname.startsWith('10.') || hostname.startsWith('192.168.') || hostname.startsWith('172.')) throw new Error('blocked_url')
-    }
-    const patch: Record<string, unknown> = {}
-    if (c.args.name !== undefined) patch.name = c.args.name
-    if (c.args.url !== undefined) {
-      patch.url = c.args.url
-      patch.cachedAt = undefined
-      patch.cachedTools = undefined
-    }
-    if (c.args.authHeaders !== undefined) {
-      patch.authHeaders = c.args.authHeaders
-      patch.cachedAt = undefined
-      patch.cachedTools = undefined
-    }
-    if (c.args.isEnabled !== undefined) patch.isEnabled = c.args.isEnabled
-    await c.ctx.db.patch(c.args.id, patch)
-  }
-})
-
-const deleteMcpServer = m({
-  args: { id: v.id('mcpServers') },
-  handler: async c => {
-    const server = await c.ctx.db.get(c.args.id)
-    if (!server || server.userId !== c.userId) throw new Error('not_found')
-    await c.ctx.db.delete(c.args.id)
   }
 })
 ```
 
-`listMcpServers` redacts `authHeaders` from the response — it returns `hasAuthHeaders: Boolean(server.authHeaders)` instead of the raw value. This prevents browser-side exposure of stored credentials. The `updateMcpServer` mutation accepts a new `authHeaders` value (replace-only), but never returns the stored value.
+MCP CRUD uses noboil's `crud()` with hooks — ownership enforcement (`userId` checks), `list`/`read` filtering, and `create`/`update`/`rm` are all handled by the framework. Custom hooks add URL SSRF validation (`validateMcpUrl`), name uniqueness checks, cache invalidation on URL/auth changes, and `authHeaders` redaction via `afterRead` (returned as `hasAuthHeaders: boolean` instead of raw value). This eliminates ~80 lines of hand-written boilerplate while preserving all safety checks.
 
 ---
 
