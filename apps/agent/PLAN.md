@@ -858,12 +858,12 @@ const markRunning = internalMutation({
   handler: async (ctx, { taskId }) => {
     const task = await ctx.db.get(taskId)
     if (!task || task.status !== 'pending') return { ok: false }
+    const session = await ctx.db.get(task.sessionId)
+    if (session?.status === 'archived') {
+      await ctx.db.patch(taskId, { lastError: 'session_archived', status: 'cancelled' })
+      return { ok: false }
+    }
     await ctx.db.patch(taskId, { heartbeatAt: Date.now(), startedAt: Date.now(), status: 'running' })
-    const session = await ctx.db
-      .query('session')
-      .withIndex('by_threadId', q => q.eq('threadId', task.parentThreadId))
-      .first()
-    if (session) await ctx.db.patch(session._id, { lastActivityAt: Date.now() })
     return { ok: true }
   }
 })
@@ -1712,6 +1712,13 @@ const getContextSize = internalQuery({
     for (const m of messages) {
       charCount += JSON.stringify(m).length
     }
+    const runState = await ctx.db
+      .query('threadRunState')
+      .withIndex('by_threadId', q => q.eq('threadId', threadId))
+      .unique()
+    if (runState?.compactionSummary) {
+      charCount += runState.compactionSummary.length
+    }
     return { charCount, messageCount: messages.length }
   }
 })
@@ -2513,6 +2520,23 @@ apps/agent/
 └── SOURCES.md
 ```
 
+### Frontend File Specifications
+
+Files listed in the tree above that do not have full code snippets are specified by role:
+
+- `server-form.tsx` — MCP server add/edit form component. Uses `useMutation` for `addMcpServer`/`updateMcpServer`. Fields: name, url, authHeaders (textarea), isEnabled toggle.
+- `server-list.tsx` — MCP server list component. Uses `useQuery` for `listMcpServers`. Renders server cards with edit/delete actions.
+- `chat-log.tsx` — Scrollable message container. Uses `useUIMessages` with infinite scroll via `loadMore`. Renders `MessageRow` for each message.
+- `message-row.tsx` — Single message renderer. Switches on message part types: text → inline, reasoning → `ReasoningBlock`, tool-call → `ToolCallCard`, source → `SourceCard`.
+- `reasoning-block.tsx` — Collapsible reasoning/thinking display with expand/collapse toggle.
+- `todo-panel.tsx` — Session todo list panel. Uses `useQuery(api.todos.listBySession)`. Renders todo items with status badges.
+- `token-usage-panel.tsx` — Token usage summary panel. Uses `useQuery(api.tokenUsage.getSessionTotals)`. Shows prompt/completion/total token counts.
+- `a11y.ts` — Accessibility utility helpers: `srOnly` class helper, `announceToScreenReader` live region function.
+- `format.ts` — Formatting utilities: `formatTimestamp`, `formatTokenCount`, `truncateText`.
+- `session-layout.ts` — Responsive layout hook: returns panel visibility state based on viewport width breakpoints.
+
+These components follow the co-location rule (page-specific, not shared). Full implementations are produced during Phase 5 (Frontend).
+
 ### `apps/agent/middleware.ts`
 
 ```typescript
@@ -2809,12 +2833,16 @@ export default app
 import Google from '@auth/core/providers/google'
 import { convexAuth } from '@convex-dev/auth/server'
 
+import '../env'
+
 const { auth, isAuthenticated, signIn, signOut, store } = convexAuth({
   providers: [Google]
 })
 
 export { auth, isAuthenticated, signIn, signOut, store }
 ```
+
+`import '../env'` ensures environment variable validation runs when the auth module loads. Auth depends on `AUTH_SECRET`, `AUTH_GOOGLE_ID`, and `AUTH_GOOGLE_SECRET` — validating early prevents opaque runtime errors from missing credentials.
 
 ### `packages/be-agent/convex/testauth.ts`
 
@@ -2937,8 +2965,14 @@ const mockModel = {
         : firstTool.name === 'webSearch'
           ? { query: 'test' }
           : firstTool.name === 'todoWrite'
-            ? { todos: [{ content: 'Test task', priority: 'medium', status: 'pending' }] }
-            : { input: 'test' }
+            ? { todos: [{ content: 'Test task', position: 0, priority: 'medium', status: 'pending' }] }
+            : firstTool.name === 'taskStatus' || firstTool.name === 'taskOutput'
+              ? { taskId: 'mock-task-id' }
+              : firstTool.name === 'mcpCall'
+                ? { serverName: 'test-server', toolArgs: '{}', toolName: 'test-tool' }
+                : firstTool.name === 'mcpDiscover' || firstTool.name === 'todoRead'
+                  ? {}
+                  : {}
       return {
         finishReason: 'tool-calls' as const,
         toolCalls: [createMockToolCall({ args: mockArgs, name: firstTool.name })],
@@ -3643,10 +3677,10 @@ Phase 6 wires `checkRateLimit` guards into `submitMessage`, `delegateTool.execut
 
 | Variable | Dev | Test | Prod | Notes |
 |---|---|---|---|---|
-| `NEXT_PUBLIC_CONVEX_URL` | required | required | required | Agent app Convex URL, separate from demo apps |
+| `NEXT_PUBLIC_CONVEX_URL` | optional (falls back to `http://127.0.0.1:3210`) | required | required | Agent app Convex URL, separate from demo apps |
 | `NEXT_PUBLIC_CONVEX_TEST_MODE` | omit | `true` | omit | Enables `TestLoginProvider` bypass of Google OAuth |
 
-`NEXT_PUBLIC_CONVEX_URL` follows Next.js `NEXT_PUBLIC_*` handling and is validated at build time by Next.js environment loading; no separate frontend `env.ts` is required for v1.
+`NEXT_PUBLIC_CONVEX_URL` follows Next.js `NEXT_PUBLIC_*` handling. In development, the provider falls back to `http://127.0.0.1:3210` when unset. In test and production, the variable must be set explicitly. No separate frontend `env.ts` is required for v1.
 `NEXT_PUBLIC_CONVEX_TEST_MODE` is only set in test/E2E environments to enable the `TestLoginProvider` auto-login flow.
 
 ### Backend env (`packages/be-agent`, set with `convex env set`)
