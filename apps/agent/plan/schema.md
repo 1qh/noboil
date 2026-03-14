@@ -33,11 +33,14 @@ The backend keeps noboil schema conventions:
   - `parts` (JSON array for tool calls, reasoning, sources, and structured content)
   - `streamingContent` (mutable partial text during active streaming)
   - `isComplete`
+  - `order`
+  - `createdAt`
+  - `sessionId`
   - `metadata` (optional JSON)
   - `tokenUsage` (optional usage payload)
 - Indexes:
   - `by_threadId`
-  - `by_threadId_order`
+  - `by_thread_createdAt`
 
 ### `session`
 
@@ -49,6 +52,23 @@ The backend keeps noboil schema conventions:
 
 - Delegated worker lifecycle records and completion notification state.
 - Links worker thread back to parent thread and session.
+- Fields:
+  - `sessionId`
+  - `threadId`
+  - `parentThreadId`
+  - `description`
+  - `prompt`
+  - `status`
+  - `result`
+  - `lastError`
+  - `retryCount`
+  - `heartbeatAt`
+  - `startedAt`
+  - `pendingAt`
+  - `completedAt`
+  - `completionNotifiedAt`
+  - `completionReminderMessageId`
+  - `isBackground`
 
 ### `todos`
 
@@ -66,6 +86,22 @@ The backend keeps noboil schema conventions:
 ### `threadRunState`
 
 - Per-thread singleton run/queue/compaction coordination state.
+- Fields:
+  - `threadId`
+  - `status`
+  - `activatedAt`
+  - `activeRunToken`
+  - `claimedAt`
+  - `runClaimed`
+  - `runHeartbeatAt`
+  - `queuedPriority`
+  - `queuedPromptMessageId`
+  - `queuedReason`
+  - `autoContinueStreak`
+  - `compactionLock`
+  - `compactionLockExpiresAt`
+  - `compactionSummary`
+  - `lastCompactedMessageId`
 
 ## ER Diagram
 
@@ -96,24 +132,48 @@ erDiagram
       json parts
       string streamingContent
       boolean isComplete
+      number order
+      number createdAt
+      id sessionId
       json metadata
       json tokenUsage
     }
 
     TASKS {
       id sessionId
-      string parentThreadId
       string threadId
+      string parentThreadId
+      string description
+      string prompt
       string status
+      string result
+      string lastError
+      number retryCount
       number heartbeatAt
+      number startedAt
+      number pendingAt
+      number completedAt
+      number completionNotifiedAt
+      string completionReminderMessageId
+      boolean isBackground
     }
 
     THREAD_RUN_STATE {
       string threadId
       string status
+      number activatedAt
       string activeRunToken
+      number claimedAt
+      boolean runClaimed
+      number runHeartbeatAt
+      string queuedPriority
       string queuedPromptMessageId
+      string queuedReason
       number autoContinueStreak
+      string compactionLock
+      number compactionLockExpiresAt
+      string compactionSummary
+      string lastCompactedMessageId
     }
 ```
 
@@ -141,8 +201,8 @@ All major query paths are covered with explicit indexes.
 
 | Query Pattern                          | Index                                  |
 | -------------------------------------- | -------------------------------------- |
-| list messages by thread                | `messages.by_threadId_order`           |
-| read latest message for thread checks  | `messages.by_threadId_order`           |
+| list messages by thread                | `messages.by_thread_createdAt`         |
+| read latest message for thread checks  | `messages.by_thread_createdAt`         |
 | resolve session from thread            | `session.by_threadId`                  |
 | resolve owned session by user+thread   | `session.by_user_threadId`             |
 | list sessions for user                 | `session.by_user_status`               |
@@ -161,7 +221,7 @@ All major query paths are covered with explicit indexes.
 ```mermaid
 flowchart TB
     subgraph Messages
-      I1[by_threadId_order]
+      I1[by_thread_createdAt]
       I2[by_threadId]
     end
 
@@ -202,5 +262,6 @@ flowchart TB
 
 - No component-backed message storage.
 - No agent-component helper APIs.
+- No `threads` table; thread identity is a UUID string referenced across tables.
 - All message persistence and streaming state are represented directly in `messages`.
 - Frontend real-time updates rely on normal Convex query reactivity over first-party tables.

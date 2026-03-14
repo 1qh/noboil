@@ -40,6 +40,12 @@ Canonical flow:
 5. `summarizeGroups`
 6. `setCompactionSummary`
 
+### Cumulative Summary Requirement
+
+Compaction MUST be cumulative: each new summary is built from `previous compactionSummary + newly compacted message groups`. The `summarizeGroups` call receives the existing `compactionSummary` (if any) as a preamble, and the model generates a combined summary covering all previously compacted history plus the new groups. `setCompactionSummary` validates that the new `lastCompactedMessageId` is strictly newer than the previous one (monotonic guard) — regressive writes are rejected.
+
+This prevents context loss across multiple compaction rounds: without cumulative carry-forward, the second compaction would overwrite the first summary and lose the earlier compacted history from future model context.
+
 ```mermaid
 flowchart LR
   A[runOrchestrator pre-generation] --> B[compactIfNeeded]

@@ -102,6 +102,15 @@ sequenceDiagram
   - `*.internal`
   - private ranges (`10.*`, `192.168.*`, and `172.*` per current v1 guard)
 
+### Call-Time SSRF Enforcement
+
+Save-time hostname validation (`validateMcpUrl`) is a first line of defense but insufficient alone. A public hostname can resolve to private IPs after save, or redirect to internal targets at call time. v1 implementation should add call-time checks:
+- Resolve the URL's A/AAAA records before connecting and block loopback/link-local/private/ULA/metadata IPs
+- Disable HTTP redirects in the transport, or re-validate each redirect target
+- If `http:` (non-TLS) is allowed for local dev, disallow `authHeaders` on `http:` URLs outside test mode
+
+This hardens the SSRF boundary from "hostname string check" to "resolved IP check at connection time."
+
 ### Auth Header Redaction
 
 - `authHeaders` is stored server-side only.

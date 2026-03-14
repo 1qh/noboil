@@ -99,6 +99,8 @@ Legacy v1 wording called out app-layer-only cleanup and component-layer orphans.
 
 Deletion cascade for hard-delete:
 
+The hard-delete cascade includes worker-thread artifacts: for each deleted task, all `messages` rows on the task's `threadId` are also deleted. Since worker threads have no `session` row (they are task-owned), the cleanup resolves through `tasks.threadId` -> `messages.by_threadId`, not through `session`. The deletion order is: `tokenUsage` -> `todos` -> `messages` (both session and worker threads) -> `tasks` -> `threadRunState` -> `session`.
+
 1. Session root record
 2. Child rows: `tasks`, `todos`, `tokenUsage`, `threadRunState`
 3. Thread/message records associated with the session

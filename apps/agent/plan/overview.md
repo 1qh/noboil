@@ -1,6 +1,6 @@
 # Agent Harness — Implementation Plan
 
-A web-based AI agent harness inspired by [oh-my-openagent](https://github.com/code-yeongyu/oh-my-openagent) (commit `6625670`), built on the noboil monorepo with Convex + AI SDK v6 + Gemini 2.5 Flash. No vendor lock-in — uses AI SDK directly with our own Convex tables instead of third-party agent components.
+A web-based AI agent harness inspired by [oh-my-openagent](https://github.com/code-yeongyu/oh-my-openagent) (commit `5073efe`), built on the noboil monorepo with Convex + AI SDK v6 + Gemini 2.5 Flash. No vendor lock-in — uses AI SDK directly with our own Convex tables instead of third-party agent components.
 
 After the app works, generic building blocks will be extracted into `@noboil/agent` as a publishable library.
 

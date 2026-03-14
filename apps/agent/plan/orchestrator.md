@@ -143,6 +143,8 @@ If continue is allowed:
 1. Save system reminder message in `messages` table.
 2. Call `enqueueRun({ reason: 'todo_continuation', incrementStreak: true, promptMessageId: reminderMessageId })`.
 
+`postTurnAudit` must verify `activeRunToken === runToken` before writing reminders or enqueuing continuation. Without this check, a stale run that passes the `isStale()` check before streaming but gets superseded during streaming can still write reminders and trigger continuation after `timeoutStaleRuns` rotates the token. The token check in `postTurnAudit` is the last defense against stale-run side effects.
+
 ```mermaid
 flowchart TD
     A[postTurnAudit] --> T{incomplete todos > 0?}
