@@ -130,15 +130,17 @@ All model context assembly (orchestrator turns, worker turns, compaction input) 
 - **User messages**: `{ role: 'user', content: m.content }`
 - **System messages**: `{ role: 'system', content: m.content }`
 - **Assistant messages**: Reconstructed from BOTH `content` AND `parts`:
-  - Text content from `m.content`
-  - Tool calls from `parts` entries with `type: 'tool-call'` → mapped to AI SDK tool-call content parts
-  - For each assistant message with tool-call parts: emit the assistant `CoreMessage` with text + tool-call content parts (type `tool-call`), then emit a SEPARATE `{ role: 'tool', content: [...] }` CoreMessage containing the tool results for all terminal tool-call parts in that message. AI SDK requires tool results in their own message, not embedded in the assistant message. Storage remains parts-only (single DB row per assistant turn) — the split happens only during serialization.
-  - Reasoning from `parts` entries with `type: 'reasoning'` → included as reasoning content
-  - Sources are metadata-only (not sent to the model, only rendered in UI)
+   - Text content from `m.content`
+   - Tool calls from `parts` entries with `type: 'tool-call'` → mapped to AI SDK tool-call content parts
+   - For each assistant message with tool-call parts: emit the assistant `CoreMessage` with text + tool-call content parts (type `tool-call`), then emit a SEPARATE `{ role: 'tool', content: [...] }` CoreMessage containing the tool results for all terminal tool-call parts in that message. AI SDK requires tool results in their own message, not embedded in the assistant message. Storage remains parts-only (single DB row per assistant turn) — the split happens only during serialization.
+   - Reasoning from `parts` entries with `type: 'reasoning'` → included as reasoning content
+   - Sources are metadata-only (not sent to the model, only rendered in UI)
 
 Tool results serialization: All terminal tool outcomes (both `success` and `error`) are included in the model context. This ensures the model sees the full history of what was attempted and what failed, enabling intelligent retry decisions or user-facing error reporting in follow-up turns.
 
 This ensures the model sees the full conversation history including prior tool interactions, not just plain text. Without this, follow-up turns after tool-heavy conversations would lose all tool context.
+
+**Multi-step turn handling**: when an assistant turn includes multiple steps (text → tool-call → tool-result → more text), all steps are stored in one message row's `parts` array in execution order. During serialization, `buildModelMessages` emits: (1) an assistant CoreMessage with text + tool-call parts, then (2) a tool CoreMessage with tool results, preserving the correct assistant→tool ordering. If a turn has multiple sequential tool calls, each call-result pair is serialized in order. The single-row storage is a deliberate v1 simplification — it handles the common case (1-2 tool calls per turn) correctly. Turns with complex interleaving (text → tool → text → tool) serialize the tool calls in order but may not perfectly reconstruct mid-turn text boundaries. This is acceptable for v1; the model still sees all content and tool outcomes.
 
 ## Thread Model
 

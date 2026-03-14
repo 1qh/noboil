@@ -33,7 +33,7 @@ const getModel = async (): Promise<LanguageModel> => {
 export { getModel }
 ```
 
-`import './env'` ensures the `@t3-oss/env-core` validation runs when the module is first loaded. Since `ai.ts` is imported by agent definitions (`agents.ts`), validation is guaranteed to execute before any model access. The `skipValidation` flag in `env.ts` short-circuits validation in CI, lint, and test environments.
+`import './env'` ensures the `@t3-oss/env-core` validation runs when the module is first loaded. Since `ai.ts` is imported by agent definitions (`agents.ts`), validation is guaranteed to execute before any model access. `skipValidation` short-circuits validation in CI, lint, AND test mode environments. In test mode, Google OAuth credentials are not needed because `getAuthUserIdOrTest` bypasses real auth.
 
 ---
 
@@ -277,12 +277,14 @@ const env = createEnv({
     CONVEX_TEST_MODE: z.string().optional(),
     GOOGLE_GENERATIVE_AI_API_KEY: z.string().min(1).optional()
   },
-  skipValidation: Boolean(process.env.CI || process.env.LINT)
+  skipValidation: Boolean(process.env.CI || process.env.LINT || process.env.CONVEX_TEST_MODE)
 })
 
 export { env }
 
 When `skipValidation` is false (production/staging), `AUTH_GOOGLE_ID` and `AUTH_GOOGLE_SECRET` are **required** — validation throws immediately if they are missing. This prevents a deploy that starts successfully but fails at runtime when a user tries to sign in with Google. Only `CONVEX_TEST_MODE` remains optional (and its presence in production triggers the runtime fuse).
+
+`GOOGLE_GENERATIVE_AI_API_KEY` is required in production/staging (non-test) deployments. The `getModel()` function dynamically imports `@ai-sdk/google` which reads this key from the environment. In test mode, `getModel()` returns the mock model and never accesses the key. The env.ts validation makes this key required when `skipValidation` is false.
 ```
 
 ### `packages/be-agent/check-schema.ts`

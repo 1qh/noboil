@@ -90,7 +90,7 @@ sequenceDiagram
     FE-->>U: Real-time updates via useQuery
 ```
 
-Workers use `generateText` (single-shot, non-streaming) since worker output is retrieved via `taskOutput` tool, not streamed to the UI in real-time.
+Worker output is available via the task panel after completion. Workers use `generateText` (single-shot, non-streaming) — their results are retrieved via the `taskOutput` tool, not streamed in real-time. This is an intentional v1 simplification; v2 can add worker streaming for live progress visibility.
 
 ## Capabilities
 
