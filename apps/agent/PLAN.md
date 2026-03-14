@@ -886,7 +886,6 @@ const completeTask = internalMutation({
 
     const reminderText = buildTaskCompletionReminder({
       description: task.description,
-      result,
       taskId: String(taskId)
     })
     const saved = await orchestrator.saveMessage(ctx, {
@@ -1353,13 +1352,12 @@ const resolveOwnedSessionByThread = async ({ ctx, threadId, userId }) => {
   return session
 }
 
-const buildTaskCompletionReminder = ({ taskId, description, result }) => {
+const buildTaskCompletionReminder = ({ taskId, description }) => {
   return [
     '<system-reminder>',
     '[BACKGROUND TASK COMPLETED]',
     `Task ID: ${taskId}`,
     `Description: ${description}`,
-    `Result: ${result ?? 'completed'}`,
     '',
     'Use taskOutput tool with this taskId to retrieve full results.',
     '</system-reminder>'
@@ -1741,6 +1739,7 @@ const getContextSize = internalQuery({
       threadId
     })
     const messages = result.page
+    const hasMore = result.continueCursor !== null && messages.length >= 500
     let charCount = 0
     for (const m of messages) {
       charCount += JSON.stringify(m).length
