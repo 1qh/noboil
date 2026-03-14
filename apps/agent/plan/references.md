@@ -12,7 +12,7 @@ Comprehensive reference index for the web agent harness plan.
 - Next.js App Router: <https://nextjs.org/docs/app>
 - Playwright: <https://playwright.dev>
 
-## oh-my-openagent source paths (commit `6625670`)
+## oh-my-openagent source paths (commit `5073efe`)
 
 - Main agent loop: `src/index.ts`
 - Agent definitions: `src/agents/`
@@ -44,7 +44,7 @@ The oh-my-openagent repo contains rich Mermaid-based architecture visualizations
 - Atlas execution flow: `docs/guide/orchestration.md` (flowchart LR)
 - Feature AGENTS.md files with per-module context: `src/features/AGENTS.md`, `src/hooks/AGENTS.md`
 
-Our plan's Mermaid diagrams are inspired by these but adapted for the web architecture (Convex + Next.js instead of CLI).
+Our plan’s Mermaid diagrams are inspired by these but adapted for the web architecture (Convex + Next.js instead of CLI).
 
 ## noboil internal references
 

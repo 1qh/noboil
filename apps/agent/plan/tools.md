@@ -226,3 +226,85 @@ flowchart LR
 - `delegate`, `taskStatus`, and `taskOutput` provide asynchronous background workflow control.
 - `todoWrite` and `todoRead` provide explicit todo persistence and retrieval over `todos` table CRUD.
 - `webSearch` is a dedicated grounding bridge action with normalized response contract.
+
+## Recovered: Search Integration
+
+### Why split search tool
+
+`google.tools.googleSearch({})` is provider-defined. Mixing provider-defined tools and function tools in one model call can cause function tools to be ignored by provider preparation logic.
+
+### Recovered Design
+
+1. `webSearch` in orchestrator and worker remains a function tool.
+2. Function tool calls `internal.search.groundWithGemini` action.
+3. That action makes a dedicated model call with only `google.tools.googleSearch({})` enabled.
+4. Action records model usage through `internal.tokenUsage.recordModelUsage`.
+5. Action returns normalized `{ summary, sources }` payload.
+6. In test mode, `getModel()` returns the mock model; search tests stub this action directly.
+
+```typescript
+const normalizeGrounding = result => {
+  const text = result.text ?? ''
+  const sources = []
+  const metadata = result.providerMetadata?.google
+  if (metadata?.groundingChunks) {
+    for (const chunk of metadata.groundingChunks) {
+      if (chunk.web) {
+        sources.push({
+          snippet: chunk.web.snippet ?? '',
+          title: chunk.web.title ?? '',
+          url: chunk.web.uri ?? ''
+        })
+      }
+    }
+  }
+  return { sources, summary: text }
+}
+
+const groundWithGemini = internalAction({
+  args: { query: v.string(), threadId: v.string() },
+  handler: async (ctx, { query, threadId }) => {
+    const { generateText } = await import('ai')
+    const { google } = await import('@ai-sdk/google')
+    const model = await getModel()
+    const out = await generateText({
+      model,
+      prompt: query,
+      tools: {
+        googleSearch: google.tools.googleSearch({})
+      }
+    })
+    await ctx.runMutation(internal.tokenUsage.recordModelUsage, {
+      agentName: 'search-bridge',
+      outputTokens: out.usage?.outputTokens ?? 0,
+      model: model.modelId,
+      inputTokens: out.usage?.inputTokens ?? 0,
+      provider: model.provider ?? 'google',
+      threadId,
+      totalTokens: out.usage?.totalTokens ?? 0
+    })
+    return normalizeGrounding(out)
+  }
+})
+
+const webSearchTool = tool({
+  description: 'Run grounded web search and return summary with sources.',
+  inputSchema: z.object({ query: z.string() }),
+  execute: async ({ query }) => {
+    try {
+      const result = await ctx.runAction(internal.search.groundWithGemini, {
+        query,
+        threadId: ctx.threadId
+      })
+      return { sources: result.sources, summary: result.summary }
+    } catch (error) {
+      return { code: 'search_failed', error: String(error), ok: false }
+    }
+  }
+})
+```
+
+Provider-defined tool isolation note:
+
+- Keep provider-defined grounding tool calls isolated in `groundWithGemini`.
+- Do not mix provider-defined tools with function tools in the same `generateText` call.

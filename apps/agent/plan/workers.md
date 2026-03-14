@@ -170,3 +170,305 @@ This preserves recoverability for crash windows: a task can be `completed` but s
 - Crash gap: if worker crashes between `completeTask` and `maybeContinueOrchestrator`, reminder exists but no continuation is enqueued.
 - Duplicate side effects on retries: external MCP/tool effects from a failed attempt are not rolled back.
 - Prompt duplication on retry can happen in worker thread history (cosmetic).
+
+## Recovered: Internal Functions (Worker/Task)
+
+```typescript
+const spawnTask = internalMutation({
+  args: {
+    description: v.string(),
+    isBackground: v.boolean(),
+    parentThreadId: v.string(),
+    prompt: v.string(),
+    userId: v.string()
+  },
+  handler: async (ctx, args) => {
+    const session = await resolveOwnedSessionByThread({
+      ctx,
+      threadId: args.parentThreadId,
+      userId: args.userId
+    })
+
+    const workerThreadId = await ctx.db.insert('threads', {
+      title: args.description,
+      userId: session.userId
+    })
+
+    const taskId = await ctx.db.insert('tasks', {
+      agent: 'Worker',
+      description: args.description,
+      isBackground: args.isBackground,
+      parentThreadId: args.parentThreadId,
+      pendingAt: Date.now(),
+      prompt: args.prompt,
+      retryCount: 0,
+      sessionId: session._id,
+      status: 'pending',
+      threadId: String(workerThreadId),
+      userId: session.userId
+    })
+
+    await ctx.scheduler.runAfter(0, internal.agents.runWorker, {
+      prompt: args.prompt,
+      taskId,
+      threadId: String(workerThreadId)
+    })
+
+    return { taskId, threadId: String(workerThreadId) }
+  }
+})
+
+const markRunning = internalMutation({
+  args: { taskId: v.id('tasks') },
+  handler: async (ctx, { taskId }) => {
+    const task = await ctx.db.get(taskId)
+    if (!task || task.status !== 'pending') return { ok: false }
+    const session = await ctx.db.get(task.sessionId)
+    if (session?.status === 'archived') {
+      await ctx.db.patch(taskId, { lastError: 'session_archived', status: 'cancelled' })
+      return { ok: false }
+    }
+    await ctx.db.patch(taskId, { heartbeatAt: Date.now(), startedAt: Date.now(), status: 'running' })
+    return { ok: true }
+  }
+})
+
+const updateHeartbeat = internalMutation({
+  args: { taskId: v.id('tasks') },
+  handler: async (ctx, { taskId }) => {
+    const task = await ctx.db.get(taskId)
+    if (!task || task.status !== 'running') return
+    await ctx.db.patch(taskId, { heartbeatAt: Date.now() })
+  }
+})
+
+const completeTask = internalMutation({
+  args: { result: v.string(), taskId: v.id('tasks') },
+  handler: async (ctx, { result, taskId }) => {
+    const task = await ctx.db.get(taskId)
+    if (!task || task.status !== 'running') return { ok: false }
+    if (task.completionNotifiedAt) return { ok: false }
+
+    const reminderText = buildTaskCompletionReminder({
+      description: task.description,
+      taskId: String(taskId)
+    })
+
+    const reminderMessageId = await ctx.db.insert('messages', {
+      content: reminderText,
+      isComplete: true,
+      role: 'system',
+      sessionId: task.sessionId,
+      threadId: task.parentThreadId,
+      userId: task.userId
+    })
+
+    await ctx.db.patch(taskId, {
+      completedAt: Date.now(),
+      completionReminderMessageId: String(reminderMessageId),
+      result,
+      status: 'completed'
+    })
+
+    const session = await ctx.db
+      .query('session')
+      .withIndex('by_threadId', q => q.eq('threadId', task.parentThreadId))
+      .first()
+    if (session) await ctx.db.patch(session._id, { lastActivityAt: Date.now() })
+
+    return { ok: true, reminderMessageId: String(reminderMessageId) }
+  }
+})
+
+const failTask = internalMutation({
+  args: { errorMessage: v.string(), taskId: v.id('tasks') },
+  handler: async (ctx, { errorMessage, taskId }) => {
+    const task = await ctx.db.get(taskId)
+    if (!task || task.status !== 'running') return { ok: false }
+    await ctx.db.patch(taskId, {
+      lastError: errorMessage,
+      retryCount: task.retryCount + 1,
+      status: 'failed'
+    })
+    const session = await ctx.db
+      .query('session')
+      .withIndex('by_threadId', q => q.eq('threadId', task.parentThreadId))
+      .first()
+    if (session) await ctx.db.patch(session._id, { lastActivityAt: Date.now() })
+    return { ok: true }
+  }
+})
+
+const scheduleRetry = internalMutation({
+  args: { taskId: v.id('tasks') },
+  handler: async (ctx, { taskId }) => {
+    const task = await ctx.db.get(taskId)
+    if (!task || task.status !== 'running') return
+    const session = await ctx.db.get(task.sessionId)
+    if (session?.status === 'archived') {
+      await ctx.db.patch(taskId, { lastError: 'session_archived', status: 'cancelled' })
+      return
+    }
+    const retryCount = task.retryCount + 1
+    await ctx.db.patch(taskId, { pendingAt: Date.now(), retryCount, status: 'pending' })
+    const delay = Math.min(1000 * Math.pow(2, retryCount), 30_000)
+    await ctx.scheduler.runAfter(delay, internal.agents.runWorker, {
+      prompt: task.prompt ?? task.description,
+      taskId,
+      threadId: task.threadId
+    })
+  }
+})
+
+const markContinuationEnqueued = internalMutation({
+  args: { taskId: v.id('tasks') },
+  handler: async (ctx, { taskId }) => {
+    const task = await ctx.db.get(taskId)
+    if (!task) return
+    await ctx.db.patch(taskId, { continuationEnqueuedAt: Date.now() })
+  }
+})
+
+const maybeContinueOrchestrator = async ({ ctx, taskId }) => {
+  const task = await ctx.runQuery(internal.tasks.getById, { taskId })
+  if (!task || !task.completionReminderMessageId) return
+  const session = await ctx.runQuery(internal.sessions.getByThreadIdInternal, { threadId: task.parentThreadId })
+  if (session?.status === 'archived') return
+  if (task.continuationEnqueuedAt) return
+
+  const enqueued = await ctx.runMutation(internal.orchestrator.enqueueRunIfLatest, {
+    expectedLatestMessageId: task.completionReminderMessageId,
+    incrementStreak: true,
+    promptMessageId: task.completionReminderMessageId,
+    reason: 'task_completion',
+    threadId: task.parentThreadId
+  })
+  if (!enqueued.ok) return
+
+  await ctx.runMutation(internal.tasks.markContinuationEnqueued, { taskId })
+}
+
+const isTransientError = msg => {
+  const transient = ['ECONNRESET', 'ETIMEDOUT', 'rate_limit', '503', '429', 'overloaded']
+  const lower = msg.toLowerCase()
+  for (const t of transient) {
+    if (lower.includes(t.toLowerCase())) return true
+  }
+  return false
+}
+```
+
+After `maybeContinueOrchestrator` completes (whether it enqueued continuation or not), caller sets `completionNotifiedAt`. This is intentionally deferred from `completeTask` so crash windows remain recoverable (`status: 'completed'` with `completionNotifiedAt` unset).
+
+v1 limitation: if worker crashes between `completeTask` and `maybeContinueOrchestrator`, completion reminder is persisted but continuation is not enqueued. The thread can remain idle with no queued payload, so `timeoutStaleRuns` cannot recover this case. User input re-engages orchestrator. On retry, `continuationEnqueuedAt` guards duplicate enqueue.
+
+Worker retry side-effect safety: if `runWorker` retries after partial MCP side effects, external effects can duplicate. Prompt save duplication on retry can also produce duplicate worker-thread prompt entries. Both are accepted v1 trade-offs.
+
+## Recovered: Agent Definitions (Worker)
+
+`Agent` class usage is replaced with direct AI SDK calls and plain config.
+
+```typescript
+const WORKER_RUNTIME_CONFIG = {
+  callSettings: {
+    temperature: 0.5
+  },
+  contextOptions: { recentMessages: 50 },
+  instructions: WORKER_SYSTEM_PROMPT,
+  languageModel: getModel,
+  maxSteps: 10,
+  name: 'Worker',
+  tools: {
+    mcpCall: mcpCallTool,
+    mcpDiscover: mcpDiscoverTool,
+    webSearch: webSearchTool
+  },
+  usageHandler: usageHandlerByThread
+} as const
+
+const runWorker = internalAction({
+  args: { prompt: v.string(), taskId: v.id('tasks'), threadId: v.string() },
+  handler: async (ctx, args) => {
+    const marked = await ctx.runMutation(internal.tasks.markRunning, { taskId: args.taskId })
+    if (!marked.ok) return
+
+    const heartbeatInterval = setInterval(async () => {
+      try {
+        await ctx.runMutation(internal.tasks.updateHeartbeat, { taskId: args.taskId })
+      } catch (_error) {}
+    }, 30_000)
+
+    try {
+      const promptMessageId = await ctx.db.insert('messages', {
+        content: args.prompt,
+        isComplete: true,
+        role: 'user',
+        threadId: args.threadId
+      })
+
+      const { generateText } = await import('ai')
+      const model = await getModel()
+
+      const context = await ctx.db
+        .query('messages')
+        .withIndex('by_threadId', q => q.eq('threadId', args.threadId))
+        .order('desc')
+        .take(WORKER_RUNTIME_CONFIG.contextOptions.recentMessages)
+
+      const messages = []
+      for (const m of context.reverse()) {
+        messages.push({ content: m.content, role: m.role })
+      }
+
+      const result = await generateText({
+        maxSteps: WORKER_RUNTIME_CONFIG.maxSteps,
+        messages,
+        model,
+        system: WORKER_RUNTIME_CONFIG.instructions,
+        temperature: WORKER_RUNTIME_CONFIG.callSettings.temperature,
+        tools: WORKER_RUNTIME_CONFIG.tools
+      })
+
+      await usageHandlerByThread(ctx, {
+        agentName: WORKER_RUNTIME_CONFIG.name,
+        model: model.modelId,
+        provider: model.provider ?? 'unknown',
+        providerMetadata: result.providerMetadata,
+        threadId: args.threadId,
+        usage: result.usage,
+        userId: undefined
+      })
+
+      const text = result.text ?? ''
+      await ctx.db.insert('messages', {
+        content: text,
+        isComplete: true,
+        role: 'assistant',
+        threadId: args.threadId
+      })
+
+      const completed = await ctx.runMutation(internal.tasks.completeTask, {
+        result: text,
+        taskId: args.taskId
+      })
+
+      if (completed.ok && completed.reminderMessageId) {
+        await maybeContinueOrchestrator({ ctx, taskId: args.taskId })
+      }
+      await ctx.db.patch(args.taskId, { completionNotifiedAt: Date.now() })
+    } catch (error) {
+      const task = await ctx.runQuery(internal.tasks.getById, { taskId: args.taskId })
+      if (task && task.retryCount < 3 && isTransientError(String(error))) {
+        await ctx.runMutation(internal.tasks.scheduleRetry, { taskId: args.taskId })
+      } else {
+        await ctx.runMutation(internal.tasks.failTask, {
+          errorMessage: String(error),
+          taskId: args.taskId
+        })
+      }
+    } finally {
+      clearInterval(heartbeatInterval)
+    }
+  }
+})
+```

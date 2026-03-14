@@ -23,8 +23,9 @@ oh-my-openagent is a powerful CLI-based agent harness. We want the same capabili
 | 9   | [Auth](./auth.md)                 | Auth flow, test auth bypass, ownership enforcement                        |
 | 10  | [Ops](./ops.md)                   | Crons, session retention, cleanup, monitoring                             |
 | 11  | [Testing](./testing.md)           | E2E strategy, mock model, test auth                                       |
-| 12  | [Phases](./phases.md)             | Implementation phases with dependencies and success criteria              |
-| 13  | [References](./references.md)     | Official doc URLs, oh-my-openagent source paths, SOURCES.md               |
+| 12  | [Infrastructure](./infra.md)      | Model selection, config files, backend tree, env vars, deployment, deps   |
+| 13  | [Phases](./phases.md)             | Implementation phases with dependencies and success criteria              |
+| 14  | [References](./references.md)     | Official doc URLs, oh-my-openagent source paths, SOURCES.md               |
 
 ## High-Level Architecture
 
@@ -115,3 +116,79 @@ Undo messages, fork conversation, switch models/orchestrator, plan mode, slash c
 | CRUD            | noboil `crud()` with hooks where applicable         | Eliminates boilerplate, enforces ownership                              |
 | Auth            | `@convex-dev/auth` + Google OAuth                   | Standard Convex auth, test mode bypass for E2E                          |
 | MCP transport   | HTTP only (StreamableHTTPClientTransport)           | Convex serverless has no stdio                                          |
+
+## Recovered: Verbatim Requirements
+
+### User Request
+
+> Now, i want to make a simplified version of you, oh-my-openagent (latest version) but for the web, built on noboil convex. Think of it like an agent harness, but built on the web technologies and for the web infrastructure.
+>
+> This is a complex app to push the boundary of both convex and our library to maximum. Let’s leverage all the best of both worlds: Our noboil/convex setup and convex itself.
+>
+> After this app is done and verified working, we will try to make our building blocks to be generic and release @noboil/agent as a solution for anyone to build their own web-based agent harness with maximum customizability.
+>
+> First, clone the repo and pinpoint the exact commit hash, this is to know the exact version of our reference, so when they have newer releases, we can compare and see their improvements to adopt what we can.
+>
+> Let create a new app inside apps/ called ‘agent’, this is where this new app lives.
+
+### Capabilities Requested
+
+- Parallel sync/async/background tasks
+- Search capability based on Gemini grounding search
+- MCP
+- Multiple agents delegation
+- To-do list
+- System reminder for continuation on unfinished to-do list
+- Poll on a background task to see its progress
+- System reminder for done background tasks
+- See clear reasoning, response, tool calls on frontend
+- Non-blocking conversation when tasks are being executed
+- Token usage tracking
+- Compaction
+
+### Explicitly Excluded
+
+- Undo a message
+- Fork conversation
+- Switch models
+- Switch main orchestrator
+- Plan mode / plan executor mode
+- Switch reasoning effort of a model
+- Slash commands
+- Editing files
+- Code execution
+- Any command-line related tools
+
+### Clarifications
+
+- **Auth**: Simple user auth, but structured to be org-auth-ready
+- **Multi-user**: Yes, multiple users can use the system
+- **MCP server management**: v1 supports user-owned MCP server configuration only (per-user CRUD via settings UI). Admin-configured shared MCP servers are deferred to v2. Each user manages their own servers with ownership-enforced CRUD.
+- **Deployment**: Inside this monorepo at `apps/agent`
+- **LLM**: Start with Gemini 2.5 Flash via AI SDK v6
+- **One orchestrator**: User does not configure anything, we provide defaults
+- **Tools**: Convex actions/mutations (sync/async/background) with system reminder injection
+- **Streaming**: Everything streamable to frontend, same as OpenCode. Each agent’s stream visible in UI
+- **Borrowed code**: Track source file paths from oh-my-openagent for future upstream adoption
+
+## Recovered: File Attachments
+
+### v1 Decision
+
+File upload attachments are out of scope for v1.
+
+- users can paste text
+- users cannot upload files in this version
+- file upload and retrieval is tracked as post-v1 enhancement
+
+v2 note:
+
+- file upload and retrieval is deferred and tracked as a post-v1 enhancement area.
+
+## Recovered: AGENTS.md Compliance Checklist
+
+1. no unconstrained validators or loose typing in snippets
+2. arrow functions only in snippets
+3. no array callback aggregation shortcuts in snippets
+4. no inline per-file source comments; use `SOURCES.md`
+5. component co-location prioritized over global shared folders
