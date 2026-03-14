@@ -1,0 +1,139 @@
+# Architecture
+
+This module defines the web agent harness architecture after removing `@convex-dev/agent`. Runtime orchestration uses AI SDK v6 (`streamText`) directly, and all conversational state lives in first-party Convex tables in `packages/be-agent`.
+
+## Reference Sources
+
+- AI SDK docs: https://ai-sdk.vercel.ai/docs
+- Convex docs: https://docs.convex.dev
+- oh-my-openagent inspiration paths:
+  - `src/index.ts`
+  - `src/agents/`
+  - `src/features/background-agent/`
+  - `src/hooks/todo-continuation-enforcer/`
+
+## System Topology
+
+The frontend app (`apps/agent`) and backend Convex project (`packages/be-agent`) are split intentionally. `packages/be-agent` owns schema, actions, mutations, crons, auth wiring, and deploy lifecycle.
+
+```mermaid
+flowchart LR
+    B[Browser UI] --> N[Next.js app\napps/agent]
+    N --> C[Convex project\npackages/be-agent]
+    C --> G[Gemini via AI SDK v6]
+    C --> M[MCP servers]
+
+    C --> T[(Convex tables\nsession tasks todos messages tokenUsage mcpServers threadRunState)]
+```
+
+## Convex Topology In Monorepo
+
+`packages/be-agent` is an independent backend package, not an extension of `packages/be-convex`.
+
+```mermaid
+flowchart TB
+    subgraph Monorepo
+      subgraph Apps
+        A1[apps/agent]
+      end
+
+      subgraph Backends
+        B1[packages/be-convex\nexisting demos]
+        B2[packages/be-agent\nnew agent backend]
+      end
+    end
+
+    A1 -->|NEXT_PUBLIC_CONVEX_URL| B2
+    A1 -. no runtime coupling .-> B1
+
+    subgraph B2D[packages/be-agent structure]
+      D1[convex/schema.ts]
+      D2[convex/actions + mutations + queries]
+      D3[convex/crons.ts]
+      D4[env/auth/lazy setup]
+    end
+
+    B2 --> B2D
+```
+
+## Data Flow
+
+Primary turn path:
+
+1. User submits input from `apps/agent`.
+2. Public mutation writes user message into `messages` and updates session activity.
+3. Mutation enqueues orchestrator run through `threadRunState` (CAS queue semantics).
+4. Orchestrator action claims run token, reads thread context, runs `streamText` with function tools.
+5. Tool calls may enqueue worker tasks; workers run in separate thread IDs, then write completion reminders.
+6. Assistant response is streamed into the same thread’s `messages` row and finalized.
+7. Frontend rerenders continuously via standard Convex `useQuery` reactivity.
+
+## Streaming Architecture (DIY, No Agent Component)
+
+Streaming state is stored on the message row directly:
+
+- Create assistant message row with `isComplete=false` and initial `streamingContent`.
+- For each AI SDK delta chunk, patch `messages.streamingContent`.
+- On finish, set final `content` / `parts`, clear or freeze `streamingContent`, and mark `isComplete=true`.
+- UI reads thread messages with `useQuery`; no specialized message hook is required.
+
+```mermaid
+sequenceDiagram
+    participant FE as Frontend useQuery
+    participant A as Convex action (orchestrator/worker)
+    participant AI as AI SDK streamText
+    participant DB as messages table
+
+    A->>DB: insert assistant row (isComplete=false)
+    A->>AI: streamText(...)
+    loop each delta
+      AI-->>A: text delta / part delta
+      A->>DB: patch streamingContent
+      DB-->>FE: reactive query update
+      FE-->>FE: render partial output
+    end
+    AI-->>A: finish
+    A->>DB: patch content/parts + isComplete=true
+    DB-->>FE: final reactive update
+```
+
+## Thread Model
+
+- Threads are plain UUID strings.
+- `session.threadId` is the parent conversation thread.
+- `messages.threadId` and `tasks.threadId` link all conversation and worker activity.
+- No component thread/message API is used.
+
+## Action vs Mutation Boundaries
+
+Convex boundary is explicit:
+
+- Actions: external I/O and long-running orchestration (`streamText`, MCP HTTP calls, search bridges).
+- Mutations: atomic state transitions, queue CAS, message patching, task lifecycle transitions.
+- Queries: ownership-safe reads for UI and internal orchestration checks.
+
+```mermaid
+flowchart LR
+    U[User event] --> M1[Mutation\nsubmitMessage + enqueue CAS]
+    M1 --> A1[Action\nrunOrchestrator / runWorker]
+    A1 --> E1[External I/O\nAI SDK + MCP + web search]
+    A1 --> M2[Mutation patches\nmessages/tasks/threadRunState]
+    M2 --> Q1[Query\nfrontend useQuery reads]
+
+    classDef mut fill:#d9f2ff,stroke:#1f6feb,stroke-width:1px;
+    classDef act fill:#ffe8cc,stroke:#b26b00,stroke-width:1px;
+    classDef io fill:#ffe3e3,stroke:#c92a2a,stroke-width:1px;
+    classDef qry fill:#e6fcf5,stroke:#0b7285,stroke-width:1px;
+
+    class M1,M2 mut;
+    class A1 act;
+    class E1 io;
+    class Q1 qry;
+```
+
+## Runtime Constraints To Preserve
+
+- Keep queue/state transitions mutation-first and idempotent.
+- Keep one active orchestrator run per thread with queued continuation payloads.
+- Keep actions side-effecting only through explicit mutation calls.
+- Keep ownership checks on every public entry point before thread/session/task access.

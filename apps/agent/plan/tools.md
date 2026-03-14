@@ -1,0 +1,228 @@
+# Tool Definitions
+
+## Scope
+
+This document extracts and rewrites the plan sections for tool architecture and tool-related system prompt behavior.
+
+Key baseline for v1:
+
+- Tools are defined with AI SDK v6 `tool()` and Zod schemas.
+- Tool execution runs inside Convex actions and receives action context (`ctx`) so tools can call internal queries, mutations, and actions.
+- Tool calls read/write from our own `messages` table and app tables.
+
+Reference docs and code:
+
+- AI SDK tool API: https://ai-sdk.vercel.ai/docs/reference/ai-sdk-core/tool
+- oh-my-openagent delegate reference: `src/tools/delegate-task/`
+- oh-my-openagent background task reference: `src/tools/background-task/`
+
+## Tool Architecture
+
+Tool definitions follow this structure:
+
+```ts
+import { tool } from 'ai'
+import { z } from 'zod/v4'
+
+const delegateTool = tool({
+  description: 'Delegate a task to a worker agent.',
+  inputSchema: z.object({
+    description: z.string(),
+    isBackground: z.boolean().default(true),
+    prompt: z.string()
+  }),
+  execute: async input => {
+    const spawn = await ctx.runMutation(internal.tasks.spawnTask, {
+      description: input.description,
+      isBackground: input.isBackground,
+      parentThreadId: ctx.threadId,
+      prompt: input.prompt,
+      userId: ctx.userId
+    })
+    return {
+      status: 'pending',
+      taskId: spawn.taskId,
+      threadId: spawn.threadId
+    }
+  }
+})
+```
+
+Execution model:
+
+1. `streamText` receives a tool map built from AI SDK `tool()`.
+2. The model emits a tool call.
+3. The tool `execute` handler runs in Convex action runtime with `ctx`.
+4. The handler invokes internal mutation/query/action functions.
+5. The tool returns normalized JSON back to the model.
+
+```mermaid
+flowchart LR
+  A[Orchestrator streamText] --> B[AI SDK v6 tool call]
+  B --> C[tool execute(input)]
+  C --> D{Convex operation}
+  D -->|runMutation| E[Internal mutation]
+  D -->|runQuery| F[Internal query]
+  D -->|runAction| G[Internal action]
+  E --> H[Tool result]
+  F --> H
+  G --> H
+  H --> I[Model continues response]
+```
+
+## Tool-Related Prompt Rules
+
+Orchestrator prompt behavior tied to tools:
+
+- `delegate`: use for independent parallelizable work.
+- `webSearch`: use for fresh external information and return sources.
+- `todoWrite`: maintain multi-step tracking discipline (`in_progress` before work, `completed` after completion, only one in progress).
+- `taskStatus`: check background progress by `taskId`.
+- `taskOutput`: retrieve final output after completion reminders.
+- MCP tools are separate (`mcpCall`, `mcpDiscover`) and not covered in this tools file.
+
+Worker prompt behavior tied to tools:
+
+- Worker is scoped to delegated task prompt.
+- Worker may use `webSearch` where needed.
+- Worker does not manage todos and does not re-delegate.
+
+## Definitions
+
+## `delegate`
+
+Purpose:
+
+- Spawn a worker task asynchronously.
+- Return identifiers needed for polling and output retrieval.
+
+Input schema:
+
+- `description: string`
+- `isBackground: boolean` (default `true`)
+- `prompt: string`
+
+Execution details:
+
+- Calls `internal.tasks.spawnTask` mutation.
+- Mutation atomically creates worker thread, inserts task row, and schedules worker action.
+- Returns `{ status: 'pending', taskId, threadId }`.
+
+```mermaid
+sequenceDiagram
+  participant O as Orchestrator
+  participant T as delegate tool
+  participant M as tasks.spawnTask mutation
+  participant W as Worker action
+  participant DB as tasks table
+
+  O->>T: delegate(description, prompt, isBackground)
+  T->>M: runMutation(...)
+  M->>DB: insert pending task + threadId
+  M->>W: scheduler.runAfter(0, runWorker)
+  M-->>T: { taskId, threadId }
+  T-->>O: { status: pending, taskId, threadId }
+  W->>DB: pending -> running -> completed/failed
+```
+
+## `taskStatus`
+
+Purpose:
+
+- Poll state of one background task.
+
+Input schema:
+
+- `taskId: string`
+
+Execution details:
+
+- Calls `internal.tasks.getOwnedTaskStatusInternal`.
+- Returns ownership-scoped status data (`status`, `retryCount`, `lastError`, `completedAt`, `threadId`) or `null`.
+
+## `taskOutput`
+
+Purpose:
+
+- Fetch final output for a completed task.
+
+Input schema:
+
+- `taskId: string`
+
+Execution details:
+
+- Calls `internal.tasks.getOwnedTaskOutput`.
+- Returns `result` when completed.
+- Returns structured non-completed response (`task_not_completed`, current status) when still running/pending.
+
+## `todoWrite`
+
+Purpose:
+
+- Upsert session todo state in one write path.
+
+Input schema:
+
+- `todos: Array<{ content, position, priority, status }>`
+- `priority` in `high | medium | low`
+- `status` in `pending | in_progress | completed | cancelled`
+
+Execution details:
+
+- Calls `internal.todos.syncOwned`.
+- Mutation resolves session by thread, replaces prior rows, inserts incoming todos preserving `position` ordering.
+- Returns `{ updated: todos.length }`.
+
+## `todoRead`
+
+Purpose:
+
+- Read session todo list for current thread.
+
+Input schema:
+
+- empty object
+
+Execution details:
+
+- Calls `internal.todos.listOwnedByThread`.
+- Returns `{ todos }` sorted by `position` via `by_session_position` index.
+
+## `webSearch`
+
+Purpose:
+
+- Perform grounded web search through a dedicated Gemini call and return normalized summary + sources.
+
+Input schema:
+
+- `query: string`
+
+Execution details:
+
+- Tool handler calls `internal.search.groundWithGemini` action.
+- `groundWithGemini` runs a dedicated model call with only `google.tools.googleSearch({})` enabled.
+- Search bridge records token usage via `internal.tokenUsage.recordModelUsage`.
+- Result is normalized to `{ summary, sources }` for orchestrator/worker usage.
+
+Isolation rule:
+
+- Keep provider grounding tool calls in isolated search action.
+- Do not mix provider tools with function tools in same generation call.
+
+```mermaid
+flowchart LR
+  A[Orchestrator or Worker] --> B[webSearch tool execute]
+  B --> C[internal.search.groundWithGemini]
+  C --> D[Gemini generateText with googleSearch only]
+  D --> E[normalizeGrounding]
+  E --> F[{ summary, sources }]
+  F --> A
+```
+
+## End-to-End Notes
+
+- `delegate`, `taskStatus`, and `taskOutput` provide asynchronous background workflow control.
+- `todoWrite` and `todoRead` provide explicit todo persistence and retrieval over `todos` table CRUD.
+- `webSearch` is a dedicated grounding bridge action with normalized response contract.
