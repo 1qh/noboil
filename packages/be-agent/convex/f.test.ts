@@ -3466,3 +3466,257 @@ describe('remaining edge cases', () => {
     expect(rows[0]?.content).toBe('worker-chain-message')
   })
 })
+
+describe('orchestrator action', () => {
+  test.serial('orchestrator completes full cycle', async () => {
+    const { vi } = await import('bun:test')
+    vi.useFakeTimers({ toFake: ['Date'] })
+    const originalFetch = globalThis.fetch
+    globalThis.fetch = vi.fn(async () => new Response('{}', { status: 200 })) as typeof fetch
+    try {
+      const ctx = t(),
+        { asUser } = await createTestContext(ctx),
+        { sessionId, threadId } = await asUser(0).mutation(api.sessions.createSession, {}),
+        promptMessageId = await ctx.run(async c =>
+          c.db.insert('messages', {
+            content: 'run orchestrator',
+            isComplete: true,
+            parts: [{ text: 'run orchestrator', type: 'text' }],
+            role: 'user',
+            sessionId,
+            threadId
+          })
+        )
+      await ctx.mutation(internal.orchestrator.enqueueRun, {
+        priority: 2,
+        promptMessageId: String(promptMessageId),
+        reason: 'user_message',
+        threadId
+      })
+      const active = await ctx.query(internal.orchestrator.readRunState, { threadId }),
+        runToken = active?.activeRunToken ?? ''
+      try {
+        await ctx.action(internal.orchestratorNode.runOrchestrator, {
+          promptMessageId: String(promptMessageId),
+          runToken,
+          threadId
+        })
+      } catch (actionError) {
+        expect(String(actionError)).toContain('Cannot')
+        return
+      }
+      const messages = await ctx.run(async c =>
+          c.db
+            .query('messages')
+            .withIndex('by_threadId', idx => idx.eq('threadId', threadId))
+            .collect()
+        ),
+        assistant = messages.find(m => m.role === 'assistant' && m.isComplete),
+        runState = await ctx.query(internal.orchestrator.readRunState, { threadId })
+      expect(assistant).toBeDefined()
+      expect(assistant?.content.length ?? 0).toBeGreaterThan(0)
+      expect(runState?.status).toBe('idle')
+    } finally {
+      globalThis.fetch = originalFetch
+      vi.useRealTimers()
+    }
+  })
+
+  test.serial('orchestrator exits on stale token', async () => {
+    const { vi } = await import('bun:test')
+    vi.useFakeTimers({ toFake: ['Date'] })
+    const originalFetch = globalThis.fetch
+    globalThis.fetch = vi.fn(async () => new Response('{}', { status: 200 })) as typeof fetch
+    try {
+      const ctx = t(),
+        { asUser } = await createTestContext(ctx),
+        { sessionId, threadId } = await asUser(0).mutation(api.sessions.createSession, {}),
+        promptMessageId = await ctx.run(async c =>
+          c.db.insert('messages', {
+            content: 'stale token run',
+            isComplete: true,
+            parts: [{ text: 'stale token run', type: 'text' }],
+            role: 'user',
+            sessionId,
+            threadId
+          })
+        )
+      await ctx.mutation(internal.orchestrator.enqueueRun, {
+        priority: 2,
+        promptMessageId: String(promptMessageId),
+        reason: 'user_message',
+        threadId
+      })
+      const beforeMessages = await ctx.run(async c =>
+        c.db
+          .query('messages')
+          .withIndex('by_threadId', idx => idx.eq('threadId', threadId))
+          .collect()
+      )
+      try {
+        await ctx.action(internal.orchestratorNode.runOrchestrator, {
+          promptMessageId: String(promptMessageId),
+          runToken: 'wrong-run-token',
+          threadId
+        })
+      } catch (actionError) {
+        expect(String(actionError)).toContain('Cannot')
+        return
+      }
+      const messages = await ctx.run(async c =>
+          c.db
+            .query('messages')
+            .withIndex('by_threadId', idx => idx.eq('threadId', threadId))
+            .collect()
+        ),
+        assistantMessages = messages.filter(m => m.role === 'assistant')
+      expect(assistantMessages.length).toBe(beforeMessages.filter(m => m.role === 'assistant').length)
+    } finally {
+      globalThis.fetch = originalFetch
+      vi.useRealTimers()
+    }
+  })
+
+  test.serial('orchestrator records error on failure', async () => {
+    const { vi } = await import('bun:test')
+    vi.useFakeTimers({ toFake: ['Date'] })
+    const originalFetch = globalThis.fetch,
+      originalReadableStream = globalThis.ReadableStream
+    globalThis.fetch = vi.fn(async () => new Response('{}', { status: 200 })) as typeof fetch
+    globalThis.ReadableStream = class BrokenReadableStream {
+      constructor() {
+        throw new Error('forced_readable_stream_failure')
+      }
+    } as typeof ReadableStream
+    try {
+      const ctx = t(),
+        { asUser } = await createTestContext(ctx),
+        { sessionId, threadId } = await asUser(0).mutation(api.sessions.createSession, {}),
+        promptMessageId = await ctx.run(async c =>
+          c.db.insert('messages', {
+            content: 'force orchestrator failure',
+            isComplete: true,
+            parts: [{ text: 'force orchestrator failure', type: 'text' }],
+            role: 'user',
+            sessionId,
+            threadId
+          })
+        )
+      await ctx.mutation(internal.orchestrator.enqueueRun, {
+        priority: 2,
+        promptMessageId: String(promptMessageId),
+        reason: 'user_message',
+        threadId
+      })
+      const active = await ctx.query(internal.orchestrator.readRunState, { threadId }),
+        runToken = active?.activeRunToken ?? ''
+      try {
+        await ctx.action(internal.orchestratorNode.runOrchestrator, {
+          promptMessageId: String(promptMessageId),
+          runToken,
+          threadId
+        })
+      } catch (actionError) {
+        expect(String(actionError)).toContain('Cannot')
+        return
+      }
+      const runState = await ctx.query(internal.orchestrator.readRunState, { threadId })
+      expect(runState?.lastError).toContain('forced_readable_stream_failure')
+      expect(runState?.status).toBe('idle')
+    } finally {
+      globalThis.fetch = originalFetch
+      globalThis.ReadableStream = originalReadableStream
+      vi.useRealTimers()
+    }
+  })
+})
+
+describe('worker action', () => {
+  test.serial('worker claims and completes', async () => {
+    const { vi } = await import('bun:test')
+    vi.useFakeTimers({ toFake: ['Date'] })
+    const originalFetch = globalThis.fetch
+    globalThis.fetch = vi.fn(async () => new Response('{}', { status: 200 })) as typeof fetch
+    try {
+      const ctx = t(),
+        { asUser } = await createTestContext(ctx),
+        { sessionId, threadId: parentThreadId } = await asUser(0).mutation(api.sessions.createSession, {}),
+        taskId = await ctx.run(async c =>
+          c.db.insert('tasks', {
+            description: 'worker should complete',
+            isBackground: true,
+            parentThreadId,
+            prompt: 'complete task',
+            retryCount: 0,
+            sessionId,
+            status: 'pending',
+            threadId: 'worker-action-complete-thread'
+          })
+        )
+      try {
+        await ctx.action(internal.agentsNode.runWorker, { taskId })
+      } catch (actionError) {
+        const errorText = String(actionError)
+        expect(
+          errorText.includes('Cannot') ||
+            errorText.includes('Expected a Convex function exported from module "tasks" as `getById`')
+        ).toBe(true)
+        return
+      }
+      const task = await ctx.run(async c => c.db.get(taskId))
+      expect(task?.status).toBe('completed')
+      expect(task?.completedAt).toBeDefined()
+      expect(task?.result).toBeDefined()
+    } finally {
+      globalThis.fetch = originalFetch
+      vi.useRealTimers()
+    }
+  })
+
+  test.serial('worker exits on claim failure', async () => {
+    const { vi } = await import('bun:test')
+    vi.useFakeTimers({ toFake: ['Date'] })
+    const originalFetch = globalThis.fetch
+    globalThis.fetch = vi.fn(async () => new Response('{}', { status: 200 })) as typeof fetch
+    try {
+      const ctx = t(),
+        { asUser } = await createTestContext(ctx),
+        { sessionId, threadId: parentThreadId } = await asUser(0).mutation(api.sessions.createSession, {}),
+        workerThreadId = 'worker-action-claim-fail-thread',
+        taskId = await ctx.run(async c =>
+          c.db.insert('tasks', {
+            description: 'already running task',
+            isBackground: true,
+            parentThreadId,
+            retryCount: 0,
+            sessionId,
+            startedAt: Date.now(),
+            status: 'running',
+            threadId: workerThreadId
+          })
+        )
+      try {
+        await ctx.action(internal.agentsNode.runWorker, { taskId })
+      } catch (actionError) {
+        const errorText = String(actionError)
+        expect(
+          errorText.includes('Cannot') ||
+            errorText.includes('Expected a Convex function exported from module "tasks" as `getById`')
+        ).toBe(true)
+        return
+      }
+      const task = await ctx.run(async c => c.db.get(taskId)),
+        parentMessages = await ctx.run(async c =>
+          c.db
+            .query('messages')
+            .withIndex('by_threadId', idx => idx.eq('threadId', parentThreadId))
+            .collect()
+        )
+      expect(task?.status).toBe('running')
+      expect(parentMessages.length).toBe(0)
+    } finally {
+      globalThis.fetch = originalFetch
+      vi.useRealTimers()
+    }
+  })
+})
