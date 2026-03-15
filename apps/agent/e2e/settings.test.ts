@@ -55,3 +55,8 @@ test.describe
       await expect(page.getByText('test-server')).not.toBeVisible()
     })
   })
+
+test.describe
+  .serial('Settings (MCP) - matrix additions', () => {
+    test.skip('server enable/disable toggle [BLOCKED: settings UI currently supports create/delete only, no enabled toggle control]', async () => {})
+  })

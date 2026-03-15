@@ -137,3 +137,8 @@ test.describe
       await expect(page.getByTestId('typing-panel')).toContainText(/agent is typing/iu, { timeout: 10_000 })
     })
   })
+
+test.describe
+  .serial('Chat & Streaming - matrix additions', () => {
+    test.skip('mcp discover button in chat UI [BLOCKED: discover trigger button is not implemented on chat page]', async () => {})
+  })

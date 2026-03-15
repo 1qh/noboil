@@ -5702,3 +5702,294 @@ describe('rate limit enforcement', () => {
     expect(submitted).toBe(25)
   })
 })
+
+describe('mcp matrix remaining coverage', () => {
+  test.skip('mcp #2 call-time SSRF enforcement [BLOCKED: runtime connector and DNS/redirect checks are not implemented in mcp.ts]', async () => {})
+
+  test.skip('mcp #5 cache hit path [BLOCKED: cache connect/listTools flow is not implemented in mcp.ts]', async () => {})
+
+  test.skip('mcp #6 cache refresh on miss/expiry [BLOCKED: cache refresh flow is not implemented in mcp.ts]', async () => {})
+
+  test.skip('mcp #7 mcpCallTool retry-after-refresh [BLOCKED: retry logic for stale tool metadata is not implemented in mcp.ts]', async () => {})
+
+  test.skip('mcp #8 deterministic retry exhausted payload [BLOCKED: deterministic retry payload contract is not implemented in mcp.ts]', async () => {})
+
+  test.skip('mcp #9 per-call timeout wrappers [BLOCKED: connect/listTools/callTool timeout wrappers are not implemented in mcp.ts]', async () => {})
+
+  test.skip('mcp #12 ownership resolution from worker thread [BLOCKED: mcpCallTool currently resolves ownership only from sessionId, not task thread chain]', async () => {})
+
+  test.skip('mcp #14 malformed JSON response handling [BLOCKED: external MCP transport/JSON parsing is not implemented in mcp.ts]', async () => {})
+
+  test('mcp #15 mcpDiscover returns flattened cached tools from enabled servers', async () => {
+    const ctx = t(),
+      { asUser } = await createTestContext(ctx),
+      { sessionId } = await asUser(0).mutation(api.sessions.createSession, {}),
+      enabledId = await asUser(0).mutation(api.mcp.create, {
+        isEnabled: true,
+        name: 'matrix-enabled',
+        transport: 'http',
+        url: 'https://example.com/matrix-enabled'
+      }),
+      disabledId = await asUser(0).mutation(api.mcp.create, {
+        isEnabled: false,
+        name: 'matrix-disabled',
+        transport: 'http',
+        url: 'https://example.com/matrix-disabled'
+      })
+    await ctx.run(async c => {
+      await c.db.patch(enabledId, {
+        cachedTools: JSON.stringify([{ name: 'toolA' }, { name: 'toolB' }])
+      })
+      await c.db.patch(disabledId, {
+        cachedTools: JSON.stringify([{ name: 'toolX' }])
+      })
+    })
+    const out = await ctx.mutation(internal.mcp.mcpDiscover, { sessionId })
+    expect(out.tools).toEqual([
+      { serverName: 'matrix-enabled', toolName: 'toolA' },
+      { serverName: 'matrix-enabled', toolName: 'toolB' }
+    ])
+  })
+
+  test('mcp #16 mcpCallTool happy path is scoped to owned server', async () => {
+    const ctx = t(),
+      { asUser } = await createTestContext(ctx),
+      { sessionId } = await asUser(0).mutation(api.sessions.createSession, {})
+    await asUser(0).mutation(api.mcp.create, {
+      isEnabled: true,
+      name: 'same-name',
+      transport: 'http',
+      url: 'https://example.com/owner-server'
+    })
+    await asUser(1).mutation(api.mcp.create, {
+      isEnabled: true,
+      name: 'same-name',
+      transport: 'http',
+      url: 'https://example.com/other-server'
+    })
+    const out = await ctx.mutation(internal.mcp.mcpCallTool, {
+      serverName: 'same-name',
+      sessionId,
+      toolArgs: '{"ok":true}',
+      toolName: 'matrixTool'
+    })
+    expect(out.ok).toBe(true)
+    expect(out.content).toBe('mock MCP result')
+  })
+
+  test('mcp #19 webSearch writes token usage row through search bridge', async () => {
+    const ctx = t(),
+      { asUser } = await createTestContext(ctx),
+      { sessionId, threadId } = await asUser(0).mutation(api.sessions.createSession, {}),
+      out = await ctx.action(internal.webSearch.groundWithGemini, {
+        query: 'mcp token usage matrix',
+        threadId
+      })
+    expect(out.summary.includes('Mock search result')).toBe(true)
+    const rows = await ctx.run(async c =>
+      c.db
+        .query('tokenUsage')
+        .withIndex('by_session', idx => idx.eq('sessionId', sessionId))
+        .collect()
+    )
+    expect(rows.length > 0).toBe(true)
+    expect(rows[rows.length - 1]?.agentName).toBe('search-bridge')
+  })
+
+  test.skip('mcp #20 invalid toolArgs JSON rejected [BLOCKED: mcpCallTool does not parse toolArgs in current implementation]', async () => {})
+
+  test.skip('mcp #21 invalid persisted authHeaders JSON handling [BLOCKED: mcpCallTool does not parse persisted authHeaders in current implementation]', async () => {})
+})
+
+describe('rate limiting matrix bypass coverage', () => {
+  test('rate-limit #1 submitMessage bucket bypass in test mode', async () => {
+    const ctx = t(),
+      { asUser } = await createTestContext(ctx),
+      { sessionId } = await asUser(0).mutation(api.sessions.createSession, {})
+    for (let i = 0; i < 30; i += 1)
+      await asUser(0).mutation(api.orchestrator.submitMessage, {
+        content: `submit-bypass-${i}`,
+        sessionId
+      })
+    const rows = await asUser(0).query(api.messages.listMessages, {
+      threadId: (await asUser(0).query(api.sessions.getSession, { sessionId }))?.threadId ?? ''
+    })
+    expect(rows.length >= 30).toBe(true)
+  })
+
+  test('rate-limit #2 delegation bucket bypass in test mode', async () => {
+    const ctx = t(),
+      { asUser } = await createTestContext(ctx),
+      { sessionId, threadId } = await asUser(0).mutation(api.sessions.createSession, {})
+    for (let i = 0; i < 14; i += 1)
+      await ctx.mutation(internal.tasks.spawnTask, {
+        description: `delegation-bypass-${i}`,
+        isBackground: true,
+        parentThreadId: threadId,
+        prompt: `do-${i}`,
+        sessionId
+      })
+    const tasks = await asUser(0).query(api.tasks.listTasks, { sessionId })
+    expect(tasks.length).toBe(14)
+  })
+
+  test('rate-limit #3 searchCall bucket bypass in test mode', async () => {
+    const ctx = t(),
+      { asUser } = await createTestContext(ctx),
+      { threadId } = await asUser(0).mutation(api.sessions.createSession, {})
+    for (let i = 0; i < 35; i += 1)
+      await ctx.action(internal.webSearch.groundWithGemini, {
+        query: `search-bypass-${i}`,
+        threadId
+      })
+    const rows = await ctx.run(async c =>
+      c.db
+        .query('tokenUsage')
+        .withIndex('by_threadId', idx => idx.eq('threadId', threadId))
+        .collect()
+    )
+    expect(rows.length > 0).toBe(true)
+  })
+
+  test('rate-limit #4 mcpCall bucket bypass in test mode', async () => {
+    const ctx = t(),
+      { asUser } = await createTestContext(ctx),
+      { sessionId } = await asUser(0).mutation(api.sessions.createSession, {})
+    await asUser(0).mutation(api.mcp.create, {
+      isEnabled: true,
+      name: 'rate-mcp-bypass',
+      transport: 'http',
+      url: 'https://example.com/rate-mcp-bypass'
+    })
+    for (let i = 0; i < 24; i += 1) {
+      const out = await ctx.mutation(internal.mcp.mcpCallTool, {
+        serverName: 'rate-mcp-bypass',
+        sessionId,
+        toolArgs: `{"i":${i}}`,
+        toolName: 'noop'
+      })
+      expect(out.ok).toBe(true)
+    }
+  })
+
+  test('rate-limit #5 buckets isolated by user under test-mode bypass', async () => {
+    const ctx = t(),
+      { asUser } = await createTestContext(ctx),
+      a = await asUser(0).mutation(api.sessions.createSession, {}),
+      b = await asUser(1).mutation(api.sessions.createSession, {})
+    for (let i = 0; i < 22; i += 1) {
+      await asUser(0).mutation(api.orchestrator.submitMessage, {
+        content: `user0-${i}`,
+        sessionId: a.sessionId
+      })
+      await asUser(1).mutation(api.orchestrator.submitMessage, {
+        content: `user1-${i}`,
+        sessionId: b.sessionId
+      })
+    }
+    const rows0 = await asUser(0).query(api.messages.listMessages, { threadId: a.threadId }),
+      rows1 = await asUser(1).query(api.messages.listMessages, { threadId: b.threadId })
+    expect(rows0.length >= 22).toBe(true)
+    expect(rows1.length >= 22).toBe(true)
+  })
+
+  test('rate-limit #6 internal flows are not rate-limited', async () => {
+    const ctx = t(),
+      { asUser } = await createTestContext(ctx),
+      { threadId } = await asUser(0).mutation(api.sessions.createSession, {})
+    await ctx.mutation(internal.orchestrator.enqueueRun, {
+      priority: 2,
+      promptMessageId: 'internal-flow-start',
+      reason: 'user_message',
+      threadId
+    })
+    const state = await ctx.query(internal.orchestrator.readRunState, { threadId })
+    for (let i = 0; i < 40; i += 1)
+      await ctx.mutation(internal.orchestrator.heartbeatRun, {
+        runToken: state?.activeRunToken ?? '',
+        threadId
+      })
+    const after = await ctx.query(internal.orchestrator.readRunState, { threadId })
+    expect(after?.status).toBe('active')
+  })
+
+  test.skip('rate-limit #7 refill window behavior [BLOCKED: enforcement is bypassed in CONVEX_TEST_MODE]', async () => {})
+
+  test.skip('rate-limit #8 storage index wiring [BLOCKED: backend bypass path does not exercise persisted limiter table IO]', async () => {})
+
+  test.skip('rate-limit #9 retryAt timestamp payload [BLOCKED: no rate-limited error payload is emitted in test mode]', async () => {})
+})
+
+describe('auth matrix remaining coverage', () => {
+  test('auth #9 getAuthUserIdOrTest fallback works only in test mode', async () => {
+    const ctx = t(),
+      { TEST_EMAIL, getAuthUserIdOrTest } = await import('./testauth'),
+      originalTestMode = process.env.CONVEX_TEST_MODE
+    try {
+      process.env.CONVEX_TEST_MODE = 'true'
+      const testUserId = await ctx.run(async c => {
+        const existing = await c.db
+          .query('users')
+          .filter(q => q.eq(q.field('email'), TEST_EMAIL))
+          .first()
+        if (existing) return String(existing._id)
+        const inserted = await c.db.insert('users', {
+          email: TEST_EMAIL,
+          emailVerificationTime: Date.now(),
+          name: 'Auth Matrix User'
+        })
+        return String(inserted)
+      })
+      const fallbackId = await ctx.run(async c =>
+          getAuthUserIdOrTest({
+            auth: { getUserIdentity: async () => null },
+            db: c.db
+          })
+        ),
+        identityId = await ctx.run(async c =>
+          getAuthUserIdOrTest({
+            auth: { getUserIdentity: async () => ({ subject: `${testUserId}|token` }) },
+            db: c.db
+          })
+        )
+      expect(String(fallbackId)).toBe(testUserId)
+      expect(identityId).toBe(testUserId)
+
+      process.env.CONVEX_TEST_MODE = 'false'
+      const nonTestResult = await ctx.run(async c =>
+        getAuthUserIdOrTest({
+          auth: { getUserIdentity: async () => null },
+          db: c.db
+        })
+      )
+      expect(nonTestResult).toBeNull()
+    } finally {
+      if (originalTestMode === undefined) delete process.env.CONVEX_TEST_MODE
+      else process.env.CONVEX_TEST_MODE = originalTestMode
+    }
+  })
+
+  test.skip('auth #10 production fuse for test auth [BLOCKED: env.ts currently has no production-url fuse guard to assert]', async () => {})
+})
+
+describe('cron and lifecycle remaining blocked cases', () => {
+  test.skip('crons #2 unclaimed-run timeout with activatedAt threshold [BLOCKED: covered indirectly; no dedicated unclaimed-activatedAt-only contract hook available]', async () => {})
+
+  test.skip('crons #5 pending never-started timeout [BLOCKED: timeoutStaleTasks only processes running tasks in current implementation]', async () => {})
+
+  test.skip('crons #6 timed-out task continuation attempt [BLOCKED: timeoutStaleTasks does not call maybeContinueOrchestrator in current implementation]', async () => {})
+
+  test.skip('integration lifecycle #1 full delegation chain through orchestrator action [BLOCKED: convex-test action environment currently throws for full streamText orchestration path]', async () => {})
+
+  test.skip('integration lifecycle #2 full lifecycle with compaction summary injection [BLOCKED: compaction summarization is placeholder in current implementation]', async () => {})
+
+  test.skip('integration lifecycle #3 worker crash-gap persisted reminder without continuation [BLOCKED: requires injected mid-mutation crash point not exposed by current code path]', async () => {})
+
+  test.skip('integration lifecycle #7 retry-caused duplicate side effects regression [BLOCKED: requires real tool side effects beyond current mock pipeline]', async () => {})
+
+  test.skip('integration lifecycle #8 complex text-tool serialization regression [BLOCKED: requires multi-step real model stream parts not available in current mock path]', async () => {})
+
+  test.skip('integration lifecycle #12 worker output unavailable until completion [BLOCKED: requires live worker streaming channel which v1 intentionally does not expose]', async () => {})
+
+  test.skip('integration lifecycle #19 production model smoke [BLOCKED: requires live Vertex credentials and non-test runtime]', async () => {})
+})

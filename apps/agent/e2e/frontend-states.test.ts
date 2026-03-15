@@ -67,4 +67,18 @@ test.describe('Frontend States - final remaining coverage', () => {
     await page.waitForURL('/')
     await expect(page.getByRole('button', { name: /new/i })).toBeVisible()
   })
+
+  test('responsive flow works at 375px viewport', async ({ page, sessionListPage }) => {
+    await page.setViewportSize({ height: 812, width: 375 })
+    await sessionListPage.goto('/')
+    await expect(sessionListPage.getNewButton()).toBeVisible()
+    await sessionListPage.getNewButton().click()
+    await page.waitForURL(/\/chat\//u)
+    await expect(page.getByPlaceholder(/message/iu)).toBeVisible()
+    await expect(page.getByRole('button', { name: /send/iu })).toBeVisible()
+    await page.getByRole('link', { name: /settings/i }).click()
+    await page.waitForURL('/settings')
+    await expect(page.getByRole('heading', { name: /settings/i })).toBeVisible()
+    await expect(page.getByRole('heading', { name: /mcp servers/i })).toBeVisible()
+  })
 })

@@ -25,4 +25,6 @@ test.describe
       await page.goto('/chat/not-a-convex-id')
       await expect(page.getByText(/error|invalid|not found/iu).first()).toBeVisible()
     })
+
+    test.skip('rate-limit exceeded message [BLOCKED: backend rate limiting is intentionally bypassed in CONVEX_TEST_MODE]', async () => {})
   })

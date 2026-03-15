@@ -37,4 +37,20 @@ test.describe('Accessibility', () => {
     )
     expect(areSummaryTags).toBe(true)
   })
+
+  test('composer input and send button expose accessible roles', async ({ page, sessionListPage }) => {
+    await sessionListPage.goto('/')
+    await sessionListPage.getNewButton().click()
+    await page.waitForURL(/\/chat\//u)
+    await expect(page.getByRole('textbox', { name: /message the agent/i })).toBeVisible()
+    await expect(page.getByRole('button', { name: /send/i })).toBeVisible()
+  })
+
+  test('typing panel has polite live region and readable status text', async ({ page, sessionListPage }) => {
+    await sessionListPage.goto('/')
+    await sessionListPage.getNewButton().click()
+    await page.waitForURL(/\/chat\//u)
+    await expect(page.getByRole('log')).toHaveAttribute('aria-live', 'polite')
+    await expect(page.getByTestId('typing-panel')).toContainText(/idle|typing/iu)
+  })
 })
