@@ -1,0 +1,164 @@
+import { v } from 'convex/values'
+
+import type { Id } from './_generated/dataModel'
+import type { MutationCtx, QueryCtx } from './_generated/server'
+
+import { internalMutation, internalQuery } from './_generated/server'
+
+const LOCK_TTL_MS = 10 * 60 * 1000,
+  MESSAGE_THRESHOLD = 200,
+  CHAR_THRESHOLD = 100_000,
+  SCAN_LIMIT = 500,
+  hasTerminalToolParts = ({ parts }: { parts: { status?: 'error' | 'pending' | 'success'; type: string }[] }) => {
+    for (const p of parts) if (p.type === 'tool-call' && !(p.status === 'success' || p.status === 'error')) return false
+    return true
+  },
+  readRunStateByThreadId = async ({ ctx, threadId }: { ctx: Pick<QueryCtx, 'db'>; threadId: string }) =>
+    ctx.db
+      .query('threadRunState')
+      .withIndex('by_threadId', idx => idx.eq('threadId', threadId))
+      .unique(),
+  getContextSizeInline = async ({ ctx, threadId }: { ctx: Pick<QueryCtx, 'db'>; threadId: string }) => {
+    const runState = await readRunStateByThreadId({ ctx, threadId }),
+      rows = await ctx.db
+        .query('messages')
+        .withIndex('by_threadId', idx => idx.eq('threadId', threadId))
+        .order('desc')
+        .take(SCAN_LIMIT + 1),
+      hasMore = rows.length > SCAN_LIMIT,
+      selected = rows.slice(0, SCAN_LIMIT)
+    let charCount = runState?.compactionSummary?.length ?? 0
+    for (const m of selected) charCount += m.content.length
+    return { charCount, hasMore, messageCount: selected.length }
+  },
+  acquireCompactionLockInline = async ({ ctx, threadId }: { ctx: Pick<MutationCtx, 'db'>; threadId: string }) => {
+    const runState = await readRunStateByThreadId({ ctx, threadId })
+    if (!runState) return { lockToken: '', ok: false }
+    const now = Date.now(),
+      lockExpired = !!runState.compactionLockAt && now - runState.compactionLockAt > LOCK_TTL_MS,
+      lockOpen = !runState.compactionLock || !runState.compactionLockAt || lockExpired,
+      lockToken = crypto.randomUUID()
+    if (lockOpen) {
+      await ctx.db.patch(runState._id, {
+        compactionLock: lockToken,
+        compactionLockAt: now
+      })
+      return { lockToken, ok: true }
+    }
+    return { lockToken: runState.compactionLock ?? '', ok: false }
+  },
+  listClosedPrefixGroupsInline = async ({ ctx, threadId }: { ctx: Pick<QueryCtx, 'db'>; threadId: string }) => {
+    const runState = await readRunStateByThreadId({ ctx, threadId }),
+      rows = await ctx.db
+        .query('messages')
+        .withIndex('by_threadId', idx => idx.eq('threadId', threadId))
+        .order('asc')
+        .take(SCAN_LIMIT)
+    let boundaryCreationTime = Number.NEGATIVE_INFINITY
+    if (runState?.lastCompactedMessageId) {
+      const boundaryMessage = await ctx.db.get(runState.lastCompactedMessageId as Id<'messages'>)
+      if (boundaryMessage) boundaryCreationTime = boundaryMessage._creationTime
+    }
+    const groups: { endMessageId: string; messageIds: string[] }[] = []
+    for (const m of rows)
+      if (m._creationTime > boundaryCreationTime)
+        if (m.isComplete && hasTerminalToolParts({ parts: m.parts }))
+          groups.push({
+            endMessageId: String(m._id),
+            messageIds: [String(m._id)]
+          })
+        else break
+
+    return groups
+  },
+  releaseCompactionLockInline = async ({
+    ctx,
+    lockToken,
+    threadId
+  }: {
+    ctx: Pick<MutationCtx, 'db'>
+    lockToken: string
+    threadId: string
+  }) => {
+    const runState = await readRunStateByThreadId({ ctx, threadId })
+    if (runState?.compactionLock === lockToken)
+      await ctx.db.patch(runState._id, {
+        compactionLock: undefined,
+        compactionLockAt: undefined
+      })
+  },
+  getContextSize = internalQuery({
+    args: { threadId: v.string() },
+    handler: async (ctx, { threadId }) => getContextSizeInline({ ctx, threadId })
+  }),
+  acquireCompactionLock = internalMutation({
+    args: { threadId: v.string() },
+    handler: async (ctx, { threadId }) => acquireCompactionLockInline({ ctx, threadId })
+  }),
+  listClosedPrefixGroups = internalQuery({
+    args: { threadId: v.string() },
+    handler: async (ctx, { threadId }) => listClosedPrefixGroupsInline({ ctx, threadId })
+  }),
+  setCompactionSummary = internalMutation({
+    args: {
+      compactionSummary: v.string(),
+      lastCompactedMessageId: v.string(),
+      lockToken: v.string(),
+      threadId: v.string()
+    },
+    handler: async (ctx, { compactionSummary, lastCompactedMessageId, lockToken, threadId }) => {
+      const runState = await readRunStateByThreadId({ ctx, threadId })
+      if (!runState) return { ok: false }
+      if (runState.compactionLock !== lockToken) return { ok: false }
+      const nextBoundary = await ctx.db.get(lastCompactedMessageId as Id<'messages'>)
+      if (!nextBoundary || nextBoundary.threadId !== threadId) return { ok: false }
+      if (runState.lastCompactedMessageId) {
+        const currentBoundary = await ctx.db.get(runState.lastCompactedMessageId as Id<'messages'>)
+        if (!currentBoundary) return { ok: false }
+        if (nextBoundary._creationTime <= currentBoundary._creationTime) return { ok: false }
+      }
+      await ctx.db.patch(runState._id, {
+        compactionLock: undefined,
+        compactionLockAt: undefined,
+        compactionSummary,
+        lastCompactedMessageId
+      })
+      return { ok: true }
+    }
+  }),
+  compactIfNeeded = internalMutation({
+    args: { threadId: v.string() },
+    handler: async (ctx, { threadId }) => {
+      const contextSize = await getContextSizeInline({ ctx, threadId }),
+        overThreshold = contextSize.charCount > CHAR_THRESHOLD || contextSize.messageCount > MESSAGE_THRESHOLD
+      if (!overThreshold) return { compacted: false, reason: 'under_threshold' as const }
+      const lock = await acquireCompactionLockInline({ ctx, threadId })
+      if (!lock.ok) return { compacted: false, reason: 'lock_denied' as const }
+      const groups = await listClosedPrefixGroupsInline({ ctx, threadId })
+      if (groups.length === 0) {
+        await releaseCompactionLockInline({
+          ctx,
+          lockToken: lock.lockToken,
+          threadId
+        })
+        return { compacted: false, reason: 'no_closed_groups' as const }
+      }
+      console.log(
+        JSON.stringify({
+          charCount: contextSize.charCount,
+          groupCount: groups.length,
+          messageCount: contextSize.messageCount,
+          threadId,
+          type: 'compaction_placeholder'
+        })
+      )
+      await releaseCompactionLockInline({
+        ctx,
+        lockToken: lock.lockToken,
+        threadId
+      })
+      return { compacted: false, reason: 'placeholder' as const }
+    }
+  })
+
+export { acquireCompactionLock, compactIfNeeded, getContextSize, listClosedPrefixGroups, setCompactionSummary }

@@ -31,7 +31,10 @@ const reasonPriority = {
     'action',
     { promptMessageId?: string; runToken: string; threadId: string },
     undefined
-  >('orchestrator.node:runOrchestrator')
+  >('orchestrator.node:runOrchestrator'),
+  CLAIMED_STALE_MS = 15 * 60 * 1000,
+  UNCLAIMED_STALE_MS = 5 * 60 * 1000,
+  WALL_CLOCK_TIMEOUT_MS = 15 * 60 * 1000
 
 type EnqueueContext = Pick<MutationCtx, 'db' | 'scheduler'>
 type RunReason = 'task_completion' | 'todo_continuation' | 'user_message'
@@ -296,6 +299,71 @@ const readRunStateByThreadId = async ({ ctx, threadId }: { ctx: Pick<MutationCtx
       return { ok: true, shouldContinue: true }
     }
   }),
+  timeoutStaleRuns = internalMutation({
+    args: {},
+    handler: async ctx => {
+      const activeStates = await ctx.db
+          .query('threadRunState')
+          .withIndex('by_status', idx => idx.eq('status', 'active'))
+          .collect(),
+        now = Date.now()
+      for (const state of activeStates) {
+        const heartbeatBase = state.runHeartbeatAt ?? state.claimedAt ?? state.activatedAt,
+          claimedHeartbeatStale = state.runClaimed === true && !!heartbeatBase && now - heartbeatBase > CLAIMED_STALE_MS,
+          unclaimedStale = state.runClaimed !== true && !!state.activatedAt && now - state.activatedAt > UNCLAIMED_STALE_MS,
+          wallClockStale = !!state.activatedAt && now - state.activatedAt > WALL_CLOCK_TIMEOUT_MS,
+          isStale = claimedHeartbeatStale || unclaimedStale || wallClockStale
+        if (isStale) {
+          const queuedPromptMessageId = state.queuedPromptMessageId
+          if (queuedPromptMessageId) {
+            const session = await resolveSessionByThreadId({ ctx, threadId: state.threadId })
+            if (session?.status === 'archived')
+              await ctx.db.patch(state._id, {
+                activatedAt: undefined,
+                activeRunToken: undefined,
+                claimedAt: undefined,
+                queuedPriority: undefined,
+                queuedPromptMessageId: undefined,
+                queuedReason: undefined,
+                runClaimed: undefined,
+                runHeartbeatAt: undefined,
+                status: 'idle'
+              })
+            else {
+              const runToken = crypto.randomUUID()
+              await ctx.scheduler.runAfter(0, runOrchestratorRef, {
+                promptMessageId: queuedPromptMessageId,
+                runToken,
+                threadId: state.threadId
+              })
+              await ctx.db.patch(state._id, {
+                activatedAt: now,
+                activeRunToken: runToken,
+                claimedAt: undefined,
+                queuedPriority: undefined,
+                queuedPromptMessageId: undefined,
+                queuedReason: undefined,
+                runClaimed: false,
+                runHeartbeatAt: undefined,
+                status: 'active'
+              })
+            }
+          } else
+            await ctx.db.patch(state._id, {
+              activatedAt: undefined,
+              activeRunToken: undefined,
+              claimedAt: undefined,
+              queuedPriority: undefined,
+              queuedPromptMessageId: undefined,
+              queuedReason: undefined,
+              runClaimed: undefined,
+              runHeartbeatAt: undefined,
+              status: 'idle'
+            })
+        }
+      }
+    }
+  }),
   readRunState = internalQuery({
     args: { threadId: v.string() },
     handler: async (ctx, { threadId }) =>
@@ -435,5 +503,6 @@ export {
   readRunState,
   readSessionByThread,
   recordRunError,
-  submitMessage
+  submitMessage,
+  timeoutStaleRuns
 }
