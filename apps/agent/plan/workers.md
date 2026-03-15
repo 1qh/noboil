@@ -70,8 +70,8 @@ Message ordering uses Convex’s built-in `_creationTime` system field which is 
 1. `markRunning(taskId)` CAS (`pending -> running` only).
 2. Start heartbeat interval (`updateHeartbeat` every 30s).
 3. Build worker prompt context from `tasks.prompt` and thread messages.
-4. Call AI SDK v6 `generateText()` directly (worker usually does single-shot completion).
-5. On success: `completeTask(taskId, result)`.
+4. Call AI SDK v6 `streamText()` — workers stream their output in real-time to the worker thread, using the same `createAssistantMessage` → `patchStreamingMessage` → `finalizeMessage` mutation chain as the orchestrator. Frontend renders worker streams in the task panel via `useQuery(api.messages.listMessages, { threadId: task.threadId })`.
+5. On success: `completeTask(taskId, result)` with the finalized text.
 6. On error:
    - if transient and `retryCount < 3`: `scheduleRetry` (`running -> pending`)
    - else `failTask` (`running -> failed`)
@@ -82,7 +82,7 @@ flowchart TD
     S[runWorker action start] --> MR{markRunning ok?}
     MR -- no --> X[exit]
     MR -- yes --> HB[start heartbeat interval]
-    HB --> GEN[generateText worker turn]
+    HB --> GEN[streamText worker turn]
     GEN --> OK{success?}
     OK -- yes --> CT[completeTask]
     CT --> MC[maybeContinueOrchestrator]
@@ -495,7 +495,7 @@ const runWorker = internalAction({
         threadId: args.threadId
       })
 
-      const { generateText } = await import('ai')
+      const { streamText } = await import('ai')
       const model = await getModel()
 
       const context = await ctx.db
@@ -511,7 +511,7 @@ const runWorker = internalAction({
 
       // Worker context is built via the same `buildModelMessages` serializer as the orchestrator.
 
-      const result = await generateText({
+      const result = await streamText({
         maxSteps: WORKER_RUNTIME_CONFIG.maxSteps,
         messages,
         model,
@@ -541,8 +541,7 @@ const runWorker = internalAction({
         return
       }
 
-      const text = result.text ?? ''
-      // After `generateText` completes, the worker persists the final result as an assistant message with `parts` populated from the AI SDK response steps. If the worker called tools during its turn (webSearch, mcpCall), those tool calls and results are captured in `parts` just like orchestrator messages. The `content` field contains the final text output. This ensures worker-thread messages are viewable in the task panel with full tool-call history, and the `buildModelMessages` serializer works identically for worker threads.
+      // Workers use `streamText` (streaming) so their output is visible in real-time via the task panel. Worker messages are persisted to the worker's own thread using the same `createAssistantMessage` → `patchStreamingMessage` → `finalizeMessage` mutation chain as the orchestrator. The frontend subscribes to worker-thread messages via `useQuery(api.messages.listMessages, { threadId: task.threadId })` and renders streaming content alongside the orchestrator's output.
       await ctx.db.insert('messages', {
         content: text,
         isComplete: true,

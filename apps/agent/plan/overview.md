@@ -1,12 +1,45 @@
 # Agent Harness — Implementation Plan
 
-A web-based AI agent harness inspired by [oh-my-openagent](https://github.com/code-yeongyu/oh-my-openagent) (commit `5073efe`), built on the noboil monorepo with Convex + AI SDK v6 + Gemini 2.5 Flash. No vendor lock-in — uses AI SDK directly with our own Convex tables instead of third-party agent components.
+A simplified web version of oh-my-openagent ([commit `5073efe`](https://github.com/code-yeongyu/oh-my-openagent)), built on the noboil monorepo with Convex + AI SDK v6 + Gemini 2.5 Flash. Not a coding agent — a general-purpose agent harness for the web. No vendor lock-in — uses AI SDK directly with our own Convex tables.
 
-After the app works, generic building blocks will be extracted into `@noboil/agent` as a publishable library.
+After the app works, generic building blocks will be extracted into `@noboil/agent` as a publishable library for anyone to build their own web-based agent harness with maximum customizability.
+
+## #1 Priority: Real-Time Streaming
+
+**Everything the orchestrator and subagents do MUST stream to the frontend in real-time**, just like how opencode works. Users see each agent's stream in the same UI simultaneously. This is the single most important feature — without it, the UX gap with oh-my-openagent is unacceptable.
+
+This means:
+- Orchestrator streams text + tool calls + reasoning to the chat UI via `streamText` → `patchStreamingMessage` → reactive `useQuery`
+- Workers ALSO stream (not single-shot `generateText`) — their output appears in real-time in the task panel within the chat
+- Tool execution status (pending → running → completed) updates live
+- Background task progress visible inline
+- All of this uses Convex reactive queries — no polling, no WebSocket management
+
+## Priority Checklist
+
+| Priority | Feature | Status |
+|---|---|---|
+| P0 | Real-time streaming (orchestrator + workers) | ✅ Backend, 🔄 Frontend |
+| P0 | Multi-stream UI (see all agents simultaneously) | 🔄 In progress |
+| P0 | ai-elements components (Conversation, Message, Tool, Reasoning, Sources) | 🔄 In progress |
+| P1 | Parallel sync/async/background tasks | ✅ |
+| P1 | Multiple agent delegation | ✅ |
+| P1 | System reminders (task completion, todo continuation) | ✅ |
+| P1 | Non-blocking conversation during task execution | ✅ |
+| P1 | Todo list with auto-continuation | ✅ |
+| P1 | Stagnation detection (from oh-my-openagent) | ✅ |
+| P1 | Continuation cooldown with exponential backoff | ✅ |
+| P2 | Search via Gemini grounding search | ✅ Backend stub |
+| P2 | MCP server management | ✅ |
+| P2 | Token usage tracking | ✅ |
+| P2 | Message compaction | ✅ |
+| P2 | Task reminder injection (from oh-my-openagent) | ✅ |
+| P2 | Delegate retry guidance (from oh-my-openagent) | ✅ |
+| P2 | Compaction todo preservation (from oh-my-openagent) | ✅ |
 
 ## Motivation
 
-oh-my-openagent is a powerful CLI-based agent harness. We want the same capabilities — parallel tasks, delegation, MCP, streaming, compaction — but for the web, built on our own infrastructure with full control over data and no dependency coupling.
+oh-my-openagent is a powerful CLI-based agent harness. We want the same capabilities — parallel tasks, delegation, MCP, streaming, compaction — but for the web, built on our own infrastructure with full control over data and no dependency coupling. The UI should leverage shadcn and ai-elements components for a polished experience.
 
 ## Table of Contents
 
@@ -52,7 +85,7 @@ graph TB
     API -->|enqueue run| ORCH
     ORCH -->|spawn tasks| WORK
     ORCH -->|streamText| GEMINI
-    WORK -->|generateText| GEMINI
+    WORK -->|streamText| GEMINI
     ORCH -->|callTool| MCP_S
     WORK -->|callTool| MCP_S
     ORCH -->|read/write| DB
@@ -90,7 +123,7 @@ sequenceDiagram
     FE-->>U: Real-time updates via useQuery
 ```
 
-Worker output is available via the task panel after completion. Workers use `generateText` (single-shot, non-streaming) — their results are retrieved via the `taskOutput` tool, not streamed in real-time. This is an intentional v1 simplification; v2 can add worker streaming for live progress visibility.
+Workers use `streamText` (streaming) so their output is visible in real-time via the task panel. Worker messages are persisted to the worker's own thread using the same `createAssistantMessage` → `patchStreamingMessage` → `finalizeMessage` mutation chain as the orchestrator. The frontend subscribes to worker-thread messages via `useQuery(api.messages.listMessages, { threadId: task.threadId })` and renders streaming content alongside the orchestrator's output.
 
 ## Capabilities
 
