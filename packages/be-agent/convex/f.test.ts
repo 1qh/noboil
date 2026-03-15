@@ -1851,3 +1851,694 @@ describe('auth ownership', () => {
     expect(otherTask).toBeNull()
   })
 })
+
+describe('edge cases', () => {
+  test('archive blocks new messages', async () => {
+    const ctx = t(),
+      { asUser } = await createTestContext(ctx),
+      { sessionId } = await asUser(0).mutation(api.sessions.createSession, {})
+    await asUser(0).mutation(api.sessions.archiveSession, { sessionId })
+    let threw = false
+    try {
+      await asUser(0).mutation(api.orchestrator.submitMessage, {
+        content: 'blocked-after-archive',
+        sessionId
+      })
+    } catch (error) {
+      threw = true
+      expect(String(error)).toContain('session_archived')
+    }
+    expect(threw).toBe(true)
+  })
+
+  test('auto-continue streak cap rejects at 5', async () => {
+    const ctx = t(),
+      { asUser } = await createTestContext(ctx),
+      { threadId } = await asUser(0).mutation(api.sessions.createSession, {})
+    await ctx.mutation(internal.orchestrator.enqueueRun, {
+      priority: 2,
+      promptMessageId: 'prompt-start',
+      reason: 'user_message',
+      threadId
+    })
+    await ctx.run(async c => {
+      const runState = await c.db
+        .query('threadRunState')
+        .withIndex('by_threadId', idx => idx.eq('threadId', threadId))
+        .unique()
+      if (runState) await c.db.patch(runState._id, { autoContinueStreak: 5 })
+    })
+    const result = await ctx.mutation(internal.orchestrator.enqueueRun, {
+      incrementStreak: true,
+      priority: 0,
+      promptMessageId: 'prompt-next',
+      reason: 'todo_continuation',
+      threadId
+    })
+    expect(result.ok).toBe(false)
+    expect(result.reason).toBe('streak_cap')
+  })
+
+  test('cancelled task transition writes no reminder', async () => {
+    const ctx = t(),
+      { asUser } = await createTestContext(ctx),
+      { sessionId, threadId: parentThreadId } = await asUser(0).mutation(api.sessions.createSession, {}),
+      taskId = await ctx.run(async c =>
+        c.db.insert('tasks', {
+          description: 'cancel-me',
+          isBackground: true,
+          parentThreadId,
+          prompt: 'cancel-me',
+          retryCount: 0,
+          sessionId,
+          startedAt: Date.now(),
+          status: 'running',
+          threadId: 'worker-thread-cancel-no-reminder'
+        })
+      )
+    await ctx.run(async c => {
+      await c.db.patch(sessionId, { status: 'archived' })
+    })
+    const result = await ctx.mutation(internal.tasks.scheduleRetry, { taskId }),
+      task = await ctx.run(async c => c.db.get(taskId)),
+      reminders = await ctx.run(async c =>
+        c.db
+          .query('messages')
+          .withIndex('by_threadId', idx => idx.eq('threadId', parentThreadId))
+          .collect()
+      )
+    expect(result.ok).toBe(false)
+    expect(task?.status).toBe('cancelled')
+    expect(task?.completionReminderMessageId).toBeUndefined()
+    expect(reminders.length).toBe(0)
+  })
+
+  test('cleanupStaleMessages terminalizes pending tool-call parts', async () => {
+    const ctx = t(),
+      { asUser } = await createTestContext(ctx),
+      { threadId } = await asUser(0).mutation(api.sessions.createSession, {}),
+      originalNow = Date.now,
+      baseNow = Date.now(),
+      { messageId, result } = await (async () => {
+        try {
+          Date.now = () => baseNow
+          const id = await ctx.run(async c =>
+            c.db.insert('messages', {
+              content: '',
+              isComplete: false,
+              parts: [
+                { args: '{}', status: 'pending', toolCallId: 'call-pending', toolName: 'tool-a', type: 'tool-call' },
+                { args: '{}', result: 'ok', status: 'success', toolCallId: 'call-ok', toolName: 'tool-b', type: 'tool-call' }
+              ],
+              role: 'assistant',
+              streamingContent: 'partial',
+              threadId
+            })
+          )
+          Date.now = () => baseNow + 6 * 60 * 1000
+          const cleanupResult = await ctx.mutation(internal.staleTaskCleanup.cleanupStaleMessages, {})
+          return { messageId: id, result: cleanupResult }
+        } finally {
+          Date.now = originalNow
+        }
+      })()
+    const message = await ctx.run(async c => c.db.get(messageId)),
+      pendingPart = message?.parts.find(p => p.type === 'tool-call' && p.toolCallId === 'call-pending'),
+      successPart = message?.parts.find(p => p.type === 'tool-call' && p.toolCallId === 'call-ok')
+    expect(result.cleanedCount).toBe(1)
+    expect(message?.isComplete).toBe(true)
+    expect(pendingPart?.status).toBe('error')
+    expect(pendingPart?.result).toBe('Interrupted: agent run terminated before tool completion')
+    expect(successPart?.status).toBe('success')
+    expect(successPart?.result).toBe('ok')
+  })
+
+  test('failed task writes terminal reminder with failed prefix', async () => {
+    const ctx = t(),
+      { asUser } = await createTestContext(ctx),
+      { sessionId, threadId: parentThreadId } = await asUser(0).mutation(api.sessions.createSession, {}),
+      taskId = await ctx.run(async c =>
+        c.db.insert('tasks', {
+          description: 'fail-with-prefix',
+          isBackground: true,
+          parentThreadId,
+          retryCount: 0,
+          sessionId,
+          startedAt: Date.now(),
+          status: 'running',
+          threadId: 'worker-thread-fail-prefix'
+        })
+      )
+    await ctx.run(async c => {
+      await c.db.patch(sessionId, { status: 'archived' })
+    })
+    await ctx.mutation(internal.tasks.failTask, { lastError: 'boom', taskId })
+    const task = await ctx.run(async c => c.db.get(taskId)),
+      reminder = await ctx.run(async c => {
+        const rows = await c.db
+          .query('messages')
+          .withIndex('by_threadId', idx => idx.eq('threadId', parentThreadId))
+          .collect()
+        return rows.find(m => String(m._id) === task?.completionReminderMessageId)
+      })
+    expect(reminder?.content.includes('[BACKGROUND TASK FAILED]')).toBe(true)
+  })
+
+  test('worker timeout fencing rejects completeTask after timed_out', async () => {
+    const ctx = t(),
+      { asUser } = await createTestContext(ctx),
+      { sessionId, threadId: parentThreadId } = await asUser(0).mutation(api.sessions.createSession, {}),
+      taskId = await ctx.run(async c =>
+        c.db.insert('tasks', {
+          description: 'timeout-fence',
+          heartbeatAt: Date.now() - 6 * 60 * 1000,
+          isBackground: true,
+          parentThreadId,
+          retryCount: 0,
+          sessionId,
+          startedAt: Date.now() - 7 * 60 * 1000,
+          status: 'running',
+          threadId: 'worker-thread-timeout-fence'
+        })
+      )
+    await ctx.mutation(internal.staleTaskCleanup.timeoutStaleTasks, {})
+    const completeResult = await ctx.mutation(internal.tasks.completeTask, { result: 'late result', taskId }),
+      task = await ctx.run(async c => c.db.get(taskId))
+    expect(task?.status).toBe('timed_out')
+    expect(completeResult.ok).toBe(false)
+  })
+
+  test('compaction excludes incomplete message from closed prefix', async () => {
+    const ctx = t(),
+      { asUser } = await createTestContext(ctx),
+      { sessionId, threadId } = await asUser(0).mutation(api.sessions.createSession, {})
+    const completeId = await ctx.run(async c =>
+      c.db.insert('messages', {
+        content: 'complete-before-incomplete',
+        isComplete: true,
+        parts: [],
+        role: 'assistant',
+        sessionId,
+        threadId
+      })
+    )
+    await ctx.run(async c => {
+      await c.db.insert('messages', {
+        content: 'incomplete',
+        isComplete: false,
+        parts: [],
+        role: 'assistant',
+        sessionId,
+        streamingContent: 'draft',
+        threadId
+      })
+    })
+    const groups = await ctx.query(internal.compaction.listClosedPrefixGroups, { threadId })
+    expect(groups.length).toBe(1)
+    expect(groups[0]?.endMessageId).toBe(String(completeId))
+  })
+})
+
+describe('stale run recovery', () => {
+  test('timeoutStaleRuns marks stale heartbeat run and rotates token', async () => {
+    const ctx = t(),
+      { asUser } = await createTestContext(ctx),
+      { sessionId, threadId } = await asUser(0).mutation(api.sessions.createSession, {})
+    const queuedPromptId = await ctx.run(async c =>
+      c.db.insert('messages', {
+        content: 'queued',
+        isComplete: true,
+        parts: [{ text: 'queued', type: 'text' }],
+        role: 'system',
+        sessionId,
+        threadId
+      })
+    )
+    await ctx.mutation(internal.orchestrator.enqueueRun, {
+      priority: 2,
+      promptMessageId: 'prompt-start',
+      reason: 'user_message',
+      threadId
+    })
+    const before = await ctx.run(async c =>
+      c.db
+        .query('threadRunState')
+        .withIndex('by_threadId', idx => idx.eq('threadId', threadId))
+        .unique()
+    )
+    await ctx.run(async c => {
+      const current = await c.db
+        .query('threadRunState')
+        .withIndex('by_threadId', idx => idx.eq('threadId', threadId))
+        .unique()
+      if (current)
+        await c.db.patch(current._id, {
+          activatedAt: Date.now() - 2 * 60 * 1000,
+          claimedAt: Date.now() - 16 * 60 * 1000,
+          queuedPriority: 'task_completion',
+          queuedPromptMessageId: String(queuedPromptId),
+          queuedReason: 'task_completion',
+          runClaimed: true,
+          runHeartbeatAt: Date.now() - 16 * 60 * 1000,
+          status: 'active'
+        })
+    })
+    await ctx.mutation(internal.orchestrator.timeoutStaleRuns, {})
+    const after = await ctx.run(async c =>
+      c.db
+        .query('threadRunState')
+        .withIndex('by_threadId', idx => idx.eq('threadId', threadId))
+        .unique()
+    )
+    expect(after?.status).toBe('active')
+    expect(after?.activeRunToken).toBeDefined()
+    expect(after?.activeRunToken).not.toBe(before?.activeRunToken)
+  })
+
+  test('timeoutStaleRuns respects wall-clock cap despite fresh heartbeat', async () => {
+    const ctx = t(),
+      { asUser } = await createTestContext(ctx),
+      { sessionId, threadId } = await asUser(0).mutation(api.sessions.createSession, {})
+    const queuedPromptId = await ctx.run(async c =>
+      c.db.insert('messages', {
+        content: 'queued-wall-clock',
+        isComplete: true,
+        parts: [{ text: 'queued-wall-clock', type: 'text' }],
+        role: 'system',
+        sessionId,
+        threadId
+      })
+    )
+    await ctx.mutation(internal.orchestrator.enqueueRun, {
+      priority: 2,
+      promptMessageId: 'prompt-start',
+      reason: 'user_message',
+      threadId
+    })
+    const before = await ctx.run(async c =>
+      c.db
+        .query('threadRunState')
+        .withIndex('by_threadId', idx => idx.eq('threadId', threadId))
+        .unique()
+    )
+    await ctx.run(async c => {
+      const current = await c.db
+        .query('threadRunState')
+        .withIndex('by_threadId', idx => idx.eq('threadId', threadId))
+        .unique()
+      if (current)
+        await c.db.patch(current._id, {
+          activatedAt: Date.now() - 16 * 60 * 1000,
+          claimedAt: Date.now() - 16 * 60 * 1000,
+          queuedPriority: 'task_completion',
+          queuedPromptMessageId: String(queuedPromptId),
+          queuedReason: 'task_completion',
+          runClaimed: true,
+          runHeartbeatAt: Date.now(),
+          status: 'active'
+        })
+    })
+    await ctx.mutation(internal.orchestrator.timeoutStaleRuns, {})
+    const after = await ctx.run(async c =>
+      c.db
+        .query('threadRunState')
+        .withIndex('by_threadId', idx => idx.eq('threadId', threadId))
+        .unique()
+    )
+    expect(after?.status).toBe('active')
+    expect(after?.activeRunToken).toBeDefined()
+    expect(after?.activeRunToken).not.toBe(before?.activeRunToken)
+  })
+
+  test('timeoutStaleRuns drains queue on timeout and schedules new token', async () => {
+    const ctx = t(),
+      { asUser } = await createTestContext(ctx),
+      { sessionId, threadId } = await asUser(0).mutation(api.sessions.createSession, {})
+    const queuedPromptId = await ctx.run(async c =>
+      c.db.insert('messages', {
+        content: 'queued-drain',
+        isComplete: true,
+        parts: [{ text: 'queued-drain', type: 'text' }],
+        role: 'system',
+        sessionId,
+        threadId
+      })
+    )
+    await ctx.mutation(internal.orchestrator.enqueueRun, {
+      priority: 2,
+      promptMessageId: 'prompt-start',
+      reason: 'user_message',
+      threadId
+    })
+    const before = await ctx.run(async c =>
+      c.db
+        .query('threadRunState')
+        .withIndex('by_threadId', idx => idx.eq('threadId', threadId))
+        .unique()
+    )
+    await ctx.run(async c => {
+      const current = await c.db
+        .query('threadRunState')
+        .withIndex('by_threadId', idx => idx.eq('threadId', threadId))
+        .unique()
+      if (current)
+        await c.db.patch(current._id, {
+          activatedAt: Date.now() - 6 * 60 * 1000,
+          queuedPriority: 'task_completion',
+          queuedPromptMessageId: String(queuedPromptId),
+          queuedReason: 'task_completion',
+          runClaimed: false,
+          status: 'active'
+        })
+    })
+    await ctx.mutation(internal.orchestrator.timeoutStaleRuns, {})
+    const after = await ctx.run(async c =>
+      c.db
+        .query('threadRunState')
+        .withIndex('by_threadId', idx => idx.eq('threadId', threadId))
+        .unique()
+    )
+    expect(after?.status).toBe('active')
+    expect(after?.activeRunToken).toBeDefined()
+    expect(after?.activeRunToken).not.toBe(before?.activeRunToken)
+    expect(after?.queuedPromptMessageId).toBeUndefined()
+    expect(after?.queuedReason).toBeUndefined()
+  })
+
+  test('timeoutStaleRuns resets to idle when no queue', async () => {
+    const ctx = t(),
+      { asUser } = await createTestContext(ctx),
+      { threadId } = await asUser(0).mutation(api.sessions.createSession, {})
+    await ctx.mutation(internal.orchestrator.enqueueRun, {
+      priority: 2,
+      promptMessageId: 'prompt-start',
+      reason: 'user_message',
+      threadId
+    })
+    await ctx.run(async c => {
+      const current = await c.db
+        .query('threadRunState')
+        .withIndex('by_threadId', idx => idx.eq('threadId', threadId))
+        .unique()
+      if (current)
+        await c.db.patch(current._id, {
+          activatedAt: Date.now() - 6 * 60 * 1000,
+          runClaimed: false,
+          status: 'active'
+        })
+    })
+    await ctx.mutation(internal.orchestrator.timeoutStaleRuns, {})
+    const after = await ctx.run(async c =>
+      c.db
+        .query('threadRunState')
+        .withIndex('by_threadId', idx => idx.eq('threadId', threadId))
+        .unique()
+    )
+    expect(after?.status).toBe('idle')
+    expect(after?.activeRunToken).toBeUndefined()
+  })
+
+  test('timeoutStaleRuns skips archived sessions from rescheduling', async () => {
+    const ctx = t(),
+      { asUser } = await createTestContext(ctx),
+      { sessionId, threadId } = await asUser(0).mutation(api.sessions.createSession, {})
+    const queuedPromptId = await ctx.run(async c =>
+      c.db.insert('messages', {
+        content: 'queued-archived',
+        isComplete: true,
+        parts: [{ text: 'queued-archived', type: 'text' }],
+        role: 'system',
+        sessionId,
+        threadId
+      })
+    )
+    await ctx.mutation(internal.orchestrator.enqueueRun, {
+      priority: 2,
+      promptMessageId: 'prompt-start',
+      reason: 'user_message',
+      threadId
+    })
+    await ctx.run(async c => {
+      const current = await c.db
+        .query('threadRunState')
+        .withIndex('by_threadId', idx => idx.eq('threadId', threadId))
+        .unique()
+      if (current)
+        await c.db.patch(current._id, {
+          activatedAt: Date.now() - 6 * 60 * 1000,
+          queuedPriority: 'task_completion',
+          queuedPromptMessageId: String(queuedPromptId),
+          queuedReason: 'task_completion',
+          runClaimed: false,
+          status: 'active'
+        })
+      await c.db.patch(sessionId, { status: 'archived' })
+    })
+    await ctx.mutation(internal.orchestrator.timeoutStaleRuns, {})
+    const after = await ctx.run(async c =>
+      c.db
+        .query('threadRunState')
+        .withIndex('by_threadId', idx => idx.eq('threadId', threadId))
+        .unique()
+    )
+    expect(after?.status).toBe('idle')
+    expect(after?.activeRunToken).toBeUndefined()
+    expect(after?.queuedPromptMessageId).toBeUndefined()
+  })
+})
+
+describe('implementation details', () => {
+  test('getModel returns mock model in test mode', async () => {
+    const { getModel } = await import('../ai'),
+      model = await getModel()
+    expect(model.modelId).toBe('mock-model')
+  })
+
+  test('mock model returns text part when no tools', async () => {
+    const { mockModel } = await import('../models.mock'),
+      result = await mockModel.doGenerate({ tools: undefined })
+    expect(result.finishReason).toBe('stop')
+    expect(result.content[0]?.type).toBe('text')
+  })
+
+  test('mock model returns tool-call when tools provided', async () => {
+    const { mockModel } = await import('../models.mock'),
+      result = await mockModel.doGenerate({ tools: [{ name: 'delegate' }] })
+    expect(result.finishReason).toBe('tool-calls')
+    expect(result.content[0]?.type).toBe('tool-call')
+  })
+
+  test('buildTaskCompletionReminder output format includes completion prefix', async () => {
+    const { buildTaskCompletionReminder } = await import('./tasks'),
+      output = buildTaskCompletionReminder({ description: 'done task', taskId: 'task-1' })
+    expect(output.includes('[BACKGROUND TASK COMPLETED]')).toBe(true)
+  })
+
+  test('buildTaskTerminalReminder output format includes failed prefix', async () => {
+    const { buildTaskTerminalReminder } = await import('./tasks'),
+      output = buildTaskTerminalReminder({
+        description: 'failed task',
+        error: 'bad',
+        status: 'failed',
+        taskId: 'task-2'
+      })
+    expect(output.includes('[BACKGROUND TASK FAILED]')).toBe(true)
+  })
+
+  test('orchestrator system prompt is non-empty', async () => {
+    const { ORCHESTRATOR_SYSTEM_PROMPT } = await import('../prompts')
+    expect(typeof ORCHESTRATOR_SYSTEM_PROMPT).toBe('string')
+    expect(ORCHESTRATOR_SYSTEM_PROMPT.length).toBeGreaterThan(0)
+  })
+
+  test('worker system prompt is non-empty', async () => {
+    const { WORKER_SYSTEM_PROMPT } = await import('../prompts')
+    expect(typeof WORKER_SYSTEM_PROMPT).toBe('string')
+    expect(WORKER_SYSTEM_PROMPT.length).toBeGreaterThan(0)
+  })
+})
+
+describe('integration lifecycle', () => {
+  test('full retention chain deletes session and related rows', async () => {
+    const ctx = t(),
+      { asUser } = await createTestContext(ctx),
+      { sessionId, threadId } = await asUser(0).mutation(api.sessions.createSession, {})
+    await ctx.run(async c => {
+      await c.db.insert('messages', {
+        content: 'session message',
+        isComplete: true,
+        parts: [{ text: 'session message', type: 'text' }],
+        role: 'assistant',
+        sessionId,
+        threadId
+      })
+      await c.db.insert('todos', {
+        content: 'todo',
+        position: 0,
+        priority: 'high',
+        sessionId,
+        status: 'pending'
+      })
+      await c.db.insert('tokenUsage', {
+        agentName: 'main',
+        inputTokens: 1,
+        model: 'gpt-test',
+        outputTokens: 1,
+        provider: 'openai',
+        sessionId,
+        threadId,
+        totalTokens: 2
+      })
+      await c.db.insert('tasks', {
+        description: 'worker',
+        isBackground: true,
+        parentThreadId: threadId,
+        retryCount: 0,
+        sessionId,
+        status: 'completed',
+        threadId: 'worker-thread-integration-chain'
+      })
+      await c.db.insert('messages', {
+        content: 'worker message',
+        isComplete: true,
+        parts: [{ text: 'worker message', type: 'text' }],
+        role: 'assistant',
+        sessionId,
+        threadId: 'worker-thread-integration-chain'
+      })
+      await c.db.patch(sessionId, { lastActivityAt: Date.now() - 8 * 24 * 60 * 60 * 1000 })
+    })
+    await ctx.mutation(internal.retention.archiveIdleSessions, {})
+    const idleSession = await ctx.run(async c => c.db.get(sessionId))
+    expect(idleSession?.status).toBe('idle')
+    await ctx.mutation(internal.retention.archiveIdleSessions, {})
+    const archivedSession = await ctx.run(async c => c.db.get(sessionId))
+    expect(archivedSession?.status).toBe('archived')
+    await ctx.run(async c => {
+      await c.db.patch(sessionId, {
+        archivedAt: Date.now() - 181 * 24 * 60 * 60 * 1000,
+        lastActivityAt: Date.now() - 181 * 24 * 60 * 60 * 1000,
+        status: 'archived'
+      })
+    })
+    const cleanup = await ctx.mutation(internal.retention.cleanupArchivedSessions, {}),
+      session = await ctx.run(async c => c.db.get(sessionId)),
+      sessionMessages = await ctx.run(async c =>
+        c.db
+          .query('messages')
+          .withIndex('by_threadId', idx => idx.eq('threadId', threadId))
+          .collect()
+      ),
+      workerMessages = await ctx.run(async c =>
+        c.db
+          .query('messages')
+          .withIndex('by_threadId', idx => idx.eq('threadId', 'worker-thread-integration-chain'))
+          .collect()
+      )
+    expect(cleanup.deletedCount).toBe(1)
+    expect(session).toBeNull()
+    expect(sessionMessages.length).toBe(0)
+    expect(workerMessages.length).toBe(0)
+  })
+
+  test('post-cleanup has no orphan rows for deleted session', async () => {
+    const ctx = t(),
+      { asUser } = await createTestContext(ctx),
+      { sessionId, threadId } = await asUser(0).mutation(api.sessions.createSession, {}),
+      workerThreadId = 'worker-thread-orphan-check'
+    await ctx.run(async c => {
+      await c.db.insert('messages', {
+        content: 'session message',
+        isComplete: true,
+        parts: [{ text: 'session message', type: 'text' }],
+        role: 'assistant',
+        sessionId,
+        threadId
+      })
+      await c.db.insert('tasks', {
+        description: 'task',
+        isBackground: true,
+        parentThreadId: threadId,
+        retryCount: 0,
+        sessionId,
+        status: 'completed',
+        threadId: workerThreadId
+      })
+      await c.db.insert('messages', {
+        content: 'worker message',
+        isComplete: true,
+        parts: [{ text: 'worker message', type: 'text' }],
+        role: 'assistant',
+        sessionId,
+        threadId: workerThreadId
+      })
+      await c.db.insert('todos', {
+        content: 'todo',
+        position: 0,
+        priority: 'medium',
+        sessionId,
+        status: 'pending'
+      })
+      await c.db.insert('tokenUsage', {
+        agentName: 'main',
+        inputTokens: 2,
+        model: 'gpt-test',
+        outputTokens: 3,
+        provider: 'openai',
+        sessionId,
+        threadId,
+        totalTokens: 5
+      })
+      await c.db.patch(sessionId, {
+        archivedAt: Date.now() - 181 * 24 * 60 * 60 * 1000,
+        lastActivityAt: Date.now() - 181 * 24 * 60 * 60 * 1000,
+        status: 'archived'
+      })
+    })
+    await ctx.mutation(internal.retention.cleanupArchivedSessions, {})
+    const session = await ctx.run(async c => c.db.get(sessionId)),
+      runState = await ctx.run(async c =>
+        c.db
+          .query('threadRunState')
+          .withIndex('by_threadId', idx => idx.eq('threadId', threadId))
+          .collect()
+      ),
+      messages = await ctx.run(async c =>
+        c.db
+          .query('messages')
+          .withIndex('by_threadId', idx => idx.eq('threadId', threadId))
+          .collect()
+      ),
+      workerMessages = await ctx.run(async c =>
+        c.db
+          .query('messages')
+          .withIndex('by_threadId', idx => idx.eq('threadId', workerThreadId))
+          .collect()
+      ),
+      tasks = await ctx.run(async c =>
+        c.db
+          .query('tasks')
+          .withIndex('by_session', idx => idx.eq('sessionId', sessionId))
+          .collect()
+      ),
+      todos = await ctx.run(async c =>
+        c.db
+          .query('todos')
+          .withIndex('by_session_position', idx => idx.eq('sessionId', sessionId))
+          .collect()
+      ),
+      tokenUsage = await ctx.run(async c =>
+        c.db
+          .query('tokenUsage')
+          .withIndex('by_session', idx => idx.eq('sessionId', sessionId))
+          .collect()
+      )
+    expect(session).toBeNull()
+    expect(runState.length).toBe(0)
+    expect(messages.length).toBe(0)
+    expect(workerMessages.length).toBe(0)
+    expect(tasks.length).toBe(0)
+    expect(todos.length).toBe(0)
+    expect(tokenUsage.length).toBe(0)
+  })
+})
