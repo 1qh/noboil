@@ -36,7 +36,7 @@ const LOCK_TTL_MS = 10 * 60 * 1000,
     if (!runState) return { lockToken: '', ok: false }
     const now = Date.now(),
       lockExpired = !!runState.compactionLockAt && now - runState.compactionLockAt > LOCK_TTL_MS,
-      lockOpen = !runState.compactionLock || !runState.compactionLockAt || lockExpired,
+      lockOpen = !(runState.compactionLock && runState.compactionLockAt) || lockExpired,
       lockToken = crypto.randomUUID()
     if (lockOpen) {
       await ctx.db.patch(runState._id, {

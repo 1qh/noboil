@@ -57,7 +57,8 @@ const FIVE_MINUTES_MS = 5 * 60 * 1000,
           .collect()
         for (const m of messages)
           if (!m.isComplete && m._creationTime < staleBefore) {
-            const nextContent = m.streamingContent && m.streamingContent.length > 0 ? m.streamingContent : INTERRUPTED_TEXT,
+            const nextContent =
+                m.streamingContent && m.streamingContent.length > 0 ? m.streamingContent : INTERRUPTED_TEXT,
               nextParts: typeof m.parts = []
             for (const p of m.parts)
               if (p.type === 'tool-call' && p.status === 'pending')

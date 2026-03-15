@@ -310,7 +310,8 @@ const readRunStateByThreadId = async ({ ctx, threadId }: { ctx: Pick<MutationCtx
       for (const state of activeStates) {
         const heartbeatBase = state.runHeartbeatAt ?? state.claimedAt ?? state.activatedAt,
           claimedHeartbeatStale = state.runClaimed === true && !!heartbeatBase && now - heartbeatBase > CLAIMED_STALE_MS,
-          unclaimedStale = state.runClaimed !== true && !!state.activatedAt && now - state.activatedAt > UNCLAIMED_STALE_MS,
+          unclaimedStale =
+            state.runClaimed !== true && !!state.activatedAt && now - state.activatedAt > UNCLAIMED_STALE_MS,
           wallClockStale = !!state.activatedAt && now - state.activatedAt > WALL_CLOCK_TIMEOUT_MS,
           isStale = claimedHeartbeatStale || unclaimedStale || wallClockStale
         if (isStale) {

@@ -14,6 +14,7 @@ import type * as auth from "../auth.js";
 import type * as compaction from "../compaction.js";
 import type * as crons from "../crons.js";
 import type * as http from "../http.js";
+import type * as mcp from "../mcp.js";
 import type * as messages from "../messages.js";
 import type * as orchestrator from "../orchestrator.js";
 import type * as orchestratorNode from "../orchestratorNode.js";
@@ -39,6 +40,7 @@ declare const fullApi: ApiFromModules<{
   compaction: typeof compaction;
   crons: typeof crons;
   http: typeof http;
+  mcp: typeof mcp;
   messages: typeof messages;
   orchestrator: typeof orchestrator;
   orchestratorNode: typeof orchestratorNode;

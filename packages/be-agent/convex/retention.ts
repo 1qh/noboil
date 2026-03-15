@@ -59,9 +59,9 @@ const DAY_MS = 24 * 60 * 60 * 1000,
       for (const s of archivedSessions)
         if (deletedCount < MAX_SESSIONS_PER_CLEANUP && s.archivedAt && s.archivedAt < deleteBefore) {
           const tokenUsages = await ctx.db
-            .query('tokenUsage')
-            .withIndex('by_session', idx => idx.eq('sessionId', s._id))
-            .collect(),
+              .query('tokenUsage')
+              .withIndex('by_session', idx => idx.eq('sessionId', s._id))
+              .collect(),
             todos = await ctx.db
               .query('todos')
               .withIndex('by_session_position', idx => idx.eq('sessionId', s._id))

@@ -1774,7 +1774,14 @@ describe('tool factories', () => {
       parentThreadId: 'parent-thread',
       sessionId: 'session-id' as never
     })
-    expect(Object.keys(tools).sort()).toEqual(['delegate', 'taskOutput', 'taskStatus', 'todoRead', 'todoWrite', 'webSearch'])
+    expect(Object.keys(tools).sort()).toEqual([
+      'delegate',
+      'taskOutput',
+      'taskStatus',
+      'todoRead',
+      'todoWrite',
+      'webSearch'
+    ])
   })
 
   test('createWorkerTools returns only webSearch', async () => {
@@ -1948,7 +1955,14 @@ describe('edge cases', () => {
               isComplete: false,
               parts: [
                 { args: '{}', status: 'pending', toolCallId: 'call-pending', toolName: 'tool-a', type: 'tool-call' },
-                { args: '{}', result: 'ok', status: 'success', toolCallId: 'call-ok', toolName: 'tool-b', type: 'tool-call' }
+                {
+                  args: '{}',
+                  result: 'ok',
+                  status: 'success',
+                  toolCallId: 'call-ok',
+                  toolName: 'tool-b',
+                  type: 'tool-call'
+                }
               ],
               role: 'assistant',
               streamingContent: 'partial',
