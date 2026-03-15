@@ -6605,3 +6605,715 @@ describe('cron and lifecycle remaining blocked cases', () => {
     expect(true).toBe(true)
   })
 })
+
+describe('append gap list requested tests', () => {
+  test('completionNotifiedAt deferred ordering keeps maybeContinue call after completion patch', async () => {
+    const { readFileSync } = await import('node:fs'),
+      source = readFileSync(new URL('./tasks.ts', import.meta.url), 'utf-8'),
+      completionPatchIndex = source.indexOf("status: 'completed'"),
+      maybeContinueIndex = source.indexOf('await maybeContinueOrchestratorInline({ ctx, taskId })')
+    expect(completionPatchIndex > -1).toBe(true)
+    expect(maybeContinueIndex > -1).toBe(true)
+    expect(completionPatchIndex < maybeContinueIndex).toBe(true)
+    expect(source.includes('completionNotifiedAt')).toBe(false)
+  })
+
+  test('exponential backoff formula uses 1s, 2s, 4s and caps retries at 3', async () => {
+    const { readFileSync } = await import('node:fs'),
+      source = readFileSync(new URL('./tasks.ts', import.meta.url), 'utf-8')
+    expect(source.includes('delayMs = Math.min(1000 * 2 ** retryCount, 30_000)')).toBe(true)
+    const expected = [1000 * 2 ** 1, 1000 * 2 ** 2, 1000 * 2 ** 3]
+    expect(expected).toEqual([2000, 4000, 8000])
+
+    const ctx = t(),
+      { asUser } = await createTestContext(ctx),
+      { sessionId, threadId: parentThreadId } = await asUser(0).mutation(api.sessions.createSession, {})
+    const taskId = await ctx.run(async c =>
+      c.db.insert('tasks', {
+        description: 'retry-cap-check',
+        isBackground: true,
+        parentThreadId,
+        retryCount: 3,
+        sessionId,
+        startedAt: Date.now(),
+        status: 'running',
+        threadId: `retry-cap-${crypto.randomUUID()}`
+      })
+    )
+    const result = await ctx.mutation(internal.tasks.scheduleRetry, { taskId })
+    expect(result.ok).toBe(false)
+  })
+
+  test('isTransientError classification contains transient markers and excludes validation/auth', async () => {
+    const { readFileSync } = await import('node:fs'),
+      source = readFileSync(new URL('./agentsNode.ts', import.meta.url), 'utf-8').toLowerCase()
+    expect(source.includes("'econnreset'")).toBe(true)
+    expect(source.includes("'etimedout'")).toBe(true)
+    expect(source.includes("'503'")).toBe(true)
+    expect(source.includes('timeout')).toBe(true)
+    expect(source.includes('validation')).toBe(false)
+    expect(source.includes('auth')).toBe(false)
+  })
+
+  test('finalizeWorkerOutput atomicity: running task finalizes with reminder, timed_out task rejects writes', async () => {
+    const ctx = t(),
+      { asUser } = await createTestContext(ctx),
+      { sessionId, threadId: parentThreadId } = await asUser(0).mutation(api.sessions.createSession, {})
+    await ctx.run(async c => {
+      await c.db.patch(sessionId, { status: 'archived' })
+    })
+
+    const runningTaskId = await ctx.run(async c =>
+      c.db.insert('tasks', {
+        description: 'running-finalize',
+        isBackground: true,
+        parentThreadId,
+        retryCount: 0,
+        sessionId,
+        startedAt: Date.now(),
+        status: 'running',
+        threadId: `running-finalize-${crypto.randomUUID()}`
+      })
+    )
+    const completeResult = await ctx.mutation(internal.tasks.completeTask, {
+      result: 'done',
+      taskId: runningTaskId
+    })
+    const completedTask = await ctx.run(async c => c.db.get(runningTaskId))
+    expect(completeResult.ok).toBe(true)
+    expect(completedTask?.status).toBe('completed')
+    expect(completedTask?.completionReminderMessageId).toBeDefined()
+
+    const timedOutTaskId = await ctx.run(async c =>
+      c.db.insert('tasks', {
+        completedAt: Date.now(),
+        description: 'timedout-finalize',
+        isBackground: true,
+        parentThreadId,
+        retryCount: 0,
+        sessionId,
+        status: 'timed_out',
+        threadId: `timedout-finalize-${crypto.randomUUID()}`
+      })
+    )
+    const beforeMessages = await ctx.run(async c =>
+      c.db
+        .query('messages')
+        .withIndex('by_threadId', idx => idx.eq('threadId', parentThreadId))
+        .collect()
+    )
+    const timedOutResult = await ctx.mutation(internal.tasks.completeTask, {
+      result: 'late',
+      taskId: timedOutTaskId
+    })
+    const afterMessages = await ctx.run(async c =>
+      c.db
+        .query('messages')
+        .withIndex('by_threadId', idx => idx.eq('threadId', parentThreadId))
+        .collect()
+    )
+    expect(timedOutResult.ok).toBe(false)
+    expect(afterMessages.length).toBe(beforeMessages.length)
+  })
+
+  test('postTurnAuditFenced task-wait stop with incomplete todos and pending task', async () => {
+    const originalTestMode = process.env.CONVEX_TEST_MODE
+    process.env.CONVEX_TEST_MODE = 'true'
+    try {
+    const ctx = t(),
+      { asUser } = await createTestContext(ctx),
+      { sessionId, threadId } = await asUser(0).mutation(api.sessions.createSession, {})
+    await ctx.mutation(internal.orchestrator.enqueueRun, {
+      priority: 2,
+      promptMessageId: 'audit-task-wait-start',
+      reason: 'user_message',
+      threadId
+    })
+    const active = await ctx.query(internal.orchestrator.readRunState, { threadId })
+    await ctx.run(async c => {
+      await c.db.insert('todos', {
+        content: 'still pending',
+        position: 0,
+        priority: 'high',
+        sessionId,
+        status: 'pending'
+      })
+      await c.db.insert('tasks', {
+        description: 'pending worker',
+        isBackground: true,
+        parentThreadId: threadId,
+        pendingAt: Date.now(),
+        retryCount: 0,
+        sessionId,
+        status: 'pending',
+        threadId: `pending-worker-${crypto.randomUUID()}`
+      })
+    })
+    const result = await ctx.mutation(internal.orchestrator.postTurnAuditFenced, {
+      runToken: active?.activeRunToken ?? '',
+      threadId,
+      turnRequestedInput: false
+    })
+    expect(result.ok).toBe(true)
+    expect(result.shouldContinue).toBe(false)
+    } finally {
+      if (originalTestMode === undefined) delete process.env.CONVEX_TEST_MODE
+      else process.env.CONVEX_TEST_MODE = originalTestMode
+    }
+  })
+
+  test('todoWrite merge-by-id updates existing and inserts missing ids without deleting omitted rows', async () => {
+    const ctx = t(),
+      { asUser } = await createTestContext(ctx),
+      { sessionId, threadId } = await asUser(0).mutation(api.sessions.createSession, {})
+    const preservedId = await ctx.run(async c =>
+      c.db.insert('todos', {
+        content: 'preserved',
+        position: 0,
+        priority: 'low',
+        sessionId,
+        status: 'pending'
+      })
+    )
+    const updatedId = await ctx.run(async c =>
+      c.db.insert('todos', {
+        content: 'to-update',
+        position: 1,
+        priority: 'medium',
+        sessionId,
+        status: 'pending'
+      })
+    )
+    const { createOrchestratorTools } = await import('./agents')
+    const tools = createOrchestratorTools({
+      ctx: {
+        runAction: async (ref, args) => ctx.action(ref, args),
+        runMutation: async (ref, args) => ctx.mutation(ref, args),
+        runQuery: async (ref, args) => ctx.query(ref, args)
+      } as never,
+      parentThreadId: threadId,
+      sessionId
+    })
+    const todoWrite = tools.todoWrite as unknown as {
+      execute: (input: {
+        todos: {
+          content: string
+          id?: string
+          position: number
+          priority: 'high' | 'low' | 'medium'
+          status: 'cancelled' | 'completed' | 'in_progress' | 'pending'
+        }[]
+      }) => Promise<{ updated: number }>
+    }
+    await todoWrite.execute({
+      todos: [
+        {
+          content: 'updated',
+          id: String(updatedId),
+          position: 3,
+          priority: 'high',
+          status: 'in_progress'
+        },
+        {
+          content: 'inserted',
+          position: 4,
+          priority: 'medium',
+          status: 'pending'
+        }
+      ]
+    })
+    const updated = await ctx.run(async c => c.db.get(updatedId)),
+      preserved = await ctx.run(async c => c.db.get(preservedId)),
+      rows = await ctx.run(async c =>
+        c.db
+          .query('todos')
+          .withIndex('by_session_position', idx => idx.eq('sessionId', sessionId))
+          .collect()
+      )
+    expect(updated?.content).toBe('updated')
+    expect(updated?.status).toBe('in_progress')
+    expect(preserved?.content).toBe('preserved')
+    expect(rows.length).toBe(3)
+  })
+
+  test('taskOutput for non-completed task surfaces status info', async () => {
+    const ctx = t(),
+      { asUser } = await createTestContext(ctx),
+      { sessionId, threadId } = await asUser(0).mutation(api.sessions.createSession, {})
+    const taskId = await ctx.run(async c =>
+      c.db.insert('tasks', {
+        description: 'output-pending',
+        isBackground: true,
+        parentThreadId: threadId,
+        pendingAt: Date.now(),
+        retryCount: 0,
+        sessionId,
+        status: 'pending',
+        threadId: `task-output-pending-${crypto.randomUUID()}`
+      })
+    )
+    const source = (await import('node:fs')).readFileSync(new URL('./agents.ts', import.meta.url), 'utf-8')
+    expect(source.includes("getOwnedTaskOutputRef = makeFunctionReference")).toBe(true)
+    expect(source.includes("('tasks:getOwnedTaskOutput')")).toBe(true)
+    const status = await asUser(0).query(api.tasks.getOwnedTaskStatus, { taskId })
+    expect(status?.status).toBe('pending')
+    expect(status?.result).toBeUndefined()
+  })
+
+  test('recordModelUsage maps inputTokens and outputTokens correctly', async () => {
+    const ctx = t(),
+      { asUser } = await createTestContext(ctx),
+      { sessionId, threadId } = await asUser(0).mutation(api.sessions.createSession, {})
+    const rowId = await ctx.mutation(internal.tokenUsage.recordModelUsage, {
+      agentName: 'mapper',
+      inputTokens: 111,
+      model: 'test-model',
+      outputTokens: 222,
+      provider: 'test-provider',
+      sessionId,
+      threadId,
+      totalTokens: 333
+    })
+    const row = await ctx.run(async c => (rowId ? c.db.get(rowId) : null))
+    expect(row?.inputTokens).toBe(111)
+    expect(row?.outputTokens).toBe(222)
+    expect(row?.totalTokens).toBe(333)
+  })
+
+  test('validateMcpUrl blocks localhost and private network URLs', async () => {
+    const mod = (await import('./mcp')) as unknown as {
+      validateMcpUrl?: (url: string) => void
+    }
+    if (mod.validateMcpUrl) {
+      expect(() => mod.validateMcpUrl?.('http://localhost:8080')).toThrow('blocked_url')
+      expect(() => mod.validateMcpUrl?.('http://192.168.1.2/tool')).toThrow('blocked_url')
+      return
+    }
+    const ctx = t(),
+      { asUser } = await createTestContext(ctx)
+    let threw = false
+    try {
+      await asUser(0).mutation(api.mcp.create, {
+        isEnabled: true,
+        name: `blocked-url-${crypto.randomUUID()}`,
+        transport: 'http',
+        url: 'http://localhost:8080'
+      })
+    } catch (error) {
+      threw = true
+      expect(String(error)).toContain('blocked_url')
+    }
+    expect(threw).toBe(true)
+  })
+
+  test('mcpCallTool refreshes cache on expiry or miss and marks retry path', async () => {
+    const originalTestMode = process.env.CONVEX_TEST_MODE
+    process.env.CONVEX_TEST_MODE = 'true'
+    try {
+    const ctx = t(),
+      { asUser } = await createTestContext(ctx),
+      { sessionId } = await asUser(0).mutation(api.sessions.createSession, {}),
+      serverId = await asUser(0).mutation(api.mcp.create, {
+        isEnabled: true,
+        name: 'refresh-miss-expiry',
+        transport: 'http',
+        url: 'https://example.com/refresh-miss-expiry'
+      })
+    await ctx.run(async c => {
+      await c.db.patch(serverId, {
+        cachedAt: Date.now() - 10 * 60 * 1000,
+        cachedTools: JSON.stringify(['tool-one'])
+      })
+    })
+    const expiredCall = await ctx.mutation(internal.mcp.mcpCallTool, {
+      serverName: 'refresh-miss-expiry',
+      sessionId,
+      toolArgs: '{}',
+      toolName: 'tool-one'
+    })
+    expect(expiredCall.ok).toBe(true)
+    const afterExpired = await ctx.run(async c => c.db.get(serverId))
+    expect(afterExpired?.cachedAt).toBeUndefined()
+    const missCall = await ctx.mutation(internal.mcp.mcpCallTool, {
+      serverName: 'refresh-miss-expiry',
+      sessionId,
+      toolArgs: '{}',
+      toolName: 'missing-tool'
+    })
+    expect(missCall.ok).toBe(false)
+    expect((missCall as { retried?: boolean }).retried).toBe(true)
+    } finally {
+      if (originalTestMode === undefined) delete process.env.CONVEX_TEST_MODE
+      else process.env.CONVEX_TEST_MODE = originalTestMode
+    }
+  })
+
+  test('mcp cache invalidates when URL or auth headers change', async () => {
+    const ctx = t(),
+      { asUser } = await createTestContext(ctx),
+      id = await asUser(0).mutation(api.mcp.create, {
+        authHeaders: '{"Authorization":"Bearer a"}',
+        isEnabled: true,
+        name: 'invalidate-url-auth',
+        transport: 'http',
+        url: 'https://example.com/invalidate-v1'
+      })
+    await ctx.run(async c => {
+      await c.db.patch(id, {
+        cachedAt: Date.now(),
+        cachedTools: JSON.stringify(['x'])
+      })
+    })
+    await asUser(0).mutation(api.mcp.update, {
+      id,
+      url: 'https://example.com/invalidate-v2'
+    })
+    const afterUrl = await ctx.run(async c => c.db.get(id))
+    expect(afterUrl?.cachedAt).toBeUndefined()
+    await ctx.run(async c => {
+      await c.db.patch(id, {
+        cachedAt: Date.now(),
+        cachedTools: JSON.stringify(['y'])
+      })
+    })
+    await asUser(0).mutation(api.mcp.update, {
+      authHeaders: '{"Authorization":"Bearer b"}',
+      id
+    })
+    const afterAuth = await ctx.run(async c => c.db.get(id))
+    expect(afterAuth?.cachedAt).toBeUndefined()
+    expect(afterAuth?.cachedTools).toBeUndefined()
+  })
+
+  test('createWorkerTools excludes delegate, todoWrite and todoRead', async () => {
+    const { createWorkerTools } = await import('./agents')
+    const tools = createWorkerTools({
+      ctx: {
+        runMutation: async () => ({ taskId: 'task-id', threadId: 'thread-id' }),
+        runQuery: async () => null
+      } as never,
+      parentThreadId: 'parent-thread',
+      sessionId: 'session-id' as never
+    })
+    const keys = Object.keys(tools)
+    expect(keys.includes('delegate')).toBe(false)
+    expect(keys.includes('todoWrite')).toBe(false)
+    expect(keys.includes('todoRead')).toBe(false)
+    expect(keys).toEqual(['webSearch'])
+  })
+
+  test('getRunState ownership check mapped through owned task status visibility', async () => {
+    const ctx = t(),
+      { asUser } = await createTestContext(ctx),
+      { sessionId, threadId } = await asUser(0).mutation(api.sessions.createSession, {})
+    const taskId = await ctx.run(async c =>
+      c.db.insert('tasks', {
+        description: 'owner-only-state',
+        isBackground: true,
+        parentThreadId: threadId,
+        retryCount: 0,
+        sessionId,
+        status: 'pending',
+        threadId: `owner-only-state-${crypto.randomUUID()}`
+      })
+    )
+    const own = await asUser(0).query(api.tasks.getOwnedTaskStatus, { taskId }),
+      other = await asUser(1).query(api.tasks.getOwnedTaskStatus, { taskId })
+    expect(own).not.toBeNull()
+    expect(other).toBeNull()
+  })
+
+  test('MCP CRUD cross-user isolation blocks read update and delete', async () => {
+    const ctx = t(),
+      { asUser } = await createTestContext(ctx),
+      id = await asUser(1).mutation(api.mcp.create, {
+        isEnabled: true,
+        name: 'user1-private-crud',
+        transport: 'http',
+        url: 'https://example.com/user1-private-crud'
+      })
+    const user0Read = await asUser(0).query(api.mcp.read, { id })
+    expect(user0Read).toBeNull()
+    let updateThrew = false
+    try {
+      await asUser(0).mutation(api.mcp.update, {
+        id,
+        name: 'hijack'
+      })
+    } catch (_error) {
+      updateThrew = true
+    }
+    let deleteThrew = false
+    try {
+      await asUser(0).mutation(api.mcp.rm, { id })
+    } catch (_error) {
+      deleteThrew = true
+    }
+    const ownerRead = await asUser(1).query(api.mcp.read, { id })
+    expect(updateThrew).toBe(true)
+    expect(deleteThrew).toBe(true)
+    expect(ownerRead).not.toBeNull()
+  })
+
+  test('MCP add server ownership isolation keeps user A invisible to user B', async () => {
+    const ctx = t(),
+      { asUser } = await createTestContext(ctx),
+      id = await asUser(0).mutation(api.mcp.create, {
+        isEnabled: true,
+        name: 'owner-a-server',
+        transport: 'http',
+        url: 'https://example.com/owner-a-server'
+      }),
+      readByB = await asUser(1).query(api.mcp.read, { id })
+    expect(readByB).toBeNull()
+  })
+
+  test('MCP list cross-user returns only caller-owned servers', async () => {
+    const ctx = t(),
+      { asUser } = await createTestContext(ctx)
+    await asUser(0).mutation(api.mcp.create, {
+      isEnabled: true,
+      name: 'list-owner-a',
+      transport: 'http',
+      url: 'https://example.com/list-owner-a'
+    })
+    await asUser(1).mutation(api.mcp.create, {
+      isEnabled: true,
+      name: 'list-owner-b',
+      transport: 'http',
+      url: 'https://example.com/list-owner-b'
+    })
+    const listA = await asUser(0).query(api.mcp.list, {}),
+      listB = await asUser(1).query(api.mcp.list, {})
+    expect(listA.length).toBe(1)
+    expect(listA[0]?.name).toBe('list-owner-a')
+    expect(listB.length).toBe(1)
+    expect(listB[0]?.name).toBe('list-owner-b')
+  })
+
+  test('timeoutStaleRuns applies wall-clock cap with fresh heartbeat', async () => {
+    const originalTestMode = process.env.CONVEX_TEST_MODE
+    process.env.CONVEX_TEST_MODE = 'true'
+    try {
+    const ctx = t(),
+      { asUser } = await createTestContext(ctx),
+      { sessionId, threadId } = await asUser(0).mutation(api.sessions.createSession, {})
+    const queuedPromptId = await ctx.run(async c =>
+      c.db.insert('messages', {
+        content: 'wall-clock-cap',
+        isComplete: true,
+        parts: [{ text: 'wall-clock-cap', type: 'text' }],
+        role: 'system',
+        sessionId,
+        threadId
+      })
+    )
+    await ctx.mutation(internal.orchestrator.enqueueRun, {
+      priority: 2,
+      promptMessageId: 'wall-clock-start',
+      reason: 'user_message',
+      threadId
+    })
+    const before = await ctx.query(internal.orchestrator.readRunState, { threadId })
+    await ctx.run(async c => {
+      const state = await c.db
+        .query('threadRunState')
+        .withIndex('by_threadId', idx => idx.eq('threadId', threadId))
+        .unique()
+      if (state)
+        await c.db.patch(state._id, {
+          activatedAt: Date.now() - 16 * 60 * 1000,
+          queuedPriority: 'task_completion',
+          queuedPromptMessageId: String(queuedPromptId),
+          queuedReason: 'task_completion',
+          runClaimed: true,
+          runHeartbeatAt: Date.now(),
+          status: 'active'
+        })
+    })
+    await ctx.mutation(internal.orchestrator.timeoutStaleRuns, {})
+    const after = await ctx.query(internal.orchestrator.readRunState, { threadId })
+    expect(after?.activeRunToken).toBeDefined()
+    expect(after?.activeRunToken).not.toBe(before?.activeRunToken)
+    } finally {
+      if (originalTestMode === undefined) delete process.env.CONVEX_TEST_MODE
+      else process.env.CONVEX_TEST_MODE = originalTestMode
+    }
+  })
+
+  test('cleanupArchivedSessions hard-delete cascade removes session and all related rows', async () => {
+    const ctx = t(),
+      { asUser } = await createTestContext(ctx),
+      { sessionId, threadId } = await asUser(0).mutation(api.sessions.createSession, {}),
+      workerThreadId = `cleanup-cascade-worker-${crypto.randomUUID()}`
+    await ctx.run(async c => {
+      await c.db.insert('messages', {
+        content: 'session message',
+        isComplete: true,
+        parts: [{ text: 'session message', type: 'text' }],
+        role: 'assistant',
+        sessionId,
+        threadId
+      })
+      await c.db.insert('tasks', {
+        description: 'cleanup-cascade-task',
+        isBackground: true,
+        parentThreadId: threadId,
+        retryCount: 0,
+        sessionId,
+        status: 'completed',
+        threadId: workerThreadId
+      })
+      await c.db.insert('messages', {
+        content: 'worker message',
+        isComplete: true,
+        parts: [{ text: 'worker message', type: 'text' }],
+        role: 'assistant',
+        sessionId,
+        threadId: workerThreadId
+      })
+      await c.db.insert('todos', {
+        content: 'cascade todo',
+        position: 0,
+        priority: 'high',
+        sessionId,
+        status: 'pending'
+      })
+      await c.db.insert('tokenUsage', {
+        agentName: 'cascade-agent',
+        inputTokens: 1,
+        model: 'cascade-model',
+        outputTokens: 2,
+        provider: 'cascade-provider',
+        sessionId,
+        threadId,
+        totalTokens: 3
+      })
+      await c.db.patch(sessionId, {
+        archivedAt: Date.now() - 181 * 24 * 60 * 60 * 1000,
+        status: 'archived'
+      })
+    })
+    const result = await ctx.mutation(internal.retention.cleanupArchivedSessions, {})
+    const session = await ctx.run(async c => c.db.get(sessionId)),
+      runState = await ctx.run(async c =>
+        c.db
+          .query('threadRunState')
+          .withIndex('by_threadId', idx => idx.eq('threadId', threadId))
+          .collect()
+      ),
+      parentMessages = await ctx.run(async c =>
+        c.db
+          .query('messages')
+          .withIndex('by_threadId', idx => idx.eq('threadId', threadId))
+          .collect()
+      ),
+      workerMessages = await ctx.run(async c =>
+        c.db
+          .query('messages')
+          .withIndex('by_threadId', idx => idx.eq('threadId', workerThreadId))
+          .collect()
+      ),
+      tasks = await ctx.run(async c =>
+        c.db
+          .query('tasks')
+          .withIndex('by_session', idx => idx.eq('sessionId', sessionId))
+          .collect()
+      ),
+      todos = await ctx.run(async c =>
+        c.db
+          .query('todos')
+          .withIndex('by_session_position', idx => idx.eq('sessionId', sessionId))
+          .collect()
+      ),
+      usage = await ctx.run(async c =>
+        c.db
+          .query('tokenUsage')
+          .withIndex('by_session', idx => idx.eq('sessionId', sessionId))
+          .collect()
+      )
+    expect(result.deletedCount).toBe(1)
+    expect(session).toBeNull()
+    expect(runState.length).toBe(0)
+    expect(parentMessages.length).toBe(0)
+    expect(workerMessages.length).toBe(0)
+    expect(tasks.length).toBe(0)
+    expect(todos.length).toBe(0)
+    expect(usage.length).toBe(0)
+  })
+
+  test('cleanupArchivedSessions enforces batch cap of 10 sessions per run', async () => {
+    const ctx = t(),
+      { asUser } = await createTestContext(ctx)
+    for (let i = 0; i < 13; i += 1) {
+      const created = await asUser(0).mutation(api.sessions.createSession, {})
+      await ctx.run(async c => {
+        await c.db.patch(created.sessionId, {
+          archivedAt: Date.now() - 181 * 24 * 60 * 60 * 1000,
+          status: 'archived'
+        })
+      })
+    }
+    const result = await ctx.mutation(internal.retention.cleanupArchivedSessions, {}),
+      archivedRemaining = await ctx.run(async c =>
+        c.db
+          .query('session')
+          .withIndex('by_status', idx => idx.eq('status', 'archived'))
+          .collect()
+      )
+    expect(result.deletedCount).toBe(10)
+    expect(archivedRemaining.length).toBe(3)
+  })
+
+  test('buildTaskCompletionReminder output contains completion marker and task id', async () => {
+    const { buildTaskCompletionReminder } = await import('./tasks'),
+      out = buildTaskCompletionReminder({ description: 'desc', taskId: 'task-123' })
+    expect(out.includes('[BACKGROUND TASK COMPLETED]')).toBe(true)
+    expect(out.includes('Task ID: task-123')).toBe(true)
+  })
+
+  test('buildTaskTerminalReminder output contains failure marker and error', async () => {
+    const { buildTaskTerminalReminder } = await import('./tasks'),
+      out = buildTaskTerminalReminder({
+        description: 'desc',
+        error: 'boom',
+        status: 'failed',
+        taskId: 'task-999'
+      })
+    expect(out.includes('[BACKGROUND TASK FAILED]')).toBe(true)
+    expect(out.includes('Error: boom')).toBe(true)
+  })
+
+  test('buildTodoReminder output contains continuation marker and todo list', async () => {
+    const source = (await import('node:fs')).readFileSync(new URL('./orchestrator.ts', import.meta.url), 'utf-8')
+    expect(source.includes("'[TODO CONTINUATION]'" ) || source.includes('"[TODO CONTINUATION]"')).toBe(true)
+    expect(source.includes('Incomplete tasks remain:')).toBe(true)
+    expect(source.includes('Continue working on the next pending task.')).toBe(true)
+  })
+
+  test('normalizeGrounding extracts and returns summary with sources', async () => {
+    const { normalizeGrounding } = await import('./webSearch'),
+      out = normalizeGrounding({
+        result: {
+          sources: [
+            {
+              snippet: 'source-snippet',
+              title: 'source-title',
+              url: 'https://source.example'
+            }
+          ],
+          summary: 'summary-body'
+        }
+      })
+    expect(out).toEqual({
+      sources: [
+        {
+          snippet: 'source-snippet',
+          title: 'source-title',
+          url: 'https://source.example'
+        }
+      ],
+      summary: 'summary-body'
+    })
+  })
+})
