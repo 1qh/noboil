@@ -6,13 +6,15 @@
 import type { GenericDataModel, MutationBuilder, QueryBuilder } from 'convex/server'
 
 import { v } from 'convex/values'
-import { env as nodeEnv } from 'node:process'
 
 import type { DbLike, Rec } from './types'
 
 import { flt, idx } from './bridge'
 import { isTestMode } from './env'
 import { generateToken, SEVEN_DAYS_MS, time } from './helpers'
+
+/** biome-ignore lint/style/noProcessEnv: convex bundler can't resolve node:process */
+const nodeEnv = process.env
 
 /** Configuration for test authentication helpers. */
 interface TestAuthConfig<DM extends GenericDataModel = GenericDataModel> {
