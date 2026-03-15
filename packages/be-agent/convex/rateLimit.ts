@@ -18,12 +18,23 @@ const RATE_LIMITS = {
     key: string
     name: keyof typeof RATE_LIMITS
   }) => {
-    const isTestMode = process.env.CONVEX_TEST_MODE === 'true'
-    if (isTestMode) return
+    let result: { ok: boolean; retryAt?: number }
     try {
-      await checkRateLimit(ctx, { key, name, throws: true })
-    } catch (_error) {
+      result = await rateLimit(ctx, { key, name })
+    } catch (error) {
+      const payload =
+        typeof error === 'object' && error && 'data' in error
+          ? (error as { data?: { kind?: string; retryAt?: number } }).data
+          : undefined
+      if (payload?.kind === 'RateLimited') {
+        const retryAt = payload.retryAt ?? 0
+        throw new Error(`rate_limited:${name}:${retryAt}`)
+      }
       throw new Error(`rate_limited:${name}`)
+    }
+    if (!result.ok) {
+      const retryAt = result.retryAt ?? 0
+      throw new Error(`rate_limited:${name}:${retryAt}`)
     }
   }
 

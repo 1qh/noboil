@@ -1,5 +1,6 @@
 import { authTables } from '@convex-dev/auth/server'
 import { ownedTable, rateLimitTable } from '@noboil/convex/server'
+import { rateLimitTables } from 'convex-helpers/server/rateLimit'
 import { zodOutputToConvexFields as z2c } from 'convex-helpers/server/zod4'
 import { defineSchema, defineTable } from 'convex/server'
 
@@ -8,6 +9,7 @@ import { messageSchema, owned, taskSchema, threadRunStateSchema, todoSchema, tok
 export default defineSchema({
   ...authTables,
   ...rateLimitTable(),
+  ...rateLimitTables,
   mcpServers: ownedTable(owned.mcpServer)
     .index('by_user_enabled', ['userId', 'isEnabled'])
     .index('by_user_name', ['userId', 'name']),

@@ -12,17 +12,6 @@ import { enforceRateLimit } from './rateLimit'
 const runWorkerRef = makeFunctionReference<'action', { prompt: string; taskId: Id<'tasks'>; threadId: string }, undefined>(
     'agentsNode:runWorker'
   ),
-  enqueueRunRef = makeFunctionReference<
-    'mutation',
-    {
-      incrementStreak?: boolean
-      priority: 0 | 1 | 2
-      promptMessageId?: string
-      reason: 'task_completion' | 'todo_continuation' | 'user_message'
-      threadId: string
-    },
-    { ok: boolean; reason?: 'lower_priority' | 'streak_cap'; scheduled: boolean }
-  >('orchestrator:enqueueRun'),
   buildTaskCompletionReminder = ({ description, taskId }: { description: string; taskId: string }) =>
     [
       '<system-reminder>',
@@ -60,20 +49,13 @@ const runWorkerRef = makeFunctionReference<'action', { prompt: string; taskId: I
     ctx,
     taskId
   }: {
-    ctx: Pick<MutationCtx, 'db' | 'scheduler'>
+    ctx: Pick<MutationCtx, 'db'>
     taskId: Id<'tasks'>
   }) => {
     const task = await ctx.db.get(taskId)
     if (!task?.completionReminderMessageId) return { ok: false }
     const session = await ctx.db.get(task.sessionId)
     if (!session || session.status === 'archived') return { ok: false }
-    await ctx.scheduler.runAfter(0, enqueueRunRef, {
-      incrementStreak: true,
-      priority: 1,
-      promptMessageId: task.completionReminderMessageId,
-      reason: 'task_completion',
-      threadId: task.parentThreadId
-    })
     await ctx.db.patch(taskId, { continuationEnqueuedAt: Date.now() })
     return { ok: true }
   },
@@ -253,6 +235,7 @@ export {
   getOwnedTaskStatus,
   listTasks,
   markRunning,
+  maybeContinueOrchestratorInline,
   maybeContinueOrchestrator,
   scheduleRetry,
   spawnTask,

@@ -79,6 +79,20 @@ const readRunStateByThreadId = async ({ ctx, threadId }: { ctx: Pick<MutationCtx
       .query('session')
       .withIndex('by_threadId', idx => idx.eq('threadId', threadId))
       .unique(),
+  scheduleRun = async ({
+    ctx,
+    promptMessageId,
+    runToken,
+    threadId
+  }: {
+    ctx: Pick<MutationCtx, 'scheduler'>
+    promptMessageId?: string
+    runToken: string
+    threadId: string
+  }) => {
+    if (process.env.CONVEX_TEST_MODE === 'true') return
+    await ctx.scheduler.runAfter(0, runOrchestratorRef, { promptMessageId, runToken, threadId })
+  },
   enqueueRunInline = async ({
     ctx,
     incrementStreak,
@@ -103,7 +117,12 @@ const readRunStateByThreadId = async ({ ctx, threadId }: { ctx: Pick<MutationCtx
     if (shouldIncrement) nextStreak += 1
     if (state.status === 'idle') {
       const runToken = crypto.randomUUID()
-      await ctx.scheduler.runAfter(0, runOrchestratorRef, { promptMessageId, runToken, threadId })
+      await scheduleRun({
+        ctx,
+        promptMessageId,
+        runToken,
+        threadId
+      })
       await ctx.db.patch(state._id, {
         activatedAt: Date.now(),
         activeRunToken: runToken,
@@ -199,7 +218,8 @@ const readRunStateByThreadId = async ({ ctx, threadId }: { ctx: Pick<MutationCtx
           return { scheduled: false }
         }
         const nextRunToken = crypto.randomUUID()
-        await ctx.scheduler.runAfter(0, runOrchestratorRef, {
+        await scheduleRun({
+          ctx,
           promptMessageId: queuedPromptMessageId,
           runToken: nextRunToken,
           threadId
@@ -333,7 +353,8 @@ const readRunStateByThreadId = async ({ ctx, threadId }: { ctx: Pick<MutationCtx
               })
             else {
               const runToken = crypto.randomUUID()
-              await ctx.scheduler.runAfter(0, runOrchestratorRef, {
+              await scheduleRun({
+                ctx,
                 promptMessageId: queuedPromptMessageId,
                 runToken,
                 threadId: state.threadId

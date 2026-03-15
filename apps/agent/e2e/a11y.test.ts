@@ -1,7 +1,12 @@
 import { expect, test } from './fixtures'
 
 test.describe('Accessibility', () => {
-  test.skip('chat log has role=log', async () => {})
+  test('chat log has role=log (duplicate coverage)', async ({ chatPage, page, sessionListPage }) => {
+    await sessionListPage.goto('/')
+    await sessionListPage.getNewButton().click()
+    await page.waitForURL(/\/chat\//u)
+    await expect(chatPage.getMessageLog()).toHaveAttribute('role', 'log')
+  })
 
   test('html has lang=en', async ({ page }) => {
     await page.goto('/')

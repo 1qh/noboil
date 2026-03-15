@@ -1,4 +1,4 @@
-import { buildTaskTerminalReminder } from './tasks'
+import { buildTaskTerminalReminder, maybeContinueOrchestratorInline } from './tasks'
 import { internalMutation } from './_generated/server'
 
 const FIVE_MINUTES_MS = 5 * 60 * 1000,
@@ -12,6 +12,10 @@ const FIVE_MINUTES_MS = 5 * 60 * 1000,
         runningTasks = await ctx.db
           .query('tasks')
           .withIndex('by_status', idx => idx.eq('status', 'running'))
+          .collect(),
+        pendingTasks = await ctx.db
+          .query('tasks')
+          .withIndex('by_status', idx => idx.eq('status', 'pending'))
           .collect()
       let timedOutCount = 0
       for (const t of runningTasks)
@@ -33,6 +37,37 @@ const FIVE_MINUTES_MS = 5 * 60 * 1000,
             completedAt: now,
             completionReminderMessageId: String(reminderMessageId),
             status: 'timed_out'
+          })
+          await maybeContinueOrchestratorInline({
+            ctx,
+            taskId: t._id
+          })
+          timedOutCount += 1
+        }
+
+      for (const t of pendingTasks)
+        if (t.pendingAt && t.pendingAt < staleBefore) {
+          const reminder = buildTaskTerminalReminder({
+              description: t.description,
+              status: 'timed_out',
+              taskId: String(t._id)
+            }),
+            reminderMessageId = await ctx.db.insert('messages', {
+              content: reminder,
+              isComplete: true,
+              parts: [{ text: reminder, type: 'text' }],
+              role: 'system',
+              sessionId: t.sessionId,
+              threadId: t.parentThreadId
+            })
+          await ctx.db.patch(t._id, {
+            completedAt: now,
+            completionReminderMessageId: String(reminderMessageId),
+            status: 'timed_out'
+          })
+          await maybeContinueOrchestratorInline({
+            ctx,
+            taskId: t._id
           })
           timedOutCount += 1
         }

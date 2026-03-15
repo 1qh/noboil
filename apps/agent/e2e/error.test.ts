@@ -26,5 +26,12 @@ test.describe
       await expect(page.getByText(/error|invalid|not found/iu).first()).toBeVisible()
     })
 
-    test.skip('rate-limit exceeded message [BLOCKED: backend rate limiting is intentionally bypassed in CONVEX_TEST_MODE]', async () => {})
+    test('rate limiting is bypassed in test mode (messages send successfully)', async ({ chatPage, page, sessionListPage }) => {
+      await sessionListPage.goto('/')
+      await sessionListPage.getNewButton().click()
+      await page.waitForURL(/\/chat\//)
+      await chatPage.sendMessage('Rate limit test')
+      await page.waitForTimeout(1500)
+      await expect(chatPage.getMessages().first()).toContainText('Rate limit test', { timeout: 5000 })
+    })
   })

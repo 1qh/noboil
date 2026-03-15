@@ -10,6 +10,7 @@ import { useState } from 'react'
 type McpServerRow = {
   _id: Id<'mcpServers'>
   hasAuthHeaders: boolean
+  isEnabled: boolean
   name: string
   url: string
 }
@@ -27,6 +28,7 @@ const formatCreateError = (error: unknown) => {
 const SettingsPage = () => {
   const servers = useQuery(api.mcp.list, {}),
     createServer = useMutation(api.mcp.create),
+    updateServer = useMutation(api.mcp.update),
     removeServer = useMutation(api.mcp.rm),
     [name, setName] = useState(''),
     [url, setUrl] = useState(''),
@@ -34,6 +36,7 @@ const SettingsPage = () => {
     [formError, setFormError] = useState(''),
     [isSaving, setIsSaving] = useState(false),
     [deletingId, setDeletingId] = useState<Id<'mcpServers'> | null>(null),
+    [togglingId, setTogglingId] = useState<Id<'mcpServers'> | null>(null),
     onSubmit = async (event: FormEvent<HTMLFormElement>) => {
       event.preventDefault()
       const nextName = name.trim(),
@@ -72,6 +75,17 @@ const SettingsPage = () => {
         await removeServer({ id })
       } finally {
         setDeletingId(null)
+      }
+    },
+    onToggle = async (server: McpServerRow) => {
+      setTogglingId(server._id)
+      try {
+        await updateServer({
+          id: server._id,
+          isEnabled: !server.isEnabled
+        })
+      } finally {
+        setTogglingId(null)
       }
     }
 
@@ -130,13 +144,22 @@ const SettingsPage = () => {
                     <p className='truncate text-xs text-gray-500'>{server.url}</p>
                     <p className='text-xs text-gray-500'>Auth headers: {server.hasAuthHeaders ? 'Configured' : 'Not set'}</p>
                   </div>
-                  <button
-                    className='rounded-lg border px-3 py-2 text-xs disabled:opacity-60'
-                    disabled={deletingId === server._id}
-                    onClick={() => onDelete(server._id)}
-                    type='button'>
-                    Delete
-                  </button>
+                  <div className='flex items-center gap-2'>
+                    <button
+                      className='rounded-lg border px-3 py-2 text-xs disabled:opacity-60'
+                      disabled={togglingId === server._id}
+                      onClick={() => onToggle(server)}
+                      type='button'>
+                      {server.isEnabled ? 'Disable' : 'Enable'}
+                    </button>
+                    <button
+                      className='rounded-lg border px-3 py-2 text-xs disabled:opacity-60'
+                      disabled={deletingId === server._id}
+                      onClick={() => onDelete(server._id)}
+                      type='button'>
+                      Delete
+                    </button>
+                  </div>
                 </li>
               )
             })}

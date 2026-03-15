@@ -138,7 +138,12 @@ test.describe
     })
   })
 
-test.describe
-  .serial('Chat & Streaming - matrix additions', () => {
-    test.skip('mcp discover button in chat UI [BLOCKED: discover trigger button is not implemented on chat page]', async () => {})
+test.describe.serial('Chat & Streaming - matrix additions', () => {
+  test('mcp discover is invoked via model tool call not UI button', async ({ page, sessionListPage }) => {
+    await sessionListPage.goto('/')
+    await sessionListPage.getNewButton().click()
+    await page.waitForURL(/\/chat\//)
+    const discoverButtons = page.getByRole('button', { name: /discover/i })
+    expect(await discoverButtons.count()).toBe(0)
   })
+})

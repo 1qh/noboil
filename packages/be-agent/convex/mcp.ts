@@ -19,7 +19,9 @@ interface McpHookCtx {
   userId: string
 }
 
-const validateMcpUrl = (url: string) => {
+const MCP_CACHE_TTL_MS = 5 * 60 * 1000,
+  MCP_TIMEOUT_MS = 30_000,
+  validateMcpUrl = (url: string) => {
     const parsed = new URL(url)
     if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') throw new Error('invalid_url_protocol')
     const hostname = parsed.hostname.toLowerCase(),
@@ -51,6 +53,21 @@ const validateMcpUrl = (url: string) => {
       return []
     }
   },
+  parseJsonObject = ({ raw }: { raw: string }) => {
+    const parsed = JSON.parse(raw) as unknown
+    if (!parsed || Array.isArray(parsed) || typeof parsed !== 'object') throw new Error('invalid_json_object')
+    return parsed as Record<string, unknown>
+  },
+  withMcpTimeout = async <T>({ operation, promise }: { operation: string; promise: Promise<T> }) =>
+    Promise.race([
+      promise,
+      new Promise<T>((_, reject) => {
+        const handle = setTimeout(() => {
+          clearTimeout(handle)
+          reject(new Error(`mcp_timeout:${operation}`))
+        }, MCP_TIMEOUT_MS)
+      })
+    ]),
   redactServer = (doc: null | Record<string, unknown>) => {
     if (!doc) return null
     const { authHeaders, ...rest } = doc
@@ -143,26 +160,87 @@ const validateMcpUrl = (url: string) => {
   mcpCallTool = internalMutation({
     args: {
       serverName: v.string(),
-      sessionId: v.id('session'),
+      sessionId: v.optional(v.id('session')),
+      threadId: v.optional(v.string()),
       toolArgs: v.string(),
       toolName: v.string()
     },
-    handler: async (ctx, { serverName, sessionId }) => {
-      const session = await ctx.db.get(sessionId)
+    handler: async (ctx, { serverName, sessionId, threadId, toolArgs, toolName }) => {
+      let resolvedSessionId = sessionId
+      if (!resolvedSessionId && threadId) {
+        const task = await ctx.db
+          .query('tasks')
+          .withIndex('by_threadId', idx => idx.eq('threadId', threadId))
+          .unique()
+        resolvedSessionId = task?.sessionId
+      }
+      if (!resolvedSessionId) throw new Error('session_not_found')
+      const session = await ctx.db.get(resolvedSessionId)
       if (!session) throw new Error('session_not_found')
+
+      let parsedToolArgs: Record<string, unknown>
+      try {
+        parsedToolArgs = parseJsonObject({ raw: toolArgs })
+      } catch (_error) {
+        return { error: 'invalid_tool_args' as const, ok: false as const }
+      }
+
       await enforceRateLimit({
         ctx,
         key: String(session.userId),
         name: 'mcpCall'
       })
-      const server = await ctx.db
-        .query('mcpServers')
-        .withIndex('by_user_name', idx => idx.eq('userId', session.userId).eq('name', serverName))
-        .first()
+      const loadServer = async () =>
+          ctx.db
+            .query('mcpServers')
+            .withIndex('by_user_name', idx => idx.eq('userId', session.userId).eq('name', serverName))
+            .first(),
+        server = await loadServer()
       if (!server || !server.isEnabled) throw new Error('mcp_server_not_found')
-      const isTestMode = process.env.CONVEX_TEST_MODE === 'true'
-      if (isTestMode) return { content: 'mock MCP result', ok: true as const }
-      throw new Error('mcp_not_implemented')
+
+      validateMcpUrl(server.url)
+      if (server.authHeaders) {
+        try {
+          parseJsonObject({ raw: server.authHeaders })
+        } catch (_error) {
+          return { error: 'invalid_auth_headers' as const, ok: false as const }
+        }
+      }
+
+      const now = Date.now(),
+        toolInCache = ({
+          allowStale,
+          row
+        }: {
+          allowStale: boolean
+          row: { cachedAt?: number; cachedTools?: string }
+        }) => {
+          const withinTtl = row.cachedAt !== undefined && now - row.cachedAt <= MCP_CACHE_TTL_MS
+          if (!allowStale && !withinTtl) return false
+          const toolNames = parseCachedToolNames({ cachedTools: row.cachedTools })
+          return toolNames.includes(toolName)
+        },
+        firstHit = toolInCache({ allowStale: false, row: server })
+      if (!firstHit) {
+        await ctx.db.patch(server._id, { cachedAt: undefined })
+        const refreshed = await loadServer()
+        if (!refreshed || !refreshed.isEnabled) throw new Error('mcp_server_not_found')
+        const secondHit = toolInCache({ allowStale: true, row: refreshed })
+        if (!secondHit) return { error: 'tool_not_found' as const, ok: false as const, retried: true as const }
+      }
+
+      if (process.env.CONVEX_TEST_MODE === 'true')
+        return {
+          content: `mock MCP result:${toolName}`,
+          ok: true as const,
+          toolArgs: parsedToolArgs
+        }
+
+      await withMcpTimeout({
+        operation: 'callTool',
+        promise: Promise.reject(new Error('mcp_not_implemented'))
+      })
+      return { content: '', ok: true as const, toolArgs: parsedToolArgs }
     }
   })
 

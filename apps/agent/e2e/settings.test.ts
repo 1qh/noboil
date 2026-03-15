@@ -56,7 +56,17 @@ test.describe
     })
   })
 
-test.describe
-  .serial('Settings (MCP) - matrix additions', () => {
-    test.skip('server enable/disable toggle [BLOCKED: settings UI currently supports create/delete only, no enabled toggle control]', async () => {})
+test.describe.serial('Settings (MCP) - matrix additions', () => {
+  test('server enable/disable toggle', async ({ page }) => {
+    const name = `toggle-${Date.now()}`
+    await page.goto('/settings')
+    await page.getByPlaceholder(/name/i).fill(name)
+    await page.getByPlaceholder(/url/i).fill('https://example.com/toggle')
+    await page.getByRole('button', { name: /add/i }).click()
+    await expect(page.getByText(name)).toBeVisible()
+    const disableBtn = page.getByRole('button', { name: /disable/i }).first()
+    await disableBtn.click()
+    await page.waitForTimeout(2000)
+    await expect(page.getByRole('button', { name: /enable/i }).first()).toBeVisible({ timeout: 10000 })
   })
+})
