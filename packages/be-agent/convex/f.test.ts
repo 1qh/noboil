@@ -4404,3 +4404,946 @@ describe('additional cleanup and retention coverage', () => {
     expect(kept?.status).toBe('archived')
   })
 })
+
+describe('gap coverage implementation details', () => {
+  test('getModel caches resolved instance across calls', async () => {
+    const originalTestMode = process.env.CONVEX_TEST_MODE
+    process.env.CONVEX_TEST_MODE = 'true'
+    try {
+      const aiModule = await import(`../ai.ts?cache-check=${crypto.randomUUID()}`),
+        first = await aiModule.getModel(),
+        second = await aiModule.getModel()
+      expect(first).toBe(second)
+    } finally {
+      if (originalTestMode === undefined) delete process.env.CONVEX_TEST_MODE
+      else process.env.CONVEX_TEST_MODE = originalTestMode
+    }
+  })
+
+  test('getModel returns mock model details in test mode', async () => {
+    const originalTestMode = process.env.CONVEX_TEST_MODE
+    process.env.CONVEX_TEST_MODE = 'true'
+    try {
+      const aiModule = await import(`../ai.ts?mock-check=${crypto.randomUUID()}`),
+        model = await aiModule.getModel()
+      expect(model.modelId).toBe('mock-model')
+      expect(model.provider).toBe('mock')
+    } finally {
+      if (originalTestMode === undefined) delete process.env.CONVEX_TEST_MODE
+      else process.env.CONVEX_TEST_MODE = originalTestMode
+    }
+  })
+
+  test('env module loads in test mode without throwing', async () => {
+    const originalTestMode = process.env.CONVEX_TEST_MODE
+    process.env.CONVEX_TEST_MODE = 'true'
+    try {
+      const envModule = await import(`../env.ts?skip-validation=${crypto.randomUUID()}`)
+      expect(envModule.default).toBeDefined()
+    } finally {
+      if (originalTestMode === undefined) delete process.env.CONVEX_TEST_MODE
+      else process.env.CONVEX_TEST_MODE = originalTestMode
+    }
+  })
+
+  test('buildTaskCompletionReminder includes wrapper id and description', async () => {
+    const { buildTaskCompletionReminder } = await import('./tasks'),
+      text = buildTaskCompletionReminder({ description: 'compile docs', taskId: 'task-123' })
+    expect(text.includes('<system-reminder>')).toBe(true)
+    expect(text.includes('[BACKGROUND TASK COMPLETED]')).toBe(true)
+    expect(text.includes('Task ID: task-123')).toBe(true)
+    expect(text.includes('Description: compile docs')).toBe(true)
+    expect(text.includes('</system-reminder>')).toBe(true)
+  })
+
+  test('buildTaskCompletionReminder has stable line structure', async () => {
+    const { buildTaskCompletionReminder } = await import('./tasks'),
+      text = buildTaskCompletionReminder({ description: 'shape check', taskId: 'task-shape' }),
+      lines = text.split('\n')
+    expect(lines.length).toBe(6)
+    expect(lines[0]).toBe('<system-reminder>')
+    expect(lines[1]).toBe('[BACKGROUND TASK COMPLETED]')
+    expect(lines[2]).toBe('Task ID: task-shape')
+  })
+
+  test('buildTaskTerminalReminder failed format includes error line', async () => {
+    const { buildTaskTerminalReminder } = await import('./tasks'),
+      text = buildTaskTerminalReminder({
+        description: 'sync data',
+        error: 'network failure',
+        status: 'failed',
+        taskId: 'task-failed'
+      })
+    expect(text.includes('[BACKGROUND TASK FAILED]')).toBe(true)
+    expect(text.includes('Task ID: task-failed')).toBe(true)
+    expect(text.includes('Description: sync data')).toBe(true)
+    expect(text.includes('Error: network failure')).toBe(true)
+  })
+
+  test('buildTaskTerminalReminder timeout format includes timeout prefix', async () => {
+    const { buildTaskTerminalReminder } = await import('./tasks'),
+      text = buildTaskTerminalReminder({
+        description: 'sync data',
+        status: 'timed_out',
+        taskId: 'task-timeout'
+      })
+    expect(text.includes('[BACKGROUND TASK TIMED OUT]')).toBe(true)
+    expect(text.includes('Task ID: task-timeout')).toBe(true)
+    expect(text.includes('Description: sync data')).toBe(true)
+  })
+
+  test('buildTaskTerminalReminder omits Error line when no error provided', async () => {
+    const { buildTaskTerminalReminder } = await import('./tasks'),
+      text = buildTaskTerminalReminder({
+        description: 'no explicit error',
+        status: 'timed_out',
+        taskId: 'task-no-error'
+      })
+    expect(text.includes('Error:')).toBe(false)
+  })
+
+  test('mock model no-tool doGenerate returns single text part and stop', async () => {
+    const { mockModel } = await import('../models.mock'),
+      result = await mockModel.doGenerate({ tools: undefined })
+    expect(result.finishReason).toBe('stop')
+    expect(result.content.length).toBe(1)
+    expect(result.content[0]?.type).toBe('text')
+    expect(result.content[0]?.text.includes('Mock response')).toBe(true)
+  })
+
+  test('mock model tool-call doGenerate emits delegate args json', async () => {
+    const { mockModel } = await import('../models.mock'),
+      result = await mockModel.doGenerate({ tools: [{ name: 'delegate' }] }),
+      part = result.content[0],
+      args = typeof part?.input === 'string' ? JSON.parse(part.input) : null
+    expect(result.finishReason).toBe('tool-calls')
+    expect(part?.type).toBe('tool-call')
+    expect(args?.description).toBe('Test task')
+    expect(args?.isBackground).toBe(true)
+    expect(args?.prompt).toBe('Test prompt')
+  })
+
+  test('mock model tool-call doGenerate emits todoWrite args json', async () => {
+    const { mockModel } = await import('../models.mock'),
+      result = await mockModel.doGenerate({ tools: [{ name: 'todoWrite' }] }),
+      part = result.content[0],
+      args = typeof part?.input === 'string' ? JSON.parse(part.input) : null
+    expect(result.finishReason).toBe('tool-calls')
+    expect(part?.toolName).toBe('todoWrite')
+    expect(Array.isArray(args?.todos)).toBe(true)
+    expect(args?.todos[0]?.content).toBe('Test task')
+  })
+
+  test('mock model doStream emits expected event triplet and finish', async () => {
+    const { mockModel } = await import('../models.mock'),
+      result = await mockModel.doStream(),
+      reader = result.stream.getReader(),
+      events: string[] = []
+    for (;;) {
+      const chunk = await reader.read()
+      if (chunk.done) break
+      const value = chunk.value as { type?: string }
+      events.push(value.type ?? 'unknown')
+    }
+    expect(events).toEqual(['stream-start', 'text-start', 'text-delta', 'text-end', 'finish'])
+  })
+})
+
+describe('gap coverage tool factories', () => {
+  test('delegate tool executes runMutation with spawned task payload', async () => {
+    const { createOrchestratorTools } = await import('./agents')
+    let called = false
+    const tools = createOrchestratorTools({
+      ctx: {
+        runMutation: async (_ref: unknown, args: unknown) => {
+          called = true
+          const payload = args as {
+            description: string
+            isBackground: boolean
+            parentThreadId: string
+            prompt: string
+            sessionId: string
+          }
+          expect(payload.description).toBe('delegate task')
+          expect(payload.isBackground).toBe(true)
+          expect(payload.prompt).toBe('investigate')
+          expect(payload.parentThreadId).toBe('parent-1')
+          expect(payload.sessionId).toBe('session-1')
+          return { taskId: 'task-1', threadId: 'worker-1' }
+        },
+        runQuery: async () => null
+      } as never,
+      parentThreadId: 'parent-1',
+      sessionId: 'session-1' as never
+    })
+    const delegate = tools.delegate as unknown as {
+      execute: (input: { description: string; isBackground: boolean; prompt: string }) => Promise<unknown>
+    }
+    const result = (await delegate.execute({
+      description: 'delegate task',
+      isBackground: true,
+      prompt: 'investigate'
+    })) as { status: string; taskId: string; threadId: string }
+    expect(called).toBe(true)
+    expect(result.status).toBe('pending')
+    expect(result.taskId).toBe('task-1')
+    expect(result.threadId).toBe('worker-1')
+  })
+
+  test('todoWrite tool forwards todos to sync mutation', async () => {
+    const { createOrchestratorTools } = await import('./agents')
+    let called = false
+    const tools = createOrchestratorTools({
+      ctx: {
+        runMutation: async (_ref: unknown, args: unknown) => {
+          called = true
+          const payload = args as {
+            sessionId: string
+            todos: { content: string; id?: string; position: number; priority: string; status: string }[]
+          }
+          expect(payload.sessionId).toBe('session-2')
+          expect(payload.todos.length).toBe(2)
+          expect(payload.todos[0]?.content).toBe('a')
+          return { updated: payload.todos.length }
+        },
+        runQuery: async () => null
+      } as never,
+      parentThreadId: 'parent-2',
+      sessionId: 'session-2' as never
+    })
+    const todoWrite = tools.todoWrite as unknown as {
+      execute: (input: {
+        todos: { content: string; id?: string; position: number; priority: 'high' | 'low' | 'medium'; status: string }[]
+      }) => Promise<unknown>
+    }
+    const result = (await todoWrite.execute({
+      todos: [
+        { content: 'a', position: 0, priority: 'high', status: 'pending' },
+        { content: 'b', id: 'todo-b', position: 1, priority: 'low', status: 'in_progress' }
+      ]
+    })) as { updated: number }
+    expect(called).toBe(true)
+    expect(result.updated).toBe(2)
+  })
+
+  test('todoRead tool normalizes array response to todos object', async () => {
+    const { createOrchestratorTools } = await import('./agents')
+    const tools = createOrchestratorTools({
+      ctx: {
+        runMutation: async () => ({ taskId: 'task', threadId: 'thread' }),
+        runQuery: async () => [{ content: 'todo 1' }]
+      } as never,
+      parentThreadId: 'parent-3',
+      sessionId: 'session-3' as never
+    })
+    const todoRead = tools.todoRead as unknown as { execute: (input: object) => Promise<unknown> },
+      result = (await todoRead.execute({})) as { todos: { content: string }[] }
+    expect(result.todos.length).toBe(1)
+    expect(result.todos[0]?.content).toBe('todo 1')
+  })
+
+  test('todoRead tool passes through object response', async () => {
+    const { createOrchestratorTools } = await import('./agents')
+    const tools = createOrchestratorTools({
+      ctx: {
+        runMutation: async () => ({ taskId: 'task', threadId: 'thread' }),
+        runQuery: async () => ({ todos: [{ content: 'todo passthrough' }] })
+      } as never,
+      parentThreadId: 'parent-4',
+      sessionId: 'session-4' as never
+    })
+    const todoRead = tools.todoRead as unknown as { execute: (input: object) => Promise<unknown> },
+      result = (await todoRead.execute({})) as { todos: { content: string }[] }
+    expect(result.todos.length).toBe(1)
+    expect(result.todos[0]?.content).toBe('todo passthrough')
+  })
+
+  test('taskStatus tool returns null contract when task is missing', async () => {
+    const { createOrchestratorTools } = await import('./agents')
+    const tools = createOrchestratorTools({
+      ctx: {
+        runMutation: async () => ({ taskId: 'task', threadId: 'thread' }),
+        runQuery: async () => null
+      } as never,
+      parentThreadId: 'parent-5',
+      sessionId: 'session-5' as never
+    })
+    const taskStatus = tools.taskStatus as unknown as { execute: (input: { taskId: string }) => Promise<unknown> },
+      result = (await taskStatus.execute({ taskId: 'missing' })) as { description: null; status: null }
+    expect(result.description).toBeNull()
+    expect(result.status).toBeNull()
+  })
+
+  test('taskStatus tool returns status and description', async () => {
+    const { createOrchestratorTools } = await import('./agents')
+    const tools = createOrchestratorTools({
+      ctx: {
+        runMutation: async () => ({ taskId: 'task', threadId: 'thread' }),
+        runQuery: async () => ({ description: 'download file', status: 'running' })
+      } as never,
+      parentThreadId: 'parent-6',
+      sessionId: 'session-6' as never
+    })
+    const taskStatus = tools.taskStatus as unknown as { execute: (input: { taskId: string }) => Promise<unknown> },
+      result = (await taskStatus.execute({ taskId: 'task-6' })) as {
+        description: string
+        status: 'cancelled' | 'completed' | 'failed' | 'pending' | 'running' | 'timed_out'
+      }
+    expect(result.description).toBe('download file')
+    expect(result.status).toBe('running')
+  })
+
+  test('taskOutput tool returns non-completed response contract', async () => {
+    const { createOrchestratorTools } = await import('./agents')
+    const tools = createOrchestratorTools({
+      ctx: {
+        runMutation: async () => ({ taskId: 'task', threadId: 'thread' }),
+        runQuery: async () => ({ status: 'running' })
+      } as never,
+      parentThreadId: 'parent-7',
+      sessionId: 'session-7' as never
+    })
+    const taskOutput = tools.taskOutput as unknown as { execute: (input: { taskId: string }) => Promise<unknown> },
+      result = (await taskOutput.execute({ taskId: 'task-7' })) as {
+        result: null | string
+        status: null | 'cancelled' | 'completed' | 'failed' | 'pending' | 'running' | 'timed_out'
+      }
+    expect(result.status).toBe('running')
+    expect(result.result).toBeNull()
+  })
+
+  test('taskOutput tool returns completed result', async () => {
+    const { createOrchestratorTools } = await import('./agents')
+    const tools = createOrchestratorTools({
+      ctx: {
+        runMutation: async () => ({ taskId: 'task', threadId: 'thread' }),
+        runQuery: async () => ({ result: 'done output', status: 'completed' })
+      } as never,
+      parentThreadId: 'parent-8',
+      sessionId: 'session-8' as never
+    })
+    const taskOutput = tools.taskOutput as unknown as { execute: (input: { taskId: string }) => Promise<unknown> },
+      result = (await taskOutput.execute({ taskId: 'task-8' })) as { result: string | null; status: string | null }
+    expect(result.status).toBe('completed')
+    expect(result.result).toBe('done output')
+  })
+
+  test('webSearch tool returns placeholder summary with sources', async () => {
+    const { createOrchestratorTools } = await import('./agents')
+    const tools = createOrchestratorTools({
+      ctx: {
+        runMutation: async () => ({ taskId: 'task', threadId: 'thread' }),
+        runQuery: async () => null
+      } as never,
+      parentThreadId: 'parent-9',
+      sessionId: 'session-9' as never
+    })
+    const webSearch = tools.webSearch as unknown as { execute: (input: { query: string }) => Promise<unknown> },
+      result = (await webSearch.execute({ query: 'convex' })) as { sources: unknown[]; summary: string }
+    expect(Array.isArray(result.sources)).toBe(true)
+    expect(result.sources.length).toBe(0)
+    expect(result.summary).toBe('Search not yet implemented')
+  })
+
+  test('createWorkerTools exposes only webSearch behavior', async () => {
+    const { createWorkerTools } = await import('./agents')
+    const tools = createWorkerTools({
+      ctx: {
+        runMutation: async () => ({ taskId: 'task', threadId: 'thread' }),
+        runQuery: async () => null
+      } as never,
+      parentThreadId: 'worker-parent',
+      sessionId: 'worker-session' as never
+    })
+    expect(Object.keys(tools)).toEqual(['webSearch'])
+    const webSearch = tools.webSearch as unknown as { execute: (input: { query: string }) => Promise<unknown> },
+      result = (await webSearch.execute({ query: 'worker query' })) as { summary: string }
+    expect(result.summary).toBe('Search not yet implemented')
+  })
+
+  test('delegate path mutation creates pending task row', async () => {
+    const ctx = t(),
+      { asUser } = await createTestContext(ctx),
+      { sessionId, threadId } = await asUser(0).mutation(api.sessions.createSession, {})
+    await ctx.mutation(internal.tasks.spawnTask, {
+      description: 'delegate-real',
+      isBackground: true,
+      parentThreadId: threadId,
+      prompt: 'real-actionctx-prompt',
+      sessionId
+    })
+    const tasks = await ctx.run(async c =>
+      c.db
+        .query('tasks')
+        .withIndex('by_parentThreadId_status', idx => idx.eq('parentThreadId', threadId).eq('status', 'pending'))
+        .collect()
+    )
+    expect(tasks.length).toBe(1)
+    expect(tasks[0]?.description).toBe('delegate-real')
+    expect(tasks[0]?.sessionId).toBe(sessionId)
+  })
+})
+
+describe('gap coverage orchestrator runtime', () => {
+  test('todo sync merge-by-id updates in place and preserves omitted rows', async () => {
+    const ctx = t(),
+      { asUser } = await createTestContext(ctx),
+      { sessionId } = await asUser(0).mutation(api.sessions.createSession, {})
+    const firstId = await ctx.run(async c =>
+      c.db.insert('todos', {
+        content: 'first',
+        position: 0,
+        priority: 'medium',
+        sessionId,
+        status: 'pending'
+      })
+    )
+    const secondId = await ctx.run(async c =>
+      c.db.insert('todos', {
+        content: 'second',
+        position: 1,
+        priority: 'low',
+        sessionId,
+        status: 'pending'
+      })
+    )
+    await ctx.mutation(internal.todos.syncOwned, {
+      sessionId,
+      todos: [
+        {
+          content: 'first-updated',
+          id: firstId,
+          position: 3,
+          priority: 'high',
+          status: 'in_progress'
+        },
+        {
+          content: 'third-new',
+          position: 4,
+          priority: 'medium',
+          status: 'pending'
+        }
+      ]
+    })
+    const first = await ctx.run(async c => c.db.get(firstId)),
+      second = await ctx.run(async c => c.db.get(secondId)),
+      rows = await ctx.run(async c =>
+        c.db
+          .query('todos')
+          .withIndex('by_session_position', idx => idx.eq('sessionId', sessionId))
+          .collect()
+      )
+    expect(first?.content).toBe('first-updated')
+    expect(first?.status).toBe('in_progress')
+    expect(second?.content).toBe('second')
+    expect(rows.length).toBe(3)
+  })
+
+  test('todo sync with foreign todo id inserts new row in owned session', async () => {
+    const ctx = t(),
+      { asUser } = await createTestContext(ctx),
+      { sessionId: sessionA } = await asUser(0).mutation(api.sessions.createSession, {}),
+      { sessionId: sessionB } = await asUser(0).mutation(api.sessions.createSession, {})
+    const foreignTodoId = await ctx.run(async c =>
+      c.db.insert('todos', {
+        content: 'foreign',
+        position: 0,
+        priority: 'low',
+        sessionId: sessionB,
+        status: 'pending'
+      })
+    )
+    await ctx.mutation(internal.todos.syncOwned, {
+      sessionId: sessionA,
+      todos: [
+        {
+          content: 'copied-to-a',
+          id: foreignTodoId,
+          position: 0,
+          priority: 'high',
+          status: 'pending'
+        }
+      ]
+    })
+    const rowsA = await ctx.run(async c =>
+        c.db
+          .query('todos')
+          .withIndex('by_session_position', idx => idx.eq('sessionId', sessionA))
+          .collect()
+      ),
+      foreign = await ctx.run(async c => c.db.get(foreignTodoId))
+    expect(rowsA.length).toBe(1)
+    expect(rowsA[0]?.content).toBe('copied-to-a')
+    expect(foreign?.content).toBe('foreign')
+  })
+
+  test('listMessagesForPrompt returns descending-slice reversed to chronological', async () => {
+    const ctx = t(),
+      { asUser } = await createTestContext(ctx),
+      { sessionId, threadId } = await asUser(0).mutation(api.sessions.createSession, {})
+    await ctx.run(async c => {
+      for (let i = 0; i < 7; i += 1)
+        await c.db.insert('messages', {
+          content: `order-${i}`,
+          isComplete: true,
+          parts: [{ text: `order-${i}`, type: 'text' }],
+          role: 'user',
+          sessionId,
+          threadId
+        })
+    })
+    const rows = await ctx.query(internal.orchestrator.listMessagesForPrompt, {
+      promptMessageId: undefined,
+      threadId
+    })
+    expect(rows.length).toBe(7)
+    expect(rows[0]?.content).toBe('order-0')
+    expect(rows[6]?.content).toBe('order-6')
+  })
+
+  test('recordModelUsage maps input and output token fields exactly', async () => {
+    const ctx = t(),
+      { asUser } = await createTestContext(ctx),
+      { sessionId, threadId } = await asUser(0).mutation(api.sessions.createSession, {})
+    const rowId = await ctx.mutation(internal.tokenUsage.recordModelUsage, {
+      agentName: 'runtime',
+      inputTokens: 21,
+      model: 'gemini-test',
+      outputTokens: 34,
+      provider: 'vertex',
+      sessionId,
+      threadId,
+      totalTokens: 55
+    })
+    const row = await ctx.run(async c => (rowId ? c.db.get(rowId) : null))
+    expect(row?.inputTokens).toBe(21)
+    expect(row?.outputTokens).toBe(34)
+    expect(row?.totalTokens).toBe(55)
+    expect(row?.model).toBe('gemini-test')
+  })
+
+  test('recordModelUsage resolves session from parent thread when sessionId omitted', async () => {
+    const ctx = t(),
+      { asUser } = await createTestContext(ctx),
+      { sessionId, threadId } = await asUser(0).mutation(api.sessions.createSession, {})
+    const rowId = await ctx.mutation(internal.tokenUsage.recordModelUsage, {
+      agentName: 'main',
+      inputTokens: 2,
+      model: 'mock',
+      outputTokens: 3,
+      provider: 'mock',
+      threadId,
+      totalTokens: 5
+    })
+    const row = await ctx.run(async c => (rowId ? c.db.get(rowId) : null))
+    expect(row?.sessionId).toBe(sessionId)
+  })
+
+  test('recordModelUsage resolves session from worker thread when sessionId omitted', async () => {
+    const ctx = t(),
+      { asUser } = await createTestContext(ctx),
+      { sessionId, threadId: parentThreadId } = await asUser(0).mutation(api.sessions.createSession, {})
+    const workerThreadId = 'worker-token-resolve'
+    await ctx.run(async c => {
+      await c.db.insert('tasks', {
+        description: 'worker token row',
+        isBackground: true,
+        parentThreadId,
+        retryCount: 0,
+        sessionId,
+        status: 'pending',
+        threadId: workerThreadId
+      })
+    })
+    const rowId = await ctx.mutation(internal.tokenUsage.recordModelUsage, {
+      agentName: 'worker',
+      inputTokens: 4,
+      model: 'mock',
+      outputTokens: 6,
+      provider: 'mock',
+      threadId: workerThreadId,
+      totalTokens: 10
+    })
+    const row = await ctx.run(async c => (rowId ? c.db.get(rowId) : null))
+    expect(row?.sessionId).toBe(sessionId)
+    expect(row?.threadId).toBe(workerThreadId)
+  })
+
+  test('recordModelUsage returns null when session cannot be resolved', async () => {
+    const ctx = t(),
+      rowId = await ctx.mutation(internal.tokenUsage.recordModelUsage, {
+        agentName: 'orphan',
+        inputTokens: 1,
+        model: 'mock',
+        outputTokens: 1,
+        provider: 'mock',
+        threadId: `missing-thread-${crypto.randomUUID()}`,
+        totalTokens: 2
+      })
+    expect(rowId).toBeNull()
+  })
+
+  test('token usage aggregates across multiple thread rows within one session', async () => {
+    const ctx = t(),
+      { asUser } = await createTestContext(ctx),
+      { sessionId, threadId: parentThreadId } = await asUser(0).mutation(api.sessions.createSession, {})
+    await ctx.mutation(internal.tokenUsage.recordModelUsage, {
+      agentName: 'main',
+      inputTokens: 5,
+      model: 'mock',
+      outputTokens: 7,
+      provider: 'mock',
+      sessionId,
+      threadId: parentThreadId,
+      totalTokens: 12
+    })
+    await ctx.mutation(internal.tokenUsage.recordModelUsage, {
+      agentName: 'worker',
+      inputTokens: 3,
+      model: 'mock',
+      outputTokens: 4,
+      provider: 'mock',
+      sessionId,
+      threadId: 'worker-aggregate-thread',
+      totalTokens: 7
+    })
+    const usage = await asUser(0).query(api.tokenUsage.getTokenUsage, { sessionId })
+    expect(usage.count).toBe(2)
+    expect(usage.inputTokens).toBe(8)
+    expect(usage.outputTokens).toBe(11)
+    expect(usage.totalTokens).toBe(19)
+  })
+
+  test('token usage query excludes rows from other sessions', async () => {
+    const ctx = t(),
+      { asUser } = await createTestContext(ctx),
+      { sessionId: a, threadId: ta } = await asUser(0).mutation(api.sessions.createSession, {}),
+      { sessionId: b, threadId: tb } = await asUser(0).mutation(api.sessions.createSession, {})
+    await ctx.mutation(internal.tokenUsage.recordModelUsage, {
+      agentName: 'main',
+      inputTokens: 10,
+      model: 'mock',
+      outputTokens: 10,
+      provider: 'mock',
+      sessionId: a,
+      threadId: ta,
+      totalTokens: 20
+    })
+    await ctx.mutation(internal.tokenUsage.recordModelUsage, {
+      agentName: 'main',
+      inputTokens: 1,
+      model: 'mock',
+      outputTokens: 2,
+      provider: 'mock',
+      sessionId: b,
+      threadId: tb,
+      totalTokens: 3
+    })
+    const usageA = await asUser(0).query(api.tokenUsage.getTokenUsage, { sessionId: a })
+    expect(usageA.count).toBe(1)
+    expect(usageA.totalTokens).toBe(20)
+  })
+
+  test('enqueueRun lower-priority rejection does not mutate streak', async () => {
+    const ctx = t(),
+      { asUser } = await createTestContext(ctx),
+      { threadId } = await asUser(0).mutation(api.sessions.createSession, {})
+    await ctx.mutation(internal.orchestrator.enqueueRun, {
+      priority: 2,
+      promptMessageId: 'base',
+      reason: 'user_message',
+      threadId
+    })
+    await ctx.run(async c => {
+      const state = await c.db
+        .query('threadRunState')
+        .withIndex('by_threadId', idx => idx.eq('threadId', threadId))
+        .unique()
+      if (state)
+        await c.db.patch(state._id, {
+          autoContinueStreak: 4,
+          queuedPriority: 'user_message',
+          queuedReason: 'user_message'
+        })
+    })
+    const result = await ctx.mutation(internal.orchestrator.enqueueRun, {
+      incrementStreak: true,
+      priority: 0,
+      promptMessageId: 'lower',
+      reason: 'todo_continuation',
+      threadId
+    })
+    const state = await ctx.query(internal.orchestrator.readRunState, { threadId })
+    expect(result.ok).toBe(false)
+    expect(result.reason).toBe('lower_priority')
+    expect(state?.autoContinueStreak).toBe(4)
+  })
+
+  test('user_message reason resets streak immediately while run is active', async () => {
+    const ctx = t(),
+      { asUser } = await createTestContext(ctx),
+      { threadId } = await asUser(0).mutation(api.sessions.createSession, {})
+    await ctx.mutation(internal.orchestrator.enqueueRun, {
+      priority: 2,
+      promptMessageId: 'active-start',
+      reason: 'user_message',
+      threadId
+    })
+    await ctx.run(async c => {
+      const state = await c.db
+        .query('threadRunState')
+        .withIndex('by_threadId', idx => idx.eq('threadId', threadId))
+        .unique()
+      if (state) await c.db.patch(state._id, { autoContinueStreak: 5 })
+    })
+    await ctx.mutation(internal.orchestrator.enqueueRun, {
+      incrementStreak: false,
+      priority: 2,
+      promptMessageId: 'new-user-message',
+      reason: 'user_message',
+      threadId
+    })
+    const state = await ctx.query(internal.orchestrator.readRunState, { threadId })
+    expect(state?.autoContinueStreak).toBe(0)
+  })
+
+  test('postTurnAudit at streak cap does not enqueue todo continuation', async () => {
+    const ctx = t(),
+      { asUser } = await createTestContext(ctx),
+      { sessionId, threadId } = await asUser(0).mutation(api.sessions.createSession, {})
+    await ctx.mutation(internal.orchestrator.enqueueRun, {
+      priority: 2,
+      promptMessageId: 'start',
+      reason: 'user_message',
+      threadId
+    })
+    const beforeMessages = await ctx.run(async c =>
+      c.db
+        .query('messages')
+        .withIndex('by_threadId', idx => idx.eq('threadId', threadId))
+        .collect()
+    )
+    const runState = await ctx.query(internal.orchestrator.readRunState, { threadId })
+    await ctx.run(async c => {
+      await c.db.insert('todos', {
+        content: 'remaining todo',
+        position: 0,
+        priority: 'high',
+        sessionId,
+        status: 'pending'
+      })
+      const state = await c.db
+        .query('threadRunState')
+        .withIndex('by_threadId', idx => idx.eq('threadId', threadId))
+        .unique()
+      if (state) await c.db.patch(state._id, { autoContinueStreak: 5 })
+    })
+    const result = await ctx.mutation(internal.orchestrator.postTurnAuditFenced, {
+      runToken: runState?.activeRunToken ?? '',
+      threadId,
+      turnRequestedInput: false
+    })
+    const afterMessages = await ctx.run(async c =>
+      c.db
+        .query('messages')
+        .withIndex('by_threadId', idx => idx.eq('threadId', threadId))
+        .collect()
+    )
+    expect(result.ok).toBe(true)
+    expect(result.shouldContinue).toBe(false)
+    expect(afterMessages.length).toBe(beforeMessages.length)
+  })
+
+  test('postTurnAudit reminder format lists only incomplete todos', async () => {
+    const ctx = t(),
+      { asUser } = await createTestContext(ctx),
+      { sessionId, threadId } = await asUser(0).mutation(api.sessions.createSession, {})
+    await ctx.mutation(internal.orchestrator.enqueueRun, {
+      priority: 2,
+      promptMessageId: 'todo-format-start',
+      reason: 'user_message',
+      threadId
+    })
+    const active = await ctx.query(internal.orchestrator.readRunState, { threadId })
+    await ctx.run(async c => {
+      await c.db.insert('todos', {
+        content: 'pending item',
+        position: 0,
+        priority: 'high',
+        sessionId,
+        status: 'pending'
+      })
+      await c.db.insert('todos', {
+        content: 'in progress item',
+        position: 1,
+        priority: 'medium',
+        sessionId,
+        status: 'in_progress'
+      })
+      await c.db.insert('todos', {
+        content: 'completed item',
+        position: 2,
+        priority: 'low',
+        sessionId,
+        status: 'completed'
+      })
+      await c.db.insert('todos', {
+        content: 'cancelled item',
+        position: 3,
+        priority: 'low',
+        sessionId,
+        status: 'cancelled'
+      })
+    })
+    const result = await ctx.mutation(internal.orchestrator.postTurnAuditFenced, {
+      runToken: active?.activeRunToken ?? '',
+      threadId,
+      turnRequestedInput: false
+    })
+    const state = await ctx.query(internal.orchestrator.readRunState, { threadId })
+    const reminder = await ctx.run(async c => {
+      const rows = await c.db
+        .query('messages')
+        .withIndex('by_threadId', idx => idx.eq('threadId', threadId))
+        .collect()
+      return rows.find(m => String(m._id) === state?.queuedPromptMessageId)
+    })
+    expect(result.shouldContinue).toBe(true)
+    expect(reminder?.content.includes('[TODO CONTINUATION]')).toBe(true)
+    expect(reminder?.content.includes('- [pending] (high) pending item')).toBe(true)
+    expect(reminder?.content.includes('- [in_progress] (medium) in progress item')).toBe(true)
+    expect(reminder?.content.includes('completed item')).toBe(false)
+    expect(reminder?.content.includes('cancelled item')).toBe(false)
+  })
+})
+
+describe('gap coverage error and state surfaces', () => {
+  test('timeoutStaleTasks terminal reminder uses timed out prefix', async () => {
+    const ctx = t(),
+      { asUser } = await createTestContext(ctx),
+      { sessionId, threadId: parentThreadId } = await asUser(0).mutation(api.sessions.createSession, {})
+    const taskId = await ctx.run(async c =>
+      c.db.insert('tasks', {
+        description: 'timed out state surface',
+        heartbeatAt: Date.now() - 6 * 60 * 1000,
+        isBackground: true,
+        parentThreadId,
+        retryCount: 0,
+        sessionId,
+        status: 'running',
+        threadId: 'worker-timeout-state-surface'
+      })
+    )
+    await ctx.mutation(internal.staleTaskCleanup.timeoutStaleTasks, {})
+    const task = await ctx.run(async c => c.db.get(taskId)),
+      reminder = await ctx.run(async c => {
+        const rows = await c.db
+          .query('messages')
+          .withIndex('by_threadId', idx => idx.eq('threadId', parentThreadId))
+          .collect()
+        return rows.find(m => String(m._id) === task?.completionReminderMessageId)
+      })
+    expect(reminder?.content.includes('[BACKGROUND TASK TIMED OUT]')).toBe(true)
+  })
+
+  test('cleanupStaleMessages writes interrupted fallback when streaming content is empty', async () => {
+    const ctx = t(),
+      { asUser } = await createTestContext(ctx),
+      { threadId } = await asUser(0).mutation(api.sessions.createSession, {}),
+      originalNow = Date.now,
+      baseNow = Date.now()
+    const messageId = await (async () => {
+      try {
+        Date.now = () => baseNow
+        return await ctx.run(async c =>
+          c.db.insert('messages', {
+            content: '',
+            isComplete: false,
+            parts: [{ args: '{}', status: 'pending', toolCallId: 'p', toolName: 'x', type: 'tool-call' }],
+            role: 'assistant',
+            streamingContent: '',
+            threadId
+          })
+        )
+      } finally {
+        Date.now = originalNow
+      }
+    })()
+    await (async () => {
+      try {
+        Date.now = () => baseNow + 6 * 60 * 1000
+        await ctx.mutation(internal.staleTaskCleanup.cleanupStaleMessages, {})
+      } finally {
+        Date.now = originalNow
+      }
+    })()
+    const message = await ctx.run(async c => c.db.get(messageId))
+    expect(message?.isComplete).toBe(true)
+    expect(message?.content).toBe('[Message interrupted]')
+  })
+
+  test('failed terminal reminder includes description and error text', async () => {
+    const ctx = t(),
+      { asUser } = await createTestContext(ctx),
+      { sessionId, threadId: parentThreadId } = await asUser(0).mutation(api.sessions.createSession, {})
+    await ctx.run(async c => {
+      await c.db.patch(sessionId, { status: 'archived' })
+    })
+    const taskId = await ctx.run(async c =>
+      c.db.insert('tasks', {
+        description: 'failing task state surface',
+        isBackground: true,
+        parentThreadId,
+        retryCount: 0,
+        sessionId,
+        startedAt: Date.now(),
+        status: 'running',
+        threadId: 'worker-failed-state-surface'
+      })
+    )
+    await ctx.mutation(internal.tasks.failTask, { lastError: 'boom state', taskId })
+    const task = await ctx.run(async c => c.db.get(taskId)),
+      reminder = await ctx.run(async c => {
+        const rows = await c.db
+          .query('messages')
+          .withIndex('by_threadId', idx => idx.eq('threadId', parentThreadId))
+          .collect()
+        return rows.find(m => String(m._id) === task?.completionReminderMessageId)
+      })
+    expect(reminder?.content.includes('[BACKGROUND TASK FAILED]')).toBe(true)
+    expect(reminder?.content.includes('Description: failing task state surface')).toBe(true)
+    expect(reminder?.content.includes('Error: boom state')).toBe(true)
+  })
+
+  test('completed terminal reminder includes completion prefix and task identifier', async () => {
+    const ctx = t(),
+      { asUser } = await createTestContext(ctx),
+      { sessionId, threadId: parentThreadId } = await asUser(0).mutation(api.sessions.createSession, {})
+    await ctx.run(async c => {
+      await c.db.patch(sessionId, { status: 'archived' })
+    })
+    const taskId = await ctx.run(async c =>
+      c.db.insert('tasks', {
+        description: 'completed task state surface',
+        isBackground: true,
+        parentThreadId,
+        retryCount: 0,
+        sessionId,
+        startedAt: Date.now(),
+        status: 'running',
+        threadId: 'worker-completed-state-surface'
+      })
+    )
+    await ctx.mutation(internal.tasks.completeTask, { result: 'ok', taskId })
+    const task = await ctx.run(async c => c.db.get(taskId)),
+      reminder = await ctx.run(async c => {
+        const rows = await c.db
+          .query('messages')
+          .withIndex('by_threadId', idx => idx.eq('threadId', parentThreadId))
+          .collect()
+        return rows.find(m => String(m._id) === task?.completionReminderMessageId)
+      })
+    expect(reminder?.content.includes('[BACKGROUND TASK COMPLETED]')).toBe(true)
+    expect(reminder?.content.includes(`Task ID: ${String(taskId)}`)).toBe(true)
+  })
+})
