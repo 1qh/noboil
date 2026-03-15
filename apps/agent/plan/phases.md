@@ -100,16 +100,19 @@ Success criteria:
 
 Scope:
 
-1. E2E smoke coverage for core flows
-2. Repeatability checks for async and streaming paths
-3. Deployment verification (backend deploy + frontend env wiring)
-4. Final quality gates (`bun fix`, targeted tests, smoke suite)
+1. **Backend tests (convex-test)** — 175+ cases covering every mutation, query, action, cron handler, ownership guard, CAS transition, and edge case. Written alongside code in Phase 1-4.
+2. **E2E infrastructure** — playwright.config.ts, global-setup.ts, page objects, fixtures, helpers. Follows monorepo pattern from `@a/e2e`.
+3. **E2E test implementation** — 60+ Playwright test cases across 7 files (session, chat, tools, settings, error, a11y, frontend-states).
+4. **Pre-E2E deployment** — `CONVEX_TEST_MODE=true bun --cwd packages/be-agent with-env convex dev --once` before test run.
+5. **Final quality gates** — `bun fix` passes, `bun test` (backend) green, `bun test:e2e` (Playwright) green.
 
 Success criteria:
 
-- Smoke suite verifies session CRUD, messaging, tool execution, streaming, and background continuation
-- Deployment path is validated in target environment
-- Success criteria list from plan is satisfied end-to-end
+- All 175+ backend tests pass
+- All 60+ E2E tests pass in headless Chromium
+- `bun fix` produces zero errors on `packages/be-agent` and `apps/agent`
+- Deployment path validated (backend deploy + frontend build)
+- E2E covers: session CRUD, chat streaming, tool execution, MCP settings, error states, accessibility, responsive
 
 ## Phase dependency graph
 

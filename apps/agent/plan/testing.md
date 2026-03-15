@@ -296,6 +296,179 @@ flowchart LR
 | 11  | Full MCP E2E: add server in settings → trigger discover in chat → call tool → result renders                              | Complete product path from config to tool usage                                                               |
 | 12  | Worker output only available after completion, not live-streamed (v1 limitation)                                          | No streaming content visible during worker execution; result appears via taskOutput only                      |
 
+## E2E Infrastructure
+
+### File Structure
+
+```
+apps/agent/
+├── playwright.config.ts        # createPlaywrightConfig({ port: 3010 })
+├── e2e/
+│   ├── global-setup.ts         # re-export from @a/e2e + agent-specific setup
+│   ├── global-teardown.ts      # re-export from @a/e2e
+│   ├── fixtures.ts             # extend base test with page objects
+│   ├── helpers.ts              # re-export login from @a/e2e/helpers
+│   ├── pages/
+│   │   ├── session-list.ts     # page object: session list (/)
+│   │   ├── chat.ts             # page object: chat page (/chat/[id])
+│   │   └── settings.ts         # page object: settings (/settings)
+│   ├── session.test.ts         # Session Management tests
+│   ├── chat.test.ts            # Chat & Streaming tests
+│   ├── tools.test.ts           # Tool Execution tests
+│   ├── settings.test.ts        # Settings (MCP) tests
+│   ├── error.test.ts           # Error States tests
+│   ├── a11y.test.ts            # Accessibility tests
+│   └── frontend-states.test.ts # Frontend States tests
+```
+
+### Playwright Config
+
+Uses shared `createPlaywrightConfig` from `@a/e2e/playwright-config`:
+
+```typescript
+import { createPlaywrightConfig } from '@a/e2e/playwright-config'
+export default createPlaywrightConfig({ port: 3010 })
+```
+
+This provides:
+- Web server: `next dev --turbo --port 3010` with `CONVEX_TEST_MODE=true` and `PLAYWRIGHT=1`
+- Chromium only, workers: 1 (serial), retries: 2
+- Global setup/teardown for test user + cleanup
+- Test results in `./test-results/`
+
+### Global Setup (agent-specific)
+
+The shared `@a/e2e/global-setup` sets `CONVEX_TEST_MODE` on the Convex backend and ensures the test user exists. The agent app needs to customize it to target `packages/be-agent` instead of `packages/be-convex`:
+
+```typescript
+/** biome-ignore-all lint/style/noProcessEnv: env detection */
+import { ConvexHttpClient } from 'convex/browser'
+import { anyApi } from 'convex/server'
+import type { FunctionReference } from 'convex/server'
+import { execSync } from 'node:child_process'
+
+const globalSetup = async () => {
+  execSync('bun with-env convex env set CONVEX_TEST_MODE true', {
+    cwd: '../../packages/be-agent',
+    stdio: 'pipe'
+  })
+  const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL ?? 'http://127.0.0.1:3212'
+  const client = new ConvexHttpClient(convexUrl)
+  await client.mutation(
+    anyApi.testauth.ensureTestUser as FunctionReference<'mutation'>,
+    {}
+  )
+}
+
+export default globalSetup
+```
+
+### Pre-E2E Deployment
+
+Before running E2E tests, the backend must be deployed in test mode:
+
+```bash
+CONVEX_TEST_MODE=true bun --cwd packages/be-agent with-env convex dev --once
+```
+
+This is handled by the test script in `apps/agent/package.json`:
+
+```json
+{
+  "test:e2e": "NEXT_PUBLIC_CONVEX_TEST_MODE=true CONVEX_TEST_MODE=true bun --cwd ../../packages/be-agent with-env convex dev --once && bun with-env playwright test --reporter=list"
+}
+```
+
+### Page Objects
+
+Page objects encapsulate locators and actions for each page. Pattern from existing `@a/e2e/base-page`:
+
+```typescript
+import BasePage from '@a/e2e/base-page'
+
+class ChatPage extends BasePage {
+  getComposer = () => this.page.getByRole('textbox', { name: /message/i })
+  getSendButton = () => this.page.getByRole('button', { name: /send/i })
+  getMessageLog = () => this.page.getByRole('log')
+  getMessages = () => this.page.locator('article')
+  getStreamingIndicator = () => this.page.locator('[data-streaming="true"]')
+  getToolCards = () => this.page.locator('details').filter({ has: this.page.locator('summary') })
+  
+  sendMessage = async (content: string) => {
+    await this.getComposer().fill(content)
+    await this.getSendButton().click()
+  }
+}
+```
+
+### Fixtures
+
+```typescript
+import { test as baseTest, expect } from '@a/e2e/base-test'
+import ChatPage from './pages/chat'
+import SessionListPage from './pages/session-list'
+import SettingsPage from './pages/settings'
+
+interface Fixtures {
+  chatPage: ChatPage
+  sessionListPage: SessionListPage
+  settingsPage: SettingsPage
+}
+
+const test = baseTest.extend<Fixtures>({
+  chatPage: async ({ page }, run) => { await run(new ChatPage(page)) },
+  sessionListPage: async ({ page }, run) => { await run(new SessionListPage(page)) },
+  settingsPage: async ({ page }, run) => { await run(new SettingsPage(page)) }
+})
+
+export { expect, test }
+```
+
+### Mock Model Behavior in E2E
+
+In E2E mode (`CONVEX_TEST_MODE=true`), the backend uses `mockModel` which:
+- Returns deterministic text responses for text-only queries
+- Returns schema-valid tool calls when tools are available
+- Returns tool-call parts that get resolved by actual tool handlers (which execute real Convex mutations)
+
+This means E2E tests exercise the FULL pipeline: frontend → Convex mutation → orchestrator action → mock model → tool execution → message persistence → reactive query → frontend renders. The only mock is the LLM itself.
+
+### Test Data Seeding
+
+E2E tests create their own sessions and messages via the UI or via direct Convex mutations using `ConvexHttpClient`:
+
+```typescript
+import { ConvexHttpClient } from 'convex/browser'
+import { anyApi } from 'convex/server'
+
+const seedSession = async (client: ConvexHttpClient) =>
+  client.mutation(anyApi.sessions.createSession as FunctionReference<'mutation'>, { title: 'E2E Test' })
+```
+
+Global teardown cleans up test data by querying all test-user-owned sessions and deleting them.
+
+```mermaid
+sequenceDiagram
+    participant GS as Global Setup
+    participant BE as Convex Backend
+    participant PW as Playwright
+    participant FE as Next.js Frontend
+
+    GS->>BE: convex dev --once (deploy in test mode)
+    GS->>BE: ensureTestUser mutation
+    GS->>BE: set CONVEX_TEST_MODE=true
+    PW->>FE: Navigate to /
+    FE->>BE: useQuery(sessions.list)
+    BE-->>FE: test user sessions
+    PW->>FE: Click "New Chat"
+    FE->>BE: createSession mutation
+    PW->>FE: Type message + Send
+    FE->>BE: submitMessage mutation
+    BE->>BE: runOrchestrator (mock model)
+    BE-->>FE: streaming messages
+    PW->>FE: Assert message visible
+```
+
 ## E2E Test Matrix (Playwright)
 
 ### Session Management
