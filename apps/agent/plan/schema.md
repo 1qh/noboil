@@ -36,11 +36,10 @@ The backend keeps noboil schema conventions:
   - `sessionId` (optional)
   - `metadata` (optional JSON)
 - Canonical ordering key: Convex `_creationTime` system field (monotonic and unique, set by DB engine).
-- Message ordering uses Convex's built-in `_creationTime` system field which is monotonic and unique — no manual `createdAt` needed. All ordering, prompt bounding, and compaction boundary checks use `_creationTime` for strict total order with no same-millisecond ambiguity.
+- Message ordering uses Convex’s built-in `_creationTime` system field which is monotonic and unique — no manual `createdAt` needed. All ordering, prompt bounding, and compaction boundary checks use `_creationTime` for strict total order with no same-millisecond ambiguity.
 - Worker-thread messages omit `sessionId` - ownership resolves through `tasks.threadId -> tasks.sessionId`. Orchestrator-thread messages always include `sessionId`.
 - Indexes:
-  - `by_threadId`
-  - `by_thread_creationTime`
+  - `by_threadId` — Convex implicitly sorts by `_creationTime` within any index prefix, so a single `by_threadId` index covers both `by_threadId` and `by_thread_creationTime` (they would be duplicate indexes). All ordering queries use this single index.
 
 ### `session`
 
@@ -272,10 +271,13 @@ flowchart TB
 Tests for this module are defined in [testing.md](./testing.md). Key test areas:
 
 ### convex-test
+
 - Auth & Ownership: #11-12
 
 ### E2E (Playwright)
+
 - Chat & Streaming: #4
 
 ### Edge Cases
+
 - Edge Cases: #1

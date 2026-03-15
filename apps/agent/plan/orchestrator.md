@@ -519,7 +519,7 @@ const runOrchestratorStream = async ({
 
 System reminders are saved as `messages` rows and their inserted id is reused as next prompt anchor.
 
-Message ordering uses Convex's built-in `_creationTime` system field which is monotonic and unique — no manual `createdAt` needed.
+Message ordering uses Convex’s built-in `_creationTime` system field which is monotonic and unique — no manual `createdAt` needed.
 
 ```typescript
 const reminderMessageId = await ctx.db.insert('messages', {
@@ -543,7 +543,12 @@ await result.consumeStream()
 There is no hook system; continuation enforcement runs in orchestrator action after streaming completes.
 
 ```typescript
-const postTurnAudit = async ({ ctx, runToken, threadId, turnRequestedInput }) => {
+const postTurnAudit = async ({
+  ctx,
+  runToken,
+  threadId,
+  turnRequestedInput
+}) => {
   const session = await ctx.runQuery(internal.sessions.getByThreadIdInternal, {
     threadId
   })
@@ -802,12 +807,12 @@ const enqueueRunIfLatest = internalMutation({
     threadId: v.string()
   },
   handler: async (ctx, args) => {
-     const latest = await ctx.db
-       .query('messages')
-       .withIndex('by_thread_creationTime', q => q.eq('threadId', args.threadId))
-       .order('desc')
-       .first()
-     const latestMessageId = latest ? String(latest._id) : null
+    const latest = await ctx.db
+      .query('messages')
+      .withIndex('by_thread_creationTime', q => q.eq('threadId', args.threadId))
+      .order('desc')
+      .first()
+    const latestMessageId = latest ? String(latest._id) : null
     if (latestMessageId !== args.expectedLatestMessageId)
       return { ok: false, reason: 'not_latest' }
 
@@ -969,11 +974,11 @@ const getContextSize = internalQuery({
   args: { threadId: v.string() },
   handler: async (ctx, { threadId }) => {
     // Query `messages.by_thread_creationTime` with `order('desc')`, take the first 100 (most recent), then reverse the array to chronological order before passing to `buildModelMessages`. This ensures the model always sees the latest context window in correct temporal order.
-     const messages = await ctx.db
-       .query('messages')
-       .withIndex('by_thread_creationTime', q => q.eq('threadId', threadId))
-       .order('desc')
-       .take(500)
+    const messages = await ctx.db
+      .query('messages')
+      .withIndex('by_thread_creationTime', q => q.eq('threadId', threadId))
+      .order('desc')
+      .take(500)
     const hasMore = messages.length >= 500
     let charCount = 0
     for (const m of messages) {
@@ -1002,10 +1007,10 @@ const listMessages = query({
     await resolveOwnedSessionByThread({ ctx, threadId: args.threadId, userId })
 
     // Query `messages.by_thread_creationTime` with `order('desc')`, take the first 100 (most recent), then reverse the array to chronological order before passing to `buildModelMessages`. This ensures the model always sees the latest context window in correct temporal order.
-     return await ctx.db
-       .query('messages')
-       .withIndex('by_thread_creationTime', q => q.eq('threadId', args.threadId))
-       .paginate(args.paginationOpts)
+    return await ctx.db
+      .query('messages')
+      .withIndex('by_thread_creationTime', q => q.eq('threadId', args.threadId))
+      .paginate(args.paginationOpts)
   }
 })
 
@@ -1055,12 +1060,14 @@ const setCompactionSummary = internalMutation({
   ) => {
     const state = await ensureRunState({ ctx, threadId })
     if (state.compactionLock !== lockToken) return { ok: false }
-     if (state.lastCompactedMessageId) {
-       const prev = await ctx.db.get(state.lastCompactedMessageId as Id<'messages'>)
-       const next = await ctx.db.get(lastCompactedMessageId as Id<'messages'>)
-       if (!next) return { ok: false }
-       if (prev && next._creationTime <= prev._creationTime) return { ok: false }
-     }
+    if (state.lastCompactedMessageId) {
+      const prev = await ctx.db.get(
+        state.lastCompactedMessageId as Id<'messages'>
+      )
+      const next = await ctx.db.get(lastCompactedMessageId as Id<'messages'>)
+      if (!next) return { ok: false }
+      if (prev && next._creationTime <= prev._creationTime) return { ok: false }
+    }
     await ctx.db.patch(state._id, { compactionSummary, lastCompactedMessageId })
     return { ok: true }
   }
@@ -1153,14 +1160,14 @@ const submitMessage = mutation({
     })
     if (session.status === 'archived') throw new Error('session_archived')
 
-     const messageId = await ctx.db.insert('messages', {
-       content: args.content,
-       isComplete: true,
-       role: 'user',
-       sessionId: session._id,
-       threadId: session.threadId,
-       userId
-     })
+    const messageId = await ctx.db.insert('messages', {
+      content: args.content,
+      isComplete: true,
+      role: 'user',
+      sessionId: session._id,
+      threadId: session.threadId,
+      userId
+    })
 
     await ctx.db.patch(session._id, {
       lastActivityAt: Date.now(),
@@ -1200,12 +1207,14 @@ const enqueueRunIfLatest = internalMutation({
     threadId: v.string()
   },
   handler: async (ctx, args) => {
-     const latest = await ctx.db
-       .query('messages')
-       .withIndex('by_thread_creationTime', q => q.eq('threadId', c.args.threadId))
-       .order('desc')
-       .first()
-     if (!latest || latest._id !== args.expectedLatestMessageId)
+    const latest = await ctx.db
+      .query('messages')
+      .withIndex('by_thread_creationTime', q =>
+        q.eq('threadId', c.args.threadId)
+      )
+      .order('desc')
+      .first()
+    if (!latest || latest._id !== args.expectedLatestMessageId)
       return { ok: false, reason: 'not_latest' }
 
     const state = await ensureRunState({ ctx, threadId: args.threadId })
@@ -1342,12 +1351,15 @@ During implementation, extract the shared CAS transition logic into one helper u
 Tests for this module are defined in [testing.md](./testing.md). Key test areas:
 
 ### convex-test
+
 - Queue & Concurrency: #1-14
 - Orchestrator Runtime: #1-20
 
 ### E2E (Playwright)
+
 - Chat & Streaming: #1-5
 - Tool Execution: #2
 
 ### Edge Cases
+
 - Edge Cases: #1-2, #8-9

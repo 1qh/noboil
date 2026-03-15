@@ -279,7 +279,9 @@ const groundWithGemini = internalAction({
   handler: async (ctx, { query, threadId }) => {
     const { generateText } = await import('ai')
     const { createVertex } = await import('@ai-sdk/google-vertex')
-  const vertex = createVertex({ googleVertexApiKey: process.env.GOOGLE_VERTEX_API_KEY })
+    const vertex = createVertex({
+      googleVertexApiKey: process.env.GOOGLE_VERTEX_API_KEY
+    })
     const model = await getModel()
     const out = await generateText({
       model,
@@ -328,11 +330,14 @@ Provider-defined tool isolation note:
 Tests for this module are defined in [testing.md](./testing.md). Key test areas:
 
 ### convex-test
+
 - Orchestrator Runtime: #10-12
 - Implementation Details: #10-11
 
 ### E2E (Playwright)
+
 - Tool Execution: #1-6
 
 ### Edge Cases
+
 - Edge Cases: #4

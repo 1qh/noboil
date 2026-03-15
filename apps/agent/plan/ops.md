@@ -39,12 +39,13 @@ Retention and stale-recovery jobs are wired through Convex cron jobs (`cronJobs(
 
 ### Stale Message Janitor
 
-`cleanupStaleMessages` runs every 5 minutes. It finds `messages` rows where `isComplete === false` AND the owning thread has no active run (`threadRunState.status === 'idle'`) AND the message's `_creationTime` is older than 5 minutes. For each orphaned message:
+`cleanupStaleMessages` runs every 5 minutes. It finds `messages` rows where `isComplete === false` AND the owning thread has no active run (`threadRunState.status === 'idle'`) AND the message’s `_creationTime` is older than 5 minutes. For each orphaned message:
+
 1. Copy `streamingContent` to `content` (or set `content` to `[Message interrupted]` if empty)
 2. Terminalize any `parts` entries with `status: 'pending'` → set `status: 'error'` and `result: 'Interrupted: agent run terminated before tool completion'`
 3. Set `isComplete: true` and clear `streamingContent`
 
-This prevents permanent ghost streaming messages AND ensures compaction can proceed (compaction requires all tool-call parts to be terminal). Without step 2, a crashed run's pending tool-call parts would block compaction forever and cause the UI to show permanent 'running' tool cards.
+This prevents permanent ghost streaming messages AND ensures compaction can proceed (compaction requires all tool-call parts to be terminal). Without step 2, a crashed run’s pending tool-call parts would block compaction forever and cause the UI to show permanent ‘running’ tool cards.
 
 Operational ownership map:
 
@@ -108,7 +109,7 @@ Legacy v1 wording called out app-layer-only cleanup and component-layer orphans.
 
 Deletion cascade for hard-delete:
 
-The hard-delete cascade includes worker-thread artifacts: for each deleted task, all `messages` rows on the task's `threadId` are also deleted. Since worker threads have no `session` row (they are task-owned), the cleanup resolves through `tasks.threadId` -> `messages.by_threadId`, not through `session`. The deletion order is: `tokenUsage` -> `todos` -> `messages` (both session and worker threads) -> `tasks` -> `threadRunState` -> `session`.
+The hard-delete cascade includes worker-thread artifacts: for each deleted task, all `messages` rows on the task’s `threadId` are also deleted. Since worker threads have no `session` row (they are task-owned), the cleanup resolves through `tasks.threadId` -> `messages.by_threadId`, not through `session`. The deletion order is: `tokenUsage` -> `todos` -> `messages` (both session and worker threads) -> `tasks` -> `threadRunState` -> `session`.
 
 1. Session root record
 2. Child rows: `tasks`, `todos`, `tokenUsage`, `threadRunState`
@@ -128,12 +129,15 @@ flowchart TD
 Tests for this module are defined in [testing.md](./testing.md). Key test areas:
 
 ### convex-test
+
 - Crons & Cleanup: #1-15
 - Rate Limiting: #1-9
 
 ### E2E (Playwright)
+
 - Error States: #1, #5
 - Session Management: #4-5
 
 ### Edge Cases
+
 - Edge Cases: #10-12

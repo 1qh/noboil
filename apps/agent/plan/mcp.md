@@ -105,9 +105,10 @@ sequenceDiagram
 ### Call-Time SSRF Enforcement
 
 Save-time hostname validation (`validateMcpUrl`) is a first line of defense but insufficient alone. A public hostname can resolve to private IPs after save, or redirect to internal targets at call time. v1 implementation MUST implement call-time checks: resolve A/AAAA records before connecting, block private/loopback/link-local/ULA/metadata IPs, disable HTTP redirects.
+
 - If `http:` (non-TLS) is allowed for local dev, disallow `authHeaders` on `http:` URLs outside test mode
 
-This hardens the SSRF boundary from "hostname string check" to "resolved IP check at connection time."
+This hardens the SSRF boundary from “hostname string check” to “resolved IP check at connection time.”
 
 ### Auth Header Redaction
 
@@ -180,11 +181,14 @@ This keeps failures actionable for the model while preserving UI/debug visibilit
 Tests for this module are defined in [testing.md](./testing.md). Key test areas:
 
 ### convex-test
+
 - MCP: #1-14
 
 ### E2E (Playwright)
+
 - Settings (MCP): #1-5
 - Error States: #3
 
 ### Edge Cases
+
 - Edge Cases: #6

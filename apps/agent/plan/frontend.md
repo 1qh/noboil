@@ -106,7 +106,7 @@ flowchart TD
 - `tool-call-card.tsx`
   - Displays tool name, status, inputs/outputs, and error payloads.
   - Status enum from backend: pending/success/error.
-  - Frontend maps these to display labels: `pending` -> 'Running', `success` -> 'Completed', `error` -> 'Error'.
+  - Frontend maps these to display labels: `pending` -> ‘Running’, `success` -> ‘Completed’, `error` -> ‘Error’.
 - `source-card.tsx`
   - Displays source title, URL, snippet.
   - External links open in new tab.
@@ -172,9 +172,11 @@ flowchart TD
 Tests for this module are defined in [testing.md](./testing.md). Key test areas:
 
 ### convex-test
+
 - Frontend contract validation is covered indirectly by backend ownership/tool/runtime tests in supporting modules.
 
 ### E2E (Playwright)
+
 - Session Management: #1-5
 - Chat & Streaming: #1-5
 - Tool Execution: #1-6
@@ -183,4 +185,5 @@ Tests for this module are defined in [testing.md](./testing.md). Key test areas:
 - Accessibility (E2E): #1-6
 
 ### Edge Cases
+
 - Edge Cases surfaced in UI paths: #10-12

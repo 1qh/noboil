@@ -160,10 +160,13 @@ Planned direction:
 Tests for this module are defined in [testing.md](./testing.md). Key test areas:
 
 ### convex-test
+
 - Compaction: #1-13
 
 ### E2E (Playwright)
+
 - Error States: #1
 
 ### Edge Cases
+
 - Edge Cases: #5, #12

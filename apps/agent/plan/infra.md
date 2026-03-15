@@ -26,7 +26,9 @@ const getModel = async (): Promise<LanguageModel> => {
     return cached
   }
   const { createVertex } = await import('@ai-sdk/google-vertex')
-  const vertex = createVertex({ googleVertexApiKey: process.env.GOOGLE_VERTEX_API_KEY })
+  const vertex = createVertex({
+    googleVertexApiKey: process.env.GOOGLE_VERTEX_API_KEY
+  })
   cached = vertex('gemini-2.5-flash') as LanguageModel
   return cached
 }
@@ -273,17 +275,14 @@ const env = createEnv({
     AUTH_GOOGLE_ID: z.string().min(1),
     AUTH_GOOGLE_SECRET: z.string().min(1),
     AUTH_SECRET: z.string().min(1),
-    CONVEX_SITE_URL: z.string().url(),
-    CONVEX_CLOUD_URL: z.string(),
-    CONVEX_TEST_MODE: z.string().optional(),
     GOOGLE_VERTEX_API_KEY: z.string().min(1)
   },
-  skipValidation: Boolean(process.env.LINT || process.env.CONVEX_TEST_MODE)
+  skipValidation: process.env.npm_lifecycle_event === 'lint' || Boolean(process.env.CONVEX_TEST_MODE)
 })
 
 export { env }
 
-`skipValidation` is `true` only for lint runs and test mode (`LINT` or `CONVEX_TEST_MODE`). `CI` is intentionally NOT included — CI deploys to staging/production must pass full validation. When `skipValidation` is false (production/staging/CI deploys), ALL fields except `CONVEX_TEST_MODE` are required: `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`, `AUTH_SECRET`, `CONVEX_SITE_URL`, `CONVEX_CLOUD_URL`, and `GOOGLE_VERTEX_API_KEY`. Missing any of these throws at module load, preventing a deploy that boots successfully but fails at runtime on first sign-in or model call.
+Implementation note: `CONVEX_SITE_URL` and `CONVEX_CLOUD_URL` are built-in Convex environment variables — they cannot be set via `convex env set` and are not validated here. They are automatically provided by the Convex runtime. Only user-controlled secrets (`AUTH_*`, `GOOGLE_VERTEX_API_KEY`) are validated. `skipValidation` uses `npm_lifecycle_event === 'lint'` (not `CI`) so CI deploys still validate.
 ```
 
 ### `packages/be-agent/check-schema.ts`
@@ -366,11 +365,11 @@ const mockModel = {
         c.enqueue({ id: 'mock-text-0', type: 'text-start' })
         c.enqueue({ delta: 'Mock.', id: 'mock-text-0', type: 'text-delta' })
         c.enqueue({ id: 'mock-text-0', type: 'text-end' })
-         c.enqueue({
-           finishReason: 'stop',
-           type: 'finish',
-           usage: { inputTokens: 5, outputTokens: 10 }
-         })
+        c.enqueue({
+          finishReason: 'stop',
+          type: 'finish',
+          usage: { inputTokens: 5, outputTokens: 10 }
+        })
         c.close()
       }
     })
@@ -452,21 +451,21 @@ File upload attachments are out of scope for v1.
 
 ### Backend env (`packages/be-agent`, set with `convex env set`)
 
-| Variable                       | Dev                               | Test             | Prod                  | Notes                                                                |
-| ------------------------------ | --------------------------------- | ---------------- | --------------------- | -------------------------------------------------------------------- |
-| `CONVEX_DEPLOYMENT`            | local deployment                  | test deployment  | production deployment | Convex target for dev/deploy scripts                                 |
-| `AUTH_SECRET`                  | required                          | required         | required              | Auth.js encryption/signing secret handled server-side in Convex auth |
-| `AUTH_GOOGLE_ID`               | required when Google auth enabled | optional         | required              | OAuth client id used by `@convex-dev/auth` backend                   |
-| `AUTH_GOOGLE_SECRET`           | required when Google auth enabled | optional         | required              | OAuth client secret used by `@convex-dev/auth` backend               |
-| `CONVEX_SITE_URL`              | optional                          | optional         | optional              | Domain for auth provider configuration                               |
-| `GOOGLE_VERTEX_API_KEY`        | required in production            | mock or test key | required              | Vertex AI Express mode API key                                       |
+| Variable                | Dev                               | Test             | Prod                  | Notes                                                                |
+| ----------------------- | --------------------------------- | ---------------- | --------------------- | -------------------------------------------------------------------- |
+| `CONVEX_DEPLOYMENT`     | local deployment                  | test deployment  | production deployment | Convex target for dev/deploy scripts                                 |
+| `AUTH_SECRET`           | required                          | required         | required              | Auth.js encryption/signing secret handled server-side in Convex auth |
+| `AUTH_GOOGLE_ID`        | required when Google auth enabled | optional         | required              | OAuth client id used by `@convex-dev/auth` backend                   |
+| `AUTH_GOOGLE_SECRET`    | required when Google auth enabled | optional         | required              | OAuth client secret used by `@convex-dev/auth` backend               |
+| `CONVEX_SITE_URL`       | optional                          | optional         | optional              | Domain for auth provider configuration                               |
+| `GOOGLE_VERTEX_API_KEY` | required in production            | mock or test key | required              | Vertex AI Express mode API key                                       |
 
 ### Shared (both frontend and backend pipelines)
 
-| Variable                       | Scope                                | Notes                                                  |
-| ------------------------------ | ------------------------------------ | ------------------------------------------------------ |
-| `CONVEX_DEPLOYMENT`            | turbo pass-through + backend runtime | Required for backend commands and deploy target wiring |
-| `GOOGLE_VERTEX_API_KEY`        | turbo pass-through + backend runtime | Required for v1 model access (Vertex AI Express)       |
+| Variable                | Scope                                | Notes                                                  |
+| ----------------------- | ------------------------------------ | ------------------------------------------------------ |
+| `CONVEX_DEPLOYMENT`     | turbo pass-through + backend runtime | Required for backend commands and deploy target wiring |
+| `GOOGLE_VERTEX_API_KEY` | turbo pass-through + backend runtime | Required for v1 model access (Vertex AI Express)       |
 
 v1 uses Vertex AI Express mode via `@ai-sdk/google-vertex` with an API key. No project/location configuration needed — Express mode routes through Vertex endpoints with just `GOOGLE_VERTEX_API_KEY`.
 
@@ -613,10 +612,13 @@ Local dev mirrors demo scripts but targets `packages/be-agent`:
 Tests for this module are defined in [testing.md](./testing.md). Key test areas:
 
 ### convex-test
+
 - Implementation Details: #1-5
 
 ### E2E (Playwright)
+
 - Test Auth bootstrap path: Session Management #1
 
 ### Edge Cases
+
 - Edge Cases: #7

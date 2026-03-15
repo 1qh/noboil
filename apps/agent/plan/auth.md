@@ -491,11 +491,14 @@ MCP CRUD uses noboil `crud()` with hooks. Ownership enforcement (`userId` checks
 Tests for this module are defined in [testing.md](./testing.md). Key test areas:
 
 ### convex-test
+
 - Auth & Ownership: #1-12
 
 ### E2E (Playwright)
+
 - Session Management: #1, #5
 - Error States: #4
 
 ### Edge Cases
+
 - Edge Cases: #7, #10
