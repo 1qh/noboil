@@ -770,15 +770,22 @@ flowchart LR
 
 | Layer | Specified | Implemented | Gap |
 |---|---|---|---|
-| Backend convex-test | 239 | 47 | 192 |
-| E2E Playwright | 60+ | 0 | 60+ |
-| **Total** | **~300** | **47** | **~253** |
+| Backend `f.test.ts` | 270 | 270 | 0 |
+| Backend `prod-smoke.test.ts` | 1 | 1 | 0 |
+| E2E Playwright | 69 | 69 | 0 |
+| **Total** | **340** | **340** | **0** |
 
-Priority order for closing gaps:
-1. **P0**: Compaction tests (7), message streaming mutations (8), orchestrator action (5), worker action (7)
-2. **P1**: Tool factory tests (7), remaining implementation detail tests
-3. **P2**: E2E infrastructure + test files
-4. **P3**: Edge case regressions, integration lifecycle tests
+All 312 originally planned tests are implemented. 28 additional real-world scenario tests were added during implementation:
+- Multi-turn conversation flow
+- Multi-session isolation and navigation
+- Rapid message sending (ordering + no duplicates)
+- Session archival flow (create → archive → verify removed)
+- Settings persistence across navigation
+- Browser refresh persistence
+- Empty state first-chat flow
+- Long message rendering (500+ chars)
+- Responsive viewports (375px mobile, 768px tablet)
+- Concurrent tab reactive updates
 
 ## Test Scripts & Execution
 
