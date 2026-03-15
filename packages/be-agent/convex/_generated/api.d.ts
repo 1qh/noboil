@@ -13,7 +13,10 @@ import type * as http from "../http.js";
 import type * as messages from "../messages.js";
 import type * as orchestrator from "../orchestrator.js";
 import type * as sessions from "../sessions.js";
+import type * as tasks from "../tasks.js";
 import type * as testauth from "../testauth.js";
+import type * as todos from "../todos.js";
+import type * as tokenUsage from "../tokenUsage.js";
 
 import type {
   ApiFromModules,
@@ -27,7 +30,10 @@ declare const fullApi: ApiFromModules<{
   messages: typeof messages;
   orchestrator: typeof orchestrator;
   sessions: typeof sessions;
+  tasks: typeof tasks;
   testauth: typeof testauth;
+  todos: typeof todos;
+  tokenUsage: typeof tokenUsage;
 }>;
 
 /**
