@@ -5414,3 +5414,112 @@ describe('auth and cron gap coverage', () => {
     )
   })
 })
+
+describe('final sweep queue and runtime gaps', () => {
+  test('appendStepMetadata is no-op when message is missing', async () => {
+    const ctx = t(),
+      { asUser } = await createTestContext(ctx),
+      { sessionId, threadId } = await asUser(0).mutation(api.sessions.createSession, {}),
+      messageId = await ctx.run(async c =>
+        c.db.insert('messages', {
+          content: 'to-delete',
+          isComplete: true,
+          parts: [{ text: 'to-delete', type: 'text' }],
+          role: 'assistant',
+          sessionId,
+          threadId
+        })
+      )
+    await ctx.run(async c => {
+      await c.db.delete(messageId)
+    })
+    await ctx.mutation(internal.orchestrator.appendStepMetadata, {
+      messageId,
+      stepPayload: 'noop'
+    })
+    const state = await ctx.query(internal.orchestrator.readRunState, {
+      threadId: `missing-thread-${crypto.randomUUID()}`
+    })
+    expect(state).toBeNull()
+  })
+
+  test('postTurnAudit suppressed branch resets autoContinueStreak to zero', async () => {
+    const ctx = t(),
+      { asUser } = await createTestContext(ctx),
+      { sessionId, threadId } = await asUser(0).mutation(api.sessions.createSession, {})
+    await ctx.mutation(internal.orchestrator.enqueueRun, {
+      priority: 2,
+      promptMessageId: 'start',
+      reason: 'user_message',
+      threadId
+    })
+    const active = await ctx.query(internal.orchestrator.readRunState, { threadId })
+    await ctx.run(async c => {
+      await c.db.insert('todos', {
+        content: 'keep working',
+        position: 0,
+        priority: 'high',
+        sessionId,
+        status: 'pending'
+      })
+      const state = await c.db
+        .query('threadRunState')
+        .withIndex('by_threadId', idx => idx.eq('threadId', threadId))
+        .unique()
+      if (state)
+        await c.db.patch(state._id, {
+          autoContinueStreak: 4,
+          queuedPriority: 'user_message',
+          queuedPromptMessageId: 'already-queued-user-message',
+          queuedReason: 'user_message'
+        })
+    })
+    const result = await ctx.mutation(internal.orchestrator.postTurnAuditFenced, {
+      runToken: active?.activeRunToken ?? '',
+      threadId,
+      turnRequestedInput: false
+    })
+    const state = await ctx.query(internal.orchestrator.readRunState, { threadId })
+    expect(result.ok).toBe(true)
+    expect(result.shouldContinue).toBe(false)
+    expect(state?.autoContinueStreak).toBe(0)
+    expect(state?.queuedReason).toBe('user_message')
+  })
+})
+
+describe('final sweep auth gaps', () => {
+  test('createTestUser is idempotent and returns deterministic row', async () => {
+    const ctx = t(),
+      originalTestMode = process.env.CONVEX_TEST_MODE,
+      email = `sweep-${crypto.randomUUID()}@example.com`,
+      setMode = () => {
+        process.env.CONVEX_TEST_MODE = 'true'
+      }
+    setMode()
+    try {
+      const first = await ctx.mutation(api.testauth.createTestUser, { email, name: 'Sweep User' }),
+        second = await ctx.mutation(api.testauth.createTestUser, { email, name: 'Sweep User' }),
+        row = await ctx.run(async c => (first ? c.db.get(first) : null))
+      expect(first).toBe(second)
+      expect(row?.email).toBe(email)
+    } finally {
+      if (originalTestMode === undefined) delete process.env.CONVEX_TEST_MODE
+      else process.env.CONVEX_TEST_MODE = originalTestMode
+    }
+  })
+
+  test('ensureTestUser returns same user id across repeated calls', async () => {
+    const ctx = t(),
+      originalTestMode = process.env.CONVEX_TEST_MODE
+    process.env.CONVEX_TEST_MODE = 'true'
+    try {
+      const first = await ctx.mutation(api.testauth.ensureTestUser, {}),
+        second = await ctx.mutation(api.testauth.ensureTestUser, {})
+      expect(first).toBe(second)
+      expect(first).toBeDefined()
+    } finally {
+      if (originalTestMode === undefined) delete process.env.CONVEX_TEST_MODE
+      else process.env.CONVEX_TEST_MODE = originalTestMode
+    }
+  })
+})
