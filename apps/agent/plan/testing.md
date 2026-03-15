@@ -296,6 +296,16 @@ The custom `mockModel` in `models.mock.ts` is still used for production test mod
 | 17  | `getRunState` ownership check                                                  | Owner gets run state; non-owner gets `null`                               |
 | 18  | MCP CRUD cross-user isolation                                                  | List only caller’s servers; update/delete others’ -> not found            |
 | 19  | Parent-thread messages include `sessionId`; worker-thread messages omit it     | Verified across both contexts                                             |
+| 20 | `createTestUser` creates deterministic test user | User row created with test email, idempotent on repeat call |
+| 21 | `ensureTestUser` returns existing or creates new | First call creates, second returns same ID |
+| 22 | `signInAsTestUser` rejected outside test mode | Throws `test_mode_only` when `CONVEX_TEST_MODE` is unset |
+| 23 | `listSessions` returns ONLY caller's sessions | User A cannot see User B's sessions, even with direct ID |
+| 24 | `createSession` stamps auth-derived userId only | No client-provided userId accepted |
+| 25 | MCP `addMcpServer` ownership isolation | User A's server not visible to User B |
+| 26 | MCP `updateMcpServer` non-owner rejected | User B cannot update User A's server |
+| 27 | MCP `deleteMcpServer` non-owner rejected | User B cannot delete User A's server |
+| 28 | MCP `listMcpServers` cross-user isolation | User A only sees own servers |
+| 29 | Unauthenticated call to any public endpoint rejected | Non-test-mode call without auth throws |
 
 ### Crons & Cleanup
 
@@ -408,6 +418,22 @@ The custom `mockModel` in `models.mock.ts` is still used for production test mod
 | 10  | Production auth smoke: login → OAuth → protected routes → sign-out → redirect                                             | Full auth lifecycle works (test-mode skipped)                                                                 |
 | 11  | Full MCP E2E: add server in settings → trigger discover in chat → call tool → result renders                              | Complete product path from config to tool usage                                                               |
 | 12  | Worker output only available after completion, not live-streamed (v1 limitation)                                          | No streaming content visible during worker execution; result appears via taskOutput only                      |
+| 13 | Full retention lifecycle in one test | Create session → make active → wait 24h → archiveIdleSessions → wait 7d → archiveIdleSessions → wait 180d → cleanupArchivedSessions → verify zero rows in ALL tables |
+| 14 | Full compaction pipeline in one test | Insert 250 messages → compactIfNeeded triggers → lock acquired → groups built → summary set → next getContextSize includes summary → second compaction cumulative |
+| 15 | Worker retry prompt duplication regression | Worker retries do not create duplicate prompt entries in worker thread |
+| 16 | Archived-in-flight worker writes completion reminder but no continuation | Worker completes into archived session thread; reminder persisted, maybeContinueOrchestrator skips |
+| 17 | Duplicate notification retry fencing | Re-running notification path after partial failure does not emit second reminder or enqueue second continuation |
+| 18 | Post-operation orphan row assertions | After cleanupArchivedSessions: zero messages, tasks, todos, tokenUsage, threadRunState for deleted session |
+
+### Test Infrastructure Notes
+
+**Timer mocks**: The project uses `bun:test`, not Vitest. Timer mocking in bun:test uses the same `vi.useFakeTimers()` API (bun:test is Vitest-compatible). However, verify that `t.finishAllScheduledFunctions(vi.runAllTimers)` works correctly with bun's timer implementation. If not, use `setTimeout` polling as a fallback.
+
+**Model cache isolation**: `getModel()` in `ai.ts` caches the model in a module-level variable. Between tests, this cache must be reset to prevent test pollution. Add `beforeEach(() => { resetModelCache() })` or restructure `getModel` to accept an injectable model for testing.
+
+**TestLoginProvider alignment**: The current `test-login-provider.tsx` is a no-op (always renders children). The plan references `signInAsTestUser` which is not exported from `testauth.ts`. For E2E: test auth works entirely backend-side via `getAuthUserIdOrTest` — the frontend provider just needs to exist. Update plan to match: TestLoginProvider is intentionally a pass-through; test auth is backend-only.
+
+**MCP CRUD test pattern**: MCP operations go through noboil `crud()` with hooks. Tests should verify both the happy path (owner CRUD succeeds) AND the cross-user isolation (non-owner operations return not_found/empty).
 
 ## E2E Infrastructure
 
@@ -664,6 +690,7 @@ These components are Phase 6 (Polish) deliverables. E2E tests for these features
 | 4   | Focus returns to composer after message submit       | `document.activeElement` is the composer input |
 | 5   | Status indicators never rely on color alone          | Icons/text accompany all colored states        |
 | 6   | Interactive cards meet 44x44px hit target            | Touch targets are accessible size              |
+| 7 | `html` element has `lang="en"` attribute | Root HTML tag has correct language |
 
 ### Frontend States (E2E)
 
@@ -687,6 +714,16 @@ These components are Phase 6 (Polish) deliverables. E2E tests for these features
 | 16  | `getRunState`-driven typing indicator on chat page                    | Activity indicator visible while orchestrator active, hidden when idle       |
 | 17  | No file upload/attachment UI exposed in v1                            | Composer has no upload button; paste-file has no effect                      |
 | 18  | Responsive viewport: chat usable on mobile (375px) and tablet (768px) | Core chat, settings, session list functional across breakpoints              |
+| 19 | Session row click navigates to chat | Clicking session card in list navigates to /chat/[id] |
+| 20 | Settings back link returns to session list | Clicking "Sessions" link on settings page navigates to / |
+| 21 | Settings placeholder text visible | "MCP Servers" heading and placeholder text rendered |
+| 22 | Chat loading states (session + messages) | Loading text shown while session/messages queries pending |
+| 23 | Chat empty state shows "No messages yet" | Empty thread shows placeholder text |
+| 24 | Blank/whitespace submit is no-op | Empty or whitespace-only input does not create message |
+| 25 | Composer disabled during send | Input and button disabled while submitMessage in flight |
+| 26 | Input clears after successful send | Draft reset to empty string after message sent |
+| 27 | Auto-scroll to latest message | New message scrolls chat log to bottom |
+| 28 | Header links (Sessions, Settings) navigate correctly | Both nav links work from chat page |
 
 ## Edge Case Tests (from Oracle reviews)
 
