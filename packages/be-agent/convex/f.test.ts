@@ -47,7 +47,7 @@ describe('sessions', () => {
 
   test('lists only own non-archived sessions', async () => {
     const ctx = t(),
-      { asUser, userIds } = await createTestContext(ctx)
+      { asUser } = await createTestContext(ctx)
     await asUser(0).mutation(api.sessions.createSession, { title: 'User0 Chat' })
     await asUser(1).mutation(api.sessions.createSession, { title: 'User1 Chat' })
     const user0Sessions = await asUser(0).query(api.sessions.listSessions, {})
@@ -116,7 +116,7 @@ describe('sessions', () => {
   test('archived sessions excluded from list', async () => {
     const ctx = t(),
       { asUser } = await createTestContext(ctx),
-      { sessionId: s1 } = await asUser(0).mutation(api.sessions.createSession, { title: 'Active' }),
+      { sessionId: _s1 } = await asUser(0).mutation(api.sessions.createSession, { title: 'Active' }),
       { sessionId: s2 } = await asUser(0).mutation(api.sessions.createSession, { title: 'To Archive' })
     await asUser(0).mutation(api.sessions.archiveSession, { sessionId: s2 })
     const sessions = await asUser(0).query(api.sessions.listSessions, {})
@@ -173,7 +173,7 @@ describe('messages', () => {
       { asUser } = await createTestContext(ctx),
       { sessionId, threadId } = await asUser(0).mutation(api.sessions.createSession, {})
     await ctx.run(async c => {
-      for (let i = 0; i < 110; i++) {
+      for (let i = 0; i < 110; i += 1) {
         await c.db.insert('messages', {
           content: `msg-${i}`,
           isComplete: true,
@@ -597,7 +597,10 @@ describe('submitMessage', () => {
         sessionId
       })
     const message = await ctx.run(async c => {
-      const rows = await c.db.query('messages').withIndex('by_threadId', idx => idx.eq('threadId', threadId)).collect()
+      const rows = await c.db
+        .query('messages')
+        .withIndex('by_threadId', idx => idx.eq('threadId', threadId))
+        .collect()
       return rows.find(m => String(m._id) === result.messageId)
     })
     expect(message).toBeDefined()
@@ -796,7 +799,10 @@ describe('postTurnAudit', () => {
     expect(runState?.queuedPromptMessageId).toBeDefined()
     expect(runState?.autoContinueStreak).toBe(1)
     const reminder = await ctx.run(async c => {
-      const rows = await c.db.query('messages').withIndex('by_threadId', idx => idx.eq('threadId', threadId)).collect()
+      const rows = await c.db
+        .query('messages')
+        .withIndex('by_threadId', idx => idx.eq('threadId', threadId))
+        .collect()
       return rows.find(m => String(m._id) === runState?.queuedPromptMessageId)
     })
     expect(reminder?.role).toBe('system')

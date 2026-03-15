@@ -16,7 +16,7 @@ const listMessages = q({
         .first()
       if (!task) throw new Error('thread_not_found')
       const taskSession = await ctx.db.get(task.sessionId)
-      if (!taskSession || taskSession.userId !== ctx.user._id) throw new Error('thread_not_found')
+      if (taskSession?.userId !== ctx.user._id) throw new Error('thread_not_found')
     }
     const messages = await ctx.db
       .query('messages')
