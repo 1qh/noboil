@@ -160,6 +160,8 @@ The custom `mockModel` in `models.mock.ts` is still used for production test mod
 | 21 | `readRunState` returns state or null | Correct state for existing thread, null for non-existent |
 | 22 | `readSessionByThread` resolves session via threadId | Correct session, null for orphaned thread |
 | 23 | `listMessagesForPrompt` bounds by promptMessageId | Only messages with _creationTime <= prompt included, latest 100, chronological |
+| 24 | `postTurnAuditFenced` suppressed by higher-priority queue | Incomplete todos + already-queued user_message → no todo_continuation enqueued, streak reset |
+| 25 | `listMessagesForPrompt` wrong-thread prompt rejected | promptMessageId from thread A with threadId B returns empty array |
 
 ### Task Lifecycle
 
@@ -190,6 +192,7 @@ The custom `mockModel` in `models.mock.ts` is still used for production test mod
 | 23  | `completeTask` CAS rejects non-`running` tasks                    | Returns `{ ok: false }`, writes no reminder for already-completed/cancelled                       |
 | 24  | `finalizeWorkerOutput` success-path atomicity                     | Running task gets exactly one assistant message + `completed` in single mutation                  |
 | 25  | `postTurnAuditFenced` task-wait stop branch                       | Incomplete todos + pending/running task → stop auto-continue, reset streak, no reminder           |
+| 26  | `failTask` rejects non-running task | Task not in running status → { ok: false }, no reminder |
 
 ### Orchestrator Runtime
 
@@ -246,6 +249,8 @@ The custom `mockModel` in `models.mock.ts` is still used for production test mod
 | 20 | `listClosedPrefixGroups` only includes complete messages | isComplete=false excluded, pending tool parts excluded |
 | 21 | `compactIfNeeded` no-op under threshold | charCount < 100k AND messageCount < 200 → no lock acquired |
 | 22 | `getContextSize` includes compactionSummary length | Summary chars added to total charCount |
+| 23 | `compactIfNeeded` exits on no closed groups | Threshold exceeded but no complete message groups → no summary written |
+| 24 | `compactIfNeeded` exits on placeholder (no summarization action) | Lock acquired, groups found, but summarization is placeholder → logs event only |
 
 ### MCP
 
@@ -326,9 +331,10 @@ The custom `mockModel` in `models.mock.ts` is still used for production test mod
 | 13  | Hard-delete cascade includes worker-thread messages                                      | Messages on `tasks.threadId` also deleted                                                                            |
 | 14  | Hard-delete order: tokenUsage -> todos -> messages -> tasks -> threadRunState -> session | No foreign key violations from order                                                                                 |
 | 15  | `cleanupStaleMessages` only targets messages where thread is idle                        | Active threads’ streaming messages are not touched                                                                   |
-| 16  | Stale-message age gate: messages <5min not touched                                       | Idle-thread incomplete messages newer than 5 min unchanged                                                           |
-| 17  | 180-day hard-delete respects retention boundary                                          | Sessions archived <180 days survive; older deleted with cascade                                                      |
-| 18  | Cron schedule wiring matches documented intervals                                        | 5min for stale tasks/runs/messages, 1hr for archive, daily 03:00 for cleanup                                         |
+| 16 | Stale-message age gate: messages <5min not touched                                       | Idle-thread incomplete messages newer than 5 min unchanged                                        |
+| 17 | 180-day hard-delete respects retention boundary                                          | Sessions archived <180 days survive; older deleted with cascade                                   |
+| 18 | Cron schedule wiring matches documented intervals                                        | 5min for stale tasks/runs/messages, 1hr for archive, daily 03:00 for cleanup                     |
+| 19 | `cleanupArchivedSessions` batch cap at 10 | Seed 15 expired sessions, one run deletes only 10, second run deletes 5 |
 
 ### Rate Limiting
 
@@ -364,9 +370,10 @@ The custom `mockModel` in `models.mock.ts` is still used for production test mod
 | 14  | Mock model `doStream` emits correct v3 triplet                               | `stream-start -> text-start -> text-delta -> text-end -> finish` in order             |
 | 15  | Mock model tool-enabled `doGenerate` returns `tool-call` part                | Schema-valid JSON input matching tool’s inputSchema                                   |
 | 16  | `env.ts` rejects each missing required var individually                      | Missing `AUTH_SECRET`, `AUTH_GOOGLE_ID`, etc. each throw                              |
-| 17  | `CI=true` alone does NOT bypass env validation                               | All required vars still validated under CI                                            |
-| 18  | `buildModelMessages` excludes `source` parts from model input                | Source parts preserved for UI but not in CoreMessage array sent to model              |
-| 19  | Worker messages persist `parts` (tool calls, reasoning) same as orchestrator | Worker-thread messages viewable in task panel with full structured parts              |
+| 17 | `CI=true` alone does NOT bypass env validation                               | All required vars still validated under CI                                            |
+| 18 | `buildModelMessages` excludes `source` parts from model input                | Source parts preserved for UI but not in CoreMessage array sent to model              |
+| 19 | Worker messages persist `parts` (tool calls, reasoning) same as orchestrator | Worker-thread messages viewable in task panel with full structured parts              |
+| 20 | `buildTodoReminder` output format | Contains `[TODO CONTINUATION]`, lists incomplete todos with status/priority/content |
 
 ### Tool Factories
 
@@ -379,6 +386,7 @@ The custom `mockModel` in `models.mock.ts` is still used for production test mod
 | 5 | todoRead tool returns session todos | Returns array from listTodos |
 | 6 | taskStatus tool returns task status | Correct status/description for owned task |
 | 7 | taskOutput tool returns result | Completed task's result returned |
+| 8 | `createOrchestratorTools` includes mcpCall and mcpDiscover | All 8 orchestrator tools present (delegate, taskStatus, taskOutput, todoWrite, todoRead, webSearch, mcpCall, mcpDiscover) |
 
 ### Worker Action (convex-test)
 
@@ -424,6 +432,8 @@ The custom `mockModel` in `models.mock.ts` is still used for production test mod
 | 16 | Archived-in-flight worker writes completion reminder but no continuation | Worker completes into archived session thread; reminder persisted, maybeContinueOrchestrator skips |
 | 17 | Duplicate notification retry fencing | Re-running notification path after partial failure does not emit second reminder or enqueue second continuation |
 | 18 | Post-operation orphan row assertions | After cleanupArchivedSessions: zero messages, tasks, todos, tokenUsage, threadRunState for deleted session |
+| 19 | Production model smoke (non-mock) | One test with real Vertex model verifies streaming + finalization (skipped in CI, manual gate) |
+| 20 | WebKit/mobile viewport smoke | One Playwright test on WebKit verifying core chat flow on 375px viewport (run before release) |
 
 ### Test Infrastructure Notes
 
@@ -691,6 +701,7 @@ These components are Phase 6 (Polish) deliverables. E2E tests for these features
 | 5   | Status indicators never rely on color alone          | Icons/text accompany all colored states        |
 | 6   | Interactive cards meet 44x44px hit target            | Touch targets are accessible size              |
 | 7 | `html` element has `lang="en"` attribute | Root HTML tag has correct language |
+| 8 | Source card links have `rel="noopener noreferrer"` | External links don't leak referrer |
 
 ### Frontend States (E2E)
 
@@ -724,8 +735,9 @@ These components are Phase 6 (Polish) deliverables. E2E tests for these features
 | 26 | Input clears after successful send | Draft reset to empty string after message sent |
 | 27 | Auto-scroll to latest message | New message scrolls chat log to bottom |
 | 28 | Header links (Sessions, Settings) navigate correctly | Both nav links work from chat page |
+| 29 | `createSession` bootstraps threadRunState | New session has exactly one idle threadRunState row for its threadId |
 
-## Edge Case Tests (from Oracle reviews)
+## Integration & Lifecycle
 
 | #   | Edge Case                                                | Test                                                                                                                                                                     |
 | --- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
