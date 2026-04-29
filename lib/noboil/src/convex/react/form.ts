@@ -7,7 +7,13 @@ import type { Api, ConflictData, FieldKind, FieldMeta, FieldMetaMap, FormReturn 
 import { buildMeta, createUseForm, getMeta } from '../../shared/react/form'
 import { extractErrorData, getErrorCode, getErrorMessage, isRecord } from '../server/helpers'
 import { defaultOnError } from './use-mutate'
+/** TanStack form hook pre-wired with Convex error extraction + sonner toast on submit failure. */
 const useForm = createUseForm({ defaultOnError, extractErrorData, getErrorCode, getErrorMessage, isRecord })
+/**
+ * One-call form binding: Zod schema + Convex mutation ref → TanStack form with auto-save,
+ * conflict handling, optimistic-version retry, and reset-on-success. Pass `transform` to
+ * map form values into mutation args when shapes differ.
+ */
 const useFormMutation = <S extends ZodObject>({
   autoSave,
   mutation: mutationRef,

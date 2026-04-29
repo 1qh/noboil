@@ -57,6 +57,7 @@ const injectError = (code: ErrorCode, opts?: { detail?: string; message?: string
   const data: ErrorData = { code, ...opts }
   pushError({ data, detail: opts?.detail ?? `Injected error: ${code}`, message: opts?.message ?? code })
 }
+/** Surface SpacetimeDB connection errors + identity info into the dev devtools panel. */
 const useDevErrors = () => {
   const spacetime = useSpacetimeDB()
   const { connectionError, connectionId, identity, isActive, token } = spacetime

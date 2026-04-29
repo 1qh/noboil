@@ -14,7 +14,12 @@ import type { UndefinedToOptional } from '../zod'
 import { buildMeta, createUseForm, getMeta, resolveFormToast } from '../../shared/react/form'
 import { extractErrorData, getErrorCode, getErrorMessage, isRecord } from '../server/helpers'
 import { defaultOnError } from './use-mutate'
+/** TanStack form hook pre-wired with SpacetimeDB error extraction + sonner toast on submit failure. */
 const useForm = createUseForm({ defaultOnError, extractErrorData, getErrorCode, getErrorMessage, isRecord })
+/**
+ * One-call form binding: Zod schema + SpacetimeDB reducer fn → TanStack form with auto-save,
+ * conflict handling, and reset-on-success. Pass `transform` to map form values into reducer args.
+ */
 const useFormMutation = <S extends ZodObject, M = output<S>>({
   autoSave,
   mutate,
