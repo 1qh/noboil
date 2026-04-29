@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 /* eslint-disable no-console */
 /* oxlint-disable eslint-plugin-unicorn(no-process-exit) */
+import { didYouMean } from '../src/shared/did-you-mean'
 import { run as runCodegen } from './noboil-tool-codegen'
 import { run as runDocgen } from './noboil-tool-docgen'
 import { run as runNew } from './noboil-tool-new'
@@ -30,7 +31,8 @@ const run = async (argv: string[]): Promise<number> => {
   }
   const cmd = SUBCOMMANDS[sub]
   if (!cmd) {
-    console.error(`unknown subcommand: ${sub}`)
+    const suggestion = didYouMean(sub, Object.keys(SUBCOMMANDS))
+    console.error(`unknown 'noboil tool' subcommand: ${sub}${suggestion ? `  (did you mean ${suggestion}?)` : ''}`)
     console.error('')
     printHelp()
     return 2

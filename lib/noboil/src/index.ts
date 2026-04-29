@@ -9,6 +9,7 @@ import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { bold, dim, red } from './ansi'
 import { LOG_PATH, logCrash } from './shared/crash-log'
+import { didYouMean } from './shared/did-you-mean'
 import { pushRecent } from './shared/recent'
 import { getCliVersion } from './shared/version'
 const handleFatal = (label: string, err: unknown) => {
@@ -134,11 +135,18 @@ else if (!cmd) {
 } else if (cmd === 'convex') await runNamespace('convex', rest)
 else if (cmd === 'stdb') await runNamespace('spacetimedb', rest)
 else if (cmd === 'tool') {
-  const TOOL_DEV = new Set(['codegen', 'docgen', 'new', 'remove'])
+  const TOOL_DEV = ['codegen', 'docgen', 'new', 'remove']
   const sub = rest[0]
-  if (sub && TOOL_DEV.has(sub)) {
+  if (sub && TOOL_DEV.includes(sub)) {
     const { run: runDev } = await import('../bin/noboil-tool-dev')
     process.exit(await runDev(rest))
+  }
+  if (sub && rest.length === 1) {
+    const suggestion = didYouMean(sub, TOOL_DEV)
+    if (suggestion) {
+      console.log(`${red("Unknown 'noboil tool' subcommand:")} ${sub}${dim(`  (did you mean ${bold(suggestion)}?)`)}`)
+      process.exit(1)
+    }
   }
   const script = fileURLToPath(new URL('../bin/noboil-tool.ts', import.meta.url))
   const result = spawnSync('bun', [script, ...rest], { stdio: 'inherit' })
@@ -153,7 +161,8 @@ else if (cmd === 'tool') {
   }
   await runNamespace(db, ['add', ...rest])
 } else {
-  console.log(`${red('Unknown command:')} ${cmd}\n`)
+  const suggestion = didYouMean(cmd, Object.keys(COMMANDS))
+  console.log(`${red('Unknown command:')} ${cmd}${suggestion ? dim(`  (did you mean ${bold(suggestion)}?)`) : ''}\n`)
   printHelp()
   process.exit(1)
 }

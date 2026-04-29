@@ -3,6 +3,7 @@
 import { spawnSync } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 import { bold, dim, red } from '../ansi'
+import { didYouMean } from '../shared/did-you-mean'
 const COMMANDS: Record<string, { description: string; script: string }> = {
   add: { description: 'Add a new table/endpoint to your project', script: 'add.ts' },
   check: { description: 'Validate schema/factory consistency', script: 'check.ts' },
@@ -31,7 +32,10 @@ const run = async (argv: string[]): Promise<number> => {
     return 0
   }
   if (!(cmd in COMMANDS)) {
-    console.log(`${red('Unknown command:')} ${cmd}\n`)
+    const suggestion = didYouMean(cmd, Object.keys(COMMANDS))
+    console.log(
+      `${red("Unknown 'noboil convex' subcommand:")} ${cmd}${suggestion ? dim(`  (did you mean ${bold(suggestion)}?)`) : ''}\n`
+    )
     printHelp()
     return 1
   }
