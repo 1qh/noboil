@@ -54,7 +54,9 @@ interface MutationOk<T> {
   value: T
 }
 type MutationResult<T> = MutationFail | MutationOk<T>
+/** Wrap a successful value in a `MutationResult` (`{ ok: true, value }`). Pair with `fail`. */
 const ok = <T>(value: T): MutationResult<T> => ({ ok: true, value })
+/** Current `Date.now()` as ms — wraps shared `time()` so tests can override globally. */
 const time = () => sharedTime()
 const extractErrorData = (e: unknown): ErrorData | undefined => {
   if (!(e instanceof ConvexError)) return
@@ -87,26 +89,36 @@ const errorUtils = createErrorUtils({
   extractErrorData,
   throwError: throwConvexError
 })
+/** Throw a structured `ConvexError` with `code` (+ optional details). Use in mutations/queries to surface user-readable failures. */
 const err = (code: ErrorCode, opts?: Record<string, unknown> | string | { message: string }): never =>
   throwConvexError(code, opts)
 const { noFetcher } = errorUtils
+/** Throw a `VALIDATION` `ConvexError` carrying flattened Zod fieldErrors — produced from a Zod safeParse failure. */
 const errValidation = (
   code: ErrorCode,
   zodError: { flatten: () => { fieldErrors: Record<string, string[] | undefined> } }
 ): never => errorUtils.errValidation(code, zodError)
+/** Extract the noboil error code from a thrown error, or `undefined` for unstructured errors. */
 const getErrorCode = (e: unknown): ErrorCode | undefined => extractErrorData(e)?.code
+/** Get a user-readable message from a thrown error, looking up `ERROR_MESSAGES[code]` for known codes. */
 const getErrorMessage = (e: unknown): string => errorUtils.getErrorMessage(e)
+/** Get the dev-debug detail string from a noboil error (table/op/internal context); empty on unknown. */
 const getErrorDetail = (e: unknown): string => errorUtils.getErrorDetail(e)
+/** Route a caught error through `handlers` keyed by error code; falls through to `default` or rethrows. */
 const handleError = (e: unknown, handlers: ErrorHandler): void => {
   errorUtils.handleError(e, handlers)
 }
 const handleConvexError = handleError
+/** Build a failure `MutationResult` (`{ ok: false, error: { code, ... } }`) without throwing. Pair with `ok`. */
 const fail = (code: ErrorCode, detail?: Omit<ErrorData, 'code'>): MutationResult<never> => errorUtils.fail(code, detail)
+/** Type-guard: true if `e` is a structured noboil error (i.e. has a known `code`). */
 const isMutationError = (e: unknown): e is ErrorData => extractErrorData(e) !== undefined
+/** True if `e` is a structured noboil error matching `code`. */
 const isErrorCode = (e: unknown, code: ErrorCode): boolean => {
   const d = extractErrorData(e)
   return d?.code === code
 }
+/** Pattern-match on a thrown `ConvexError`'s code, calling the handler matching the code; falls through to `default`. */
 const matchError = <R>(
   e: unknown,
   handlers: Partial<Record<ErrorCode, (data: ErrorData) => R>> & { _?: (error: unknown) => R }
