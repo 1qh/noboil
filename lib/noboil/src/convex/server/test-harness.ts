@@ -12,6 +12,12 @@ import { setHermeticAdapter } from '../../shared/test/hermetic'
 interface TestHarness<S extends SchemaDefinition<GenericSchema, boolean>> {
   makeTest: () => TestConvex<S>
 }
+/**
+ * Build a Convex test harness factory bound to your project schema. Returns `{ makeTest }`
+ * which produces a fresh in-memory Convex instance per test (with `afterEach` scheduled-
+ * function drainer wired in). Use in `describeTool` and `describe` blocks for fully
+ * hermetic integration tests — no mocks, real Convex semantics.
+ */
 const createTestHarness = <S extends SchemaDefinition<GenericSchema, boolean>>({
   convexDir,
   envClear,
