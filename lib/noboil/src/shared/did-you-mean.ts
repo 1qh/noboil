@@ -11,6 +11,11 @@ const dist = (a: string, b: string): number => {
     }
   return get(a.length * w + b.length)
 }
+/**
+ * Find the closest match for `target` from `options` using Levenshtein distance, with a
+ * cutoff of 2 edits (further away = no suggestion). Use to power "did you mean X?" hints
+ * in CLIs and command parsers.
+ */
 const didYouMean = (target: string, options: string[]): null | string => {
   if (options.length === 0) return null
   const sorted = options.map(o => ({ d: dist(target, o), name: o })).toSorted((a, b) => a.d - b.d)

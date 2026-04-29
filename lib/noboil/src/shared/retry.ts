@@ -24,6 +24,12 @@ const calculateDelay = (attempt: number, opts: Required<RetryOptions>) => {
   const jitter = Math.random() * JITTER_RANGE + JITTER_BASE
   return Math.min(opts.initialDelayMs * opts.base ** attempt * jitter, opts.maxDelayMs)
 }
+/**
+ * Build a `withRetry` helper bound to a runtime (Convex action / SpacetimeDB / Node).
+ * Accepts a sleep adapter (different per runtime), an option validator, and a final-error
+ * wrapper. Resulting `withRetry(fn, opts)` retries with exponential backoff + jitter,
+ * respects `retryable: false` errors, and surfaces the last attempt's error wrapped.
+ */
 const createRetryUtils = ({ sleep, validateOptions, wrapFinalError }: RetryFactoryOptions) => {
   const withRetry = async <T>(fn: () => Promise<T>, options: RetryOptions = {}): Promise<T> => {
     const opts = { ...DEFAULT_OPTIONS, ...options }

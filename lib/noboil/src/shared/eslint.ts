@@ -20,6 +20,11 @@ const createRecommendedRules = (pluginName: string): Record<string, 'error' | 'w
   [`${pluginName}/require-error-boundary`]: 'warn',
   [`${pluginName}/require-rate-limit`]: 'warn'
 })
+/**
+ * Bundle a per-backend ESLint plugin (rules + recommended preset). Used by
+ * `noboil/convex/eslint` and `noboil/spacetimedb/eslint` to ship enforcement rules
+ * (require-rate-limit, no-unprotected-mutation, etc.) under a stable plugin name.
+ */
 const createEslintPluginBundle = ({ pluginName, rules }: PluginBundleOptions) => {
   const plugin = { rules }
   const recommended = {

@@ -17,6 +17,11 @@ const parseFrame = (frame: string): null | SseEvent => {
   if (dataLines.length === 0) return null
   return { data: dataLines.join('\n'), ...(event ? { event } : {}), ...(id ? { id } : {}) }
 }
+/**
+ * Stateful SSE frame parser. Feed it chunks of an `EventSource` body and it yields
+ * complete `SseEvent`s as they arrive (handles partial events split across chunks).
+ * Call `flush()` at end-of-stream to emit any trailing event.
+ */
 const createSseFrameParser = (): { feed: (chunk: string) => SseEvent[]; flush: () => SseEvent[] } => {
   let buffer = ''
   const feed = (chunk: string): SseEvent[] => {

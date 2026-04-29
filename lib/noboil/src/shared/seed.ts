@@ -61,6 +61,12 @@ const getEnumOptions = (schema: ZodType): readonly string[] | undefined => {
   const opts = (schema as { options?: readonly string[] }).options
   return opts && opts.length > 0 ? opts : undefined
 }
+/**
+ * Build seed-data generators bound to your schema's field types. Returns helpers like
+ * `randomString`, `randomEnum`, `pickFieldValue` driven by deterministic LCG so seeds
+ * reproduce. Use in test fixtures and demo data scripts; pass the same `seed` to get
+ * the same dataset across runs.
+ */
 const createSeedUtils = <TFieldType, TSchemaInput>(
   helpers: SeedHelpers<TFieldType, TSchemaInput>,
   options: SeedOptions

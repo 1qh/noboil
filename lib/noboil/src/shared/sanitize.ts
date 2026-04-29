@@ -12,6 +12,11 @@ const RE_INLINE_CODE = /`[^`]*`/gu
 const RE_HEADING = /#{1,6}\s/gu
 const RE_SHELL_SUBST = /\$[({A-Z_]/gu
 const RE_PIPE_SEMI = /[|;]/gu
+/**
+ * Make a string safe to render in HTML / Markdown UI: strips control + zero-width chars,
+ * HTML-escapes `<` / `>`, truncates to `max` chars. Use for user-supplied content rendered
+ * into your own UI. Does NOT remove links or formatting.
+ */
 const sanitizeForDisplay = (text: unknown, max = 4000): string => {
   if (typeof text !== 'string') return ''
   return text
@@ -21,6 +26,12 @@ const sanitizeForDisplay = (text: unknown, max = 4000): string => {
     .replaceAll('>', '&gt;')
     .slice(0, max)
 }
+/**
+ * Aggressively flatten externally-fetched text (LLM output, scraped pages) into plain
+ * single-line content: drops markdown links/images/code, HTML tags, headings, control
+ * chars, newlines, shell-substitution sigils, and pipes. Use before logging or feeding
+ * untrusted text into a downstream prompt / shell.
+ */
 const sanitizeExternal = (text: unknown, max = 500): string => {
   if (typeof text !== 'string') return ''
   return text

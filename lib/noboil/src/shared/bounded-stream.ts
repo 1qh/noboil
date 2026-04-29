@@ -5,6 +5,11 @@ interface BoundedBodyOpts {
   onExceed?: () => void
   sse?: boolean
 }
+/**
+ * Wrap a request body stream with a hard byte cap. Cancels and triggers `onExceed` if the
+ * caller exceeds `maxBytes`. Use as DoS protection on user-submitted upload / chat / SSE
+ * bodies. With `sse: true`, also splits on newlines so partial events propagate.
+ */
 const boundedBody = (
   body: null | ReadableStream<Uint8Array>,
   max: number,
@@ -49,6 +54,11 @@ const boundedBody = (
     })
   )
 }
+/**
+ * Tee a stream into a passthrough that fires `onCancel` when the consumer aborts. Use to
+ * propagate client disconnects back to upstream fetches (LLM streams, file uploads) so
+ * server resources are released promptly instead of running to completion unobserved.
+ */
 const withCancelHook = (src: ReadableStream<Uint8Array>, onCancel: () => void): ReadableStream<Uint8Array> => {
   const reader = src.getReader()
   return new ReadableStream<Uint8Array>({

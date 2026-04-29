@@ -73,6 +73,11 @@ const parseObjectFields = (content: string, startPos: number): SchemaField[] => 
   }
   return fields
 }
+/**
+ * Build schema-introspection utilities (`extractSchemaFields`, `extractFactoryCalls`, ...)
+ * bound to a backend's wrapper factories and base tables. Used by `noboil convex check`
+ * and `noboil stdb check` to parse user schema files without executing them.
+ */
 const createSchemaUtils = ({ baseTables, schemaFactoryMap, wrapperFactories }: CreateSchemaUtilsOptions) => {
   const mergedFactoryMap = { ...schemaFactoryMapBase, ...schemaFactoryMap }
   const extractSchemaFields = (content: string): SchemaTable[] => {

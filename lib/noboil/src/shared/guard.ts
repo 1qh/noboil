@@ -27,6 +27,11 @@ const makeGuardedProxy = <T extends AnyApi>(target: T, modules: string[], config
     }
   })
 }
+/**
+ * Build a wrapper that filters a typed `api` object down to specific module names. Returns
+ * a proxy that throws on access to non-allowed modules — use to scope which Convex / Stdb
+ * modules a piece of code can call (e.g. limit untrusted handlers to a read-only subset).
+ */
 const createGuardApi =
   (config: GuardConfig) =>
   <T extends AnyApi>(api: T, modules: string[]): T =>
