@@ -3,10 +3,8 @@
 /** biome-ignore-all lint/nursery/noUnnecessaryConditions: dashboard loop intentionally infinite until exit */
 /* oxlint-disable eslint-plugin-promise(prefer-await-to-then), eslint(no-useless-assignment), eslint(no-constant-condition) */
 /* eslint-disable no-console, no-await-in-loop, @typescript-eslint/no-unnecessary-condition */
-import { spawnSync } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { bold, dim, red } from './ansi'
 import { LOG_PATH, logCrash } from './shared/crash-log'
 import { didYouMean } from './shared/did-you-mean'
@@ -144,13 +142,12 @@ else if (cmd === 'tool') {
   if (sub && rest.length === 1) {
     const suggestion = didYouMean(sub, TOOL_DEV)
     if (suggestion) {
-      console.log(`${red("Unknown 'noboil tool' subcommand:")} ${sub}${dim(`  (did you mean ${bold(suggestion)}?)`)}`)
+      console.error(`${red("Unknown 'noboil tool' subcommand:")} ${sub}${dim(`  (did you mean ${bold(suggestion)}?)`)}`)
       process.exit(1)
     }
   }
-  const script = fileURLToPath(new URL('../bin/noboil-tool.ts', import.meta.url))
-  const result = spawnSync('bun', [script, ...rest], { stdio: 'inherit' })
-  process.exit(result.status ?? 1)
+  const { run: runTool } = await import('../bin/noboil-tool')
+  process.exit(await runTool(rest))
 } else if (cmd === 'add') {
   const db = detectDb()
   if (!db) {
@@ -162,7 +159,7 @@ else if (cmd === 'tool') {
   await runNamespace(db, ['add', ...rest])
 } else {
   const suggestion = didYouMean(cmd, Object.keys(COMMANDS))
-  console.log(`${red('Unknown command:')} ${cmd}${suggestion ? dim(`  (did you mean ${bold(suggestion)}?)`) : ''}\n`)
+  console.error(`${red('Unknown command:')} ${cmd}${suggestion ? dim(`  (did you mean ${bold(suggestion)}?)`) : ''}\n`)
   printHelp()
   process.exit(1)
 }

@@ -341,8 +341,7 @@ const printLocalHelp = (): void => {
   console.log('')
   console.log('Set CLI_SESSION_*, CONVEX_SELF_HOSTED_ADMIN_KEY, or X_API_KEY to discover providers.')
 }
-const main = async (): Promise<void> => {
-  const argv0 = process.argv.slice(2)
+const main = async (argv0: string[] = process.argv.slice(2)): Promise<void> => {
   if (argv0.length === 0 || (argv0.length === 1 && (argv0[0] === '--help' || argv0[0] === '-h'))) {
     printLocalHelp()
     return
@@ -360,7 +359,7 @@ const main = async (): Promise<void> => {
   const providerKey = alias
     ? (Object.keys(manifest.tree).find(k => k.replace(PROVIDER_PREFIX_RE, '') === alias) ?? alias)
     : null
-  const argv = providerKey ? [providerKey, ...process.argv.slice(2)] : process.argv.slice(2)
+  const argv = providerKey ? [providerKey, ...argv0] : argv0
   const isHelp = argv.includes('--help') || argv.includes('-h')
   const { path, consumed } = walkCommandPath(manifest, argv)
   const flagTokens = argv.slice(consumed).filter(t => t !== '--help' && t !== '-h' && t !== '--')
@@ -402,9 +401,14 @@ const main = async (): Promise<void> => {
   }
   await runCommand(path, cmd, flagTokens)
 }
-try {
-  await main()
-} catch (error: unknown) {
-  console.error(`fatal: ${error instanceof Error ? error.message : String(error)}`)
-  process.exit(1)
+const run = async (argv: string[] = process.argv.slice(2)): Promise<number> => {
+  try {
+    await main(argv)
+    return 0
+  } catch (error: unknown) {
+    console.error(`fatal: ${error instanceof Error ? error.message : String(error)}`)
+    return 1
+  }
 }
+if (import.meta.main) process.exit(await run())
+export { run }

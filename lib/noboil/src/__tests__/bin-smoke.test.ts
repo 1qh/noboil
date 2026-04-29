@@ -50,7 +50,7 @@ describe('noboil bin smoke', () => {
   test('unknown command exits 1', () => {
     const r = run(BIN, ['nonsense'])
     expect(r.status).toBe(1)
-    expect(r.stdout).toContain('Unknown command')
+    expect(r.stderr).toContain('Unknown command')
   })
   test('completions bash prints script', () => {
     const r = run(BIN, ['completions', 'bash'])
