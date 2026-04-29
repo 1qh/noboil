@@ -9,6 +9,10 @@ interface StdbCrudRefs {
   table: { tableName: string }
   update: unknown
 }
+/**
+ * One-shot binding for a `makeCrud`/`makeOrgCrud` slice — paginated list + create / update /
+ * remove / restore wrappers backed by SpacetimeDB reducers + table subscription.
+ */
 const useCrud = <T extends Record<string, unknown>>(refs: StdbCrudRefs, options?: CrudOptions): CrudResult<T> => {
   const [rows, isReady] = useTable(refs.table as never) as [T[], boolean]
   const { data, hasMore, isLoading, loadMore } = useList(rows, isReady, options as never)

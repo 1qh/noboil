@@ -13,6 +13,10 @@ interface UseBulkSelectionOpts {
   undoLabel?: string
   undoMs?: number
 }
+/**
+ * Track a Set of selected row IDs with toggle/clear/selectAll helpers, plus a
+ * built-in undo banner (configurable `undoMs`) for last-bulk-action recovery.
+ */
 const useBulkSelection = (options: UseBulkSelectionOpts) =>
   useSharedBulkSelection({
     ...options,

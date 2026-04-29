@@ -28,6 +28,10 @@ interface StdbLogRefs {
   table: unknown
   update?: unknown
 }
+/**
+ * Bind a `makeLog` slice scoped to a parent (e.g. votes for a poll). Returns paginated
+ * `{ data, hasMore, loadMore }` plus `append`, `bulkAppend`, `purgeByParent`, `restoreByParent`.
+ */
 const useLog = <T extends LogRowBase>(refs: StdbLogRefs, args: { parent: string }): LogHookResult<T> => {
   const [rows, isReady] = useTable(refs.table as never) as [T[], boolean]
   const appendFn = useMut<Record<string, unknown>>(refs.append)

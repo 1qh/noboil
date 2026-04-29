@@ -31,6 +31,10 @@ interface UseBulkMutateOptions {
 }
 const resolveBulkError = (opts?: UseBulkMutateOptions): ((error: unknown) => void) | undefined =>
   resolveSharedBulkError(opts, defaultOnError)
+/**
+ * Run a SpacetimeDB reducer across many rows with chunking, progress, and toast feedback.
+ * Splits input into `BULK_MAX`-sized chunks, fires sequentially, surfaces combined errors.
+ */
 const useBulkMutate = <A, R = void>(mutate: (args: A) => Promise<R>, options?: UseBulkMutateOptions) =>
   useSharedBulkMutate({
     bulkMax: BULK_MAX,

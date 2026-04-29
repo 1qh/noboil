@@ -19,6 +19,10 @@ interface StdbKvRefs {
   set: unknown
   table: unknown
 }
+/**
+ * Bind a `makeKv` slice to a single key. Returns `{ data, isLoading, update, remove, restore }`.
+ * Backed by a SpacetimeDB table subscription — live updates without polling.
+ */
 const useKv = <T extends KvRowBase>(refs: StdbKvRefs, key: string): KvHookResult<T> => {
   const [rows, isReady] = useTable(refs.table as never) as [T[], boolean]
   const setFn = useMut<Record<string, unknown>>(refs.set)
