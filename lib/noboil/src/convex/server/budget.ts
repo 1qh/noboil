@@ -88,6 +88,14 @@ const consolidate = async (
   if (!cur) return { balance: 0, id: null, inflight: 0 }
   return { balance: cur.balance, id: cur._id, inflight: cur.inflight ?? 0 }
 }
+/**
+ * Build a per-owner periodic-spend budget with reservation semantics. Endpoints:
+ * `reserve` (returns reservationId), `settle` (commit/refund actuals), `check` (current
+ * balance + inflight), `add` (top-up), `pruneStale`, `auditInvariants`. Use for token /
+ * credit ceilings, API call budgets, or any "X per period" cap with two-phase commit.
+ * Cap and period are configurable; reservations expire if not settled.
+ * @returns Endpoint object: `{ reserve, settle, check, add, pruneStale, auditInvariants }`
+ */
 const makeBudget = ({
   builders: b,
   cap,

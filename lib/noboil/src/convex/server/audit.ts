@@ -67,6 +67,13 @@ const clampLimit = (n: number | undefined): number => {
   if (n === undefined) return LIST_DEFAULT_LIMIT
   return Math.max(1, Math.min(LIST_MAX_LIMIT, Math.floor(n)))
 }
+/**
+ * Build an append-only audit-log slice with `append`, `recent`, `listByActor`, `listByTrace`,
+ * and `pruneStale` endpoints. Rows include `actor`, `action`, `target`, `traceId`, `meta`, `ts`.
+ * Pair with `auditTable` in your schema. Use for compliance, debugging, and incident review.
+ * Mutations are pure inserts — no row update, no soft-delete.
+ * @returns Endpoint object: `{ append, recent, listByActor, listByTrace, pruneStale }`
+ */
 const makeAudit = ({
   builders: b,
   hooks,

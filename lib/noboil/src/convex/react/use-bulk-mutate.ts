@@ -31,6 +31,12 @@ interface UseBulkMutateOptions {
 }
 const resolveBulkError = (opts?: UseBulkMutateOptions): ((error: unknown) => void) | undefined =>
   resolveSharedBulkError(opts, defaultOnError)
+/**
+ * Run a mutation across many rows with chunking, progress, and toast feedback.
+ * Splits the input into `BULK_MAX`-sized chunks, fires them sequentially, surfaces
+ * combined errors, and (by default) shows a sonner toast on each phase.
+ * @returns Wrapped mutate fn + status object suitable for binding to a button.
+ */
 const useBulkMutate = <A, R = void>(mutate: (args: A) => Promise<R>, options?: UseBulkMutateOptions) =>
   useSharedBulkMutate({
     bulkMax: BULK_MAX,

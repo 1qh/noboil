@@ -12,6 +12,11 @@ interface SoftDeleteOpts<A extends { id: string }> {
   undoMs?: number
 }
 type ToastFn = (message: string, opts?: { action?: { label: string; onClick: () => void }; duration?: number }) => void
+/**
+ * Wrap a `remove` + `restore` pair into a single action that fires the remove and shows
+ * a sonner toast with an Undo button (configurable `undoMs`). Use for delete UIs where
+ * you want Gmail-style "Undo" instead of a confirmation dialog.
+ */
 const useSoftDelete = <A extends { id: string }>(options: SoftDeleteOpts<A>) =>
   useSharedSoftDelete({ ...options, undoMs: options.undoMs ?? UNDO_MS })
 export type { SoftDeleteOpts, ToastFn }

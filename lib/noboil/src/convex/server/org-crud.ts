@@ -145,6 +145,13 @@ const resolveAclDoc = async (
   return doc as { userId: string }
 }
 const ohk = (c: MutCtx): HookCtx => ({ db: c.db, storage: c.storage, userId: c.user._id as string })
+/**
+ * Build an org-scoped CRUD slice (rows belong to an org, members of the org can read/write
+ * per their role). Endpoints: `create`, `list`, `get`, `patch`, `remove`, `restore`, `bulk_*`.
+ * Role gating via `requireOrgRole`. Pair with `orgTable` (or `orgChildTable`) in your schema.
+ * Use `makeCrud` for per-user, `makeChildCrud` for parent-bound, `makeSingletonCrud` for one-per-user.
+ * @returns Endpoint object suitable for spreading into a Convex module's exports.
+ */
 const makeOrgCrud = <S extends ZodRawShape>({
   builders,
   options: opt,

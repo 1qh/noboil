@@ -47,6 +47,13 @@ interface LogRow {
 }
 const hk = (c: MutCtx): HookCtx => ({ db: c.db, storage: c.storage, userId: c.user._id as string })
 const notDeleted = (f: FilterLike): unknown => f.eq(f.field('deletedAt'), undefined)
+/**
+ * Build an append-only log slice keyed by a `parent` reference (e.g. votes per poll, events
+ * per session). Endpoints: `append`, `listByParent`, `bulk_append`, `purge_by_parent`,
+ * `restore_by_parent`. Soft-deletion is preserved so prunes are reversible. Rate limiting and
+ * hooks supported. Pair with `logTable` in your schema.
+ * @returns Endpoint object suitable for spreading into a Convex module's exports.
+ */
 const makeLog = <S extends ZodRawShape>({
   auth: authOpt,
   builders: b,

@@ -39,6 +39,13 @@ interface QuotaRow {
   _id: string
   timestamps?: number[]
 }
+/**
+ * Build a per-owner sliding-window quota slice with `record` (consume one unit) and
+ * `check` (remaining). Use for "N actions per period" rate caps backed by a tiny
+ * timestamp ring buffer (no cron, no decay job). Cheaper than `makeBudget` when you
+ * only need count-based throttling without two-phase commit.
+ * @returns Endpoint object: `{ record, check }`
+ */
 const makeQuota = ({
   builders: b,
   durationMs,

@@ -11,6 +11,12 @@ interface OptimisticOptions<T extends MutationFn, R = FunctionReturnType<T>> {
   onSettled?: (args: Args<T>, error: unknown, result?: R) => void
   onSuccess?: (result: R, args: Args<T>) => void
 }
+/**
+ * Wrap a Convex mutation with sync feedback hooks (`onSuccess` / `onError` / `onSettled`)
+ * and a stable `mutate` reference. Use for non-CRUD mutations or when you want a single
+ * place to centralize toast / analytics side-effects. For optimistic local cache updates,
+ * pass an `update` function via the underlying Convex `useMutation` instead.
+ */
 const useOptimisticMutation = <T extends MutationFn>({
   mutation,
   onOptimistic,

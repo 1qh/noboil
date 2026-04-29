@@ -31,6 +31,11 @@ interface LogHookResult<T> {
   update: (args: { expectedUpdatedAt?: number; id: string; patch: Partial<T> }) => Promise<void>
 }
 type LogItem<R extends ConvexLogRefs> = FunctionReturnType<R['list']> extends { page: (infer T)[] } ? T : unknown
+/**
+ * Bind a `makeLog` slice scoped to a parent (e.g. votes for a poll). Returns paginated
+ * `{ data, hasMore, loadMore }` plus `append`, `bulkAppend`, `purgeByParent`, `restoreByParent`.
+ * Use for append-only feeds; pair with `makeChildCrud` when you need full per-row mutations.
+ */
 const useLog = <R extends ConvexLogRefs>(refs: R, args: { parent: string }): LogHookResult<LogItem<R>> => {
   const { data, hasMore, isLoading, loadMore } = useList(refs.list, { parent: args.parent })
   const appendMut = useMutation(refs.append)

@@ -16,6 +16,10 @@ interface QuotaState {
   remaining: number
   retryAfter?: number
 }
+/**
+ * Bind a `makeQuota` slice for a single owner. Returns `{ remaining, retryAfter }`
+ * plus a `record` action — call before / after a rate-limited operation. Live-updates.
+ */
 const useQuota = (refs: ConvexQuotaRefs, owner: string): QuotaHookResult => {
   const state = useQuery(refs.check, { owner }) as QuotaState | undefined
   const consumeMut = useMutation(refs.consume)

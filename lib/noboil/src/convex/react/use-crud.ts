@@ -10,6 +10,12 @@ interface ConvexCrudRefs {
   update: FunctionReference<'mutation'>
 }
 type ListItem<R extends ConvexCrudRefs> = FunctionReturnType<R['list']> extends { page: (infer T)[] } ? T : unknown
+/**
+ * One-shot binding for a `makeCrud`/`makeOrgCrud` slice — paginated list + create / update /
+ * remove / restore wrappers, all wired up. Pass `api.todos` (the entire endpoint group) and
+ * get back `{ data, isLoading, hasMore, loadMore, create, update, remove, restore }`.
+ * Use the lower-level hooks (`useList`, `useMutate`) for finer control.
+ */
 const useCrud = <R extends ConvexCrudRefs>(refs: R, options?: CrudOptions): CrudResult<ListItem<R>> => {
   const { data, hasMore, isLoading, loadMore } = useList(refs.list, options?.where ? { where: options.where } : {})
   const createMut = useMutation(refs.create)

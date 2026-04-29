@@ -49,6 +49,18 @@ interface CrudMCtx extends MutCtx {
   patch: (id: string, data: Rec, expectedUpdatedAt?: number) => Promise<Rec>
 }
 const hk = (c: CrudMCtx): HookCtx => ({ db: c.db, storage: c.storage, userId: c.user._id as string })
+/**
+ * Build a per-user-owned CRUD slice (create, list, get, patch, remove, restore, bulk_*).
+ * Each row is automatically scoped to the authenticated user (`userId` field). Soft-delete
+ * via `deletedAt` is built-in. Hooks (`beforeInsert`, `afterUpdate`, ...) execute inside the
+ * same transaction and may throw to abort.
+ *
+ * Pair with `ownedTable` in your schema. Use `makeOrgCrud` for org-scoped, `makeChildCrud`
+ * for parent-bound, `makeSingletonCrud` for one-row-per-user, `makeCacheCrud` for shared
+ * cached rows, `makeKv` for key/value, `makeLog` for append-only, `makeQuota` for rate buckets.
+ *
+ * @returns Endpoint object suitable for spreading into a Convex module's exports.
+ */
 const makeCrud = <S extends ZodRawShape>({
   builders,
   options: opt,

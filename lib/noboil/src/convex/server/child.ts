@@ -78,6 +78,13 @@ const mergeChildHooks = (gh: GlobalHooks | undefined, fh: CrudHooks | undefined,
     }
   return merged
 }
+/**
+ * Build a CRUD slice scoped under a parent row (e.g. messages within a chat, line items
+ * within an order). Inherits parent ACL — user can write to a child only when they can write
+ * to the parent. Endpoints: `create`, `list`, `get`, `patch`, `remove`, `restore`,
+ * `purge_by_parent`, `restore_by_parent`. Pair with `childTable` and supply `parent` config.
+ * @returns Endpoint object suitable for spreading into a Convex module's exports.
+ */
 const makeChildCrud = <S extends ZodRawShape, PS extends ZodRawShape = ZodRawShape>({
   builders,
   globalHooks: gh,

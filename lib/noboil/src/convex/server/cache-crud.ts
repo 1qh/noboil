@@ -26,6 +26,13 @@ import {
   time
 } from './helpers'
 const chk = (c: DbCtx) => ({ db: c.db })
+/**
+ * Build a shared read-through cache backed by a Convex table. Wraps a fetcher; subsequent
+ * lookups within `ttlMs` return the cached row. Endpoints: `get` (read-through), `prime`
+ * (manual seed), `invalidate`, `list`. Use for IMDb / TMDB / external API lookups —
+ * anywhere the same `key` is queried by many users and the upstream is rate-limited.
+ * @returns Endpoint object: `{ get, prime, invalidate, list }`
+ */
 const makeCacheCrud = <S extends ZodRawShape, K extends string, DM extends GenericDataModel = GenericDataModel>({
   builders: b,
   fetcher,

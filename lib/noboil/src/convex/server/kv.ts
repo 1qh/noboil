@@ -21,6 +21,12 @@ import {
 } from './helpers'
 const hk = (c: MutCtx): HookCtx => ({ db: c.db, storage: c.storage, userId: c.user._id as string })
 const isSoftDeleted = (doc: null | Rec): boolean => doc?.deletedAt !== undefined
+/**
+ * Build a global key/value slice with `set`, `get`, `list`, `rm`, `restore`. One row per
+ * `key` (string). Use for site config, feature flags, banner messages — small shared state.
+ * Soft-delete preserved. Pair with `kvTable` in your schema.
+ * @returns Endpoint object suitable for spreading into a Convex module's exports.
+ */
 const makeKv = <S extends ZodRawShape>({
   builders: b,
   hooks,

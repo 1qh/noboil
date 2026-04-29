@@ -15,6 +15,10 @@ interface KvHookResult<T> {
   restore: () => Promise<void>
   update: (payload: T, opts?: { expectedUpdatedAt?: number }) => Promise<void>
 }
+/**
+ * Bind a `makeKv` slice to a single key. Returns `{ data, isLoading, update, remove, restore }`
+ * with optimistic-concurrency support via `expectedUpdatedAt`. Subscribes for live updates.
+ */
 const useKv = <R extends ConvexKvRefs>(refs: R, key: string): KvHookResult<KvDoc<R>> => {
   const data = useQuery(refs.get, { key }) as KvDoc<R> | undefined
   const setMut = useMutation(refs.set)

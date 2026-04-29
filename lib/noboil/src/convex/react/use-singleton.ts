@@ -10,6 +10,10 @@ interface SingletonHookResult<T> {
   data: null | T | undefined
   upsert: (payload: T) => Promise<void>
 }
+/**
+ * Bind a `makeSingletonCrud` slice (one row per user — profile, prefs, etc.).
+ * Returns `{ data, isLoading, upsert, remove, restore }`. Auto-creates on first upsert.
+ */
 const useSingleton = <R extends ConvexSingletonRefs>(refs: R): SingletonHookResult<SingletonDoc<R>> => {
   const data = useQuery(refs.get, {}) as SingletonDoc<R> | undefined
   const upsertMut = useMutation(refs.upsert)

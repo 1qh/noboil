@@ -14,6 +14,12 @@ import {
   normalizeRateLimit,
   time
 } from './helpers'
+/**
+ * Build a one-row-per-user slice (`upsert`, `get`, `remove`, `restore`). Use for user
+ * profile, preferences, settings — anything where each user owns exactly one row.
+ * Auto-creates on first write. Pair with `singletonTable` in your schema.
+ * @returns Endpoint object: `{ upsert, get, remove, restore }`
+ */
 const makeSingletonCrud = <S extends ZodRawShape>({
   builders,
   options,
