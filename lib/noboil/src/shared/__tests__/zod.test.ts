@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'bun:test'
 import { array, boolean, date, number, object, optional, string, enum as zenum } from 'zod/v4'
 import {
+  checkSchema,
   coerceOptionals,
   defaultValues,
   enumToOptions,
@@ -243,5 +244,44 @@ describe('validateSchemas', () => {
   })
   test('skips non-schema entries', () => {
     expect(() => validateSchemas({ child: { foreignKey: 'blogId', parent: 'blog' } })).not.toThrow()
+  })
+})
+describe('defaultValues with optional/nullable wrappers', () => {
+  test('optional string falls through to inner default', () => {
+    const s = object({ name: optional(string()) })
+    const result = defaultValues(s)
+    expect(result.name).toBe('')
+  })
+  test('nullable date returns null', () => {
+    const s = object({ when: optional(date()) })
+    expect(defaultValues(s).when).toBeNull()
+  })
+})
+describe('checkSchema (stderr + exitCode)', () => {
+  test('clean schemas leave exitCode untouched', () => {
+    const prev = process.exitCode
+    process.exitCode = 0
+    checkSchema({ todo: object({ title: string() }) })
+    expect(process.exitCode).toBe(0)
+    process.exitCode = prev
+  })
+  test('bad schemas write to stderr and set exitCode=1', () => {
+    const prev = process.exitCode
+    const realWrite = process.stderr.write.bind(process.stderr)
+    let captured = ''
+    process.stderr.write = (chunk: string | Uint8Array) => {
+      captured += typeof chunk === 'string' ? chunk : new TextDecoder().decode(chunk)
+      return true
+    }
+    try {
+      process.exitCode = 0
+      checkSchema({ bad: object({ val: string().pipe(string()) }) })
+      expect(process.exitCode).toBe(1)
+      expect(captured).toContain('bad.val')
+      expect(captured).toContain('unsupported')
+    } finally {
+      process.stderr.write = realWrite
+      process.exitCode = prev
+    }
   })
 })
