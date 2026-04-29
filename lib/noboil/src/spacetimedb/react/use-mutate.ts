@@ -174,6 +174,11 @@ const inferReducerName = (reducer: unknown): string | undefined => {
     if (typeof r.name === 'string') return r.name
   }
 }
+/**
+ * Bind a SpacetimeDB-generated reducer hook (e.g. `useUpdateTodo` from generated bindings)
+ * with shared devtools tracking + toast UX. Use when you need stricter typing than
+ * `useMutate` provides — `useMutate` is reducer-fn-agnostic, this is reducer-hook-shaped.
+ */
 const useMutation = <A extends Record<string, unknown>, R = void, D = unknown>(
   useReducerHook: (desc: D) => (args: A) => Promise<R>,
   reducer: D,

@@ -19,6 +19,7 @@ const identityEquals = (a: Identity | undefined, b: Identity | undefined): boole
   if (!(a && b)) return false
   return a.toHexString() === b.toHexString()
 }
+/** Bind a `makeSingletonCrud` slice — one row per user. Returns `{ data, isLoading, upsert, remove, restore }`. */
 const useSingleton = <T extends SingletonRowBase>(
   refs: StdbSingletonRefs,
   sender: Identity | undefined

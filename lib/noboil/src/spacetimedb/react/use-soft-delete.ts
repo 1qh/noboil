@@ -12,6 +12,7 @@ interface SoftDeleteOpts<A extends { id: string }> {
   undoMs?: number
 }
 type ToastFn = (message: string, opts?: { action?: { label: string; onClick: () => void }; duration?: number }) => void
+/** Wrap remove + restore reducers into a single action that fires remove and shows a sonner Undo banner. */
 const useSoftDelete = <A extends { id: string }>(options: SoftDeleteOpts<A>) =>
   useSharedSoftDelete({ ...options, undoMs: options.undoMs ?? UNDO_MS })
 export type { SoftDeleteOpts, ToastFn }

@@ -19,6 +19,11 @@ type UploadOptions = UploadConfig
 type UploadResult = { code: 'ABORTED' | 'NETWORK' | 'URL'; ok: false } | { ok: true; storageId: string; url?: string }
 const OCTET_STREAM = 'application/octet-stream'
 const toContentType = (file: File): string => file.type || OCTET_STREAM
+/**
+ * Browser file upload bound to a SpacetimeDB module. Returns `{ upload, progress, abort }`.
+ * Uses HTTP PUT to the module's storage endpoint with progress events; falls back to
+ * `application/octet-stream` if `file.type` is empty.
+ */
 const useUpload = (config?: UploadConfig) => {
   const [progress, setProgress] = useState(0)
   const [isUploading, setIsUploading] = useState(false)

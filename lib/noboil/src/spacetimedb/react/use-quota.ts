@@ -45,6 +45,7 @@ const compute = ({
   if (remaining > 0) return { allowed: true, remaining }
   return { allowed: false, remaining: 0, retryAfter: oldest + durationMs - now }
 }
+/** Bind a `makeQuota` slice for a single owner. Returns `{ remaining, retryAfter }` plus a `record` action. */
 const useQuota = (refs: StdbQuotaRefs, owner: string): QuotaHookResult => {
   const [rows] = useTable(refs.table as never) as [QuotaRowBase[], boolean]
   const consumeFn = useMut<Record<string, unknown>>(refs.consume)
