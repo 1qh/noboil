@@ -1,20 +1,39 @@
 #!/usr/bin/env bun
 /* eslint-disable no-console */
-import { spawnSync } from 'node:child_process'
-import { fileURLToPath } from 'node:url'
 import { bold, dim, red } from '../ansi'
 import { didYouMean } from '../shared/did-you-mean'
-const COMMANDS: Record<string, { description: string; script: string }> = {
-  add: { description: 'Add a new table/reducer to your project', script: 'add.ts' },
-  check: { description: 'Validate schema/reducer consistency', script: 'check.ts' },
-  dev: { description: 'Start integrated local development workflow', script: '' },
-  docs: { description: 'Generate API documentation', script: 'docs-gen.ts' },
-  doctor: { description: 'Run project diagnostics', script: 'doctor.ts' },
-  generate: { description: 'Generate project files (docker-compose, etc.)', script: '' },
-  migrate: { description: 'Schema diff and publish migration plans', script: 'migrate.ts' },
-  use: { description: 'Switch SpacetimeDB target (local / cloud)', script: '' },
-  validate: { description: 'Lint schema, reducers, indexes, and access control', script: 'check.ts' },
-  viz: { description: 'Visualize schema relationships', script: 'viz.ts' }
+const COMMANDS: Record<string, { description: string; run: (argv: string[]) => Promise<unknown> }> = {
+  add: {
+    description: 'Add a new table/reducer to your project',
+    run: async argv => (await import('./add')).add(argv)
+  },
+  check: {
+    description: 'Validate schema/reducer consistency',
+    run: async argv => (await import('./check')).run(argv)
+  },
+  dev: {
+    description: 'Start integrated local development workflow',
+    run: async argv => (await import('./dev')).dev(argv)
+  },
+  docs: { description: 'Generate API documentation', run: async argv => (await import('./docs-gen')).run(argv) },
+  doctor: { description: 'Run project diagnostics', run: async argv => (await import('./doctor')).run(argv) },
+  generate: {
+    description: 'Generate project files (docker-compose, etc.)',
+    run: async argv => (await import('./generate')).generate(argv)
+  },
+  migrate: {
+    description: 'Schema diff and publish migration plans',
+    run: async argv => (await import('./migrate')).run(argv)
+  },
+  use: {
+    description: 'Switch SpacetimeDB target (local / cloud)',
+    run: async argv => (await import('./use')).switchTarget(argv)
+  },
+  validate: {
+    description: 'Lint schema, reducers, indexes, and access control',
+    run: async argv => (await import('./check')).run(argv.length === 0 ? ['--health'] : argv)
+  },
+  viz: { description: 'Visualize schema relationships', run: async argv => (await import('./viz')).run(argv) }
 }
 const printHelp = () => {
   console.log(`\n${bold('noboil stdb')} — Zod schema → fullstack app\n`)
@@ -35,40 +54,17 @@ const run = async (argv: string[]): Promise<number> => {
     printHelp()
     return 0
   }
-  if (!(cmd in COMMANDS)) {
+  const entry = COMMANDS[cmd]
+  if (!entry) {
     const suggestion = didYouMean(cmd, Object.keys(COMMANDS))
-    console.log(
+    console.error(
       `${red("Unknown 'noboil stdb' subcommand:")} ${cmd}${suggestion ? dim(`  (did you mean ${bold(suggestion)}?)`) : ''}\n`
     )
     printHelp()
     return 1
   }
-  if (cmd === 'add') {
-    const { add } = await import('./add')
-    await add(rest)
-    return 0
-  }
-  if (cmd === 'use') {
-    const { switchTarget } = await import('./use')
-    switchTarget(rest)
-    return 0
-  }
-  if (cmd === 'generate') {
-    const { generate } = await import('./generate')
-    generate(rest)
-    return 0
-  }
-  if (cmd === 'dev') {
-    const { dev } = await import('./dev')
-    await dev(rest)
-    return 0
-  }
-  const entry = COMMANDS[cmd]
-  if (!entry) return 1
-  const args = cmd === 'validate' && rest.length === 0 ? ['--health'] : rest
-  const script = fileURLToPath(new URL(entry.script, import.meta.url))
-  const result = spawnSync('bun', [script, ...args], { stdio: 'inherit' })
-  return result.status ?? 1
+  await entry.run(rest)
+  return 0
 }
 if (import.meta.main) process.exit(await run(process.argv.slice(2)))
 export { run }

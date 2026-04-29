@@ -611,9 +611,9 @@ const printHealthReport = (convexDir: string, schemaFile: { content: string; pat
       `  ${dim('Run')} noboil convex check --access ${dim('for access matrix')}\n`
   )
 }
-const run = () => {
+const run = (argv: string[] = process.argv.slice(2)) => {
   const root = process.cwd()
-  const flags = new Set(process.argv.slice(2))
+  const flags = new Set(argv)
   console.log(bold('\nnoboil/convex check\n'))
   const convexDir = findConvexDir(root)
   if (!convexDir) {
@@ -673,6 +673,7 @@ export {
   printHealthReport,
   printIndexReport,
   printSchemaPreview,
+  run,
   scanWhereUsage
 }
 export type { AccessEntry, FactoryCall, SchemaField, SchemaTable, TableIndex, WhereField }

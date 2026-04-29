@@ -550,9 +550,9 @@ const printHealthReport = (moduleDir: string, schemaFile: { content: string; pat
       `  ${dim('Run')} noboil stdb check --access ${dim('for access matrix')}\n`
   )
 }
-const run = () => {
+const run = (argv: string[] = process.argv.slice(2)) => {
   const root = process.cwd()
-  const flags = new Set(process.argv.slice(2))
+  const flags = new Set(argv)
   console.log(bold('\nnoboil stdb check\n'))
   const moduleDir = findModuleDir(root)
   if (!moduleDir) {
@@ -612,6 +612,7 @@ export {
   printHealthReport,
   printIndexReport,
   printSchemaPreview,
+  run,
   scanWhereUsage
 }
 export type { AccessEntry, FactoryCall, SchemaField, SchemaTable, TableIndex, WhereField }

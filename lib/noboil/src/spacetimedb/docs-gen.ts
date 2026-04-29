@@ -196,9 +196,9 @@ const generateFullReference = (srcDir: string): string => {
   lines.push('---', '', `**${totalSymbols} exports** across ${ENTRY_POINTS.length} entry points.`)
   return lines.join('\n')
 }
-const run = () => {
+const run = (argv: string[] = process.argv.slice(2)) => {
   const root = process.cwd()
-  const flags = new Set(process.argv.slice(2))
+  const flags = new Set(argv)
   console.log(bold('\nnoboil stdb docs\n'))
   if (flags.has('--full')) {
     const srcDir = join(root, 'src')
@@ -248,4 +248,4 @@ const run = () => {
   console.log(dim('\nRun with --markdown for full API reference output\n'))
 }
 if (import.meta.main) run()
-export { extractJSDoc, generateFullReference, generateMarkdown, resolveReExports }
+export { extractJSDoc, generateFullReference, generateMarkdown, resolveReExports, run }

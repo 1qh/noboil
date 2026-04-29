@@ -139,9 +139,9 @@ const printSummary = (tables: TableInfo[], children: ChildInfo[]) => {
     console.log('')
   }
 }
-const run = () => {
+const run = (argv: string[] = process.argv.slice(2)) => {
   const root = process.cwd()
-  const flags = new Set(process.argv.slice(2))
+  const flags = new Set(argv)
   console.log(bold('\nnoboil stdb viz\n'))
   const moduleDir = findModuleDir(root)
   if (!moduleDir) {
@@ -169,4 +169,4 @@ const run = () => {
 }
 if (import.meta.main) run()
 const extractChildren = (content: string): ChildInfo[] => buildRelationships(extractWrapperTables(content))
-export { extractChildren, extractFieldType, extractWrapperTables, generateMermaid }
+export { extractChildren, extractFieldType, extractWrapperTables, generateMermaid, run }

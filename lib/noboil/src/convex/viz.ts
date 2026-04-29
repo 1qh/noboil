@@ -156,9 +156,9 @@ const generateMermaid = (tables: TableInfo[], children: ChildInfo[]): string => 
       }
   return lines.join('\n')
 }
-const run = () => {
+const run = (argv: string[] = process.argv.slice(2)) => {
   const root = process.cwd()
-  const flags = new Set(process.argv.slice(2))
+  const flags = new Set(argv)
   console.log(bold('\nnoboil/convex viz\n'))
   const convexDir = findConvexDir(root)
   if (!convexDir) {
@@ -185,4 +185,4 @@ const run = () => {
   console.log(dim('Run with --mermaid for ER diagram output\n'))
 }
 if (import.meta.main) run()
-export { extractChildren, extractFieldsFromBlock, extractFieldType, extractWrapperTables, generateMermaid }
+export { extractChildren, extractFieldsFromBlock, extractFieldType, extractWrapperTables, generateMermaid, run }

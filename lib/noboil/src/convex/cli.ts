@@ -1,16 +1,20 @@
 #!/usr/bin/env bun
 /* eslint-disable no-console */
-import { spawnSync } from 'node:child_process'
-import { fileURLToPath } from 'node:url'
 import { bold, dim, red } from '../ansi'
 import { didYouMean } from '../shared/did-you-mean'
-const COMMANDS: Record<string, { description: string; script: string }> = {
-  add: { description: 'Add a new table/endpoint to your project', script: 'add.ts' },
-  check: { description: 'Validate schema/factory consistency', script: 'check.ts' },
-  docs: { description: 'Generate API documentation', script: 'docs-gen.ts' },
-  doctor: { description: 'Run project diagnostics', script: 'doctor.ts' },
-  migrate: { description: 'Schema diff and migration plans', script: 'migrate.ts' },
-  viz: { description: 'Visualize schema relationships', script: 'viz.ts' }
+const COMMANDS: Record<string, { description: string; run: (argv: string[]) => Promise<unknown> }> = {
+  add: {
+    description: 'Add a new table/endpoint to your project',
+    run: async argv => (await import('./add')).add(argv)
+  },
+  check: {
+    description: 'Validate schema/factory consistency',
+    run: async argv => (await import('./check')).run(argv)
+  },
+  docs: { description: 'Generate API documentation', run: async argv => (await import('./docs-gen')).run(argv) },
+  doctor: { description: 'Run project diagnostics', run: async argv => (await import('./doctor')).run(argv) },
+  migrate: { description: 'Schema diff and migration plans', run: async argv => (await import('./migrate')).run(argv) },
+  viz: { description: 'Visualize schema relationships', run: async argv => (await import('./viz')).run(argv) }
 }
 const printHelp = () => {
   console.log(`\n${bold('noboil/convex')} — Zod schema → fullstack app\n`)
@@ -31,24 +35,17 @@ const run = async (argv: string[]): Promise<number> => {
     printHelp()
     return 0
   }
-  if (!(cmd in COMMANDS)) {
+  const entry = COMMANDS[cmd]
+  if (!entry) {
     const suggestion = didYouMean(cmd, Object.keys(COMMANDS))
-    console.log(
+    console.error(
       `${red("Unknown 'noboil convex' subcommand:")} ${cmd}${suggestion ? dim(`  (did you mean ${bold(suggestion)}?)`) : ''}\n`
     )
     printHelp()
     return 1
   }
-  if (cmd === 'add') {
-    const { add } = await import('./add')
-    await add(rest)
-    return 0
-  }
-  const entry = COMMANDS[cmd]
-  if (!entry) return 1
-  const script = fileURLToPath(new URL(entry.script, import.meta.url))
-  const result = spawnSync('bun', [script, ...rest], { stdio: 'inherit' })
-  return result.status ?? 1
+  await entry.run(rest)
+  return 0
 }
 if (import.meta.main) process.exit(await run(process.argv.slice(2)))
 export { run }

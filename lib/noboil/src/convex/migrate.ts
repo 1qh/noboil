@@ -271,9 +271,8 @@ const printMigrationPlan = (actions: MigrationAction[]) => {
     console.log()
   }
 }
-const run = () => {
+const run = (argv: string[] = process.argv.slice(2)) => {
   const root = process.cwd()
-  const argv = process.argv.slice(2)
   const flags = new Set(argv)
   console.log(bold('\nnoboil/convex migrate\n'))
   if (hasFlag(argv, '--help', '-h')) {
@@ -324,5 +323,5 @@ Examples:
   printMigrationPlan(actions)
 }
 if (import.meta.main) run()
-export { diffSnapshots, isOptionalField, parseFieldsFromBlock, parseSchemaContent }
+export { diffSnapshots, isOptionalField, parseFieldsFromBlock, parseSchemaContent, run }
 export type { FieldInfo, MigrationAction, SchemaSnapshot, TableSnapshot }

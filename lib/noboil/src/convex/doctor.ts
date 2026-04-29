@@ -218,6 +218,13 @@ const doctor = () => {
   console.log(`Summary: ${passed} passed, ${warned} warning(s), ${failed} error(s)`)
   console.log(`Health Score: ${scoreColor(`${score}/${HEALTH_MAX}`)}\n`)
 }
-if (import.meta.main) doctor()
-export { calcHealthScore, checkDeps, checkEslintContent, checkRateLimit, doctor }
+const run = (argv: readonly string[] = []) => {
+  if (argv.includes('--help') || argv.includes('-h')) {
+    console.log('Usage: noboil convex doctor')
+    return
+  }
+  doctor()
+}
+if (import.meta.main) run()
+export { calcHealthScore, checkDeps, checkEslintContent, checkRateLimit, doctor, run }
 export type { CheckResult }
