@@ -50,6 +50,7 @@ interface BudgetRow {
   owner: string
   periodKey: string
 }
+/** Compute the budget period bucket key for `now` (e.g. epoch-day for 86400000ms). Used to roll over budgets at period boundaries. */
 const periodKeyFor = (now: number, periodMs: number): string => {
   if (periodMs === DAY_MS) return new Date(now).toISOString().slice(0, 10)
   const idxNum = Math.floor(now / periodMs)

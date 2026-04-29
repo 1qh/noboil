@@ -4,6 +4,7 @@ import { any, object, string } from 'zod/v4'
 import type { Mb, MutCtx, Qb, Rec } from './types'
 import { HEARTBEAT_INTERVAL_MS, PRESENCE_TTL_MS } from '../../shared/server/presence'
 import { idx, indexFields, typed } from './bridge'
+/** Convex schema fragment for the `presence` table. Spread into your `defineSchema({ ... })` call. */
 const presenceTable = () => ({
   presence: defineTable({
     data: v.optional(v.any()),
