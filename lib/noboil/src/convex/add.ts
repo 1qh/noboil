@@ -57,9 +57,9 @@ const parseAddFlags = (args: string[]): AddFlags => {
   return { appDir, convexDir, fields, help, name, parent, type }
 }
 const printAddHelp = () => {
-  console.log(`${bold('noboil-convex add')} — add a new table/endpoint to your project\n`)
+  console.log(`${bold('noboil convex add')} — add a new table/endpoint to your project\n`)
   console.log(bold('Usage:'))
-  console.log('  noboil-convex add <table-name> [options]\n')
+  console.log('  noboil convex add <table-name> [options]\n')
   console.log(bold('Options:'))
   console.log(
     `  --type=TYPE           Table type: owned, org, singleton, cache, child, log, kv, quota ${dim('(default: owned)')}`
@@ -72,16 +72,16 @@ const printAddHelp = () => {
   console.log(`  --app-dir=DIR         App directory ${dim('(default: src/app)')}`)
   console.log('  --help, -h            Show this help\n')
   console.log(bold('Examples:'))
-  console.log(`  ${dim('$')} noboil-convex add todo --fields="title:string,done:boolean"`)
+  console.log(`  ${dim('$')} noboil convex add todo --fields="title:string,done:boolean"`)
   console.log(
-    `  ${dim('$')} noboil-convex add wiki --type=org --fields="title:string,content:string,status:enum(draft,published)"`
+    `  ${dim('$')} noboil convex add wiki --type=org --fields="title:string,content:string,status:enum(draft,published)"`
   )
-  console.log(`  ${dim('$')} noboil-convex add message --type=child --parent=chat --fields="text:string"`)
-  console.log(`  ${dim('$')} noboil-convex add profile --type=singleton --fields="displayName:string,bio:string?"`)
-  console.log(`  ${dim('$')} noboil-convex add movie --type=cache --fields="title:string,tmdb_id:number"`)
-  console.log(`  ${dim('$')} noboil-convex add vote --type=log --parent=poll --fields="optionIdx:number,voter:string"`)
-  console.log(`  ${dim('$')} noboil-convex add siteConfig --type=kv --fields="active:boolean,message:string"`)
-  console.log(`  ${dim('$')} noboil-convex add apiQuota --type=quota\n`)
+  console.log(`  ${dim('$')} noboil convex add message --type=child --parent=chat --fields="text:string"`)
+  console.log(`  ${dim('$')} noboil convex add profile --type=singleton --fields="displayName:string,bio:string?"`)
+  console.log(`  ${dim('$')} noboil convex add movie --type=cache --fields="title:string,tmdb_id:number"`)
+  console.log(`  ${dim('$')} noboil convex add vote --type=log --parent=poll --fields="optionIdx:number,voter:string"`)
+  console.log(`  ${dim('$')} noboil convex add siteConfig --type=kv --fields="active:boolean,message:string"`)
+  console.log(`  ${dim('$')} noboil convex add apiQuota --type=quota\n`)
 }
 const fieldToZod = (f: ParsedField): string => {
   const base = typeof f.type === 'object' ? `zenum([${f.type.enum.map(v => `'${v}'`).join(', ')}])` : `${f.type}()`

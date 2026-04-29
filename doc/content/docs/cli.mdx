@@ -136,10 +136,10 @@ Run noboil convex <command> --help for command-specific options.
 **noboil convex add --help**
 
 ```text
-noboil-convex add — add a new table/endpoint to your project
+noboil convex add — add a new table/endpoint to your project
 
 Usage:
-  noboil-convex add <table-name> [options]
+  noboil convex add <table-name> [options]
 
 Options:
   --type=TYPE           Table type: owned, org, singleton, cache, child, log, kv, quota (default: owned)
@@ -150,14 +150,14 @@ Options:
   --help, -h            Show this help
 
 Examples:
-  $ noboil-convex add todo --fields="title:string,done:boolean"
-  $ noboil-convex add wiki --type=org --fields="title:string,content:string,status:enum(draft,published)"
-  $ noboil-convex add message --type=child --parent=chat --fields="text:string"
-  $ noboil-convex add profile --type=singleton --fields="displayName:string,bio:string?"
-  $ noboil-convex add movie --type=cache --fields="title:string,tmdb_id:number"
-  $ noboil-convex add vote --type=log --parent=poll --fields="optionIdx:number,voter:string"
-  $ noboil-convex add siteConfig --type=kv --fields="active:boolean,message:string"
-  $ noboil-convex add apiQuota --type=quota
+  $ noboil convex add todo --fields="title:string,done:boolean"
+  $ noboil convex add wiki --type=org --fields="title:string,content:string,status:enum(draft,published)"
+  $ noboil convex add message --type=child --parent=chat --fields="text:string"
+  $ noboil convex add profile --type=singleton --fields="displayName:string,bio:string?"
+  $ noboil convex add movie --type=cache --fields="title:string,tmdb_id:number"
+  $ noboil convex add vote --type=log --parent=poll --fields="optionIdx:number,voter:string"
+  $ noboil convex add siteConfig --type=kv --fields="active:boolean,message:string"
+  $ noboil convex add apiQuota --type=quota
 ```
 
 **noboil stdb --help**

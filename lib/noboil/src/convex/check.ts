@@ -605,10 +605,10 @@ const printHealthReport = (convexDir: string, schemaFile: { content: string; pat
   }
   if (allIssues.length === 0) console.log(`  ${green('\u2713 No issues found')}\n`)
   console.log(
-    `  ${dim('Run')} noboil-convex check --schema ${dim('for schema preview')}\n` +
-      `  ${dim('Run')} noboil-convex check --endpoints ${dim('for endpoint list')}\n` +
-      `  ${dim('Run')} noboil-convex check --indexes ${dim('for index analysis')}\n` +
-      `  ${dim('Run')} noboil-convex check --access ${dim('for access matrix')}\n`
+    `  ${dim('Run')} noboil convex check --schema ${dim('for schema preview')}\n` +
+      `  ${dim('Run')} noboil convex check --endpoints ${dim('for endpoint list')}\n` +
+      `  ${dim('Run')} noboil convex check --indexes ${dim('for index analysis')}\n` +
+      `  ${dim('Run')} noboil convex check --access ${dim('for access matrix')}\n`
   )
 }
 const run = () => {

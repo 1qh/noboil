@@ -3649,7 +3649,7 @@ describe('noboil-convex-docs', () => {
   test('generateMarkdown produces markdown header', () => {
     const md = generateMarkdown([], new Map())
     expect(md).toContain('# API Reference')
-    expect(md).toContain('noboil-convex docs')
+    expect(md).toContain('noboil convex docs')
   })
   test('generateMarkdown includes factory table', () => {
     const calls = [{ factory: 'crud', file: 'blog.ts', options: '', table: 'blog' }]

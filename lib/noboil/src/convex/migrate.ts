@@ -277,7 +277,7 @@ const run = () => {
   const flags = new Set(argv)
   console.log(bold('\nnoboil/convex migrate\n'))
   if (hasFlag(argv, '--help', '-h')) {
-    console.log(`Usage: noboil-convex migrate [options]
+    console.log(`Usage: noboil convex migrate [options]
 Compare schema versions and generate migration plans.
 Options:
    --from <ref>    Git ref for the "before" schema (default: HEAD)
@@ -285,9 +285,9 @@ Options:
    --snapshot      Print current schema snapshot (no diff)
    --help, -h      Show this help
 Examples:
-   noboil-convex migrate                    Compare HEAD vs working tree
-   noboil-convex migrate --from HEAD~3      Compare 3 commits ago vs now
-   noboil-convex migrate --snapshot         Print current schema tables & fields
+   noboil convex migrate                    Compare HEAD vs working tree
+   noboil convex migrate --from HEAD~3      Compare 3 commits ago vs now
+   noboil convex migrate --snapshot         Print current schema tables & fields
  `)
     return
   }
