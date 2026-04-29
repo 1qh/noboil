@@ -51,9 +51,9 @@ That's it. Five endpoints (`create`, `update`, `rm`, `list`, `read`) with auth, 
 ## Add a table in one command
 
 ```bash
-noboil-convex add todo --fields="title:string,done:boolean"
+noboil convex add todo --fields="title:string,done:boolean"
 # or
-noboil-stdb add todo --fields="title:string,done:boolean"
+noboil stdb add todo --fields="title:string,done:boolean"
 ```
 
 This generates a Zod schema, CRUD endpoints, and a React page component. Every field name is type-checked — misspell `title` and TypeScript catches it.
@@ -101,8 +101,8 @@ Three CLIs ship with noboil:
 | CLI | Purpose |
 | --- | --- |
 | `noboil` | Project scaffolding (`init`), health checks (`doctor`), upstream sync (`sync`), eject (`eject`) |
-| `noboil-convex` | Add tables, validate schema, migrate, visualize, generate docs |
-| `noboil-stdb` | Add tables, validate schema, local dev workflow, switch targets, generate docs |
+| `noboil convex` | Add tables, validate schema, migrate, visualize, generate docs |
+| `noboil stdb` | Add tables, validate schema, local dev workflow, switch targets, generate docs |
 
 See [CLI Reference](./cli) for the full command reference.
 

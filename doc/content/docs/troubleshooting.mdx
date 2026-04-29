@@ -46,7 +46,7 @@ import { Tab, Tabs } from 'fumadocs-ui/components/tabs'
 | Symptom | Cause | Fix |
 | --- | --- | --- |
 | Module publish fails | Docker not running or SpacetimeDB container unhealthy | Run `docker compose ps` to verify the SpacetimeDB container is up and healthy |
-| WebSocket connection refused | `NEXT_PUBLIC_SPACETIMEDB_URI` missing or wrong | Check `.env` for the correct URI. Run `noboil-stdb use local` to reset to local defaults |
+| WebSocket connection refused | `NEXT_PUBLIC_SPACETIMEDB_URI` missing or wrong | Check `.env` for the correct URI. Run `noboil stdb use local` to reset to local defaults |
 | Generated bindings outdated | Schema changed without regenerating | Re-run `spacetime generate` after any schema change |
 | Column name mismatch at runtime | SpacetimeDB columns are snake_case in Rust, camelCase in generated TypeScript | Use the camelCase names from the generated bindings, not the Rust column names |
 

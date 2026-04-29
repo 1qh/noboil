@@ -5,7 +5,7 @@ description: Complete reference for all noboil CLI commands — project scaffold
 
 import { Tab, Tabs } from 'fumadocs-ui/components/tabs'
 
-Three CLIs ship with noboil. `noboil` handles project creation and top-level ops. `noboil-convex` and `noboil-stdb` are database-specific. All three support `--version` and `--help`.
+Three CLIs ship with noboil. `noboil` handles project creation and top-level ops. `noboil convex` and `noboil stdb` are database-specific. All three support `--version` and `--help`.
 
 Running `noboil` with no args opens an **interactive dashboard** with single-key hotkeys. `/` filters commands, `↑↓` navigates recent history, any letter runs the matching command instantly.
 
@@ -247,7 +247,7 @@ Parsed flag tables for every `--help` block above. **19 flags total.**
 | ----------- | -------------------------------------------- |
 | `--dry-run` | Show what would change without writing files |
 
-**`noboil-convex add`** — 5 option(s)
+**`noboil convex add`** — 5 option(s)
 
 | Flag               | Description                                                                         |
 | ------------------ | ----------------------------------------------------------------------------------- |
@@ -257,7 +257,7 @@ Parsed flag tables for every `--help` block above. **19 flags total.**
 | `--convex-dir=DIR` | Convex directory (default: convex)                                                  |
 | `--app-dir=DIR`    | App directory (default: src/app)                                                    |
 
-**`noboil-stdb add`** — 5 option(s)
+**`noboil stdb add`** — 5 option(s)
 
 | Flag               | Description                                                                         |
 | ------------------ | ----------------------------------------------------------------------------------- |
@@ -285,22 +285,22 @@ Parsed flag tables for every `--help` block above. **19 flags total.**
 | `noboil` | `completions` | `c` | Print or install shell completions |
 | `noboil` | `convex <cmd>` | — | Run a Convex subcommand (see below) |
 | `noboil` | `stdb <cmd>` | — | Run a SpacetimeDB subcommand (see below) |
-| `noboil-convex` | `add` | — | Generate a new table with CRUD |
-| `noboil-convex` | `check` | — | Validate schema/factory consistency |
-| `noboil-convex` | `doctor` | — | Project diagnostics with health score |
-| `noboil-convex` | `migrate` | — | Schema diff and migration plans |
-| `noboil-convex` | `viz` | — | Visualize schema relationships |
-| `noboil-convex` | `docs` | — | Generate API documentation |
-| `noboil-stdb` | `add` | — | Generate a new table with reducers |
-| `noboil-stdb` | `check` | — | Validate schema/factory consistency |
-| `noboil-stdb` | `doctor` | — | Project diagnostics with health score |
-| `noboil-stdb` | `dev` | — | Start integrated local dev workflow |
-| `noboil-stdb` | `migrate` | — | Schema diff and migration plans |
-| `noboil-stdb` | `use` | — | Switch SpacetimeDB target |
-| `noboil-stdb` | `generate docker` | — | Generate docker-compose.yml |
-| `noboil-stdb` | `viz` | — | Visualize schema relationships |
-| `noboil-stdb` | `docs` | — | Generate API documentation |
-| `noboil-stdb` | `validate` | — | Alias for `check --health` |
+| `noboil convex` | `add` | — | Generate a new table with CRUD |
+| `noboil convex` | `check` | — | Validate schema/factory consistency |
+| `noboil convex` | `doctor` | — | Project diagnostics with health score |
+| `noboil convex` | `migrate` | — | Schema diff and migration plans |
+| `noboil convex` | `viz` | — | Visualize schema relationships |
+| `noboil convex` | `docs` | — | Generate API documentation |
+| `noboil stdb` | `add` | — | Generate a new table with reducers |
+| `noboil stdb` | `check` | — | Validate schema/factory consistency |
+| `noboil stdb` | `doctor` | — | Project diagnostics with health score |
+| `noboil stdb` | `dev` | — | Start integrated local dev workflow |
+| `noboil stdb` | `migrate` | — | Schema diff and migration plans |
+| `noboil stdb` | `use` | — | Switch SpacetimeDB target |
+| `noboil stdb` | `generate docker` | — | Generate docker-compose.yml |
+| `noboil stdb` | `viz` | — | Visualize schema relationships |
+| `noboil stdb` | `docs` | — | Generate API documentation |
+| `noboil stdb` | `validate` | — | Alias for `check --health` |
 
 ---
 
@@ -489,11 +489,11 @@ noboil eject --dry-run
 
 ### Namespaces and auto-dispatch
 
-Instead of invoking `noboil-convex` / `noboil-stdb` directly, you can run them through the unified `noboil` entry:
+Instead of invoking `noboil convex` / `noboil stdb` directly, you can run them through the unified `noboil` entry:
 
 ```bash
-noboil convex add post            # same as noboil-convex add post
-noboil stdb add post              # same as noboil-stdb add post
+noboil convex add post            # same as noboil convex add post
+noboil stdb add post              # same as noboil stdb add post
 noboil add post                   # auto-dispatches based on .noboilrc.json
 ```
 
@@ -563,7 +563,7 @@ Hooks are skipped when `--dry-run` is passed. Config files ending in `.ts`, `.mt
 Generate a new table with typed schema, factory wiring, and CRUD endpoints.
 
 ```bash
-noboil-convex add <table> [flags]
+noboil convex add <table> [flags]
 ```
 
 | Flag | Type | Default | Description |
@@ -596,15 +596,15 @@ Run with no `<table>` to launch an interactive Ink wizard (table name, type, fie
 **Examples**
 
 ```bash
-noboil-convex add todo --fields="title:string,done:boolean"
+noboil convex add todo --fields="title:string,done:boolean"
 ```
 
 ```bash
-noboil-convex add wiki --type=org --fields="title:string,content:string,status:enum(draft,published)"
+noboil convex add wiki --type=org --fields="title:string,content:string,status:enum(draft,published)"
 ```
 
 ```bash
-noboil-convex add message --type=child --parent=chat --fields="text:string"
+noboil convex add message --type=child --parent=chat --fields="text:string"
 ```
 
 ---
@@ -614,7 +614,7 @@ noboil-convex add message --type=child --parent=chat --fields="text:string"
 Validate schema and factory consistency.
 
 ```bash
-noboil-convex check [flags]
+noboil convex check [flags]
 ```
 
 | Flag | Type | Default | Description |
@@ -632,7 +632,7 @@ noboil-convex check [flags]
 Run project diagnostics and print a health score.
 
 ```bash
-noboil-convex doctor
+noboil convex doctor
 ```
 
 ---
@@ -642,7 +642,7 @@ noboil-convex doctor
 Generate a schema diff and migration plan.
 
 ```bash
-noboil-convex migrate [flags]
+noboil convex migrate [flags]
 ```
 
 | Flag | Type | Default | Description |
@@ -654,15 +654,15 @@ noboil-convex migrate [flags]
 **Examples**
 
 ```bash
-noboil-convex migrate
+noboil convex migrate
 ```
 
 ```bash
-noboil-convex migrate --from HEAD~3
+noboil convex migrate --from HEAD~3
 ```
 
 ```bash
-noboil-convex migrate --snapshot
+noboil convex migrate --snapshot
 ```
 
 ---
@@ -672,7 +672,7 @@ noboil-convex migrate --snapshot
 Visualize schema relationships.
 
 ```bash
-noboil-convex viz [flags]
+noboil convex viz [flags]
 ```
 
 | Flag | Type | Default | Description |
@@ -686,7 +686,7 @@ noboil-convex viz [flags]
 Generate API documentation for your Convex backend.
 
 ```bash
-noboil-convex docs [flags]
+noboil convex docs [flags]
 ```
 
 | Flag | Type | Default | Description |
@@ -703,7 +703,7 @@ noboil-convex docs [flags]
 Generate a new SpacetimeDB table with typed schema and reducers.
 
 ```bash
-noboil-stdb add <table> [flags]
+noboil stdb add <table> [flags]
 ```
 
 | Flag | Type | Default | Description |
@@ -736,15 +736,15 @@ Run with no `<table>` to launch an interactive Ink wizard (table name, type, fie
 **Examples**
 
 ```bash
-noboil-stdb add todo --fields="title:string,done:boolean"
+noboil stdb add todo --fields="title:string,done:boolean"
 ```
 
 ```bash
-noboil-stdb add wiki --type=org --fields="title:string,content:string,status:enum(draft,published)"
+noboil stdb add wiki --type=org --fields="title:string,content:string,status:enum(draft,published)"
 ```
 
 ```bash
-noboil-stdb add message --type=child --parent=chat --fields="text:string"
+noboil stdb add message --type=child --parent=chat --fields="text:string"
 ```
 
 ---
@@ -754,7 +754,7 @@ noboil-stdb add message --type=child --parent=chat --fields="text:string"
 Validate schema and factory consistency.
 
 ```bash
-noboil-stdb check [flags]
+noboil stdb check [flags]
 ```
 
 | Flag | Type | Default | Description |
@@ -772,7 +772,7 @@ noboil-stdb check [flags]
 Run project diagnostics and print a health score. Checks SpacetimeDB-specific dependencies in addition to the standard checks.
 
 ```bash
-noboil-stdb doctor
+noboil stdb doctor
 ```
 
 ---
@@ -782,7 +782,7 @@ noboil-stdb doctor
 Start the integrated local dev workflow: Docker, module publish, watch mode, and Next.js.
 
 ```bash
-noboil-stdb dev [flags]
+noboil stdb dev [flags]
 ```
 
 | Flag | Type | Default | Description |
@@ -794,7 +794,7 @@ noboil-stdb dev [flags]
 **Example**
 
 ```bash
-noboil-stdb dev --module-dir %%path:backendStdb%%
+noboil stdb dev --module-dir %%path:backendStdb%%
 ```
 
 ---
@@ -804,7 +804,7 @@ noboil-stdb dev --module-dir %%path:backendStdb%%
 Generate a schema diff and migration plan.
 
 ```bash
-noboil-stdb migrate [flags]
+noboil stdb migrate [flags]
 ```
 
 | Flag | Type | Default | Description |
@@ -816,15 +816,15 @@ noboil-stdb migrate [flags]
 **Examples**
 
 ```bash
-noboil-stdb migrate
+noboil stdb migrate
 ```
 
 ```bash
-noboil-stdb migrate --from HEAD~3
+noboil stdb migrate --from HEAD~3
 ```
 
 ```bash
-noboil-stdb migrate --snapshot
+noboil stdb migrate --snapshot
 ```
 
 ---
@@ -834,17 +834,17 @@ noboil-stdb migrate --snapshot
 Switch the active SpacetimeDB target.
 
 ```bash
-noboil-stdb use <local|cloud>
+noboil stdb use <local|cloud>
 ```
 
 **Examples**
 
 ```bash
-noboil-stdb use local
+noboil stdb use local
 ```
 
 ```bash
-noboil-stdb use cloud
+noboil stdb use cloud
 ```
 
 ---
@@ -854,7 +854,7 @@ noboil-stdb use cloud
 Generate a `docker-compose.yml` for local SpacetimeDB development.
 
 ```bash
-noboil-stdb generate docker [flags]
+noboil stdb generate docker [flags]
 ```
 
 | Flag | Type | Default | Description |
@@ -865,11 +865,11 @@ noboil-stdb generate docker [flags]
 **Examples**
 
 ```bash
-noboil-stdb generate docker
+noboil stdb generate docker
 ```
 
 ```bash
-noboil-stdb generate docker --stdout
+noboil stdb generate docker --stdout
 ```
 
 ---
@@ -879,7 +879,7 @@ noboil-stdb generate docker --stdout
 Visualize schema relationships.
 
 ```bash
-noboil-stdb viz [flags]
+noboil stdb viz [flags]
 ```
 
 | Flag | Type | Default | Description |
@@ -893,7 +893,7 @@ noboil-stdb viz [flags]
 Generate API documentation for your SpacetimeDB module.
 
 ```bash
-noboil-stdb docs [flags]
+noboil stdb docs [flags]
 ```
 
 | Flag | Type | Default | Description |
@@ -908,7 +908,7 @@ noboil-stdb docs [flags]
 Alias for `check --health`. Runs all health checks.
 
 ```bash
-noboil-stdb validate
+noboil stdb validate
 ```
 
 </Tab>
