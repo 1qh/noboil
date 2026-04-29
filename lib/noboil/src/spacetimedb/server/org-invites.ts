@@ -93,6 +93,7 @@ const SEVEN_DAYS_MS = DAYS_PER_WEEK * DAY_HOURS * MINUTES_PER_HOUR * SECONDS_PER
 const TOKEN_BASE = 36
 const TOKEN_LENGTH = 32
 const tokenCounter = { value: 0 }
+/** Generate a 32-char invite token (`Date.now()` + monotonic counter, base36) for one-time-use invite links. */
 const makeInviteToken = (): string => {
   tokenCounter.value += 1
   const base = Date.now().toString(TOKEN_BASE) + tokenCounter.value.toString(TOKEN_BASE)
@@ -269,6 +270,7 @@ const acceptInvite = <
     timestamp: ctx.timestamp
   })
 }
+/** Build the SpacetimeDB invite-flow reducers (`invite`, `accept`, `revoke`, `list`) bound to your org schema. */
 const makeInviteReducers = <
   DB,
   OrgId,

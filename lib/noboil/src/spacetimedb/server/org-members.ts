@@ -93,6 +93,7 @@ const requireRole = <OrgId, MemberId>({
   if (minRole === 'admin' && role === 'member') throw makeError('FORBIDDEN', `${tableName}:${operation}`)
   return role
 }
+/** Build SpacetimeDB member-management reducers (`promote`, `demote`, `leave`, `kick`) with role checks. */
 const makeMemberReducers = <
   DB,
   OrgId,

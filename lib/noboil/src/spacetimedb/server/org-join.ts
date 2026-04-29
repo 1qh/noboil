@@ -114,6 +114,7 @@ const findPendingJoinRequestByUser = <RequestId, OrgId, JoinRequestRow extends O
   for (const request of pendingRequests) if (identityEquals(request.userId, userId)) return request
   return null
 }
+/** Build SpacetimeDB join-request reducers (`requestJoin`, `approveJoin`, `denyJoin`) for self-serve org joining. */
 const makeJoinReducers = <
   DB,
   OrgId,

@@ -233,6 +233,7 @@ const readCtx = <D = DbLike, S = StorageLike>({
     return out
   }
 })
+/** Cast `unknown` to a SpacetimeDB row-id string (accepts number or string), else null. Use at reducer arg boundaries. */
 const toId = (x: unknown): null | string => {
   if (typeof x === 'number') return String(x)
   if (typeof x === 'string') return x
@@ -448,6 +449,7 @@ const getFirstFieldError = (e?: unknown): string | undefined => {
     if (v) return v
   }
 }
+/** Build a unique-check query for a SpacetimeDB table + indexed field; use in reducers before insert/update. */
 const makeUnique = ({ field, index, pq, table }: { field: string; index?: string; pq: Qb; table: string }) =>
   typed(
     pq({

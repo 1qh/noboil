@@ -179,6 +179,7 @@ const readCtx = <D = DbLike, S = StorageLike>({
     return docs.map(d => ({ ...d, author: map.get(d.userId) ?? null, own: viewerId ? viewerId === d.userId : null }))
   }
 })
+/** Cast `unknown` to a Convex `FID` if it's a string, else null. Use at API boundaries when type-narrowing IDs. */
 const toId = (x: unknown): FID | null => (typeof x === 'string' ? (x as FID) : null)
 const cleanFiles = async (opts: {
   doc: Record<string, unknown>
@@ -280,6 +281,11 @@ const checkRateLimit = async (db: DbLike, opts: { config: RateLimitConfig; key: 
   }
   await db.patch(existing._id as string, { count: (existing.count as number) + 1 })
 }
+/**
+ * Build a single-field unique-check query bound to a table + index. Returns a fn
+ * `(value) => existing | null` for use in beforeInsert/Update hooks to enforce uniqueness
+ * before write. Cheaper than a post-write rollback.
+ */
 const makeUnique = ({
   field,
   index,
