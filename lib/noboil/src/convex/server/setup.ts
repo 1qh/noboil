@@ -35,6 +35,7 @@ import { makeOrg } from './org'
 import { makeOrgCrud } from './org-crud'
 import { makeQuota } from './quota'
 import { makeSingletonCrud } from './singleton'
+/** Combine two `GlobalHooks` bundles by chaining each phase's handlers. Used to fold middleware atop user-supplied hooks. Internal. */
 const mergeGlobalHooks = (a: GlobalHooks | undefined, b: GlobalHooks | undefined): GlobalHooks | undefined => {
   if (!(a || b)) return
   if (!a) return b
@@ -76,6 +77,7 @@ const mergeGlobalHooks = (a: GlobalHooks | undefined, b: GlobalHooks | undefined
     }
   return merged
 }
+/** Fold global hooks scoped to `table` into per-table CRUD hooks; preserves order (global-then-factory). Internal. */
 const mergeHooks = (gh: GlobalHooks | undefined, fh: CrudHooks | undefined, table: string): CrudHooks | undefined => {
   if (!(gh || fh)) return
   const merged: CrudHooks = {}
@@ -115,6 +117,7 @@ const mergeHooks = (gh: GlobalHooks | undefined, fh: CrudHooks | undefined, tabl
     }
   return merged
 }
+/** Variant of `mergeHooks` for cache-CRUD slices, which expose a narrower hook set. Internal. */
 const mergeCacheHooks = (
   gh: GlobalHooks | undefined,
   fh: CacheHooks | undefined,

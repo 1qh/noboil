@@ -150,6 +150,7 @@ const dispatchTable = (s: SetupResult<GenericDataModel>, name: string, def: Defe
     `noboil(): unknown brand '${def.brand}' on table '${name}'. Valid brands: base, kv, log, org, owned, quota, singleton, child`
   )
 }
+/** Wrap a schema + options into a `Deferred` payload that `setup()` resolves later by brand. Internal. */
 const buildDeferred = (schema: unknown, opts: unknown): Deferred => {
   if (isChildConfig(schema)) return { [DEFERRED]: true, brand: 'child', opts, schema }
   const brand = readBrand(schema)
