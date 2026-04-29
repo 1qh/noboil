@@ -347,6 +347,11 @@ const main = async (): Promise<void> => {
     printLocalHelp()
     return
   }
+  if (argv0.length === 1 && (argv0[0] === '--version' || argv0[0] === '-v')) {
+    const { getCliVersion } = await import('../src/shared/version')
+    console.log(await getCliVersion())
+    return
+  }
   const manifest = await fetchManifest()
   const providerBinaries = new Set(Object.keys(manifest.tree).map(p => p.replace(PROVIDER_PREFIX_RE, '')))
   const invoked = (process.argv[1] ?? '').split('/').pop() ?? ''
