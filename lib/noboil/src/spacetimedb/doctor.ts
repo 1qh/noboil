@@ -167,7 +167,7 @@ const calcHealthScore = (results: CheckResult[]): number => {
 }
 const doctor = () => {
   const root = process.cwd()
-  console.log(bold('\nnoboil-stdb doctor\n'))
+  console.log(bold('\nnoboil stdb doctor\n'))
   const moduleDir = findModuleDir(root)
   if (!moduleDir) {
     console.log(red('✗ Could not find SpacetimeDB schema directory (module/ or src/)'))

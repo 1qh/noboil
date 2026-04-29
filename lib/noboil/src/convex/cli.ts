@@ -14,10 +14,10 @@ const COMMANDS: Record<string, { description: string; script: string }> = {
 const printHelp = () => {
   console.log(`\n${bold('noboil/convex')} — Zod schema → fullstack app\n`)
   console.log(bold('Usage:'))
-  console.log('  noboil-convex <command> [options]\n')
+  console.log('  noboil convex <command> [options]\n')
   console.log(bold('Commands:'))
   for (const [name, { description }] of Object.entries(COMMANDS)) console.log(`  ${name.padEnd(16)} ${dim(description)}`)
-  console.log(`\nRun ${dim('noboil-convex <command> --help')} for command-specific options.\n`)
+  console.log(`\nRun ${dim('noboil convex <command> --help')} for command-specific options.\n`)
 }
 const [cmd, ...rest] = process.argv.slice(2)
 if (cmd === '--version' || cmd === '-v') {

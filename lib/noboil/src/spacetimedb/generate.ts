@@ -31,18 +31,18 @@ const GENERATORS: Record<GenerateTarget, { content: string; description: string;
   }
 }
 const printGenerateHelp = () => {
-  console.log(`${bold('noboil-stdb generate')} — generate project files\n`)
+  console.log(`${bold('noboil stdb generate')} — generate project files\n`)
   console.log(bold('Usage:'))
-  console.log('  noboil-stdb generate <target> [options]\n')
+  console.log('  noboil stdb generate <target> [options]\n')
   console.log(bold('Targets:'))
   for (const [name, { description }] of Object.entries(GENERATORS)) console.log(`  ${name.padEnd(16)} ${dim(description)}`)
   console.log(`\n${bold('Options:')}`)
   console.log(`  --force    ${dim('Overwrite existing files')}`)
   console.log(`  --stdout   ${dim('Print to stdout instead of writing file')}\n`)
   console.log(bold('Examples:'))
-  console.log(`  ${dim('$')} noboil-stdb generate docker`)
-  console.log(`  ${dim('$')} noboil-stdb generate docker --stdout`)
-  console.log(`  ${dim('$')} noboil-stdb generate docker --force\n`)
+  console.log(`  ${dim('$')} noboil stdb generate docker`)
+  console.log(`  ${dim('$')} noboil stdb generate docker --stdout`)
+  console.log(`  ${dim('$')} noboil stdb generate docker --force\n`)
 }
 const generate = (args: string[] = []) => {
   if (args.includes('--help') || args.includes('-h') || args.length === 0) {
@@ -72,7 +72,7 @@ const generate = (args: string[] = []) => {
   console.log(`  ${dim(outPath)}\n`)
   console.log(bold('Next steps:'))
   console.log(`  ${dim('1.')} docker compose up -d`)
-  console.log(`  ${dim('2.')} noboil-stdb use local`)
+  console.log(`  ${dim('2.')} noboil stdb use local`)
   console.log(`  ${dim('3.')} spacetime publish <your-module> --module-path <path>\n`)
 }
 if (process.argv[1]?.endsWith('generate.ts')) generate(process.argv.slice(2))

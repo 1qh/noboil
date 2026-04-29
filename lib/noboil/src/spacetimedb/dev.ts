@@ -92,9 +92,9 @@ const parseDevFlags = (args: string[]): DevFlags => {
   return { docker, help, moduleDir, watch: watchEnabled }
 }
 const printDevHelp = () => {
-  console.log(`${bold('noboil-stdb dev')} — integrated SpacetimeDB + Next.js development\n`)
+  console.log(`${bold('noboil stdb dev')} — integrated SpacetimeDB + Next.js development\n`)
   console.log(bold('Usage:'))
-  console.log('  noboil-stdb dev [options]\n')
+  console.log('  noboil stdb dev [options]\n')
   console.log(bold('Options:'))
   console.log(
     `  --module-dir=DIR   ${dim('SpacetimeDB module directory (default: auto-detect from package.json scripts)')}`
@@ -257,7 +257,7 @@ const dev = async (args: string[] = []) => {
     console.log(`${red('Spacetime CLI not found on PATH.')} Install from https://spacetimedb.com/install`)
     process.exit(1)
   }
-  console.log(`\n${bold('noboil-stdb dev')} ${dim('— starting development environment')}`)
+  console.log(`\n${bold('noboil stdb dev')} ${dim('— starting development environment')}`)
   console.log(`${dim('module dir:')} ${moduleDir}`)
   console.log(`${dim('module name:')} ${moduleName}`)
   const composeFile = findComposeFile(cwd)

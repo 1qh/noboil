@@ -215,9 +215,9 @@ const run = () => {
   const root = process.cwd()
   const argv = process.argv.slice(2)
   const flags = new Set(argv)
-  console.log(bold('\nnoboil-stdb migrate\n'))
+  console.log(bold('\nnoboil stdb migrate\n'))
   if (hasFlag(argv, '--help', '-h')) {
-    console.log(`Usage: noboil-stdb migrate [options]
+    console.log(`Usage: noboil stdb migrate [options]
 Compare SpacetimeDB schema versions and generate publish plans.
 Options:
    --from <ref>    Git ref for the "before" schema (default: HEAD)
@@ -225,9 +225,9 @@ Options:
    --snapshot      Print current schema snapshot (no diff)
    --help, -h      Show this help
 Examples:
-   noboil-stdb migrate                    Compare HEAD vs working tree
-   noboil-stdb migrate --from HEAD~3      Compare 3 commits ago vs now
-   noboil-stdb migrate --snapshot         Print current schema tables & fields
+   noboil stdb migrate                    Compare HEAD vs working tree
+   noboil stdb migrate --from HEAD~3      Compare 3 commits ago vs now
+   noboil stdb migrate --snapshot         Print current schema tables & fields
 `)
     return
   }

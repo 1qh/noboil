@@ -142,7 +142,7 @@ const printSummary = (tables: TableInfo[], children: ChildInfo[]) => {
 const run = () => {
   const root = process.cwd()
   const flags = new Set(process.argv.slice(2))
-  console.log(bold('\nnoboil-stdb viz\n'))
+  console.log(bold('\nnoboil stdb viz\n'))
   const moduleDir = findModuleDir(root)
   if (!moduleDir) {
     console.log(red('\u2717 Could not find SpacetimeDB schema directory (module/ or src/)'))

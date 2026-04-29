@@ -15,12 +15,12 @@ const SUBCOMMANDS: Record<string, { description: string; run: (argv: string[]) =
   remove: { description: 'Remove a tool: <provider>/<...segments>', run: runRemove }
 }
 const printHelp = (): void => {
-  console.log('noboil-tool-dev <subcommand> [args]')
+  console.log('noboil tool <subcommand> [args]')
   console.log('')
   console.log('Subcommands:')
   for (const [name, { description }] of Object.entries(SUBCOMMANDS)) console.log(`  ${name.padEnd(10)} ${description}`)
   console.log('')
-  console.log('Run `noboil-tool-dev <subcommand> --help` for subcommand-specific usage (where applicable).')
+  console.log('Run `noboil tool <subcommand> --help` for subcommand-specific usage (where applicable).')
 }
 const argv = process.argv.slice(2)
 const sub = argv[0]

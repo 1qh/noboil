@@ -16,12 +16,12 @@ const COMMANDS: Record<string, { description: string; script: string }> = {
   viz: { description: 'Visualize schema relationships', script: 'viz.ts' }
 }
 const printHelp = () => {
-  console.log(`\n${bold('noboil-stdb')} — Zod schema → fullstack app\n`)
+  console.log(`\n${bold('noboil stdb')} — Zod schema → fullstack app\n`)
   console.log(bold('Usage:'))
-  console.log('  noboil-stdb <command> [options]\n')
+  console.log('  noboil stdb <command> [options]\n')
   console.log(bold('Commands:'))
   for (const [name, { description }] of Object.entries(COMMANDS)) console.log(`  ${name.padEnd(16)} ${dim(description)}`)
-  console.log(`\nRun ${dim('noboil-stdb <command> --help')} for command-specific options.\n`)
+  console.log(`\nRun ${dim('noboil stdb <command> --help')} for command-specific options.\n`)
 }
 const [cmd, ...rest] = process.argv.slice(2)
 if (cmd === '--version' || cmd === '-v') {

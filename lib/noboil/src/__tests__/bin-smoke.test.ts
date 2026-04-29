@@ -58,7 +58,7 @@ describe('noboil bin smoke', () => {
     expect(r.stdout).toContain('_noboil()')
   })
 })
-describe('noboil-convex bin smoke', () => {
+describe('noboil convex bin smoke', () => {
   test('--help exits 0', () => {
     const r = run(CONVEX_BIN, ['--help'])
     expect(r.status).toBe(0)
@@ -74,11 +74,11 @@ describe('noboil-convex bin smoke', () => {
     expect(r.status).toBe(0)
   })
 })
-describe('noboil-stdb bin smoke', () => {
+describe('noboil stdb bin smoke', () => {
   test('--help exits 0', () => {
     const r = run(STDB_BIN, ['--help'])
     expect(r.status).toBe(0)
-    expect(r.stdout).toContain('noboil-stdb')
+    expect(r.stdout).toContain('noboil stdb')
   })
   test('--version prints semver', () => {
     const r = run(STDB_BIN, ['--version'])

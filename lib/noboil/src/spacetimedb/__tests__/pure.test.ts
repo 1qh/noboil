@@ -3737,7 +3737,7 @@ describe('noboil-stdb-docs', () => {
   test('generateMarkdown produces markdown header', () => {
     const md = generateMarkdown([], new Map())
     expect(md).toContain('# API Reference')
-    expect(md).toContain('noboil-stdb docs')
+    expect(md).toContain('noboil stdb docs')
   })
   test('generateMarkdown includes factory table', () => {
     const calls = [

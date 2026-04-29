@@ -56,9 +56,9 @@ const parseAddFlags = (args: string[]): AddFlags => {
   return { appDir, fields, help, moduleDir, name, parent, type }
 }
 const printAddHelp = () => {
-  console.log(`${bold('noboil-stdb add')} — add a new table/reducer to your project\n`)
+  console.log(`${bold('noboil stdb add')} — add a new table/reducer to your project\n`)
   console.log(bold('Usage:'))
-  console.log('  noboil-stdb add <table-name> [options]\n')
+  console.log('  noboil stdb add <table-name> [options]\n')
   console.log(bold('Options:'))
   console.log(
     `  --type=TYPE           Table type: owned, org, singleton, cache, child, log, kv, quota ${dim('(default: owned)')}`
@@ -71,16 +71,16 @@ const printAddHelp = () => {
   console.log(`  --app-dir=DIR         App directory ${dim('(default: src/app)')}`)
   console.log('  --help, -h            Show this help\n')
   console.log(bold('Examples:'))
-  console.log(`  ${dim('$')} noboil-stdb add todo --fields="title:string,done:boolean"`)
+  console.log(`  ${dim('$')} noboil stdb add todo --fields="title:string,done:boolean"`)
   console.log(
-    `  ${dim('$')} noboil-stdb add wiki --type=org --fields="title:string,content:string,status:enum(draft,published)"`
+    `  ${dim('$')} noboil stdb add wiki --type=org --fields="title:string,content:string,status:enum(draft,published)"`
   )
-  console.log(`  ${dim('$')} noboil-stdb add message --type=child --parent=chat --fields="text:string"`)
-  console.log(`  ${dim('$')} noboil-stdb add profile --type=singleton --fields="displayName:string,bio:string?"`)
-  console.log(`  ${dim('$')} noboil-stdb add movie --type=cache --fields="title:string,externalId:string"`)
-  console.log(`  ${dim('$')} noboil-stdb add vote --type=log --parent=poll --fields="option:string"`)
-  console.log(`  ${dim('$')} noboil-stdb add siteConfig --type=kv --fields="active:boolean,message:string"`)
-  console.log(`  ${dim('$')} noboil-stdb add apiQuota --type=quota\n`)
+  console.log(`  ${dim('$')} noboil stdb add message --type=child --parent=chat --fields="text:string"`)
+  console.log(`  ${dim('$')} noboil stdb add profile --type=singleton --fields="displayName:string,bio:string?"`)
+  console.log(`  ${dim('$')} noboil stdb add movie --type=cache --fields="title:string,externalId:string"`)
+  console.log(`  ${dim('$')} noboil stdb add vote --type=log --parent=poll --fields="option:string"`)
+  console.log(`  ${dim('$')} noboil stdb add siteConfig --type=kv --fields="active:boolean,message:string"`)
+  console.log(`  ${dim('$')} noboil stdb add apiQuota --type=quota\n`)
 }
 const fieldToTypeExpr = (f: ParsedField): string => {
   if (typeof f.type === 'object') return 't.string()'

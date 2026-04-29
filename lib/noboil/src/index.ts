@@ -29,6 +29,7 @@ const COMMANDS: Record<string, string> = {
   status: 'Show project drift, last sync, and health at a glance',
   stdb: 'Run a SpacetimeDB subcommand (add, dev, generate, migrate, use, viz, ...)',
   sync: 'Pull and apply upstream changes',
+  tool: 'Run or scaffold a tool (new, remove, codegen, docgen, or <provider> <name>)',
   upgrade: 'Install the latest noboil version'
 }
 const printHelp = () => {
@@ -135,7 +136,14 @@ else if (!cmd) {
   status(rest)
 } else if (cmd === 'convex') runNamespace('convex', rest)
 else if (cmd === 'stdb' || cmd === 'spacetimedb') runNamespace('spacetimedb', rest)
-else if (cmd === 'add') {
+else if (cmd === 'tool') {
+  const TOOL_DEV = new Set(['codegen', 'docgen', 'new', 'remove'])
+  const sub = rest[0]
+  const entry = sub && TOOL_DEV.has(sub) ? '../bin/noboil-tool-dev.ts' : '../bin/noboil-tool.ts'
+  const script = fileURLToPath(new URL(entry, import.meta.url))
+  const result = spawnSync('bun', [script, ...rest], { stdio: 'inherit' })
+  process.exit(result.status ?? 1)
+} else if (cmd === 'add') {
   const db = detectDb()
   if (!db) {
     console.log(

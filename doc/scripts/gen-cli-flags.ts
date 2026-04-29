@@ -14,8 +14,7 @@ const escapeMd = (s: string): string =>
     .replaceAll('<', '&lt;')
     .replaceAll('>', '&gt;')
 const FLAG_RE = /^\s{2,}(?<flag>(?:--[\w-]+|-\w)(?:[=,\s][^\s][^\s]*)*)\s{2,}(?<desc>\S.*)$/u
-const COMMAND_RE =
-  /\*\*(?<cmd>(?:noboil|noboil-convex|noboil-stdb)(?: \w+)?(?: --help)?)\*\*\n+```text\n(?<body>[\s\S]*?)\n```/gu
+const COMMAND_RE = /\*\*(?<cmd>noboil(?: \w+)?(?: \w+)?(?: --help)?)\*\*\n+```text\n(?<body>[\s\S]*?)\n```/gu
 interface Flag {
   description: string
   flag: string

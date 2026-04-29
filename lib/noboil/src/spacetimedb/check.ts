@@ -544,16 +544,16 @@ const printHealthReport = (moduleDir: string, schemaFile: { content: string; pat
   }
   if (allIssues.length === 0) console.log(`  ${green('✓ No issues found')}\n`)
   console.log(
-    `  ${dim('Run')} noboil-stdb check --schema ${dim('for schema preview')}\n` +
-      `  ${dim('Run')} noboil-stdb check --endpoints ${dim('for reducer list')}\n` +
-      `  ${dim('Run')} noboil-stdb check --indexes ${dim('for index analysis')}\n` +
-      `  ${dim('Run')} noboil-stdb check --access ${dim('for access matrix')}\n`
+    `  ${dim('Run')} noboil stdb check --schema ${dim('for schema preview')}\n` +
+      `  ${dim('Run')} noboil stdb check --endpoints ${dim('for reducer list')}\n` +
+      `  ${dim('Run')} noboil stdb check --indexes ${dim('for index analysis')}\n` +
+      `  ${dim('Run')} noboil stdb check --access ${dim('for access matrix')}\n`
   )
 }
 const run = () => {
   const root = process.cwd()
   const flags = new Set(process.argv.slice(2))
-  console.log(bold('\nnoboil-stdb check\n'))
+  console.log(bold('\nnoboil stdb check\n'))
   const moduleDir = findModuleDir(root)
   if (!moduleDir) {
     console.log(red('✗ Could not find SpacetimeDB schema directory (module/ or src/)'))

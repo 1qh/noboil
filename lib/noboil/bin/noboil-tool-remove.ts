@@ -8,8 +8,8 @@ import { join } from 'node:path'
 const run = async (argv: string[] = process.argv.slice(2)): Promise<void> => {
   const pathArg = argv[0]
   if (!pathArg) {
-    console.error('usage: noboil-tool-dev remove <provider>/<...segments>')
-    console.error('  example: noboil-tool-dev remove exim/hscode/detail')
+    console.error('usage: noboil tool remove <provider>/<...segments>')
+    console.error('  example: noboil tool remove exim/hscode/detail')
     process.exit(2)
   }
   const parts = pathArg.split('/').filter(Boolean)

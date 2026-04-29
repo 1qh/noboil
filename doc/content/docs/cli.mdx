@@ -32,6 +32,7 @@ Commands:
   status       Show project drift, last sync, and health at a glance
   stdb         Run a SpacetimeDB subcommand (add, dev, generate, migrate, use, viz, ...)
   sync         Pull and apply upstream changes
+  tool         Run or scaffold a tool (new, remove, codegen, docgen, or <provider> <name>)
   upgrade      Install the latest noboil version
 
 Run noboil <command> --help for command-specific options.
@@ -113,13 +114,13 @@ Options:
   --help, -h     Show this help
 ```
 
-**noboil-convex --help**
+**noboil convex --help**
 
 ```text
 noboil/convex — Zod schema → fullstack app
 
 Usage:
-  noboil-convex <command> [options]
+  noboil convex <command> [options]
 
 Commands:
   add              Add a new table/endpoint to your project
@@ -129,10 +130,10 @@ Commands:
   migrate          Schema diff and migration plans
   viz              Visualize schema relationships
 
-Run noboil-convex <command> --help for command-specific options.
+Run noboil convex <command> --help for command-specific options.
 ```
 
-**noboil-convex add --help**
+**noboil convex add --help**
 
 ```text
 noboil-convex add — add a new table/endpoint to your project
@@ -159,13 +160,13 @@ Examples:
   $ noboil-convex add apiQuota --type=quota
 ```
 
-**noboil-stdb --help**
+**noboil stdb --help**
 
 ```text
-noboil-stdb — Zod schema → fullstack app
+noboil stdb — Zod schema → fullstack app
 
 Usage:
-  noboil-stdb <command> [options]
+  noboil stdb <command> [options]
 
 Commands:
   add              Add a new table/reducer to your project
@@ -179,16 +180,16 @@ Commands:
   validate         Lint schema, reducers, indexes, and access control
   viz              Visualize schema relationships
 
-Run noboil-stdb <command> --help for command-specific options.
+Run noboil stdb <command> --help for command-specific options.
 ```
 
-**noboil-stdb add --help**
+**noboil stdb add --help**
 
 ```text
-noboil-stdb add — add a new table/reducer to your project
+noboil stdb add — add a new table/reducer to your project
 
 Usage:
-  noboil-stdb add <table-name> [options]
+  noboil stdb add <table-name> [options]
 
 Options:
   --type=TYPE           Table type: owned, org, singleton, cache, child, log, kv, quota (default: owned)
@@ -199,14 +200,14 @@ Options:
   --help, -h            Show this help
 
 Examples:
-  $ noboil-stdb add todo --fields="title:string,done:boolean"
-  $ noboil-stdb add wiki --type=org --fields="title:string,content:string,status:enum(draft,published)"
-  $ noboil-stdb add message --type=child --parent=chat --fields="text:string"
-  $ noboil-stdb add profile --type=singleton --fields="displayName:string,bio:string?"
-  $ noboil-stdb add movie --type=cache --fields="title:string,externalId:string"
-  $ noboil-stdb add vote --type=log --parent=poll --fields="option:string"
-  $ noboil-stdb add siteConfig --type=kv --fields="active:boolean,message:string"
-  $ noboil-stdb add apiQuota --type=quota
+  $ noboil stdb add todo --fields="title:string,done:boolean"
+  $ noboil stdb add wiki --type=org --fields="title:string,content:string,status:enum(draft,published)"
+  $ noboil stdb add message --type=child --parent=chat --fields="text:string"
+  $ noboil stdb add profile --type=singleton --fields="displayName:string,bio:string?"
+  $ noboil stdb add movie --type=cache --fields="title:string,externalId:string"
+  $ noboil stdb add vote --type=log --parent=poll --fields="option:string"
+  $ noboil stdb add siteConfig --type=kv --fields="active:boolean,message:string"
+  $ noboil stdb add apiQuota --type=quota
 ```
 {/* AUTO-GENERATED:HELP:END */}
 
