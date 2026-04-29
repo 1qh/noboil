@@ -16,6 +16,7 @@ interface PkLike<Row, Id> {
 interface TableLike<Row> {
   insert: (row: Row) => Row
 }
+/** Build a `code: message`-formatted Error so reducer rejections carry a structured prefix. */
 const makeError = (code: string, message: string): Error => new Error(`${code}: ${message}`)
 const identityEquals = (a: Identity, b: Identity): boolean => {
   const left = a as unknown as { isEqual?: (v: unknown) => boolean; toHexString?: () => string }
@@ -32,6 +33,7 @@ const timestampEquals = (a: Timestamp, b: Timestamp): boolean => {
   if (typeof left.toJSON === 'function' && typeof right.toJSON === 'function') return left.toJSON() === right.toJSON()
   return Object.is(a, b)
 }
+/** Wrap a field-builder map so every field is `.optional()` — used for partial-update reducer args. */
 const makeOptionalFields = (fields: FieldBuilders) => {
   const params: FieldBuilders = {}
   const keys = Object.keys(fields)

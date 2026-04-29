@@ -192,6 +192,11 @@ interface MakeSchemaResult {
   singletonTable: (fields: TableInput, opts?: TableOptions) => StdbTable
   t: StdbDeps['t']
 }
+/**
+ * Build SpacetimeDB table helpers (ownedTable, orgTable, kvTable, ...) bound to a `t`
+ * field-builder. Returns the helpers consumer schemas import — each takes a `TableInput`
+ * (field map) and produces an `StdbTable` with appropriate indexes and PK / unique constraints.
+ */
 const makeSchema = (deps?: Partial<StdbDeps>): MakeSchemaResult => {
   const t = deps?.t ?? stdbT
   const table = deps?.table ?? stdbTableFn

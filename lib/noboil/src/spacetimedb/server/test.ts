@@ -88,6 +88,7 @@ const getSchema = async (ctx: Pick<TestContext, 'baseHttpUrl' | 'moduleName'>): 
   const response = await fetch(`${ctx.baseHttpUrl}/v1/database/${ctx.moduleName}/schema?version=9`)
   return parseJsonResponse<SchemaResponse>(response)
 }
+/** Open a fresh authenticated WebSocket connection to a SpacetimeDB module for use in integration tests. */
 const createConnectedUser = async (ctx: Pick<TestContext, 'baseWsUrl' | 'moduleName'>): Promise<TestUser> => {
   const builder = new DbConnectionBuilder(REMOTE_MODULE, config => new DbConnectionImpl(config))
   return new Promise<TestUser>((resolve, reject) => {
@@ -206,6 +207,7 @@ const postReducer = async (
   const parsed: unknown = JSON.parse(text)
   return parsed
 }
+/** Build a test context (URLs + module name + reducer schema) for an integration-test module. Caches schema fetch. */
 const createTestContext = async (options?: CreateTestContextOptions): Promise<TestContext> => {
   const baseWsUrl = options?.wsUrl ?? DEFAULT_WS_URL
   const baseHttpUrl = options?.httpUrl ?? (toHttpUrl(baseWsUrl) || DEFAULT_HTTP_URL)
@@ -229,6 +231,7 @@ const createTestContext = async (options?: CreateTestContextOptions): Promise<Te
   for (const user of additionalUsers) ctx.users.push(user)
   return ctx
 }
+/** Convenience: connect a fresh user against an existing test context. Equivalent to `createConnectedUser(ctx)`. */
 const createTestUser = async (ctx: TestContext): Promise<TestUser> => {
   const user = await createConnectedUser(ctx)
   ctx.users.push(user)
