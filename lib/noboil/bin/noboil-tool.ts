@@ -4,7 +4,7 @@
 /** biome-ignore-all lint/suspicious/noControlCharactersInRegex: sanitize strips control chars */
 /** biome-ignore-all lint/nursery/noContinue: parser skip-lines */
 /** biome-ignore-all lint/nursery/useImportsFirst: grouped by concern */
-/* eslint-disable no-console, no-continue, no-control-regex, @typescript-eslint/no-unnecessary-condition */
+/* eslint-disable no-console, no-continue, no-control-regex, @typescript-eslint/no-unnecessary-condition, complexity */
 /* oxlint-disable eslint(no-control-regex), eslint(complexity), eslint-plugin-promise(prefer-await-to-callbacks), eslint-plugin-promise(prefer-await-to-then), eslint-plugin-unicorn(prefer-top-level-await), eslint-plugin-import(first) */
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -72,12 +72,18 @@ const resolveAuth = (): Auth => {
   )
   process.exit(1)
 }
-const auth = resolveAuth()
-if (!auth.baseUrl.startsWith('https://')) {
-  console.error('error: HTTPS required. Refusing to send credentials over insecure connection.')
-  process.exit(1)
+let cachedAuth: Auth | null = null
+const getAuth = (): Auth => {
+  if (cachedAuth) return cachedAuth
+  cachedAuth = resolveAuth()
+  if (!cachedAuth.baseUrl.startsWith('https://')) {
+    console.error('error: HTTPS required. Refusing to send credentials over insecure connection.')
+    process.exit(1)
+  }
+  return cachedAuth
 }
 const call = async (path: string, body: Record<string, unknown> = {}): Promise<{ data: unknown; status: number }> => {
+  const auth = getAuth()
   let res: Response
   try {
     res = await fetch(`${auth.baseUrl}${path}`, {
@@ -324,7 +330,23 @@ const runCommand = async (path: string[], cmd: ManifestCommand, flagTokens: stri
     errorExit(cat as 'auth' | 'input' | 'permanent' | 'transient' | 'upstream', r.data)
   errorExit('unknown', r.data ?? { error: { code: 'UNKNOWN', message: `HTTP ${r.status}` } })
 }
+const printLocalHelp = (): void => {
+  console.log('noboil tool — runtime tool dispatcher\n')
+  console.log('Usage:')
+  console.log('  noboil tool <provider> <name> [args]    run a tool')
+  console.log('  noboil tool new <path> [--kind=...]     scaffold a tool')
+  console.log('  noboil tool remove <path>               remove a tool')
+  console.log('  noboil tool codegen                     regenerate registry/types/callers')
+  console.log('  noboil tool docgen                      regenerate INVENTORY.md')
+  console.log('')
+  console.log('Set CLI_SESSION_*, CONVEX_SELF_HOSTED_ADMIN_KEY, or X_API_KEY to discover providers.')
+}
 const main = async (): Promise<void> => {
+  const argv0 = process.argv.slice(2)
+  if (argv0.length === 0 || (argv0.length === 1 && (argv0[0] === '--help' || argv0[0] === '-h'))) {
+    printLocalHelp()
+    return
+  }
   const manifest = await fetchManifest()
   const providerBinaries = new Set(Object.keys(manifest.tree).map(p => p.replace(PROVIDER_PREFIX_RE, '')))
   const invoked = (process.argv[1] ?? '').split('/').pop() ?? ''

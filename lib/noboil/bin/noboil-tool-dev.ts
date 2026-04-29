@@ -22,17 +22,21 @@ const printHelp = (): void => {
   console.log('')
   console.log('Run `noboil tool <subcommand> --help` for subcommand-specific usage (where applicable).')
 }
-const argv = process.argv.slice(2)
-const sub = argv[0]
-if (!sub || sub === '-h' || sub === '--help') {
-  printHelp()
-  process.exit(sub ? 0 : 2)
+const run = async (argv: string[]): Promise<number> => {
+  const sub = argv[0]
+  if (!sub || sub === '-h' || sub === '--help') {
+    printHelp()
+    return sub ? 0 : 2
+  }
+  const cmd = SUBCOMMANDS[sub]
+  if (!cmd) {
+    console.error(`unknown subcommand: ${sub}`)
+    console.error('')
+    printHelp()
+    return 2
+  }
+  await cmd.run(argv.slice(1))
+  return 0
 }
-const cmd = SUBCOMMANDS[sub]
-if (!cmd) {
-  console.error(`unknown subcommand: ${sub}`)
-  console.error('')
-  printHelp()
-  process.exit(2)
-}
-await cmd.run(argv.slice(1))
+if (import.meta.main) process.exit(await run(process.argv.slice(2)))
+export { run }

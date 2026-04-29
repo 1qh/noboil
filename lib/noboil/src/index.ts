@@ -62,11 +62,9 @@ const detectDb = (): 'convex' | 'spacetimedb' | null => {
   }
   return null
 }
-const runNamespace = (ns: 'convex' | 'spacetimedb', args: string[]): never => {
-  const entry = ns === 'convex' ? '../convex/cli.ts' : '../spacetimedb/cli.ts'
-  const script = fileURLToPath(new URL(entry, import.meta.url))
-  const result = spawnSync('bun', [script, ...args], { stdio: 'inherit' })
-  process.exit(result.status ?? 1)
+const runNamespace = async (ns: 'convex' | 'spacetimedb', args: string[]): Promise<never> => {
+  const { run } = ns === 'convex' ? await import('./convex/cli') : await import('./spacetimedb/cli')
+  process.exit(await run(args))
 }
 const [cmd, ...rest] = process.argv.slice(2)
 if (cmd && cmd !== '--version' && cmd !== '-v' && cmd !== '--help' && cmd !== '-h')
@@ -107,9 +105,8 @@ else if (!cmd) {
     } else if (action === 'add') {
       const db = detectDb()
       if (db) {
-        const entry = db === 'convex' ? '../convex/cli.ts' : '../spacetimedb/cli.ts'
-        const script = fileURLToPath(new URL(entry, import.meta.url))
-        spawnSync('bun', [script, 'add'], { stdio: 'inherit' })
+        const { run: runNs } = db === 'convex' ? await import('./convex/cli') : await import('./spacetimedb/cli')
+        await runNs(['add'])
       } else console.log(`${red('No .noboilrc.json found.')} Run ${dim('noboil init')} first.`)
     }
   }
@@ -134,13 +131,16 @@ else if (!cmd) {
 } else if (cmd === 'status') {
   const { status } = await import('./status')
   status(rest)
-} else if (cmd === 'convex') runNamespace('convex', rest)
-else if (cmd === 'stdb' || cmd === 'spacetimedb') runNamespace('spacetimedb', rest)
+} else if (cmd === 'convex') await runNamespace('convex', rest)
+else if (cmd === 'stdb') await runNamespace('spacetimedb', rest)
 else if (cmd === 'tool') {
   const TOOL_DEV = new Set(['codegen', 'docgen', 'new', 'remove'])
   const sub = rest[0]
-  const entry = sub && TOOL_DEV.has(sub) ? '../bin/noboil-tool-dev.ts' : '../bin/noboil-tool.ts'
-  const script = fileURLToPath(new URL(entry, import.meta.url))
+  if (sub && TOOL_DEV.has(sub)) {
+    const { run: runDev } = await import('../bin/noboil-tool-dev')
+    process.exit(await runDev(rest))
+  }
+  const script = fileURLToPath(new URL('../bin/noboil-tool.ts', import.meta.url))
   const result = spawnSync('bun', [script, ...rest], { stdio: 'inherit' })
   process.exit(result.status ?? 1)
 } else if (cmd === 'add') {
@@ -151,7 +151,7 @@ else if (cmd === 'tool') {
     )
     process.exit(1)
   }
-  runNamespace(db, ['add', ...rest])
+  await runNamespace(db, ['add', ...rest])
 } else {
   console.log(`${red('Unknown command:')} ${cmd}\n`)
   printHelp()

@@ -23,32 +23,48 @@ const printHelp = () => {
   for (const [name, { description }] of Object.entries(COMMANDS)) console.log(`  ${name.padEnd(16)} ${dim(description)}`)
   console.log(`\nRun ${dim('noboil stdb <command> --help')} for command-specific options.\n`)
 }
-const [cmd, ...rest] = process.argv.slice(2)
-if (cmd === '--version' || cmd === '-v') {
-  const { getCliVersion } = await import('../shared/version')
-  console.log(await getCliVersion())
-} else if (!cmd || cmd === '--help' || cmd === '-h') printHelp()
-else if (!(cmd in COMMANDS)) {
-  console.log(`${red('Unknown command:')} ${cmd}\n`)
-  printHelp()
-  process.exit(1)
-} else if (cmd === 'add') {
-  const { add } = await import('./add')
-  await add(rest)
-} else if (cmd === 'use') {
-  const { switchTarget } = await import('./use')
-  switchTarget(rest)
-} else if (cmd === 'generate') {
-  const { generate } = await import('./generate')
-  generate(rest)
-} else if (cmd === 'dev') {
-  const { dev } = await import('./dev')
-  await dev(rest)
-} else {
+const run = async (argv: string[]): Promise<number> => {
+  const [cmd, ...rest] = argv
+  if (cmd === '--version' || cmd === '-v') {
+    const { getCliVersion } = await import('../shared/version')
+    console.log(await getCliVersion())
+    return 0
+  }
+  if (!cmd || cmd === '--help' || cmd === '-h') {
+    printHelp()
+    return 0
+  }
+  if (!(cmd in COMMANDS)) {
+    console.log(`${red('Unknown command:')} ${cmd}\n`)
+    printHelp()
+    return 1
+  }
+  if (cmd === 'add') {
+    const { add } = await import('./add')
+    await add(rest)
+    return 0
+  }
+  if (cmd === 'use') {
+    const { switchTarget } = await import('./use')
+    switchTarget(rest)
+    return 0
+  }
+  if (cmd === 'generate') {
+    const { generate } = await import('./generate')
+    generate(rest)
+    return 0
+  }
+  if (cmd === 'dev') {
+    const { dev } = await import('./dev')
+    await dev(rest)
+    return 0
+  }
   const entry = COMMANDS[cmd]
-  if (!entry) process.exit(1)
+  if (!entry) return 1
   const args = cmd === 'validate' && rest.length === 0 ? ['--health'] : rest
   const script = fileURLToPath(new URL(entry.script, import.meta.url))
   const result = spawnSync('bun', [script, ...args], { stdio: 'inherit' })
-  process.exit(result.status ?? 1)
+  return result.status ?? 1
 }
+if (import.meta.main) process.exit(await run(process.argv.slice(2)))
+export { run }

@@ -19,22 +19,32 @@ const printHelp = () => {
   for (const [name, { description }] of Object.entries(COMMANDS)) console.log(`  ${name.padEnd(16)} ${dim(description)}`)
   console.log(`\nRun ${dim('noboil convex <command> --help')} for command-specific options.\n`)
 }
-const [cmd, ...rest] = process.argv.slice(2)
-if (cmd === '--version' || cmd === '-v') {
-  const { getCliVersion } = await import('../shared/version')
-  console.log(await getCliVersion())
-} else if (!cmd || cmd === '--help' || cmd === '-h') printHelp()
-else if (!(cmd in COMMANDS)) {
-  console.log(`${red('Unknown command:')} ${cmd}\n`)
-  printHelp()
-  process.exit(1)
-} else if (cmd === 'add') {
-  const { add } = await import('./add')
-  await add(rest)
-} else {
+const run = async (argv: string[]): Promise<number> => {
+  const [cmd, ...rest] = argv
+  if (cmd === '--version' || cmd === '-v') {
+    const { getCliVersion } = await import('../shared/version')
+    console.log(await getCliVersion())
+    return 0
+  }
+  if (!cmd || cmd === '--help' || cmd === '-h') {
+    printHelp()
+    return 0
+  }
+  if (!(cmd in COMMANDS)) {
+    console.log(`${red('Unknown command:')} ${cmd}\n`)
+    printHelp()
+    return 1
+  }
+  if (cmd === 'add') {
+    const { add } = await import('./add')
+    await add(rest)
+    return 0
+  }
   const entry = COMMANDS[cmd]
-  if (!entry) process.exit(1)
+  if (!entry) return 1
   const script = fileURLToPath(new URL(entry.script, import.meta.url))
   const result = spawnSync('bun', [script, ...rest], { stdio: 'inherit' })
-  process.exit(result.status ?? 1)
+  return result.status ?? 1
 }
+if (import.meta.main) process.exit(await run(process.argv.slice(2)))
+export { run }
