@@ -1,5 +1,6 @@
 const CODEPOINT_A = 127_462
 const CODEPOINT_UPPER_A = 65
+/** Convert a 2-letter ISO country code (`'US'`) to its flag emoji (`'🇺🇸'`). Returns `''` on invalid input. */
 const flagEmoji = (iso2: string | undefined): string => {
   if (iso2?.length !== 2) return ''
   const code = iso2.toUpperCase()

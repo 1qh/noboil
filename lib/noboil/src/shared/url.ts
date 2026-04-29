@@ -1,3 +1,4 @@
+/** Normalize a URL string to its lowercased origin (`https://example.com`); empty on parse failure. */
 const normalizeOrigin = (u: string): string => {
   try {
     return new URL(u).origin.toLowerCase()
@@ -5,6 +6,7 @@ const normalizeOrigin = (u: string): string => {
     return ''
   }
 }
+/** Parse a comma-separated SITE_URL env into `{ primary, siteUrls, allowedOrigins }` for ACL checks. */
 const parseSiteUrls = (csv: string | undefined): { allowedOrigins: Set<string>; primary: string; siteUrls: string[] } => {
   const siteUrls = (csv ?? '')
     .split(',')
@@ -22,6 +24,12 @@ interface RedirectInputs {
   primarySite: string
   redirectTo: unknown
 }
+/**
+ * Open-redirect guard. Returns `redirectTo` if it resolves to an allowed origin (or is a
+ * same-site relative path); otherwise falls back to `primarySite`. Rejects encoded
+ * traversal sequences (`%2f%2f`, `\`, etc.). Use on every post-login / post-action
+ * redirect destination.
+ */
 const validateRedirectTo = ({ allowedOrigins, primarySite, redirectTo }: RedirectInputs): string => {
   if (typeof redirectTo !== 'string') throw new Error(`Expected string redirectTo, got ${typeof redirectTo}`)
   const pathOnly = redirectTo.split('?')[0]?.split('#')[0] ?? ''
@@ -56,6 +64,7 @@ interface SourceEntry {
   url: string
 }
 const WWW_RE = /^www\./u
+/** True if `url` parses as `http(s)` — false for `javascript:`, `data:`, malformed input, etc. */
 const isSafeUrl = (url: string): boolean => {
   try {
     return new URL(url).protocol === 'https:'
@@ -63,6 +72,7 @@ const isSafeUrl = (url: string): boolean => {
     return false
   }
 }
+/** Return the bare domain (`example.com`) for a URL, stripping `www.` and protocol; empty on failure. */
 const extractDomain = (url: string): string => {
   try {
     return new URL(url).hostname.replace(WWW_RE, '')
@@ -77,6 +87,7 @@ const toSourceEntry = (raw: unknown): null | SourceEntry => {
   const title = 'title' in raw && typeof raw.title === 'string' ? raw.title : url
   return { domain: extractDomain(url), title, url }
 }
+/** Pull `[{ url, title?, domain }]` source entries out of an LLM-style content array (mixed text + tool-result blocks). */
 const extractSources = (content: unknown): SourceEntry[] => {
   if (!Array.isArray(content)) return []
   const out: SourceEntry[] = []

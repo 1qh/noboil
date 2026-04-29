@@ -1,5 +1,6 @@
 type BucketLabel = 'Older' | 'Previous 7 days' | 'Today' | 'Yesterday'
 const DAY_MS = 24 * 60 * 60 * 1000
+/** Bucket a timestamp into 'Today' / 'Yesterday' / 'Previous 7 days' / 'Older'. */
 const bucket = (ts: number, now: number): BucketLabel => {
   const delta = now - ts
   if (delta < DAY_MS) return 'Today'
@@ -8,6 +9,7 @@ const bucket = (ts: number, now: number): BucketLabel => {
   return 'Older'
 }
 const BUCKET_ORDER: readonly BucketLabel[] = ['Today', 'Yesterday', 'Previous 7 days', 'Older']
+/** Group items by recency bucket (Today/Yesterday/...) preserving insertion order; ready to render as section headers. */
 const groupByTime = <T extends { updatedAt: number }>(
   items: readonly T[],
   now: number

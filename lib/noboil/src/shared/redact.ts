@@ -19,6 +19,11 @@ const COMBINED_RE = new RegExp(
   ].join('|'),
   'giu'
 )
+/**
+ * Replace common secret formats (sk-ant-, sk-, JWT, AWS access keys, GitHub tokens,
+ * Google API keys, e2b_, proxy:tokens) with `[REDACTED]`. Use before logging untrusted
+ * strings or LLM-rendered content. Conservative — only matches well-defined prefixes.
+ */
 const redactSecrets = (s: string): string => s.replaceAll(COMBINED_RE, '[REDACTED]')
 export {
   AWS_ACCESS_KEY_RE,

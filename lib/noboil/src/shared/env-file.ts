@@ -2,6 +2,7 @@
 /** biome-ignore-all lint/nursery/noContinue: line skip on comments/empty */
 import { existsSync, readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
+/** Parse a `.env` file into `Record<string,string>`. Returns `{}` on missing file. Strips quotes, ignores comments. */
 const parseEnvFile = (path: string): Record<string, string> => {
   const vars: Record<string, string> = {}
   let text: string
@@ -24,6 +25,7 @@ const parseEnvFile = (path: string): Record<string, string> => {
   return vars
 }
 const hasMarkers = (dir: string, markers: readonly string[]): boolean => markers.every(m => existsSync(join(dir, m)))
+/** Walk up from `start` looking for any directory that contains all `markers` (default: `package.json`). */
 const findProjectRoot = (start = process.cwd(), markers: readonly string[] = ['package.json']): string => {
   let dir = start
   for (let i = 0; i < 30; i += 1) {
