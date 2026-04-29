@@ -110,10 +110,7 @@
     "noboil-convex": "./src/convex/cli.ts",
     "noboil-stdb": "./src/spacetimedb/cli.ts",
     "noboil-tool": "./bin/noboil-tool.ts",
-    "noboil-tool-codegen": "./bin/noboil-tool-codegen.ts",
-    "noboil-tool-docgen": "./bin/noboil-tool-docgen.ts",
-    "noboil-tool-new": "./bin/noboil-tool-new.ts",
-    "noboil-tool-remove": "./bin/noboil-tool-remove.ts"
+    "noboil-tool-dev": "./bin/noboil-tool-dev.ts"
   },
   "files": [
     "src",

@@ -9,12 +9,12 @@ import { dirname, resolve } from 'node:path'
 import type { ExtractedMeta } from '../src/convex/tools/codegen/extract-meta'
 import { extractMeta } from '../src/convex/tools/codegen/extract-meta'
 import { collect } from '../src/convex/tools/codegen/scan'
-const TOOLS_ROOT = resolve(process.cwd(), process.env.TOOLS_ROOT ?? 'convex/tools')
-const OUT = resolve(process.cwd(), process.env.DOCS_OUT ?? 'convex/tools/INVENTORY.md')
 const PROVIDER_PREFIX_RE = /^_/u
 const mdRow = (cells: string[]): string => `| ${cells.join(' | ')} |`
 const escapeMd = (s: string): string => s.replaceAll('|', String.raw`\|`).replaceAll('\n', ' ')
-const main = async (): Promise<void> => {
+const run = async (): Promise<void> => {
+  const TOOLS_ROOT = resolve(process.cwd(), process.env.TOOLS_ROOT ?? 'convex/tools')
+  const OUT = resolve(process.cwd(), process.env.DOCS_OUT ?? 'convex/tools/INVENTORY.md')
   const data = await collect(TOOLS_ROOT)
   const metas = extractMeta(data.tools.map(t => t.absPath))
   const toolsByProvider = new Map<string, { cliPath: string[]; meta: ExtractedMeta; tier: 'admin' | 'user' }[]>()
@@ -75,4 +75,5 @@ const main = async (): Promise<void> => {
   await writeFile(OUT, `${lines.join('\n')}\n`)
   console.log(`wrote ${OUT}: ${data.tools.length} tools, ${data.providers.length} providers`)
 }
-await main()
+if (import.meta.main) await run()
+export { run }

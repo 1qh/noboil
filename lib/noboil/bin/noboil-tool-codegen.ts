@@ -2,19 +2,13 @@
 /* eslint-disable no-console */
 /** biome-ignore-all lint/nursery/noUndeclaredEnvVars: consumer codegen reads CONVEX_DIR */
 /* oxlint-disable eslint-plugin-unicorn(no-process-exit) */
+/** biome-ignore-all lint/style/noProcessEnv: CLI script env read */
 import { createHash } from 'node:crypto'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname, resolve } from 'node:path'
 import { emitRegistry, emitToolCallers, emitToolTypes } from '../src/convex/tools/codegen/emit'
 import { collect } from '../src/convex/tools/codegen/scan'
 import { extractSchemas } from '../src/convex/tools/codegen/schema'
-/** biome-ignore lint/style/noProcessEnv: CLI script env read */
-const TOOLS_ROOT = resolve(process.cwd(), process.env.TOOLS_ROOT ?? 'convex/tools')
-const GEN_DIR = resolve(TOOLS_ROOT, 'generated')
-const OUT = resolve(GEN_DIR, 'registry.ts')
-const TOOL_TYPES_OUT = resolve(GEN_DIR, 'toolTypes.ts')
-const TOOL_CALLERS_OUT = resolve(GEN_DIR, 'toolCallers.ts')
-const HASHES_OUT = resolve(GEN_DIR, 'schemaHashes.json')
 const hashSchema = (s: unknown): string => createHash('sha256').update(JSON.stringify(s)).digest('hex').slice(0, 12)
 const diffHashes = async (
   path: string,
@@ -35,7 +29,13 @@ const diffHashes = async (
   for (const k of Object.keys(prev)) if (!(k in next)) removed.push(k)
   return { added, changed, removed }
 }
-const main = async (): Promise<void> => {
+const run = async (): Promise<void> => {
+  const TOOLS_ROOT = resolve(process.cwd(), process.env.TOOLS_ROOT ?? 'convex/tools')
+  const GEN_DIR = resolve(TOOLS_ROOT, 'generated')
+  const OUT = resolve(GEN_DIR, 'registry.ts')
+  const TOOL_TYPES_OUT = resolve(GEN_DIR, 'toolTypes.ts')
+  const TOOL_CALLERS_OUT = resolve(GEN_DIR, 'toolCallers.ts')
+  const HASHES_OUT = resolve(GEN_DIR, 'schemaHashes.json')
   const data = await collect(TOOLS_ROOT)
   if (data.tools.length === 0) {
     console.error(`no tool files found under ${TOOLS_ROOT}/<provider>/`)
@@ -63,4 +63,5 @@ const main = async (): Promise<void> => {
   console.log(`registry: ${data.providers.length} providers, ${data.tools.length} tools`)
   for (const t of data.tools) console.log(`  ${t.tier === 'admin' ? '[admin] ' : ''}${t.cliPath.join(' ')}`)
 }
-await main()
+if (import.meta.main) await run()
+export { run }
