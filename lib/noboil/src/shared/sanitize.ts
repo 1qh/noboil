@@ -49,6 +49,7 @@ const sanitizeExternal = (text: unknown, max = 500): string => {
     .replaceAll(RE_PIPE_SEMI, ',')
     .slice(0, max)
 }
+/** Lowercase an email and (for Gmail) strip dots + `+suffix` so multiple aliases map to one identity. */
 const canonicalizeEmail = (email: string): string => {
   const lower = email.trim().toLowerCase()
   const at = lower.indexOf('@')
@@ -63,6 +64,7 @@ const canonicalizeEmail = (email: string): string => {
 const WHITESPACE_RE = /\s+/gu
 const SENTENCE_SPLIT_RE = /[.!?]\s+/u
 const QUESTION_WORD_RE = /\b(?<q>what|how|why|when|which|who|where|should|can|does|do|is|are)\b/iu
+/** Trim/collapse whitespace, take first sentence, strip leading question words; fall back to `fallback` if empty. */
 const sanitizeTitle = (s: string, maxLen = 80, fallback = 'Untitled'): string => {
   const cleaned = sanitizeExternal(s).replaceAll(WHITESPACE_RE, ' ').trim()
   if (!cleaned) return fallback

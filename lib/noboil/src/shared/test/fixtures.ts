@@ -7,6 +7,11 @@ interface FixtureRule {
 }
 const isRuleArray = (v: unknown): v is FixtureRule[] =>
   Array.isArray(v) && v.every(r => typeof r === 'object' && r !== null && 'response' in r)
+/**
+ * Wire up the hermetic adapter from a JSON fixture file: `{ op: response | rule[] }`.
+ * Each rule supports `{ match: substring, response }` so a single op can return different
+ * fixtures based on payload content. Use in test setup to record/replay external calls.
+ */
 const loadHermeticFixtures = (path: string): void => {
   const data = JSON.parse(readFileSync(path, 'utf8')) as FixtureMap
   setHermeticAdapter((op, payload) => {

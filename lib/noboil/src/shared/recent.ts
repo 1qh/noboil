@@ -8,6 +8,7 @@ interface RecentEntry {
 }
 const RECENT_PATH = () => join(homedir(), '.noboil', 'recent.json')
 const MAX = 20
+/** Read the user's recent-command history from `~/.noboil/recent.json`. Returns `[]` on missing/malformed. */
 const readRecent = async (): Promise<RecentEntry[]> => {
   try {
     const f = file(RECENT_PATH())
@@ -17,6 +18,7 @@ const readRecent = async (): Promise<RecentEntry[]> => {
   }
   return []
 }
+/** Append a `(cmd, args)` invocation to recent history, dedupe + cap at MAX. Errors swallowed. */
 const pushRecent = async (cmd: string, args: string[]): Promise<void> => {
   const list = await readRecent()
   const entry = { args, at: Date.now(), cmd }

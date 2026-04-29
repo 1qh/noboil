@@ -3,6 +3,11 @@ interface Lcg {
   next: () => number
   pick: <T>(items: readonly T[]) => T
 }
+/**
+ * Create a deterministic Linear Congruential Generator from `seed`. Use in property-based
+ * tests for reproducible randomness — same seed always yields the same sequence. Returns
+ * `{ next, int, pick }` for a uniform float / bounded int / array choice.
+ */
 const createLcg = (seed: number): Lcg => {
   let state = Math.trunc(seed) || 1
   const next = (): number => {

@@ -3,6 +3,7 @@ interface ProfileLike {
   email?: unknown
   email_verified?: unknown
 }
+/** Parse a comma-separated email allowlist from env into a `Set` of canonicalized emails. */
 const parseAllowed = (csv: string | undefined): Set<string> =>
   new Set(
     (csv ?? '')
@@ -10,6 +11,11 @@ const parseAllowed = (csv: string | undefined): Set<string> =>
       .map(s => canonicalizeEmail(s))
       .filter(Boolean)
   )
+/**
+ * Gate a sign-in by an email allowlist. Throws if the OAuth profile email is missing,
+ * unverified, not in the list, or doesn't match a previously-linked existing account.
+ * Use in `convex/auth/callbacks.ts` to enforce closed-beta / single-tenant signups.
+ */
 const validateProfileEmail = (
   profile: ProfileLike,
   allowed: Set<string>,
