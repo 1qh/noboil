@@ -17,14 +17,26 @@ const apiMod = (await import('./convex/_generated/api')) as {
   api: {
     orgs: {
       acceptInvite: unknown
+      approveJoinRequest: unknown
+      cancelJoinRequest: unknown
       create: unknown
       get: unknown
       getBySlug: unknown
       invite: unknown
       isSlugAvailable: unknown
+      leave: unknown
       members: unknown
+      myJoinRequest: unknown
       myOrgs: unknown
+      pendingInvites: unknown
+      pendingJoinRequests: unknown
+      rejectJoinRequest: unknown
       remove: unknown
+      removeMember: unknown
+      requestJoin: unknown
+      revokeInvite: unknown
+      setAdmin: unknown
+      transferOwnership: unknown
       update: unknown
     }
   }
@@ -35,9 +47,11 @@ interface OrgDoc {
   name: string
   slug: string
 }
-const seedUser = async (root: ReturnType<typeof t>): Promise<{ tt: ReturnType<typeof t>; userId: string }> => {
+const seedUser = async (
+  root: ReturnType<typeof t>
+): Promise<{ root: ReturnType<typeof t>; tt: ReturnType<typeof t>; userId: string }> => {
   const userId = (await root.run(async ctx => ctx.db.insert('users', { name: 'seed' }))) as string
-  return { tt: root.withIdentity({ subject: userId }) as ReturnType<typeof t>, userId }
+  return { root, tt: root.withIdentity({ subject: userId }) as ReturnType<typeof t>, userId }
 }
 const callMutate = async (tt: ReturnType<typeof t>, fn: unknown, args: Record<string, unknown> = {}): Promise<unknown> =>
   tt.mutation(fn as never, args)
@@ -88,5 +102,99 @@ describe('makeOrg integration', () => {
     const list = (await callQuery(tt, api.orgs.members, { orgId })) as { role: string; userId: string }[]
     expect(list.length).toBeGreaterThanOrEqual(1)
     expect(['owner', 'admin']).toContain(list[0]?.role)
+  })
+  test('pendingInvites returns invites for org admin; revokeInvite removes one', async () => {
+    const { tt, userId } = await seedUser(t())
+    const { orgId } = (await callMutate(tt, api.orgs.create, { data: { name: 'P', slug: 'pi' } })) as { orgId: string }
+    const inv = (await callMutate(tt, api.orgs.invite, { email: 'x@y.com', isAdmin: false, orgId })) as {
+      inviteId: string
+      token: string
+    }
+    const pending = (await callQuery(tt, api.orgs.pendingInvites, { orgId })) as { _id: string; email: string }[]
+    expect(pending.some(p => p.email === 'x@y.com')).toBe(true)
+    await callMutate(tt, api.orgs.revokeInvite, { inviteId: inv.inviteId })
+    const after = (await callQuery(tt, api.orgs.pendingInvites, { orgId })) as { _id: string }[]
+    expect(after.find(p => p._id === inv.inviteId)).toBeUndefined()
+    expect(typeof userId).toBe('string')
+  })
+  test('requestJoin → approveJoinRequest adds member', async () => {
+    const owner = await seedUser(t())
+    const { orgId } = (await callMutate(owner.tt, api.orgs.create, { data: { name: 'R', slug: 'jr' } })) as {
+      orgId: string
+    }
+    const joinerId = (await owner.root.run(async ctx => ctx.db.insert('users', { name: 'joiner' }))) as string
+    const joiner = owner.root.withIdentity({ subject: joinerId }) as ReturnType<typeof t>
+    await callMutate(joiner, api.orgs.requestJoin, { orgId })
+    const pending = (await callQuery(owner.tt, api.orgs.pendingJoinRequests, { orgId })) as { request: { _id: string } }[]
+    expect(pending.length).toBeGreaterThanOrEqual(1)
+    await callMutate(owner.tt, api.orgs.approveJoinRequest, { requestId: pending[0]?.request._id })
+    const list = (await callQuery(owner.tt, api.orgs.members, { orgId })) as { userId: string }[]
+    expect(list.some(m => m.userId === joinerId)).toBe(true)
+  })
+  test('rejectJoinRequest sets status to rejected', async () => {
+    const owner = await seedUser(t())
+    const { orgId } = (await callMutate(owner.tt, api.orgs.create, { data: { name: 'Rj', slug: 'rj' } })) as {
+      orgId: string
+    }
+    const joinerId = (await owner.root.run(async ctx => ctx.db.insert('users', { name: 'j' }))) as string
+    const joiner = owner.root.withIdentity({ subject: joinerId }) as ReturnType<typeof t>
+    await callMutate(joiner, api.orgs.requestJoin, { orgId })
+    const pending = (await callQuery(owner.tt, api.orgs.pendingJoinRequests, { orgId })) as { request: { _id: string } }[]
+    await callMutate(owner.tt, api.orgs.rejectJoinRequest, { requestId: pending[0]?.request._id })
+    const list = (await callQuery(owner.tt, api.orgs.members, { orgId })) as { userId: string }[]
+    expect(list.some(m => m.userId === joinerId)).toBe(false)
+  })
+  test('cancelJoinRequest removes own pending request', async () => {
+    const owner = await seedUser(t())
+    const { orgId } = (await callMutate(owner.tt, api.orgs.create, { data: { name: 'C', slug: 'cj' } })) as {
+      orgId: string
+    }
+    const joinerId = (await owner.root.run(async ctx => ctx.db.insert('users', { name: 'c' }))) as string
+    const joiner = owner.root.withIdentity({ subject: joinerId }) as ReturnType<typeof t>
+    await callMutate(joiner, api.orgs.requestJoin, { orgId })
+    const my = (await callQuery(joiner, api.orgs.myJoinRequest, { orgId })) as { _id: string }
+    await callMutate(joiner, api.orgs.cancelJoinRequest, { requestId: my._id })
+    const after = (await callQuery(joiner, api.orgs.myJoinRequest, { orgId })) as null | { status: string }
+    expect(after?.status !== 'pending').toBe(true)
+  })
+  test('setAdmin promotes a member; removeMember removes them', async () => {
+    const owner = await seedUser(t())
+    const { orgId } = (await callMutate(owner.tt, api.orgs.create, { data: { name: 'A', slug: 'sa' } })) as {
+      orgId: string
+    }
+    const memberUserId = (await owner.root.run(async ctx => ctx.db.insert('users', { name: 'm' }))) as string
+    const memberId = (await owner.root.run(async ctx =>
+      ctx.db.insert('orgMember', {
+        isAdmin: false,
+        orgId,
+        updatedAt: Date.now(),
+        userId: memberUserId
+      })
+    )) as string
+    await callMutate(owner.tt, api.orgs.setAdmin, { isAdmin: true, memberId })
+    const beforeRm = (await callQuery(owner.tt, api.orgs.members, { orgId })) as { role: string; userId: string }[]
+    expect(beforeRm.find(m => m.userId === memberUserId)?.role).toBe('admin')
+    await callMutate(owner.tt, api.orgs.removeMember, { memberId })
+    const afterRm = (await callQuery(owner.tt, api.orgs.members, { orgId })) as { userId: string }[]
+    expect(afterRm.some(m => m.userId === memberUserId)).toBe(false)
+  })
+  test('leave removes own membership when not owner', async () => {
+    const owner = await seedUser(t())
+    const { orgId } = (await callMutate(owner.tt, api.orgs.create, { data: { name: 'L', slug: 'lv' } })) as {
+      orgId: string
+    }
+    const userId2 = (await owner.root.run(async ctx => ctx.db.insert('users', { name: 'l' }))) as string
+    await owner.root.run(async ctx =>
+      ctx.db.insert('orgMember', {
+        isAdmin: false,
+        orgId,
+        updatedAt: Date.now(),
+        userId: userId2
+      })
+    )
+    const u2 = owner.root.withIdentity({ subject: userId2 }) as ReturnType<typeof t>
+    await callMutate(u2, api.orgs.leave, { orgId })
+    const list = (await callQuery(owner.tt, api.orgs.members, { orgId })) as { userId: string }[]
+    expect(list.some(m => m.userId === userId2)).toBe(false)
   })
 })
