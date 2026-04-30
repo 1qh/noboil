@@ -130,6 +130,32 @@ describe('makeFileUpload integration', () => {
       /SESSION_NOT_FOUND/u
     )
   })
+  test('full chunked flow: confirm 2 chunks → assembleChunks merges into final blob', async () => {
+    const { tt } = await seedUser(t())
+    const { uploadId } = (await callMutate(tt, api.files.startChunkedUpload, {
+      contentType: 'image/png',
+      fileName: 'big.png',
+      totalChunks: 2,
+      totalSize: 10
+    })) as { uploadId: string }
+    const s1 = (await tt.run(async ctx => ctx.storage.store(new Blob(['aaaaa'])))) as string
+    const s2 = (await tt.run(async ctx => ctx.storage.store(new Blob(['bbbbb'])))) as string
+    await callMutate(tt, api.files.confirmChunk, { chunkIndex: 0, storageId: s1, uploadId })
+    const r2 = (await callMutate(tt, api.files.confirmChunk, {
+      chunkIndex: 1,
+      storageId: s2,
+      uploadId
+    })) as { allUploaded: boolean }
+    expect(r2.allUploaded).toBe(true)
+    const final = (await tt.action(api.files.assembleChunks as never, { uploadId })) as {
+      contentType: string
+      size: number
+    }
+    expect(final.contentType).toBe('image/png')
+    expect(final.size).toBe(10)
+    const progress = (await callQuery(tt, api.files.getUploadProgress, { uploadId })) as { status: string }
+    expect(progress.status).toBe('completed')
+  })
   test('startChunkedUpload rejects unknown content-type', async () => {
     const { tt } = await seedUser(t())
     await expect(
