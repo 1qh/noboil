@@ -87,6 +87,86 @@ describe('stdb makeChildCrud', () => {
       createFn({ db: {}, sender: ident('me'), timestamp: tsAtMs(0) } as never, { chatId: 999, text: 'hi' } as never)
     }).toThrow('NOT_FOUND')
   })
+  test('update mutates own child; FORBIDDEN for non-owner', () => {
+    const { reducer, reducers } = captureReducers()
+    const { rows, tbl } = mkChildTable()
+    const parent = mkParentTable()
+    parent.rows.push({ id: 1, userId: ident('me') })
+    makeChildCrud(
+      { reducer },
+      {
+        fields: { text: { optional: () => ({}) } as never },
+        foreignKeyField: {} as never,
+        foreignKeyName: 'chatId',
+        idField: {} as never,
+        parentPk: t => (t as unknown as { id: never }).id,
+        parentTable: () => parent.tbl as never,
+        pk: t => (t as unknown as { id: never }).id,
+        table: () => tbl as never,
+        tableName: 'message'
+      }
+    )
+    const createFn = reducers.create_message as (c: never, a: never) => void
+    const updateFn = reducers.update_message as (c: never, a: never) => void
+    createFn({ db: {}, sender: ident('me'), timestamp: tsAtMs(0) } as never, { chatId: 1, text: 'orig' } as never)
+    updateFn({ db: {}, sender: ident('me'), timestamp: tsAtMs(1) } as never, { id: 1, text: 'edit' } as never)
+    expect(rows[0]?.text).toBe('edit')
+    expect(() => {
+      updateFn({ db: {}, sender: ident('foe'), timestamp: tsAtMs(2) } as never, { id: 1, text: 'hax' } as never)
+    }).toThrow(/FORBIDDEN/u)
+  })
+  test('rm soft-deletes when softDelete option set', () => {
+    const { reducer, reducers } = captureReducers()
+    const { rows, tbl } = mkChildTable()
+    const parent = mkParentTable()
+    parent.rows.push({ id: 1, userId: ident('me') })
+    makeChildCrud(
+      { reducer },
+      {
+        fields: { text: { optional: () => ({}) } as never },
+        foreignKeyField: {} as never,
+        foreignKeyName: 'chatId',
+        idField: {} as never,
+        options: { softDelete: true },
+        parentPk: t => (t as unknown as { id: never }).id,
+        parentTable: () => parent.tbl as never,
+        pk: t => (t as unknown as { id: never }).id,
+        table: () => tbl as never,
+        tableName: 'message'
+      }
+    )
+    const createFn = reducers.create_message as (c: never, a: never) => void
+    const rmFn = reducers.rm_message as (c: never, a: never) => void
+    createFn({ db: {}, sender: ident('me'), timestamp: tsAtMs(0) } as never, { chatId: 1, text: 'soft' } as never)
+    rmFn({ db: {}, sender: ident('me'), timestamp: tsAtMs(5) } as never, { id: 1 } as never)
+    expect(rows).toHaveLength(1)
+    expect((rows[0] as unknown as { deletedAt?: unknown }).deletedAt).toBeDefined()
+  })
+  test('rm hard-deletes own row', () => {
+    const { reducer, reducers } = captureReducers()
+    const { rows, tbl } = mkChildTable()
+    const parent = mkParentTable()
+    parent.rows.push({ id: 1, userId: ident('me') })
+    makeChildCrud(
+      { reducer },
+      {
+        fields: { text: { optional: () => ({}) } as never },
+        foreignKeyField: {} as never,
+        foreignKeyName: 'chatId',
+        idField: {} as never,
+        parentPk: t => (t as unknown as { id: never }).id,
+        parentTable: () => parent.tbl as never,
+        pk: t => (t as unknown as { id: never }).id,
+        table: () => tbl as never,
+        tableName: 'message'
+      }
+    )
+    const createFn = reducers.create_message as (c: never, a: never) => void
+    const rmFn = reducers.rm_message as (c: never, a: never) => void
+    createFn({ db: {}, sender: ident('me'), timestamp: tsAtMs(0) } as never, { chatId: 1, text: 'gone' } as never)
+    rmFn({ db: {}, sender: ident('me'), timestamp: tsAtMs(5) } as never, { id: 1 } as never)
+    expect(rows).toHaveLength(0)
+  })
   test('create succeeds when parent exists', () => {
     const { reducer, reducers } = captureReducers()
     const { rows, tbl } = mkChildTable()
