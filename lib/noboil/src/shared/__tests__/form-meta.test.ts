@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 import { array, boolean, date, number, object, string } from 'zod/v4'
-import { buildMeta, getMeta } from '../react/form'
+import { buildMeta, getMax, getMeta, hasShapeKey } from '../react/form'
 const file = () => string().meta({ nb: 'file' as const })
 const files = () => array(file()).meta({ nb: 'files' as const })
 describe('getMeta', () => {
@@ -40,5 +40,21 @@ describe('buildMeta', () => {
     expect(meta.title.kind).toBe('string')
     expect(meta.done.kind).toBe('boolean')
     expect(meta.tags.kind).toBe('stringArray')
+  })
+})
+describe('getMax', () => {
+  test('reads max length from string schema', () => {
+    expect(getMax(string().max(120))).toBe(120)
+  })
+  test('returns undefined when schema has no max', () => {
+    expect(getMax(string())).toBeUndefined()
+    expect(getMax(undefined)).toBeUndefined()
+  })
+})
+describe('hasShapeKey', () => {
+  test('true when key present, false otherwise', () => {
+    const { shape } = object({ name: string() })
+    expect(hasShapeKey(shape, 'name')).toBe(true)
+    expect(hasShapeKey(shape, 'absent')).toBe(false)
   })
 })
