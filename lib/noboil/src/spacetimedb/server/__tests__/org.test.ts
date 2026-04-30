@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test'
-import { makeOrg } from '../org'
+import { makeOrg, makeOrgTables } from '../org'
 interface MemberRow {
   createdAt: { microsSinceUnixEpoch: bigint }
   id: number
@@ -183,5 +183,77 @@ describe('stdb makeOrg lifecycle', () => {
     expect(() => {
       update({ db: {}, sender: ident('x'), timestamp: tsAtMs(0) } as never, { name: 'N', orgId: 999 } as never)
     }).toThrow(/NOT_FOUND/u)
+  })
+})
+describe('stdb makeOrgTables adapter', () => {
+  test('returns config indexes wired to tables; filterByOrg + filterByOrgStatus work', () => {
+    const memberRows = [
+      { id: 1, isAdmin: true, orgId: 1, userId: ident('a') },
+      { id: 2, isAdmin: false, orgId: 2, userId: ident('b') }
+    ]
+    const inviteRows = [
+      { id: 10, orgId: 1, token: 'tok-a' },
+      { id: 11, orgId: 2, token: 'tok-b' }
+    ]
+    const joinRows = [
+      { id: 20, orgId: 1, status: 'pending' },
+      { id: 21, orgId: 1, status: 'approved' },
+      { id: 22, orgId: 2, status: 'pending' }
+    ]
+    const orgRows = [{ id: 1, slug: 's1', userId: ident('o') }]
+    const filterBy =
+      <T>(rows: T[], k: keyof T) =>
+      (v: unknown) =>
+        rows.filter(r => Object.is(r[k], v))
+    const idIndex = <T extends { id: number }>(rows: T[]) => ({
+      delete: (id: number) => rows.some(r => r.id === id),
+      find: (id: number) => rows.find(r => r.id === id) ?? null,
+      update: (row: T) => row
+    })
+    const orgT = {
+      [Symbol.iterator]: () => orgRows[Symbol.iterator](),
+      id: { ...idIndex(orgRows), find: (id: number) => orgRows.find(r => r.id === id) ?? null },
+      insert: (row: (typeof orgRows)[number]) => row,
+      slug: {},
+      userId: {}
+    }
+    const memberT = {
+      [Symbol.iterator]: () => memberRows[Symbol.iterator](),
+      delete: () => true,
+      id: idIndex(memberRows),
+      insert: (row: (typeof memberRows)[number]) => row,
+      orgId: { filter: filterBy(memberRows, 'orgId') },
+      userId: {}
+    }
+    const inviteT = {
+      [Symbol.iterator]: () => inviteRows[Symbol.iterator](),
+      id: idIndex(inviteRows as never),
+      insert: (row: (typeof inviteRows)[number]) => row,
+      orgId: { filter: filterBy(inviteRows, 'orgId') },
+      token: {}
+    }
+    const joinT = {
+      [Symbol.iterator]: () => joinRows[Symbol.iterator](),
+      id: idIndex(joinRows as never),
+      insert: (row: (typeof joinRows)[number]) => row,
+      orgId: { filter: filterBy(joinRows, 'orgId') }
+    }
+    const cfg = makeOrgTables({
+      org: () => orgT as never,
+      orgInvite: () => inviteT as never,
+      orgJoinRequest: () => joinT as never,
+      orgMember: () => memberT as never
+    })
+    const inviteByOrg = cfg.orgInviteByOrgIndex(inviteT as never)
+    expect([...inviteByOrg.filterByOrg(1)]).toHaveLength(1)
+    const joinByStatus = cfg.orgJoinRequestByOrgStatusIndex(joinT as never)
+    expect([...joinByStatus.filterByOrgStatus(1, 'pending')]).toHaveLength(1)
+    const memberByOrg = cfg.orgMemberByOrgIndex(memberT as never)
+    expect([...memberByOrg.filterByOrg(1)]).toHaveLength(1)
+    expect([...cfg.orgJoinRequestByOrgIndex(joinT as never).filterByOrg(2)]).toHaveLength(1)
+    expect(cfg.orgPk(orgT as never)).toBeDefined()
+    expect(cfg.orgInvitePk(inviteT as never)).toBeDefined()
+    expect(cfg.orgJoinRequestPk(joinT as never)).toBeDefined()
+    expect(cfg.orgMemberPk(memberT as never)).toBeDefined()
   })
 })
