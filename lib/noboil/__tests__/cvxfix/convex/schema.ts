@@ -29,6 +29,13 @@ export default defineSchema({
   ...orgTables(),
   pollVoteQuota: quotaTable(),
   ...presenceTable(),
+  budget: defineTable({
+    balance: v.number(),
+    inflight: v.optional(v.number()),
+    owner: v.string(),
+    periodKey: v.string(),
+    reservations: v.optional(v.array(v.any()))
+  }).index('by_owner', ['owner']),
   profile: singletonTable(profileSchema),
   project: orgTable(projectSchema),
   siteConfig: kvTable(kvSchema),
