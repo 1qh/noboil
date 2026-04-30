@@ -4,7 +4,6 @@ import {
   childTable,
   kvTable,
   logTable,
-  orgTable,
   orgTables,
   ownedTable,
   presenceTable,
@@ -12,7 +11,7 @@ import {
   singletonTable,
   uploadTables
 } from '../../../src/convex/server'
-import { chatSchema, kvSchema, messageSchema, profileSchema, projectSchema, todoSchema, voteSchema } from './s'
+import { chatSchema, kvSchema, messageSchema, profileSchema, todoSchema, voteSchema } from './s'
 export default defineSchema({
   audit: defineTable({
     action: v.string(),
@@ -45,7 +44,16 @@ export default defineSchema({
     updatedAt: v.optional(v.number())
   }).index('by_tmdb_id', ['tmdb_id']),
   profile: singletonTable(profileSchema),
-  project: orgTable(projectSchema),
+  project: defineTable({
+    deletedAt: v.optional(v.number()),
+    editors: v.optional(v.array(v.id('users'))),
+    name: v.string(),
+    orgId: v.id('org'),
+    updatedAt: v.number(),
+    userId: v.id('users')
+  })
+    .index('by_org', ['orgId'])
+    .index('by_org_user', ['orgId', 'userId']),
   siteConfig: kvTable(kvSchema),
   todo: ownedTable(todoSchema),
   users: defineTable({ name: v.optional(v.string()) }),

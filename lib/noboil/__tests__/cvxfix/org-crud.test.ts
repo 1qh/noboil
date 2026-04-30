@@ -16,7 +16,9 @@ const t = () => convexTest(schema, loadModules())
 const apiMod = (await import('./convex/_generated/api')) as {
   api: {
     projects: {
+      addEditor: unknown
       create: unknown
+      editors: unknown
       list: unknown
       read: unknown
       rm: unknown
@@ -80,6 +82,18 @@ describe('makeOrgCrud integration', () => {
     await callMutate(tt, api.projects.update, { id, name: 'renamed', orgId })
     const got = (await callQuery(tt, api.projects.read, { id, orgId })) as ProjectDoc
     expect(got.name).toBe('renamed')
+  })
+  test('addEditor + editors list', async () => {
+    const { orgId, tt } = await seedOrgWithMember(t())
+    const projectId = (await callMutate(tt, api.projects.create, { name: 'editable', orgId })) as string
+    const otherUserId = (await tt.run(async ctx => {
+      const u = await ctx.db.insert('users', { name: 'other' })
+      await ctx.db.insert('orgMember', { isAdmin: false, orgId, updatedAt: Date.now(), userId: u })
+      return u
+    })) as string
+    await callMutate(tt, api.projects.addEditor, { editorId: otherUserId, orgId, projectId })
+    const list = (await callQuery(tt, api.projects.editors, { orgId, projectId })) as { userId: string }[]
+    expect(list.some(e => e.userId === otherUserId)).toBe(true)
   })
   test('rm soft-deletes', async () => {
     const { orgId, tt } = await seedOrgWithMember(t())

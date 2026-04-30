@@ -6,5 +6,5 @@ const endpoints = makeOrgCrud({
   schema: projectSchema,
   table: 'project'
 })
-const { create, list, read, restore, rm, update } = endpoints
-export { create, list, read, restore, rm, update }
+const { addEditor, create, editors, list, read, removeEditor, restore, rm, setEditors, update } = endpoints
+export { addEditor, create, editors, list, read, removeEditor, restore, rm, setEditors, update }
