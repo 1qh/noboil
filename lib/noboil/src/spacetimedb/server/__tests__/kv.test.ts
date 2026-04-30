@@ -110,6 +110,54 @@ describe('stdb makeKv', () => {
       setFn({ db: {}, sender: senderIdent, timestamp: tsAtMs(0) }, { key: 'k' })
     }).toThrow('FORBIDDEN')
   })
+  test('softDelete: rm marks deletedAt; restore brings row back; set on deleted clears it', () => {
+    const { reducer, reducers } = captureReducers()
+    const { rows, tbl } = mkTable()
+    makeKv(
+      { reducer },
+      {
+        fields: {},
+        keyField: {} as never,
+        options: { softDelete: true },
+        table: () => tbl as never,
+        tableName: 'config'
+      }
+    )
+    const setFn = reducers.set_config as (c: never, a: never) => void
+    const rmFn = reducers.rm_config as (c: never, a: never) => void
+    const restoreFn = reducers.restore_config as (c: never, a: never) => void
+    setFn({ db: {}, sender: senderIdent, timestamp: tsAtMs(0) } as never, { key: 'k', message: 'v1' } as never)
+    rmFn({ db: {}, sender: senderIdent, timestamp: tsAtMs(1) } as never, { key: 'k' } as never)
+    expect(rows[0]?.deletedAt).toBeTruthy()
+    restoreFn({ db: {}, sender: senderIdent, timestamp: tsAtMs(2) } as never, { key: 'k' } as never)
+    expect(rows[0]?.deletedAt).toBeNull()
+    rmFn({ db: {}, sender: senderIdent, timestamp: tsAtMs(3) } as never, { key: 'k' } as never)
+    setFn({ db: {}, sender: senderIdent, timestamp: tsAtMs(4) } as never, { key: 'k', message: 'v2' } as never)
+    expect((rows[0] as unknown as { deletedAt?: unknown }).deletedAt).toBeNull()
+  })
+  test('writeRole=false rejects rm + restore', () => {
+    const { reducer, reducers } = captureReducers()
+    const { tbl } = mkTable()
+    makeKv(
+      { reducer },
+      {
+        fields: {},
+        keyField: {} as never,
+        options: { softDelete: true },
+        table: () => tbl as never,
+        tableName: 'config',
+        writeRole: () => false
+      }
+    )
+    const rmFn = reducers.rm_config as (c: never, a: never) => void
+    const restoreFn = reducers.restore_config as (c: never, a: never) => void
+    expect(() => {
+      rmFn({ db: {}, sender: senderIdent, timestamp: tsAtMs(0) } as never, { key: 'k' } as never)
+    }).toThrow('FORBIDDEN')
+    expect(() => {
+      restoreFn({ db: {}, sender: senderIdent, timestamp: tsAtMs(0) } as never, { key: 'k' } as never)
+    }).toThrow('FORBIDDEN')
+  })
   test('rm hard-deletes when softDelete=false', () => {
     const { reducer, reducers } = captureReducers()
     const { rows, tbl } = mkTable()
