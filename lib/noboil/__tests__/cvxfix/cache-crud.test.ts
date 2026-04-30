@@ -77,6 +77,16 @@ describe('makeCacheCrud integration', () => {
     const after = (await callQuery(tt, api.movies.read, { id: initial._id })) as MovieDoc
     expect(after.title).toBe('NewTitle')
   })
+  test('create with same key updates existing row (upsert path)', async () => {
+    const tt = t()
+    await callMutate(tt, api.movies.create, { rating: 5, title: 'V1', tmdb_id: 'same' })
+    await callMutate(tt, api.movies.create, { rating: 9, title: 'V2', tmdb_id: 'same' })
+    const got = (await callQuery(tt, api.movies.get, { tmdb_id: 'same' })) as MovieDoc
+    expect(got.title).toBe('V2')
+    expect(got.rating).toBe(9)
+    const all = (await callQuery(tt, api.movies.all, {})) as MovieDoc[]
+    expect(all.filter(m => m.tmdb_id === 'same')).toHaveLength(1)
+  })
   test('invalidate marks key stale', async () => {
     const tt = t()
     await callMutate(tt, api.movies.create, { rating: 7, title: 'I', tmdb_id: 'inv' })
