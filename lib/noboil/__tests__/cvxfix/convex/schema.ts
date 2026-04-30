@@ -55,6 +55,11 @@ export default defineSchema({
     .index('by_org', ['orgId'])
     .index('by_org_user', ['orgId', 'userId']),
   siteConfig: kvTable(kvSchema),
+  tagItem: defineTable({
+    label: v.string(),
+    updatedAt: v.number(),
+    userId: v.id('users')
+  }).index('by_user', ['userId']),
   todo: ownedTable(todoSchema),
   users: defineTable({ name: v.optional(v.string()) }),
   vote: logTable(voteSchema)
