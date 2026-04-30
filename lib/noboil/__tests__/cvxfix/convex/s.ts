@@ -6,4 +6,5 @@ const kvSchema = object({ active: boolean(), message: string() })
 const chatSchema = object({ title: string() })
 const messageSchema = object({ chatId: string(), text: string() })
 const projectSchema = object({ name: string() })
-export { chatSchema, kvSchema, messageSchema, profileSchema, projectSchema, todoSchema, voteSchema }
+const orgZodSchema = object({ name: string(), slug: string() })
+export { chatSchema, kvSchema, messageSchema, orgZodSchema, profileSchema, projectSchema, todoSchema, voteSchema }
