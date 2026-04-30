@@ -54,6 +54,14 @@ describe('makeAudit integration', () => {
     expect(rows).toHaveLength(1)
     expect(rows[0]?.actor).toBe('alice')
   })
+  test('pruneStale returns deleted=0 when nothing is stale', async () => {
+    const tt = t()
+    await callMutate(tt, api.audits.append, { action: 'fresh', actor: 'a', ok: true })
+    const r = (await tt.mutation((api as { audits: { pruneStale: unknown } }).audits.pruneStale as never, {})) as {
+      deleted: number
+    }
+    expect(r.deleted).toBe(0)
+  })
   test('listByTrace filters by traceId', async () => {
     const tt = t()
     await callMutate(tt, api.audits.append, { action: 'a', actor: 'alice', ok: true, traceId: 'trace-1' })
