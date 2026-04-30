@@ -51,15 +51,18 @@
     "@a/config": "workspace:*"
   },
   "devDependencies": {
+    "@happy-dom/global-registrator": "^20.9.0",
     "@playwright/test": "latest",
     "@tailwindcss/postcss": "latest",
     "@tailwindcss/typography": "latest",
+    "@testing-library/react": "^16.3.2",
     "@turbo/gen": "latest",
     "@types/mdx": "latest",
     "@types/node": "latest",
     "axe-core": "latest",
     "babel-plugin-react-compiler": "latest",
     "depcheck": "latest",
+    "happy-dom": "^20.9.0",
     "lintmax": "latest",
     "sherif": "latest",
     "simple-git-hooks": "latest",
