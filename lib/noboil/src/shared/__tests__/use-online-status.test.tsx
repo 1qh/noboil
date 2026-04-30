@@ -1,7 +1,7 @@
 /** biome-ignore-all lint/nursery/useGlobalThis: dispatchEvent + navigator.onLine require window/navigator */
 /** biome-ignore-all lint/nursery/noComponentHookFactories: test-only inline component */
 import { GlobalRegistrator } from '@happy-dom/global-registrator'
-GlobalRegistrator.register()
+if (typeof document === 'undefined') GlobalRegistrator.register()
 const { act, render, renderHook } = await import('@testing-library/react')
 const { afterEach, describe, expect, test } = await import('bun:test')
 const useOnlineStatus = (await import('../react/use-online-status')).default

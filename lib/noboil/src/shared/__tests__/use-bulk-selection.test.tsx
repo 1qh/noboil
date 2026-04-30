@@ -1,6 +1,6 @@
 /** biome-ignore-all lint/nursery/useGlobalThis: act needs window context */
 import { GlobalRegistrator } from '@happy-dom/global-registrator'
-GlobalRegistrator.register()
+if (typeof document === 'undefined') GlobalRegistrator.register()
 const { act, renderHook } = await import('@testing-library/react')
 const { describe, expect, test } = await import('bun:test')
 const { useBulkSelection } = await import('../react/use-bulk-selection')
