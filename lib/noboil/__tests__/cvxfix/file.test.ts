@@ -16,12 +16,15 @@ const t = () => convexTest(schema, loadModules())
 const apiMod = (await import('./convex/_generated/api')) as {
   api: {
     files: {
+      assembleChunks: unknown
       cancelChunkedUpload: unknown
       confirmChunk: unknown
       getUploadProgress: unknown
       info: unknown
       startChunkedUpload: unknown
       upload: unknown
+      uploadChunk: unknown
+      validate: unknown
     }
   }
 }
@@ -95,6 +98,37 @@ describe('makeFileUpload integration', () => {
         totalSize: 999_999_999
       })
     ).rejects.toThrow(/FILE_TOO_LARGE/u)
+  })
+  test('info returns metadata + url for stored file', async () => {
+    const { tt } = await seedUser(t())
+    const storageId = (await tt.run(async ctx => ctx.storage.store(new Blob(['x'], { type: 'image/png' })))) as string
+    const got = (await callQuery(tt, api.files.info, { id: storageId })) as null | { url?: string }
+    expect(got).not.toBeNull()
+    expect(typeof got?.url).toBe('string')
+  })
+  test('validate rejects unknown content-type with cleanup', async () => {
+    const { tt } = await seedUser(t())
+    const storageId = (await tt.run(async ctx =>
+      ctx.storage.store(new Blob(['x'], { type: 'application/x-evil' }))
+    )) as string
+    await expect(callMutate(tt, api.files.validate, { id: storageId })).rejects.toThrow(/INVALID_FILE_TYPE/u)
+  })
+  test('uploadChunk for valid pending session returns an upload URL', async () => {
+    const { tt } = await seedUser(t())
+    const { uploadId } = (await callMutate(tt, api.files.startChunkedUpload, {
+      contentType: 'image/png',
+      fileName: 'c.png',
+      totalChunks: 2,
+      totalSize: 200
+    })) as { uploadId: string }
+    const url = (await callMutate(tt, api.files.uploadChunk, { chunkIndex: 0, uploadId })) as string
+    expect(typeof url).toBe('string')
+  })
+  test('uploadChunk fails for unknown session', async () => {
+    const { tt } = await seedUser(t())
+    await expect(callMutate(tt, api.files.uploadChunk, { chunkIndex: 0, uploadId: 'no-such' })).rejects.toThrow(
+      /SESSION_NOT_FOUND/u
+    )
   })
   test('startChunkedUpload rejects unknown content-type', async () => {
     const { tt } = await seedUser(t())

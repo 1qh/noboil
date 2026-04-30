@@ -15,12 +15,16 @@ const endpoints = makeFileUpload({
   query
 })
 export const {
+  assembleChunks,
   cancelChunkedUpload,
   CHUNK_SIZE,
   confirmChunk,
+  finalizeAssembly,
+  getSessionForAssembly,
   getUploadProgress,
   info,
   startChunkedUpload,
   upload,
+  uploadChunk,
   validate
 } = endpoints
