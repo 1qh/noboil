@@ -1,6 +1,14 @@
 import { defineSchema, defineTable } from 'convex/server'
 import { v } from 'convex/values'
-import { childTable, kvTable, logTable, ownedTable, quotaTable, singletonTable } from '../../../src/convex/server'
+import {
+  childTable,
+  kvTable,
+  logTable,
+  ownedTable,
+  presenceTable,
+  quotaTable,
+  singletonTable
+} from '../../../src/convex/server'
 import { chatSchema, kvSchema, messageSchema, profileSchema, todoSchema, voteSchema } from './s'
 export default defineSchema({
   audit: defineTable({
@@ -17,6 +25,7 @@ export default defineSchema({
   chat: ownedTable(chatSchema),
   message: childTable(messageSchema, 'chatId'),
   pollVoteQuota: quotaTable(),
+  ...presenceTable(),
   profile: singletonTable(profileSchema),
   siteConfig: kvTable(kvSchema),
   todo: ownedTable(todoSchema),
