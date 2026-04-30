@@ -220,4 +220,30 @@ describe('makeOrg integration', () => {
     const list = (await callQuery(ownerTt, api.orgs.members, { orgId })) as { userId: string }[]
     expect(list.some(m => m.userId === inviteeId)).toBe(true)
   })
+  test('membership returns owner role for owner; null for outsider', async () => {
+    const owner = await seedUser(t())
+    const { orgId } = (await callMutate(owner.tt, api.orgs.create, { data: { name: 'Mb', slug: 'mb' } })) as {
+      orgId: string
+    }
+    const ownerView = (await callQuery(owner.tt, api.orgs.membership, { orgId })) as null | { role: string }
+    expect(ownerView?.role).toBe('owner')
+    const otherId = (await owner.root.run(async ctx => ctx.db.insert('users', { name: 'o' }))) as string
+    const other = owner.root.withIdentity({ subject: otherId }) as ReturnType<typeof t>
+    const otherView = await callQuery(other, api.orgs.membership, { orgId })
+    expect(otherView).toBeNull()
+  })
+  test('transferOwnership moves owner role to existing admin', async () => {
+    const owner = await seedUser(t())
+    const { orgId } = (await callMutate(owner.tt, api.orgs.create, { data: { name: 'T', slug: 'tx' } })) as {
+      orgId: string
+    }
+    const newOwnerUserId = (await owner.root.run(async ctx => ctx.db.insert('users', { name: 'no' }))) as string
+    const memberId = (await owner.root.run(async ctx =>
+      ctx.db.insert('orgMember', { isAdmin: true, orgId, updatedAt: Date.now(), userId: newOwnerUserId })
+    )) as string
+    expect(typeof memberId).toBe('string')
+    await callMutate(owner.tt, api.orgs.transferOwnership, { newOwnerId: newOwnerUserId, orgId })
+    const orgDoc = (await owner.root.run(async ctx => ctx.db.get(orgId))) as { userId: string }
+    expect(orgDoc.userId).toBe(newOwnerUserId)
+  })
 })
