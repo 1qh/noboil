@@ -3,4 +3,6 @@ const todoSchema = object({ done: boolean(), title: string() })
 const voteSchema = object({ optionIdx: number(), voter: string() })
 const profileSchema = object({ bio: string(), name: string() })
 const kvSchema = object({ active: boolean(), message: string() })
-export { kvSchema, profileSchema, todoSchema, voteSchema }
+const chatSchema = object({ title: string() })
+const messageSchema = object({ chatId: string(), text: string() })
+export { chatSchema, kvSchema, messageSchema, profileSchema, todoSchema, voteSchema }
