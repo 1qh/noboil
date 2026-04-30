@@ -62,6 +62,30 @@ describe('makeKv integration', () => {
     const afterRestore = (await callQuery(tt, api.kvs.get, { key: 'x' })) as KvDoc
     expect(afterRestore.message).toBe('m')
   })
+  test('writeRole function returning true allows writes', async () => {
+    const tt = t()
+    await tt.mutation((api as { kvs: { setAllowed: unknown } }).kvs.setAllowed as never, {
+      key: 'roleyes',
+      payload: { active: true, message: 'go' }
+    })
+    const r = (await callQuery(tt, api.kvs.get, { key: 'roleyes' })) as KvDoc
+    expect(r.message).toBe('go')
+  })
+  test('writeRole function returning false rejects writes', async () => {
+    const tt = t()
+    await expect(
+      tt.mutation((api as { kvs: { setDenied: unknown } }).kvs.setDenied as never, {
+        key: 'roleno',
+        payload: { active: false, message: 'no' }
+      })
+    ).rejects.toThrow('FORBIDDEN')
+  })
+  test('keys allowlist rejects unknown key', async () => {
+    const tt = t()
+    await expect(
+      callMutate(tt, api.kvs.set, { key: 'notInList', payload: { active: true, message: 'x' } })
+    ).rejects.toThrow('INVALID_KEY')
+  })
   test('get on missing key returns null', async () => {
     const tt = t()
     const r = await callQuery(tt, api.kvs.get, { key: 'never' })
