@@ -78,6 +78,47 @@ describe('stdb makeSingletonCrud', () => {
     expect(rows).toHaveLength(1)
     expect(rows[0]?.name).toBe('second')
   })
+  test('hooks fire on get/upsert (read, create, update)', () => {
+    const { reducer, reducers } = captureReducers()
+    const { tbl } = mkTable()
+    const calls: string[] = []
+    makeSingletonCrud(
+      { reducer },
+      {
+        fields: { name: { optional: () => ({}) } as never },
+        options: {
+          hooks: {
+            afterCreate: () => {
+              calls.push('afterCreate')
+            },
+            afterUpdate: () => {
+              calls.push('afterUpdate')
+            },
+            beforeCreate: (_c, p) => {
+              calls.push('beforeCreate')
+              return p.data
+            },
+            beforeRead: () => {
+              calls.push('beforeRead')
+            },
+            beforeUpdate: (_c, p) => {
+              calls.push('beforeUpdate')
+              return p.patch
+            }
+          }
+        },
+        table: () => tbl as never,
+        tableName: 'profile'
+      }
+    )
+    const upsertFn = reducers.upsert_profile as (c: never, a: never) => void
+    const getFn = reducers.get_profile as (c: never) => void
+    const u = ident('u')
+    upsertFn({ db: {}, sender: u, timestamp: tsAtMs(0) } as never, { name: 'A' } as never)
+    upsertFn({ db: {}, sender: u, timestamp: tsAtMs(1) } as never, { name: 'B' } as never)
+    getFn({ db: {}, sender: u, timestamp: tsAtMs(2) } as never)
+    expect(calls).toEqual(['beforeCreate', 'afterCreate', 'beforeUpdate', 'afterUpdate', 'beforeRead'])
+  })
   test('get throws NOT_FOUND when no row for the user', () => {
     const { reducer, reducers } = captureReducers()
     const { tbl } = mkTable()
