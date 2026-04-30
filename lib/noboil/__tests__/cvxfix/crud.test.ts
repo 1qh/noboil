@@ -1,0 +1,89 @@
+import { Glob } from 'bun'
+import { describe, expect, test } from 'bun:test'
+import { convexTest } from 'convex-test'
+import { resolve } from 'node:path'
+import schema from './convex/schema'
+const cvxDir = resolve(import.meta.dir, 'convex')
+const loadModules = () => {
+  const out: Record<string, () => Promise<Record<string, unknown>>> = {}
+  const glob = new Glob('**/*.ts')
+  for (const rel of glob.scanSync({ cwd: cvxDir }))
+    out[`../convex/${rel.replace(/\.ts$/u, '.js')}`] = async () =>
+      (await import(`${cvxDir}/${rel}`)) as Record<string, unknown>
+  return out
+}
+const t = () => convexTest(schema, loadModules())
+const apiMod = (await import('./convex/_generated/api')) as {
+  api: {
+    todos: {
+      create: unknown
+      list: unknown
+      read: unknown
+      rm: unknown
+      update: unknown
+    }
+  }
+}
+const { api } = apiMod
+interface ListResult {
+  page: TodoDoc[]
+}
+interface TodoDoc {
+  _id: string
+  deletedAt?: number
+  done: boolean
+  title: string
+  updatedAt: number
+  userId: string
+}
+const seedUser = async (root: ReturnType<typeof t>): Promise<{ tt: ReturnType<typeof t>; userId: string }> => {
+  const userId = (await root.run(async ctx => ctx.db.insert('users', { name: 'seed' }))) as string
+  return { tt: root.withIdentity({ subject: userId }) as never, userId }
+}
+const callMutate = async (tt: ReturnType<typeof t>, fn: unknown, args: Record<string, unknown> = {}): Promise<unknown> =>
+  tt.mutation(fn as never, args)
+const callQuery = async (tt: ReturnType<typeof t>, fn: unknown, args: Record<string, unknown> = {}): Promise<unknown> =>
+  tt.query(fn as never, args)
+const paginationOpts = { cursor: null, numItems: 50 }
+describe('makeCrud (owned) integration', () => {
+  test('create returns id; read returns full doc', async () => {
+    const { tt } = await seedUser(t())
+    const id = (await callMutate(tt, api.todos.create, { done: false, title: 'first' })) as string
+    expect(typeof id).toBe('string')
+    const fetched = (await callQuery(tt, api.todos.read, { id })) as TodoDoc
+    expect(fetched.title).toBe('first')
+    expect(fetched.done).toBe(false)
+  })
+  test('list returns rows for the calling user with own:true filter', async () => {
+    const { tt } = await seedUser(t())
+    await callMutate(tt, api.todos.create, { done: false, title: 'a' })
+    await callMutate(tt, api.todos.create, { done: true, title: 'b' })
+    const listed = (await callQuery(tt, api.todos.list, { paginationOpts, where: { own: true } })) as ListResult
+    expect(listed.page).toHaveLength(2)
+  })
+  test('update with shape {id, title?, done?} mutates row', async () => {
+    const { tt } = await seedUser(t())
+    const id = (await callMutate(tt, api.todos.create, { done: false, title: 'orig' })) as string
+    await callMutate(tt, api.todos.update, { done: true, id, title: 'updated' })
+    const got = (await callQuery(tt, api.todos.read, { id })) as TodoDoc
+    expect(got.title).toBe('updated')
+    expect(got.done).toBe(true)
+  })
+  test('rm hard-deletes when soft-delete disabled', async () => {
+    const { tt } = await seedUser(t())
+    const id = (await callMutate(tt, api.todos.create, { done: false, title: 'x' })) as string
+    await callMutate(tt, api.todos.rm, { id })
+    const afterRm = (await callQuery(tt, api.todos.list, { paginationOpts, where: { own: true } })) as ListResult
+    expect(afterRm.page).toHaveLength(0)
+  })
+  test('list with own:true scopes to authenticated user', async () => {
+    const root = t()
+    const { tt: tt1 } = await seedUser(root)
+    const { tt: tt2 } = await seedUser(root)
+    await callMutate(tt1, api.todos.create, { done: false, title: 'mine' })
+    await callMutate(tt2, api.todos.create, { done: false, title: 'theirs' })
+    const u1 = (await callQuery(tt1, api.todos.list, { paginationOpts, where: { own: true } })) as ListResult
+    expect(u1.page).toHaveLength(1)
+    expect(u1.page[0]?.title).toBe('mine')
+  })
+})
