@@ -36,6 +36,12 @@ export default defineSchema({
     periodKey: v.string(),
     reservations: v.optional(v.array(v.any()))
   }).index('by_owner', ['owner']),
+  movie: defineTable({
+    rating: v.number(),
+    title: v.string(),
+    tmdb_id: v.string(),
+    updatedAt: v.optional(v.number())
+  }).index('by_tmdb_id', ['tmdb_id']),
   profile: singletonTable(profileSchema),
   project: orgTable(projectSchema),
   siteConfig: kvTable(kvSchema),
