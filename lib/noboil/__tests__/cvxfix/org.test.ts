@@ -197,4 +197,27 @@ describe('makeOrg integration', () => {
     const list = (await callQuery(owner.tt, api.orgs.members, { orgId })) as { userId: string }[]
     expect(list.some(m => m.userId === userId2)).toBe(false)
   })
+  test('acceptInvite adds invitee as org member when emails match', async () => {
+    const root = t()
+    const ownerId = (await root.run(async ctx => ctx.db.insert('users', { name: 'owner' }))) as string
+    const inviteeId = (await root.run(async ctx =>
+      ctx.db.insert('users', { email: 'invitee@x.com', name: 'invitee' })
+    )) as string
+    const ownerTt = root.withIdentity({ subject: ownerId }) as ReturnType<typeof t>
+    const { orgId } = (await callMutate(ownerTt, api.orgs.create, { data: { name: 'Acc', slug: 'acc' } })) as {
+      orgId: string
+    }
+    const inv = (await callMutate(ownerTt, api.orgs.invite, {
+      email: 'invitee@x.com',
+      isAdmin: true,
+      orgId
+    })) as { token: string }
+    const inviteeTt = root.withIdentity({
+      email: 'invitee@x.com',
+      subject: inviteeId
+    }) as ReturnType<typeof t>
+    await callMutate(inviteeTt, api.orgs.acceptInvite, { token: inv.token })
+    const list = (await callQuery(ownerTt, api.orgs.members, { orgId })) as { userId: string }[]
+    expect(list.some(m => m.userId === inviteeId)).toBe(true)
+  })
 })

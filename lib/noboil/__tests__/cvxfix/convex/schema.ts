@@ -61,6 +61,6 @@ export default defineSchema({
     userId: v.id('users')
   }).index('by_user', ['userId']),
   todo: ownedTable(todoSchema),
-  users: defineTable({ name: v.optional(v.string()) }),
+  users: defineTable({ email: v.optional(v.string()), name: v.optional(v.string()) }),
   vote: logTable(voteSchema)
 })
