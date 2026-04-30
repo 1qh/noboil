@@ -20,6 +20,7 @@ const apiMod = (await import('./convex/_generated/api')) as {
       list: unknown
       purgeByParent: unknown
       restoreByParent: unknown
+      rm: unknown
     }
   }
 }
@@ -74,6 +75,32 @@ describe('makeLog integration', () => {
     await callMutate(tt, api.votes.restoreByParent, { parent: 'poll-3' })
     const restored = (await callQuery(tt, api.votes.list, { paginationOpts, parent: 'poll-3' })) as ListResult
     expect(restored.page).toHaveLength(1)
+  })
+  test('rm by id removes a single row', async () => {
+    const tt = await seedUser(t())
+    await callMutate(tt, api.votes.append, { parent: 'rm-me', payload: { optionIdx: 0, voter: 'A' } })
+    const before = (await callQuery(tt, api.votes.list, { paginationOpts, parent: 'rm-me' })) as ListResult
+    expect(before.page).toHaveLength(1)
+    const id = before.page[0]?._id
+    await callMutate(tt, api.votes.rm, { id })
+    const after = (await callQuery(tt, api.votes.list, { paginationOpts, parent: 'rm-me' })) as ListResult
+    expect(after.page).toHaveLength(0)
+  })
+  test('rm bulk via ids removes many', async () => {
+    const tt = await seedUser(t())
+    await callMutate(tt, api.votes.append, {
+      items: [
+        { optionIdx: 0, voter: 'A' },
+        { optionIdx: 0, voter: 'B' },
+        { optionIdx: 0, voter: 'C' }
+      ],
+      parent: 'bulk-rm'
+    })
+    const all = (await callQuery(tt, api.votes.list, { paginationOpts, parent: 'bulk-rm' })) as ListResult
+    const ids = all.page.map(r => r._id)
+    await callMutate(tt, api.votes.rm, { ids: ids.slice(0, 2) })
+    const remaining = (await callQuery(tt, api.votes.list, { paginationOpts, parent: 'bulk-rm' })) as ListResult
+    expect(remaining.page).toHaveLength(1)
   })
   test('list scopes by parent', async () => {
     const tt = await seedUser(t())

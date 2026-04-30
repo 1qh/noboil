@@ -7,5 +7,5 @@ const endpoints = makeLog({
   softDelete: true,
   table: 'vote'
 })
-const { append, list, purgeByParent, read, restoreByParent, rm, update } = endpoints
-export { append, list, purgeByParent, read, restoreByParent, rm, update }
+const { append, authIndexed, list, listAfter, purgeByParent, read, restoreByParent, rm, update } = endpoints
+export { append, authIndexed, list, listAfter, purgeByParent, read, restoreByParent, rm, update }
