@@ -86,6 +86,48 @@ describe('stdb makePresence', () => {
     heartbeatFn({ db: {}, sender, timestamp: tsAtMs(1000) } as never, { data: { typing: true }, roomId: 'r2' } as never)
     expect(rows).toHaveLength(1)
   })
+  test('cleanup removes stale presence rows past TTL', () => {
+    const { reducer, reducers } = captureReducers()
+    const { rows, tbl } = mkTable()
+    makePresence(
+      { reducer },
+      {
+        dataField: { optional: () => ({}) } as never,
+        pk: t => (t as unknown as { id: never }).id,
+        roomIdField: {} as never,
+        table: () => tbl as never,
+        tableName: 'presence'
+      }
+    )
+    const heartbeatFn = reducers.presence_heartbeat_presence as (c: never, a: never) => void
+    const cleanupFn = reducers.presence_cleanup_presence as (c: never, a: never) => void
+    heartbeatFn({ db: {}, sender: ident('old'), timestamp: tsAtMs(0) } as never, { roomId: 'r' } as never)
+    heartbeatFn({ db: {}, sender: ident('new'), timestamp: tsAtMs(10_000_000) } as never, { roomId: 'r' } as never)
+    cleanupFn({ db: {}, sender: ident('s'), timestamp: tsAtMs(10_000_000) } as never, {} as never)
+    expect(rows).toHaveLength(1)
+    expect(rows[0]?.userId.__id).toBe('new')
+  })
+  test('heartbeat NOT_AUTHENTICATED for zero-id sender', () => {
+    const { reducer, reducers } = captureReducers()
+    const { tbl } = mkTable()
+    makePresence(
+      { reducer },
+      {
+        dataField: { optional: () => ({}) } as never,
+        pk: t => (t as unknown as { id: never }).id,
+        roomIdField: {} as never,
+        table: () => tbl as never,
+        tableName: 'presence'
+      }
+    )
+    const heartbeatFn = reducers.presence_heartbeat_presence as (c: never, a: never) => void
+    expect(() => {
+      heartbeatFn(
+        { db: {}, sender: { toHexString: () => '0000' } as never, timestamp: tsAtMs(0) } as never,
+        { roomId: 'r' } as never
+      )
+    }).toThrow(/NOT_AUTHENTICATED/u)
+  })
   test('leave removes the user-room row', () => {
     const { reducer, reducers } = captureReducers()
     const { rows, tbl } = mkTable()
