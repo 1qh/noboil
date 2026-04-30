@@ -4,12 +4,14 @@ import {
   childTable,
   kvTable,
   logTable,
+  orgTable,
+  orgTables,
   ownedTable,
   presenceTable,
   quotaTable,
   singletonTable
 } from '../../../src/convex/server'
-import { chatSchema, kvSchema, messageSchema, profileSchema, todoSchema, voteSchema } from './s'
+import { chatSchema, kvSchema, messageSchema, profileSchema, projectSchema, todoSchema, voteSchema } from './s'
 export default defineSchema({
   audit: defineTable({
     action: v.string(),
@@ -24,9 +26,11 @@ export default defineSchema({
     .index('by_trace', ['traceId']),
   chat: ownedTable(chatSchema),
   message: childTable(messageSchema, 'chatId'),
+  ...orgTables(),
   pollVoteQuota: quotaTable(),
   ...presenceTable(),
   profile: singletonTable(profileSchema),
+  project: orgTable(projectSchema),
   siteConfig: kvTable(kvSchema),
   todo: ownedTable(todoSchema),
   users: defineTable({ name: v.optional(v.string()) }),

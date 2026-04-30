@@ -5,4 +5,5 @@ const profileSchema = object({ bio: string(), name: string() })
 const kvSchema = object({ active: boolean(), message: string() })
 const chatSchema = object({ title: string() })
 const messageSchema = object({ chatId: string(), text: string() })
-export { chatSchema, kvSchema, messageSchema, profileSchema, todoSchema, voteSchema }
+const projectSchema = object({ name: string() })
+export { chatSchema, kvSchema, messageSchema, profileSchema, projectSchema, todoSchema, voteSchema }
