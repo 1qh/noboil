@@ -28,10 +28,11 @@ describe('parseHttpBody', () => {
     expect(r).toBeInstanceOf(Response)
     expect((r as Response).status).toBe(400)
   })
-  test('rejects oversize via content-length', async () => {
+  test('rejects oversize via body length', async () => {
+    const big = 'x'.repeat(2000)
     const req = new Request('http://x', {
-      body: 'x',
-      headers: { 'Content-Type': 'application/json', 'content-length': '99999999' },
+      body: big,
+      headers: { 'Content-Type': 'application/json' },
       method: 'POST'
     })
     const r = await parseHttpBody(req, 1000)
