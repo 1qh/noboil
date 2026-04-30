@@ -1,0 +1,89 @@
+import { Glob } from 'bun'
+import { describe, expect, test } from 'bun:test'
+import { convexTest } from 'convex-test'
+import { resolve } from 'node:path'
+import schema from './convex/schema'
+const cvxDir = resolve(import.meta.dir, 'convex')
+const loadModules = () => {
+  const out: Record<string, () => Promise<Record<string, unknown>>> = {}
+  const glob = new Glob('**/*.ts')
+  for (const rel of glob.scanSync({ cwd: cvxDir }))
+    out[`../convex/${rel.replace(/\.ts$/u, '.js')}`] = async () =>
+      (await import(`${cvxDir}/${rel}`)) as Record<string, unknown>
+  return out
+}
+const t = () => convexTest(schema, loadModules())
+const apiMod = (await import('./convex/_generated/api')) as {
+  api: {
+    votes: {
+      append: unknown
+      list: unknown
+      purgeByParent: unknown
+      restoreByParent: unknown
+    }
+  }
+}
+const { api } = apiMod
+interface ListResult {
+  page: VoteDoc[]
+}
+interface VoteDoc {
+  _id: string
+  deletedAt?: number
+  optionIdx: number
+  parent: string
+  seq: number
+  voter: string
+}
+const seedUser = async (root: ReturnType<typeof t>): Promise<ReturnType<typeof t>> => {
+  const userId = (await root.run(async ctx => ctx.db.insert('users', { name: 'seed' }))) as string
+  return root.withIdentity({ subject: userId }) as never
+}
+const callMutate = async (tt: ReturnType<typeof t>, fn: unknown, args: Record<string, unknown> = {}): Promise<unknown> =>
+  tt.mutation(fn as never, args)
+const callQuery = async (tt: ReturnType<typeof t>, fn: unknown, args: Record<string, unknown> = {}): Promise<unknown> =>
+  tt.query(fn as never, args)
+const paginationOpts = { cursor: null, numItems: 50 }
+describe('makeLog integration', () => {
+  test('append + list', async () => {
+    const tt = await seedUser(t())
+    await callMutate(tt, api.votes.append, { parent: 'poll-1', payload: { optionIdx: 0, voter: 'A' } })
+    await callMutate(tt, api.votes.append, { parent: 'poll-1', payload: { optionIdx: 1, voter: 'B' } })
+    const listed = (await callQuery(tt, api.votes.list, { paginationOpts, parent: 'poll-1' })) as ListResult
+    expect(listed.page).toHaveLength(2)
+  })
+  test('append with items=[] inserts many', async () => {
+    const tt = await seedUser(t())
+    await callMutate(tt, api.votes.append, {
+      items: [
+        { optionIdx: 0, voter: 'A' },
+        { optionIdx: 1, voter: 'B' },
+        { optionIdx: 0, voter: 'C' }
+      ],
+      parent: 'poll-2'
+    })
+    const listed = (await callQuery(tt, api.votes.list, { paginationOpts, parent: 'poll-2' })) as ListResult
+    expect(listed.page).toHaveLength(3)
+  })
+  test('purgeByParent soft-deletes; restoreByParent brings back', async () => {
+    const tt = await seedUser(t())
+    await callMutate(tt, api.votes.append, { parent: 'poll-3', payload: { optionIdx: 0, voter: 'A' } })
+    await callMutate(tt, api.votes.purgeByParent, { parent: 'poll-3' })
+    const empty = (await callQuery(tt, api.votes.list, { paginationOpts, parent: 'poll-3' })) as ListResult
+    expect(empty.page).toHaveLength(0)
+    await callMutate(tt, api.votes.restoreByParent, { parent: 'poll-3' })
+    const restored = (await callQuery(tt, api.votes.list, { paginationOpts, parent: 'poll-3' })) as ListResult
+    expect(restored.page).toHaveLength(1)
+  })
+  test('list scopes by parent', async () => {
+    const tt = await seedUser(t())
+    await callMutate(tt, api.votes.append, { parent: 'p-A', payload: { optionIdx: 0, voter: 'X' } })
+    await callMutate(tt, api.votes.append, { parent: 'p-B', payload: { optionIdx: 1, voter: 'Y' } })
+    const a = (await callQuery(tt, api.votes.list, { paginationOpts, parent: 'p-A' })) as ListResult
+    const b = (await callQuery(tt, api.votes.list, { paginationOpts, parent: 'p-B' })) as ListResult
+    expect(a.page).toHaveLength(1)
+    expect(a.page[0]?.voter).toBe('X')
+    expect(b.page).toHaveLength(1)
+    expect(b.page[0]?.voter).toBe('Y')
+  })
+})
