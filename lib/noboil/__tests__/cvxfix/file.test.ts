@@ -17,6 +17,7 @@ const apiMod = (await import('./convex/_generated/api')) as {
   api: {
     files: {
       cancelChunkedUpload: unknown
+      confirmChunk: unknown
       getUploadProgress: unknown
       info: unknown
       startChunkedUpload: unknown
@@ -58,5 +59,52 @@ describe('makeFileUpload integration', () => {
     const { tt } = await seedUser(t())
     const r = await callQuery(tt, api.files.getUploadProgress, { uploadId: 'x' })
     expect(r).toBeNull()
+  })
+  test('full chunked-upload flow: start → confirm chunks → progress → cancel', async () => {
+    const { tt } = await seedUser(t())
+    const { uploadId } = (await callMutate(tt, api.files.startChunkedUpload, {
+      contentType: 'image/png',
+      fileName: 'b.png',
+      totalChunks: 2,
+      totalSize: 200
+    })) as { uploadId: string }
+    const storage1 = (await tt.run(async ctx => ctx.storage.store(new Blob(['a'])))) as string
+    const r1 = (await callMutate(tt, api.files.confirmChunk, {
+      chunkIndex: 0,
+      storageId: storage1,
+      uploadId
+    })) as { allUploaded: boolean; completedChunks: number }
+    expect(r1.completedChunks).toBe(1)
+    expect(r1.allUploaded).toBe(false)
+    const progress = (await callQuery(tt, api.files.getUploadProgress, { uploadId })) as {
+      progress: number
+      status: string
+    }
+    expect(progress.progress).toBe(50)
+    expect(progress.status).toBe('pending')
+    const cancel = (await callMutate(tt, api.files.cancelChunkedUpload, { uploadId })) as { cancelled: boolean }
+    expect(cancel.cancelled).toBe(true)
+  })
+  test('startChunkedUpload rejects oversize totalSize', async () => {
+    const { tt } = await seedUser(t())
+    await expect(
+      callMutate(tt, api.files.startChunkedUpload, {
+        contentType: 'image/png',
+        fileName: 'big.png',
+        totalChunks: 1,
+        totalSize: 999_999_999
+      })
+    ).rejects.toThrow(/FILE_TOO_LARGE/u)
+  })
+  test('startChunkedUpload rejects unknown content-type', async () => {
+    const { tt } = await seedUser(t())
+    await expect(
+      callMutate(tt, api.files.startChunkedUpload, {
+        contentType: 'application/x-evil',
+        fileName: 'evil.bin',
+        totalChunks: 1,
+        totalSize: 10
+      })
+    ).rejects.toThrow(/INVALID_FILE_TYPE/u)
   })
 })
