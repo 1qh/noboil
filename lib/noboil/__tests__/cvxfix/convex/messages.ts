@@ -1,8 +1,8 @@
 import { makeChildCrud } from '../../../src/convex/server/child'
-import { m, q } from './auth-builders'
+import { m, pq, q } from './auth-builders'
 import { chatSchema, messageSchema } from './s'
 const endpoints = makeChildCrud({
-  builders: { m, q },
+  builders: { m, pq, q },
   meta: {
     foreignKey: 'chatId',
     index: 'by_chatId',
@@ -10,7 +10,10 @@ const endpoints = makeChildCrud({
     parentSchema: chatSchema,
     schema: messageSchema
   },
+  options: { pub: { parentField: 'published' } },
   table: 'message'
 })
-const { create, get, list, rm, update } = endpoints
-export { create, get, list, rm, update }
+const { create, get, list, pub, rm, update } = endpoints
+const pubList = pub?.list
+const pubGet = pub?.get
+export { create, get, list, pubGet, pubList, rm, update }

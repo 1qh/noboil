@@ -19,6 +19,8 @@ const apiMod = (await import('./convex/_generated/api')) as {
       create: unknown
       get: unknown
       list: unknown
+      pubGet: unknown
+      pubList: unknown
       rm: unknown
       update: unknown
     }
@@ -36,7 +38,7 @@ const seedUserAndChat = async (root: ReturnType<typeof t>): Promise<{ chatId: st
   const userId = (await root.run(async ctx => ctx.db.insert('users', { name: 'seed' }))) as string
   const tt = root.withIdentity({ subject: userId }) as ReturnType<typeof t>
   const chatId = (await tt.run(async ctx =>
-    ctx.db.insert('chat', { title: 't', updatedAt: Date.now(), userId })
+    ctx.db.insert('chat', { published: false, title: 't', updatedAt: Date.now(), userId })
   )) as string
   return { chatId, tt }
 }
@@ -69,10 +71,29 @@ describe('makeChildCrud integration', () => {
     const after = (await callQuery(tt, api.messages.list, { chatId })) as MessageDoc[]
     expect(after).toHaveLength(0)
   })
+  test('pub.list returns rows when parent.published=true', async () => {
+    const root = t()
+    const { tt } = await seedUserAndChat(root)
+    const userId = (await tt.run(async ctx => (await ctx.db.query('users').collect())[0]?._id ?? '')) as string
+    const publicChatId = (await tt.run(async ctx =>
+      ctx.db.insert('chat', { published: true, title: 'public', updatedAt: Date.now(), userId })
+    )) as string
+    await callMutate(tt, api.messages.create, { chatId: publicChatId, text: 'hello world' })
+    const list = (await callQuery(tt, api.messages.pubList, { chatId: publicChatId })) as MessageDoc[]
+    expect(list).toHaveLength(1)
+    expect(list[0]?.text).toBe('hello world')
+  })
+  test('pub.list rejects when parent.published=false', async () => {
+    const { chatId, tt } = await seedUserAndChat(t())
+    await callMutate(tt, api.messages.create, { chatId, text: 'private' })
+    await expect(callQuery(tt, api.messages.pubList, { chatId })).rejects.toThrow()
+  })
   test('list scopes by chatId', async () => {
     const { chatId: c1, tt } = await seedUserAndChat(t())
     const userId = (await tt.run(async ctx => (await ctx.db.query('users').collect())[0]?._id ?? '')) as string
-    const c2 = (await tt.run(async ctx => ctx.db.insert('chat', { title: 'c2', updatedAt: Date.now(), userId }))) as string
+    const c2 = (await tt.run(async ctx =>
+      ctx.db.insert('chat', { published: true, title: 'c2', updatedAt: Date.now(), userId })
+    )) as string
     await callMutate(tt, api.messages.create, { chatId: c1, text: 'in-c1' })
     await callMutate(tt, api.messages.create, { chatId: c2, text: 'in-c2' })
     const a = (await callQuery(tt, api.messages.list, { chatId: c1 })) as MessageDoc[]
