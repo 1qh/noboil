@@ -63,4 +63,26 @@ describe('makeBudget integration (via wired builders)', () => {
     const c = (await callQuery(tt, api.budgets.check, { owner: 'u3' })) as CheckResult
     expect(c.balance).toBe(80)
   })
+  test('settle on unknown reservation (no row at periodKey) inserts actualAmount', async () => {
+    const tt = t()
+    await callMutate(tt, api.budgets.settle, {
+      actualAmount: 50,
+      owner: 'orphan',
+      reservedAmount: 0,
+      reservedPeriodKey: 'past-period-not-found'
+    })
+    const r = (await callQuery(tt, api.budgets.check, { owner: 'orphan' })) as CheckResult
+    expect(r.balance).toBe(50)
+  })
+  test('settle on unknown reservation with actualAmount=0 is no-op', async () => {
+    const tt = t()
+    await callMutate(tt, api.budgets.settle, {
+      actualAmount: 0,
+      owner: 'noop',
+      reservedAmount: 0,
+      reservedPeriodKey: 'past-period-not-found'
+    })
+    const r = (await callQuery(tt, api.budgets.check, { owner: 'noop' })) as CheckResult
+    expect(r.balance).toBe(0)
+  })
 })
