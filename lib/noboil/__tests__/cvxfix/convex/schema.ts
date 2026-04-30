@@ -9,7 +9,8 @@ import {
   ownedTable,
   presenceTable,
   quotaTable,
-  singletonTable
+  singletonTable,
+  uploadTables
 } from '../../../src/convex/server'
 import { chatSchema, kvSchema, messageSchema, profileSchema, projectSchema, todoSchema, voteSchema } from './s'
 export default defineSchema({
@@ -29,6 +30,7 @@ export default defineSchema({
   ...orgTables(),
   pollVoteQuota: quotaTable(),
   ...presenceTable(),
+  ...uploadTables(),
   budget: defineTable({
     balance: v.number(),
     inflight: v.optional(v.number()),
