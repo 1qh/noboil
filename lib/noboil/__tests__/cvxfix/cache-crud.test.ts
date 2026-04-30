@@ -21,6 +21,7 @@ const apiMod = (await import('./convex/_generated/api')) as {
       get: unknown
       invalidate: unknown
       list: unknown
+      purge: unknown
       read: unknown
       rm: unknown
       update: unknown
@@ -93,5 +94,19 @@ describe('makeCacheCrud integration', () => {
     await callMutate(tt, api.movies.invalidate, { tmdb_id: 'inv' })
     const r = await callQuery(tt, api.movies.get, { tmdb_id: 'inv' })
     expect(r).toBeNull()
+  })
+  test('rm deletes the row by id', async () => {
+    const tt = t()
+    await callMutate(tt, api.movies.create, { rating: 7, title: 'R', tmdb_id: 'rm-1' })
+    const got = (await callQuery(tt, api.movies.get, { tmdb_id: 'rm-1' })) as MovieDoc
+    await callMutate(tt, api.movies.rm, { id: got._id })
+    const after = await callQuery(tt, api.movies.get, { tmdb_id: 'rm-1' })
+    expect(after).toBeNull()
+  })
+  test('purge with batchSize=0 returns 0 (limit short-circuit)', async () => {
+    const tt = t()
+    await callMutate(tt, api.movies.create, { rating: 5, title: 'P', tmdb_id: 'p1' })
+    const count = (await callMutate(tt, api.movies.purge, { batchSize: 0 })) as number
+    expect(count).toBe(0)
   })
 })
