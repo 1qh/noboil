@@ -76,6 +76,40 @@ describe('makeCrud (owned) integration', () => {
     const afterRm = (await callQuery(tt, api.todos.list, { paginationOpts, where: { own: true } })) as ListResult
     expect(afterRm.page).toHaveLength(0)
   })
+  test('bulk create via items inserts many', async () => {
+    const { tt } = await seedUser(t())
+    const result = (await callMutate(tt, api.todos.create, {
+      items: [
+        { done: false, title: 'a' },
+        { done: true, title: 'b' },
+        { done: false, title: 'c' }
+      ]
+    })) as string[]
+    expect(result).toHaveLength(3)
+    const listed = (await callQuery(tt, api.todos.list, { paginationOpts, where: { own: true } })) as ListResult
+    expect(listed.page).toHaveLength(3)
+  })
+  test('bulk rm via ids removes many', async () => {
+    const { tt } = await seedUser(t())
+    const a = (await callMutate(tt, api.todos.create, { done: false, title: 'a' })) as string
+    const b = (await callMutate(tt, api.todos.create, { done: false, title: 'b' })) as string
+    await callMutate(tt, api.todos.create, { done: false, title: 'keep' })
+    await callMutate(tt, api.todos.rm, { ids: [a, b] })
+    const remaining = (await callQuery(tt, api.todos.list, { paginationOpts, where: { own: true } })) as ListResult
+    expect(remaining.page).toHaveLength(1)
+    expect(remaining.page[0]?.title).toBe('keep')
+  })
+  test('list with where filter on done field', async () => {
+    const { tt } = await seedUser(t())
+    await callMutate(tt, api.todos.create, { done: false, title: 'pending' })
+    await callMutate(tt, api.todos.create, { done: true, title: 'finished' })
+    const onlyDone = (await callQuery(tt, api.todos.list, {
+      paginationOpts,
+      where: { done: true, own: true }
+    })) as ListResult
+    expect(onlyDone.page).toHaveLength(1)
+    expect(onlyDone.page[0]?.title).toBe('finished')
+  })
   test('list with own:true scopes to authenticated user', async () => {
     const root = t()
     const { tt: tt1 } = await seedUser(root)
