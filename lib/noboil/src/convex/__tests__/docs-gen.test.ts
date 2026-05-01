@@ -1,5 +1,8 @@
 import { describe, expect, test } from 'bun:test'
-import { generateMarkdown } from '../docs-gen'
+import { mkdtempSync, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { generateFullReference, generateMarkdown } from '../docs-gen'
 describe('generateMarkdown', () => {
   test('emits API Reference with table list and per-table sections', () => {
     const calls = [
@@ -29,5 +32,17 @@ describe('generateMarkdown', () => {
     const calls = [{ factory: 'crud', file: 'a.ts', options: '', table: 't' }]
     const md = generateMarkdown(calls, new Map())
     expect(md).not.toContain('### Schema Fields')
+  })
+})
+describe('generateFullReference', () => {
+  test('emits markdown header + summary footer for empty src dir', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'noboil-fullref-'))
+    try {
+      const md = generateFullReference(dir)
+      expect(md).toContain('# noboil/convex')
+      expect(md).toContain('exports')
+    } finally {
+      rmSync(dir, { force: true, recursive: true })
+    }
   })
 })
