@@ -43,4 +43,52 @@ describe('printCompletions', () => {
     }
     expect(captured).toContain('complete -c noboil')
   })
+  test('unknown arg prints usage and exits non-zero', async () => {
+    const originalLog = console.log
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    const originalExit = process.exit
+    let captured = ''
+    let exitCode: number | undefined
+    console.log = (msg: string) => {
+      captured += `${msg}\n`
+    }
+    process.exit = (code?: number) => {
+      exitCode = code
+      throw new Error('__exit__')
+    }
+    try {
+      await printCompletions('xxx')
+    } catch (error) {
+      if (!(error instanceof Error) || error.message !== '__exit__') throw error
+    } finally {
+      console.log = originalLog
+      process.exit = originalExit
+    }
+    expect(captured).toContain('Usage: noboil completions')
+    expect(exitCode).toBe(1)
+  })
+  test('install with no shell prints usage and exits', async () => {
+    const originalLog = console.log
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    const originalExit = process.exit
+    let captured = ''
+    let exitCode: number | undefined
+    console.log = (msg: string) => {
+      captured += `${msg}\n`
+    }
+    process.exit = (code?: number) => {
+      exitCode = code
+      throw new Error('__exit__')
+    }
+    try {
+      await printCompletions('install', [])
+    } catch (error) {
+      if (!(error instanceof Error) || error.message !== '__exit__') throw error
+    } finally {
+      console.log = originalLog
+      process.exit = originalExit
+    }
+    expect(captured).toContain('install failed')
+    expect(exitCode).toBe(1)
+  })
 })
