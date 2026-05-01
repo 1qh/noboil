@@ -16,9 +16,12 @@ const t = () => convexTest(schema, loadModules())
 const apiMod = (await import('./convex/_generated/api')) as {
   api: {
     fetchMovie: {
+      create: unknown
       get: unknown
       load: unknown
       refresh: unknown
+      rm: unknown
+      update: unknown
     }
   }
 }
@@ -36,6 +39,17 @@ describe('cacheCrud with fetcher (load + refresh actions)', () => {
       cacheHit: boolean
     }
     expect(second.cacheHit).toBe(true)
+  })
+  test('create + update + rm fire merged factory hooks', async () => {
+    const tt = t()
+    const id = (await tt.mutation(api.fetchMovie.create as never, {
+      rating: 5,
+      title: 'orig',
+      tmdb_id: 'h1'
+    })) as string
+    await tt.mutation(api.fetchMovie.update as never, { id, title: 'edit' })
+    await tt.mutation(api.fetchMovie.rm as never, { id })
+    expect(typeof id).toBe('string')
   })
   test('refresh invalidates and re-fetches', async () => {
     const tt = t()

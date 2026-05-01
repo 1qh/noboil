@@ -19,7 +19,15 @@ const endpoints = makeCacheCrud({
     title: `fetched-${String(key)}`,
     tmdb_id: String(key)
   }),
-  hooks: { onFetch: data => ({ ...(data as Record<string, unknown>), title: 'hooked' }) },
+  hooks: {
+    afterCreate: () => undefined,
+    afterDelete: () => undefined,
+    afterUpdate: () => undefined,
+    beforeCreate: (_c, a) => a.data,
+    beforeDelete: () => undefined,
+    beforeUpdate: (_c, a) => a.patch,
+    onFetch: data => ({ ...(data as Record<string, unknown>), title: 'hooked' })
+  },
   key: 'tmdb_id',
   rateLimit: { max: 100, window: 60_000 },
   schema: movieSchema,
