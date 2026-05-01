@@ -60,6 +60,8 @@ describe('setup with global hooks wires merge functions', () => {
     expect(tryCall(() => lg('event', schema))).not.toBeUndefined()
     expect(tryCall(() => kv('settings', { schema }))).not.toBeUndefined()
     expect(tryCall(() => qt('throttle', { durationMs: 60_000, limit: 5 }))).not.toBeUndefined()
+    const uniqueCheck = wired.uniqueCheck as (...args: unknown[]) => unknown
+    expect(tryCall(() => uniqueCheck(schema, 'todo', 'title', 'by_title'))).not.toBeUndefined()
   })
   test('setup without hooks still produces builders', () => {
     const wired = setup(cfg) as Record<string, unknown>
