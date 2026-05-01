@@ -71,6 +71,21 @@ describe('makeOrgCrud integration', () => {
     expect(listed.page).toHaveLength(1)
     expect(listed.page[0]?.name).toBe('P1')
   })
+  test('bulk create + bulk update + bulk rm via items[]/ids', async () => {
+    const { orgId, tt } = await seedOrgWithMember(t())
+    const ids = (await callMutate(tt, api.projects.create, {
+      items: [{ name: 'B1' }, { name: 'B2' }, { name: 'B3' }],
+      orgId
+    })) as string[]
+    expect(ids.length).toBe(3)
+    const updated = (await callMutate(tt, api.projects.update, {
+      items: ids.map((id, i) => ({ id, name: `U${i}` })),
+      orgId
+    })) as ProjectDoc[]
+    expect(updated.length).toBe(3)
+    const deleted = await callMutate(tt, api.projects.rm, { ids, orgId })
+    expect(deleted).toBe(3)
+  })
   test('list scopes by orgId', async () => {
     const root = t()
     const { orgId: o1, tt } = await seedOrgWithMember(root)
