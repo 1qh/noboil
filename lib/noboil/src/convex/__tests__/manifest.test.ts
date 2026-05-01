@@ -3,6 +3,7 @@ import { describe, expect, test } from 'bun:test'
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { add as addCmd } from '../add'
 import { run as checkRun, checkSchemaConsistency, printAccessReport, printSchemaPreview } from '../check'
 import { run as doctorRun } from '../doctor'
 import { run as migrateRun } from '../migrate'
@@ -153,6 +154,16 @@ describe('manifest helpers', () => {
       console.log = orig
     }
     expect(true).toBe(true)
+  })
+  test('add command --help returns counts', async () => {
+    const orig = console.log
+    console.log = () => undefined
+    try {
+      const r = await addCmd(['--help'])
+      expect(r).toEqual({ created: 0, skipped: 0 })
+    } finally {
+      console.log = orig
+    }
   })
   test('check run() flag variants (--endpoints, --schema, --health, --access, --indexes)', () => {
     const dir = mkdtempSync(join(tmpdir(), 'noboil-check-run-'))
