@@ -10,6 +10,7 @@ import {
   printIndexReport,
   printSchemaPreview
 } from '../check'
+import { run as doctorRun } from '../doctor'
 const silenced = (fn: () => unknown) => {
   const orig = console.log
   console.log = () => undefined
@@ -42,6 +43,10 @@ describe('stdb check helpers', () => {
     } finally {
       rmSync(dir, { force: true, recursive: true })
     }
+  })
+  test('doctor run --help prints usage and returns', () => {
+    silenced(() => doctorRun(['--help']))
+    expect(true).toBe(true)
   })
   test('print* helpers do not throw on empty input', () => {
     const dir = mkdtempSync(join(tmpdir(), 'noboil-stdb-print-'))
