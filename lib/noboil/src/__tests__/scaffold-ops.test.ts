@@ -107,4 +107,46 @@ describe('scaffold-ops', () => {
     }
     expect(true).toBe(true)
   })
+  test('patchWorkspacePackageJsons strips other-db backend dep + lifts noboil workspace ref', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'noboil-pwspkg-'))
+    try {
+      mkdirSync(join(dir, 'lib', 'fe'), { recursive: true })
+      writeFileSync(
+        join(dir, 'lib', 'fe', 'package.json'),
+        JSON.stringify({
+          dependencies: { '@a/be-spacetimedb': 'workspace:*', noboil: 'workspace:*', other: '1.0' },
+          devDependencies: { '@a/be-spacetimedb': '1' },
+          name: '@a/fe'
+        }),
+        'utf8'
+      )
+      patchWorkspacePackageJsons({ db: 'convex', dir })
+      const after = JSON.parse(readFileSync(join(dir, 'lib', 'fe', 'package.json'), 'utf8')) as {
+        dependencies: Record<string, string>
+        devDependencies: Record<string, string>
+      }
+      expect(after.dependencies['@a/be-spacetimedb']).toBeUndefined()
+      expect(after.dependencies.noboil).toBe('latest')
+      expect(after.devDependencies['@a/be-spacetimedb']).toBeUndefined()
+    } finally {
+      rmSync(dir, { force: true, recursive: true })
+    }
+  })
+  test('patchTsconfig adds custom condition for stdb db', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'noboil-pts-'))
+    try {
+      writeFileSync(
+        join(dir, 'tsconfig.json'),
+        JSON.stringify({ compilerOptions: { customConditions: ['existing'] } }),
+        'utf8'
+      )
+      patchTsconfig({ db: 'spacetimedb', dir })
+      const ts = JSON.parse(readFileSync(join(dir, 'tsconfig.json'), 'utf8')) as {
+        compilerOptions: { customConditions: string[] }
+      }
+      expect(ts.compilerOptions.customConditions).toContain('noboil-spacetimedb')
+    } finally {
+      rmSync(dir, { force: true, recursive: true })
+    }
+  })
 })
