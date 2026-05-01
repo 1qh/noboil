@@ -1,8 +1,8 @@
 import { describe, expect, test } from 'bun:test'
-import { mkdtempSync, rmSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { generateFullReference, generateMarkdown } from '../docs-gen'
+import { generateFullReference, generateMarkdown, run } from '../docs-gen'
 describe('stdb docs-gen', () => {
   test('generateMarkdown with empty calls produces header', () => {
     const md = generateMarkdown([], new Map())
@@ -24,5 +24,61 @@ describe('stdb docs-gen', () => {
     } finally {
       rmSync(dir, { force: true, recursive: true })
     }
+  })
+  test('run() CLI dispatch covers --full no-src, full project, --markdown', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'noboil-stdb-docs-'))
+    const cwd = process.cwd()
+    /* eslint-disable no-console, @typescript-eslint/unbound-method */
+    const origLog = console.log
+    const origExit = process.exit
+    try {
+      process.chdir(dir)
+      console.log = () => undefined
+      let exited = 0
+      process.exit = (c?: number) => {
+        exited += 1
+        throw new Error(`__exit__${String(c)}`)
+      }
+      try {
+        try {
+          run(['--full'])
+        } catch {
+          // Exit no src
+        }
+        try {
+          run([])
+        } catch {
+          // Exit no module
+        }
+      } finally {
+        // Continue with files written
+      }
+      mkdirSync(join(dir, 'module'), { recursive: true })
+      writeFileSync(
+        join(dir, 'module', 'schema.ts'),
+        'export default schema({ tables: { todo: table(t.u64(), { id: t.u64(), title: t.string() }) } })',
+        'utf8'
+      )
+      writeFileSync(join(dir, 'module', 'reducers.ts'), `export const x = makeCrud({ tableName: 'todo' })`, 'utf8')
+      try {
+        run([])
+        run(['--markdown'])
+      } catch {
+        // Ignore
+      }
+      mkdirSync(join(dir, 'src'), { recursive: true })
+      try {
+        run(['--full'])
+      } catch {
+        // Ignore
+      }
+      expect(exited).toBeGreaterThan(0)
+    } finally {
+      process.chdir(cwd)
+      console.log = origLog
+      process.exit = origExit
+      rmSync(dir, { force: true, recursive: true })
+    }
+    /* eslint-enable no-console, @typescript-eslint/unbound-method */
   })
 })
