@@ -19,7 +19,12 @@ const baseTable = <T extends ZodRawShape>(s: BaseSchema<T>) =>
  * @returns Convex table definition with by_user index
  */
 const ownedTable = <T extends ZodRawShape>(s: OwnedSchema<T>) =>
-  defineTable({ ...z2c(s.shape), updatedAt: v.number(), userId: v.id('users') }).index('by_user', indexFields('userId'))
+  defineTable({
+    ...z2c(s.shape),
+    deletedAt: v.optional(v.number()),
+    updatedAt: v.number(),
+    userId: v.id('users')
+  }).index('by_user', indexFields('userId'))
 /**
  * Creates a Convex table definition for singleton per-user data with userId index.
  * @param s - Singleton-branded Zod schema

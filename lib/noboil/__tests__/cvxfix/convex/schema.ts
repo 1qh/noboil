@@ -65,6 +65,7 @@ export default defineSchema({
     .index('by_org', ['orgId'])
     .index('by_org_user', ['orgId', 'userId']),
   siteConfig: kvTable(kvSchema),
+  softTodo: ownedTable(todoSchema),
   tagItem: defineTable({
     label: v.string(),
     updatedAt: v.number(),
