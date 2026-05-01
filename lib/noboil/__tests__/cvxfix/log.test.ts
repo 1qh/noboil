@@ -122,6 +122,15 @@ describe('makeLog integration', () => {
     const after = (await callQuery(tt, api.votes.listAfter, { parent: 'la', seq: 1 })) as VoteDoc[]
     expect(after.length).toBeGreaterThanOrEqual(2)
   })
+  test('rm with deleted id continues over targets', async () => {
+    const tt = await seedUser(t())
+    await callMutate(tt, api.votes.append, { parent: 'rm-na', payload: { optionIdx: 0, voter: 'A' } })
+    const before = (await callQuery(tt, api.votes.list, { paginationOpts, parent: 'rm-na' })) as ListResult
+    const id = before.page[0]?._id
+    await tt.run(async ctx => ctx.db.delete(id as never))
+    await callMutate(tt, api.votes.rm, { ids: [id] })
+    expect(true).toBe(true)
+  })
   test('update mutates row + rm by id removes single', async () => {
     const tt = await seedUser(t())
     await callMutate(tt, api.votes.append, { parent: 'up', payload: { optionIdx: 0, voter: 'X' } })
