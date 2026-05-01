@@ -147,6 +147,14 @@ describe('makeCrud (owned) integration', () => {
     expect(all.page.every(r => r.done)).toBe(true)
     expect(all.page.find(r => r.title === 'B2')).toBeDefined()
   })
+  test('read with own:true returns null when viewer is not the owner', async () => {
+    const root = t()
+    const { tt: tt1 } = await seedUser(root)
+    const { tt: tt2 } = await seedUser(root)
+    const id = (await callMutate(tt1, api.todos.create, { done: false, title: 'mine' })) as string
+    const got = await callQuery(tt2, api.todos.read, { id, own: true })
+    expect(got).toBeNull()
+  })
   test('list with own:true scopes to authenticated user', async () => {
     const root = t()
     const { tt: tt1 } = await seedUser(root)

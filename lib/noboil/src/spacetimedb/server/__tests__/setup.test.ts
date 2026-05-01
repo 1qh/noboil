@@ -81,7 +81,7 @@ describe('stdb setup wires factories with global hooks', () => {
     }).toThrow(/VALIDATION_FAILED|synchronous/u)
   })
   test('setup with both config.hooks AND middleware merges via mergeGlobalHooks', () => {
-    const { reducer } = captureReducers()
+    const { reducer, reducers } = captureReducers()
     const wired = setup(
       { reducer } as never,
       {
@@ -126,6 +126,7 @@ describe('stdb setup wires factories with global hooks', () => {
       tableName: 'project'
     })
     expect(result).toBeDefined()
+    expect(reducers.create_project).toBeDefined()
   })
   test('setup with middleware composes hook chain (smoke)', () => {
     const { reducer } = captureReducers()
