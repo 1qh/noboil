@@ -388,6 +388,58 @@ describe('buildRules', () => {
     expect(ids.has('unhandledFetch')).toBe(true)
     expect(ids.has('missingErrorBoundary')).toBe(true)
   })
+  test('consistent-crud-naming fires on cacheCrud table/schema mismatch', () => {
+    const reports: { messageId: string }[] = []
+    const cfg = {
+      apiCasing: { casingMismatchMsg: '', getApiBaseName: () => undefined, unknownModuleMsg: '' },
+      bindings: { discoveryFailedMsg: '', discoveryMissingLabel: '' },
+      cast: { isCastTarget: () => false, unsafeApiCastMsg: '' },
+      connection: { dataFns: new Set(), missingConnectionMsg: '', unhandledFetchMsg: '' },
+      crud: { factories: new Set(['crud']), writeFactories: new Set(['crud']) },
+      list: { hookName: 'useQuery', msg: '', propNames: new Set() },
+      mutation: { authIdents: [], requireDbInBody: false },
+      orgQuery: { isHook: () => false, msg: '' },
+      pluginName: 'p',
+      provider: { missingErrorBoundaryMsg: '', nameMatchers: [] },
+      schema: {
+        findSchemaContent: () => '',
+        findSchemaContentFresh: () => '',
+        getModules: () => [],
+        getModulesFresh: () => []
+      }
+    } as never
+    const rules = buildRules(cfg) as Record<string, { create: (ctx: unknown) => Record<string, unknown> }>
+    const ctx = {
+      cwd: '/tmp',
+      filename: '/tmp/x.ts',
+      report: (d: { messageId: string }) => reports.push(d),
+      sourceCode: { getAncestors: () => [] }
+    }
+    const naming = (rules['consistent-crud-naming']?.create(ctx) as { CallExpression: (n: unknown) => void })
+      .CallExpression
+    naming({
+      arguments: [
+        {
+          properties: [
+            { key: { name: 'table', type: 'Identifier' }, type: 'Property', value: { type: 'Literal', value: 'movie' } },
+            {
+              key: { name: 'schema', type: 'Identifier' },
+              type: 'Property',
+              value: {
+                object: { name: 'schemaModule', type: 'Identifier' },
+                property: { name: 'differentName', type: 'Identifier' },
+                type: 'MemberExpression'
+              }
+            }
+          ],
+          type: 'ObjectExpression'
+        }
+      ],
+      callee: { name: 'cacheCrud', type: 'Identifier' },
+      type: 'CallExpression'
+    })
+    expect(reports.some(r => r.messageId === 'crudNameMismatch')).toBe(true)
+  })
   test('require-connection rule exercises async-body walker (with + without connection())', () => {
     const reports: { messageId: string }[] = []
     const cfg = {
