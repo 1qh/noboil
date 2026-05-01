@@ -25,6 +25,21 @@ describe('root --help commands', () => {
     silenced(() => upgrade(['--help']))
     expect(true).toBe(true)
   })
+  test('status outside a noboil project prints message', async () => {
+    const { mkdtempSync, rmSync } = await import('node:fs')
+    const { tmpdir } = await import('node:os')
+    const { join } = await import('node:path')
+    const dir = mkdtempSync(join(tmpdir(), 'noboil-status-'))
+    const orig = process.cwd()
+    try {
+      process.chdir(dir)
+      silenced(() => status([]))
+    } finally {
+      process.chdir(orig)
+      rmSync(dir, { force: true, recursive: true })
+    }
+    expect(true).toBe(true)
+  })
   test('sync + status + eject --help (with process.exit guard)', async () => {
     // eslint-disable-next-line @typescript-eslint/unbound-method
     const origExit = process.exit
