@@ -50,6 +50,53 @@ describe('stdb setup wires factories with global hooks', () => {
     for (const name of ['crud', 'orgCrud', 'childCrud', 'singletonCrud', 'cacheCrud', 'org', 'allExports'])
       expect(typeof wired[name]).toBe('function')
   })
+  test('setup with both config.hooks AND middleware merges via mergeGlobalHooks', () => {
+    const { reducer } = captureReducers()
+    const wired = setup(
+      { reducer } as never,
+      {
+        hooks: {
+          afterCreate: () => undefined,
+          afterDelete: () => undefined,
+          afterUpdate: () => undefined,
+          beforeCreate: (_c, p) => p.data,
+          beforeDelete: () => undefined,
+          beforeUpdate: (_c, p) => p.patch
+        },
+        middleware: [
+          {
+            afterCreate: () => undefined,
+            afterDelete: () => undefined,
+            afterUpdate: () => undefined,
+            beforeCreate: (_c: unknown, p: { data: unknown }) => p.data,
+            beforeDelete: () => undefined,
+            beforeUpdate: (_c: unknown, p: { patch: unknown }) => p.patch,
+            name: 'mw'
+          }
+        ]
+      } as never
+    ) as Record<string, unknown>
+    const project = mkPkTable()
+    const crud = wired.crud as (cfg: unknown) => unknown
+    const result = crud({
+      fields: { title: { optional: () => ({}) } as never },
+      idField: {} as never,
+      options: {
+        hooks: {
+          afterCreate: () => undefined,
+          afterDelete: () => undefined,
+          afterUpdate: () => undefined,
+          beforeCreate: (_c: unknown, p: { data: unknown }) => p.data,
+          beforeDelete: () => undefined,
+          beforeUpdate: (_c: unknown, p: { patch: unknown }) => p.patch
+        }
+      },
+      pk: (t: unknown) => (t as { id: never }).id,
+      table: () => project.tbl,
+      tableName: 'project'
+    })
+    expect(result).toBeDefined()
+  })
   test('setup with middleware composes hook chain (smoke)', () => {
     const { reducer } = captureReducers()
     const wired = setup(
