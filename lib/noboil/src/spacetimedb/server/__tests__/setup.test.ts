@@ -127,6 +127,17 @@ describe('stdb setup wires factories with global hooks', () => {
     })
     expect(result).toBeDefined()
     expect(reducers.create_project).toBeDefined()
+    const createFn = reducers.create_project as (c: never, a: never) => void
+    const updateFn = reducers.update_project as (c: never, a: never) => void
+    const rmFn = reducers.rm_project as (c: never, a: never) => void
+    const ctx = {
+      db: {},
+      sender: { __id: 'me', isEqual: () => true, toHexString: () => 'me' },
+      timestamp: { __ms: 0 }
+    }
+    expect(() => createFn(ctx as never, { title: 'x' } as never)).toThrow(/synchronous|VALIDATION_FAILED/u)
+    expect(() => updateFn(ctx as never, { id: 1, title: 'y' } as never)).toThrow(/.*/u)
+    expect(() => rmFn(ctx as never, { id: 1 } as never)).toThrow(/.*/u)
   })
   test('setup with middleware composes hook chain (smoke)', () => {
     const { reducer } = captureReducers()
