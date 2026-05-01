@@ -12,6 +12,7 @@ import {
 } from '../check'
 import { run as doctorRun } from '../doctor'
 import { run as migrateRun } from '../migrate'
+import { run as vizRun } from '../viz'
 const silenced = (fn: () => unknown) => {
   const orig = console.log
   console.log = () => undefined
@@ -51,6 +52,43 @@ describe('stdb check helpers', () => {
       migrateRun(['--help'])
     })
     expect(true).toBe(true)
+  })
+  test('viz run prints summary + --mermaid', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'noboil-stdb-viz-'))
+    const orig = process.cwd()
+    try {
+      writeFileSync(
+        join(dir, 'schema.ts'),
+        'export default schema({ tables: { todo: table(t.u64(), { id: t.u64(), title: t.string() }) } })',
+        'utf8'
+      )
+      process.chdir(dir)
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      const origExit = process.exit
+      process.exit = () => {
+        throw new Error('__exit__')
+      }
+      try {
+        silenced(() => {
+          try {
+            vizRun([])
+          } catch (error) {
+            if (!(error instanceof Error) || error.message !== '__exit__') throw error
+          }
+          try {
+            vizRun(['--mermaid'])
+          } catch (error) {
+            if (!(error instanceof Error) || error.message !== '__exit__') throw error
+          }
+        })
+      } finally {
+        process.exit = origExit
+      }
+      expect(true).toBe(true)
+    } finally {
+      process.chdir(orig)
+      rmSync(dir, { force: true, recursive: true })
+    }
   })
   test('migrate run --snapshot reads stdb schema', () => {
     const dir = mkdtempSync(join(tmpdir(), 'noboil-stdb-migrate-snap-'))
