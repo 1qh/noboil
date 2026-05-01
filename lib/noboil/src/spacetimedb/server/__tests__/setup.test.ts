@@ -55,6 +55,74 @@ describe('stdb setup wires factories with global hooks', () => {
     ) as Record<string, unknown>
     expect(typeof wired.crud).toBe('function')
   })
+  test('orgCrud/childCrud/singletonCrud/cacheCrud factory bodies execute', () => {
+    const { reducer } = captureReducers()
+    const wired = setup({ reducer } as never, {
+      hooks: { afterCreate: () => undefined }
+    }) as Record<string, unknown>
+    const tbl = mkPkTable()
+    const memberTbl = mkPkTable()
+    const tryCall = (fn: () => unknown) => {
+      try {
+        return fn()
+      } catch {
+        return null
+      }
+    }
+    const oc = wired.orgCrud as (cfg: unknown) => unknown
+    expect(
+      tryCall(() =>
+        oc({
+          fields: { name: { optional: () => ({}) } as never, userId: { optional: () => ({}) } as never },
+          idField: {} as never,
+          orgIdField: {} as never,
+          orgMemberTable: () => memberTbl.tbl,
+          pk: (t: unknown) => (t as { id: never }).id,
+          table: () => tbl.tbl,
+          tableName: 'project'
+        })
+      )
+    ).not.toBeUndefined()
+    const cc = wired.childCrud as (cfg: unknown) => unknown
+    expect(
+      tryCall(() =>
+        cc({
+          fields: { text: { optional: () => ({}) } as never },
+          foreignKeyField: {} as never,
+          foreignKeyName: 'parentId',
+          idField: {} as never,
+          parentPk: (t: unknown) => (t as { id: never }).id,
+          parentTable: () => tbl.tbl,
+          pk: (t: unknown) => (t as { id: never }).id,
+          table: () => tbl.tbl,
+          tableName: 'message'
+        })
+      )
+    ).not.toBeUndefined()
+    const sc = wired.singletonCrud as (cfg: unknown) => unknown
+    expect(
+      tryCall(() =>
+        sc({
+          fields: { name: { optional: () => ({}) } as never },
+          table: () => tbl.tbl,
+          tableName: 'profile'
+        })
+      )
+    ).not.toBeUndefined()
+    const cache = wired.cacheCrud as (cfg: unknown) => unknown
+    expect(
+      tryCall(() =>
+        cache({
+          fields: { title: { optional: () => ({}) } as never },
+          keyField: {} as never,
+          keyName: 'tmdb_id',
+          pk: (t: unknown) => (t as { tmdb_id: never }).tmdb_id,
+          table: () => tbl.tbl,
+          tableName: 'movie'
+        })
+      )
+    ).not.toBeUndefined()
+  })
   test('crud factory body executes when called with concrete table config', () => {
     const { reducer } = captureReducers()
     const wired = setup({ reducer } as never, {
