@@ -22,10 +22,12 @@ const apiMod = (await import('./convex/_generated/api')) as {
       create: unknown
       get: unknown
       getBySlug: unknown
+      getPublic: unknown
       invite: unknown
       isSlugAvailable: unknown
       leave: unknown
       members: unknown
+      membership: unknown
       myJoinRequest: unknown
       myOrgs: unknown
       pendingInvites: unknown
@@ -196,6 +198,66 @@ describe('makeOrg integration', () => {
     await callMutate(u2, api.orgs.leave, { orgId })
     const list = (await callQuery(owner.tt, api.orgs.members, { orgId })) as { userId: string }[]
     expect(list.some(m => m.userId === userId2)).toBe(false)
+  })
+  test('update slug + avatarId; get returns the org for member', async () => {
+    const owner = await seedUser(t())
+    const { orgId } = (await callMutate(owner.tt, api.orgs.create, { data: { name: 'U', slug: 'u-orig' } })) as {
+      orgId: string
+    }
+    await callMutate(owner.tt, api.orgs.update, {
+      data: { name: 'New', slug: 'u-new' },
+      orgId
+    })
+    const got = (await callQuery(owner.tt, api.orgs.get, { orgId })) as { name: string; slug: string }
+    expect(got.slug).toBe('u-new')
+    expect(got.name).toBe('New')
+  })
+  test('update fails with ORG_SLUG_TAKEN when slug already used', async () => {
+    const owner = await seedUser(t())
+    await callMutate(owner.tt, api.orgs.create, { data: { name: 'A', slug: 'taken' } })
+    const { orgId } = (await callMutate(owner.tt, api.orgs.create, { data: { name: 'B', slug: 'mine' } })) as {
+      orgId: string
+    }
+    await expect(callMutate(owner.tt, api.orgs.update, { data: { slug: 'taken' }, orgId })).rejects.toThrow(
+      /ORG_SLUG_TAKEN/u
+    )
+  })
+  test('getPublic by slug returns trimmed view; null on miss', async () => {
+    const owner = await seedUser(t())
+    await callMutate(owner.tt, api.orgs.create, { data: { name: 'P', slug: 'pubo' } })
+    const got = (await callQuery(owner.tt, api.orgs.getPublic, { slug: 'pubo' })) as { name: string; slug: string }
+    expect(got.slug).toBe('pubo')
+    const miss = await callQuery(owner.tt, api.orgs.getPublic, { slug: 'absent' })
+    expect(miss).toBeNull()
+  })
+  test('myOrgs lists both owned + member orgs with correct roles', async () => {
+    const owner = await seedUser(t())
+    await callMutate(owner.tt, api.orgs.create, { data: { name: 'mineA', slug: 'mine-a' } })
+    const otherOwnerId = (await owner.root.run(async ctx => ctx.db.insert('users', { name: 'o' }))) as string
+    const otherTt = owner.root.withIdentity({ subject: otherOwnerId }) as ReturnType<typeof t>
+    const { orgId: otherOrgId } = (await callMutate(otherTt, api.orgs.create, {
+      data: { name: 'theirs', slug: 'theirs' }
+    })) as { orgId: string }
+    await owner.root.run(async ctx =>
+      ctx.db.insert('orgMember', { isAdmin: false, orgId: otherOrgId, updatedAt: Date.now(), userId: owner.userId })
+    )
+    const list = (await callQuery(owner.tt, api.orgs.myOrgs, {})) as { org: { slug: string }; role: string }[]
+    expect(list.length).toBe(2)
+    expect(list.some(e => e.role === 'owner')).toBe(true)
+    expect(list.some(e => e.role === 'member')).toBe(true)
+  })
+  test('remove deletes org + invites + join requests + members', async () => {
+    const owner = await seedUser(t())
+    const { orgId } = (await callMutate(owner.tt, api.orgs.create, { data: { name: 'R', slug: 'rm' } })) as {
+      orgId: string
+    }
+    await callMutate(owner.tt, api.orgs.invite, { email: 'x@y.com', isAdmin: false, orgId })
+    const joinerId = (await owner.root.run(async ctx => ctx.db.insert('users', { name: 'j' }))) as string
+    const joiner = owner.root.withIdentity({ subject: joinerId }) as ReturnType<typeof t>
+    await callMutate(joiner, api.orgs.requestJoin, { orgId })
+    await callMutate(owner.tt, api.orgs.remove, { orgId })
+    const got = await owner.root.run(async ctx => ctx.db.get(orgId))
+    expect(got).toBeNull()
   })
   test('acceptInvite adds invitee as org member when emails match', async () => {
     const root = t()
