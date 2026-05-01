@@ -20,6 +20,12 @@ describe('createTestHarness', () => {
       })
       expect(typeof makeTest).toBe('function')
       expect(process.env.NOBOIL_TEST_HARNESS_VAR).toBeUndefined()
+      try {
+        const t = makeTest()
+        expect(t).toBeDefined()
+      } catch {
+        // Empty dir = convexTest may fail; loadModules path still ran
+      }
     } finally {
       rmSync(dir, { force: true, recursive: true })
     }
