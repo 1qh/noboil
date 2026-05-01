@@ -110,6 +110,16 @@ describe('makeCrud (owned) integration', () => {
     expect(onlyDone.page).toHaveLength(1)
     expect(onlyDone.page[0]?.title).toBe('finished')
   })
+  test('list with where or-clause (multi-group) widens match', async () => {
+    const { tt } = await seedUser(t())
+    await callMutate(tt, api.todos.create, { done: true, title: 'A' })
+    await callMutate(tt, api.todos.create, { done: false, title: 'B' })
+    const listed = (await callQuery(tt, api.todos.list, {
+      paginationOpts,
+      where: { done: true, or: [{ done: false, own: true }], own: true }
+    })) as ListResult
+    expect(listed.page.length).toBeGreaterThanOrEqual(2)
+  })
   test('list with own:true scopes to authenticated user', async () => {
     const root = t()
     const { tt: tt1 } = await seedUser(root)
