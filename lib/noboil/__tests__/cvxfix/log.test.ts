@@ -18,9 +18,12 @@ const apiMod = (await import('./convex/_generated/api')) as {
     votes: {
       append: unknown
       list: unknown
+      listAfter: unknown
       purgeByParent: unknown
+      read: unknown
       restoreByParent: unknown
       rm: unknown
+      update: unknown
     }
   }
 }
@@ -101,6 +104,22 @@ describe('makeLog integration', () => {
     await callMutate(tt, api.votes.rm, { ids: ids.slice(0, 2) })
     const remaining = (await callQuery(tt, api.votes.list, { paginationOpts, parent: 'bulk-rm' })) as ListResult
     expect(remaining.page).toHaveLength(1)
+  })
+  test('read returns single row by id', async () => {
+    const tt = await seedUser(t())
+    await callMutate(tt, api.votes.append, { parent: 'rd', payload: { optionIdx: 1, voter: 'r' } })
+    const list = (await callQuery(tt, api.votes.list, { paginationOpts, parent: 'rd' })) as ListResult
+    const id = list.page[0]?._id
+    const got = (await callQuery(tt, api.votes.read, { id })) as VoteDoc
+    expect(got.voter).toBe('r')
+  })
+  test('listAfter returns rows after a given seq', async () => {
+    const tt = await seedUser(t())
+    await callMutate(tt, api.votes.append, { parent: 'la', payload: { optionIdx: 0, voter: 'X' } })
+    await callMutate(tt, api.votes.append, { parent: 'la', payload: { optionIdx: 1, voter: 'Y' } })
+    await callMutate(tt, api.votes.append, { parent: 'la', payload: { optionIdx: 2, voter: 'Z' } })
+    const after = (await callQuery(tt, api.votes.listAfter, { parent: 'la', seq: 1 })) as VoteDoc[]
+    expect(after.length).toBeGreaterThanOrEqual(2)
   })
   test('list scopes by parent', async () => {
     const tt = await seedUser(t())
