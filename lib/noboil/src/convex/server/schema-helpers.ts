@@ -86,6 +86,7 @@ const logTable = <T extends ZodRawShape>(s: LogSchema<T>) =>
     idempotencyKey: v.optional(v.string()),
     parent: v.string(),
     seq: v.number(),
+    updatedAt: v.optional(v.number()),
     userId: v.id('users')
   })
     .index('by_parent', indexFields('parent'))

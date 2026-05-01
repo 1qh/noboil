@@ -122,6 +122,15 @@ describe('makeLog integration', () => {
     const after = (await callQuery(tt, api.votes.listAfter, { parent: 'la', seq: 1 })) as VoteDoc[]
     expect(after.length).toBeGreaterThanOrEqual(2)
   })
+  test('update mutates row + rm by id removes single', async () => {
+    const tt = await seedUser(t())
+    await callMutate(tt, api.votes.append, { parent: 'up', payload: { optionIdx: 0, voter: 'X' } })
+    const before = (await callQuery(tt, api.votes.list, { paginationOpts, parent: 'up' })) as ListResult
+    const id = before.page[0]?._id
+    await callMutate(tt, api.votes.update, { id, optionIdx: 9 })
+    const after = (await callQuery(tt, api.votes.list, { paginationOpts, parent: 'up' })) as ListResult
+    expect(after.page[0]?.optionIdx).toBe(9)
+  })
   test('purgeByParent with purge=1 hard-deletes despite softDelete', async () => {
     const tt = await seedUser(t())
     await callMutate(tt, api.votes.append, { parent: 'hd', payload: { optionIdx: 0, voter: 'A' } })

@@ -144,6 +144,62 @@ describe('stdb makeCacheCrud', () => {
     purgeFn({ db: {}, sender: {} as never, timestamp: tsAtMs(1000) } as never, {} as never)
     expect(rows).toHaveLength(0)
   })
+  test('purge with timestamp.toJSON returning ISO string parses via parseTimestampText', () => {
+    const { reducer, reducers } = captureReducers()
+    const { rows, tbl } = mkTable()
+    makeCacheCrud(
+      { reducer },
+      {
+        fields: { title: { optional: () => ({}) } as never },
+        keyField: {} as never,
+        keyName: 'tmdb_id',
+        options: { ttl: 1 },
+        pk: t => (t as unknown as { tmdb_id: never }).tmdb_id,
+        table: () => tbl as never,
+        tableName: 'movie'
+      }
+    )
+    const createFn = reducers.create_movie as (c: never, a: never) => void
+    const purgeFn = reducers.purge_movie as (c: never, a: never) => void
+    const tsJson = (iso: string) => ({ toJSON: () => iso }) as never
+    createFn(
+      { db: {}, sender: {} as never, timestamp: tsJson('2020-01-01T00:00:00Z') } as never,
+      {
+        title: 'old',
+        tmdb_id: 'j1'
+      } as never
+    )
+    purgeFn({ db: {}, sender: {} as never, timestamp: tsJson('2025-01-01T00:00:00Z') } as never, {} as never)
+    expect(rows.length).toBe(0)
+  })
+  test('purge with timestamp.toString returning numeric string parses via parseTimestampValue', () => {
+    const { reducer, reducers } = captureReducers()
+    const { rows, tbl } = mkTable()
+    makeCacheCrud(
+      { reducer },
+      {
+        fields: { title: { optional: () => ({}) } as never },
+        keyField: {} as never,
+        keyName: 'tmdb_id',
+        options: { ttl: 1 },
+        pk: t => (t as unknown as { tmdb_id: never }).tmdb_id,
+        table: () => tbl as never,
+        tableName: 'movie'
+      }
+    )
+    const createFn = reducers.create_movie as (c: never, a: never) => void
+    const purgeFn = reducers.purge_movie as (c: never, a: never) => void
+    const tsStr = (s: string) => ({ toString: () => s }) as never
+    createFn(
+      { db: {}, sender: {} as never, timestamp: tsStr('1000') } as never,
+      {
+        title: 'old',
+        tmdb_id: 'j2'
+      } as never
+    )
+    purgeFn({ db: {}, sender: {} as never, timestamp: tsStr('99999999999') } as never, {} as never)
+    expect(rows.length).toBe(0)
+  })
   test('update NOT_FOUND on missing key', () => {
     const { reducer, reducers } = captureReducers()
     const { tbl } = mkTable()
