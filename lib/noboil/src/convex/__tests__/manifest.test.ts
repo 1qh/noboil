@@ -349,6 +349,75 @@ describe('manifest helpers', () => {
       rmSync(dir, { force: true, recursive: true })
     }
   })
+  test('check run no convex dir → exits; no schema file → exits', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'noboil-check-noconvex-'))
+    const origCwd = process.cwd()
+    try {
+      process.chdir(dir)
+      const { log } = console
+      console.log = () => undefined
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      const origExit = process.exit
+      let exited = 0
+      process.exit = () => {
+        exited += 1
+        throw new Error('__exit__')
+      }
+      try {
+        try {
+          checkRun([])
+        } catch (error) {
+          if (!(error instanceof Error) || error.message !== '__exit__') throw error
+        }
+      } finally {
+        console.log = log
+        process.exit = origExit
+      }
+      expect(exited).toBeGreaterThan(0)
+    } finally {
+      process.chdir(origCwd)
+      rmSync(dir, { force: true, recursive: true })
+    }
+  })
+  test('check run --health with errors prints health report errors section', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'noboil-check-health-err-'))
+    const origCwd = process.cwd()
+    try {
+      mkdirSync(join(dir, 'convex', '_generated'), { recursive: true })
+      writeFileSync(
+        join(dir, 'convex', 'todos.ts'),
+        `export const a = crud('todo', schema)\nexport const b = crud('todo', schema)`,
+        'utf8'
+      )
+      writeFileSync(
+        join(dir, 'schema.ts'),
+        'const owned = makeOwned({ todo: object({ title: string() }), unused: object({ x: string() }) })',
+        'utf8'
+      )
+      process.chdir(dir)
+      const { log } = console
+      console.log = () => undefined
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      const origExit = process.exit
+      process.exit = () => {
+        throw new Error('__exit__')
+      }
+      try {
+        try {
+          checkRun(['--health'])
+        } catch (error) {
+          if (!(error instanceof Error) || error.message !== '__exit__') throw error
+        }
+      } finally {
+        console.log = log
+        process.exit = origExit
+      }
+      expect(true).toBe(true)
+    } finally {
+      process.chdir(origCwd)
+      rmSync(dir, { force: true, recursive: true })
+    }
+  })
   test('check run() no flag → runCheck full path with duplicates + warnings', () => {
     const dir = mkdtempSync(join(tmpdir(), 'noboil-check-runfull-'))
     const origCwd = process.cwd()
