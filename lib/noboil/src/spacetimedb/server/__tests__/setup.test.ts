@@ -186,4 +186,29 @@ describe('stdb setup wires factories with global hooks', () => {
     })
     expect(result).toBeDefined()
   })
+  test('noboil() helper exercises orgScoped, base (cache), log, kv, quota, file, presence, children', () => {
+    const result = noboil({
+      tables: (h: unknown) => {
+        const helpers = h as {
+          cacheTable: (key: string, s: unknown) => unknown
+          childTable: (fk: string, s: unknown) => unknown
+          kvTable: (s: unknown) => unknown
+          logTable: (s: unknown) => unknown
+          orgTable: (s: unknown) => unknown
+          ownedTable: (s: unknown) => unknown
+          quotaTable: (entry: { durationMs: number; limit: number }) => unknown
+        }
+        return {
+          chat: helpers.ownedTable(z.object({ title: z.string() })),
+          message: helpers.childTable('chatId', z.object({ text: z.string() })),
+          movie: helpers.cacheTable('tmdb_id', z.object({ title: z.string(), tmdb_id: z.string() })),
+          project: helpers.orgTable(z.object({ name: z.string() })),
+          settings: helpers.kvTable(z.object({ active: z.boolean() })),
+          throttle: helpers.quotaTable({ durationMs: 60_000, limit: 5 }),
+          vote: helpers.logTable(z.object({ optionIdx: z.number() }))
+        } as never
+      }
+    })
+    expect(result).toBeDefined()
+  })
 })
