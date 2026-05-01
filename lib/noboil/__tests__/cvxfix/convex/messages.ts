@@ -10,7 +10,17 @@ const endpoints = makeChildCrud({
     parentSchema: chatSchema,
     schema: messageSchema
   },
-  options: { pub: { parentField: 'published' } },
+  options: {
+    hooks: {
+      afterCreate: () => undefined,
+      afterDelete: () => undefined,
+      afterUpdate: () => undefined,
+      beforeCreate: (_c, a) => a.data,
+      beforeDelete: () => undefined,
+      beforeUpdate: (_c, a) => a.patch
+    },
+    pub: { parentField: 'published' }
+  },
   table: 'message'
 })
 const { create, get, list, pub, rm, update } = endpoints

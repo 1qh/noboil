@@ -121,6 +121,21 @@ describe('makeLog integration', () => {
     const after = (await callQuery(tt, api.votes.listAfter, { parent: 'la', seq: 1 })) as VoteDoc[]
     expect(after.length).toBeGreaterThanOrEqual(2)
   })
+  test('append with idempotencyKey dedupes second insert', async () => {
+    const tt = await seedUser(t())
+    await callMutate(tt, api.votes.append, {
+      idempotencyKey: 'k1',
+      parent: 'idem',
+      payload: { optionIdx: 0, voter: 'A' }
+    })
+    await callMutate(tt, api.votes.append, {
+      idempotencyKey: 'k1',
+      parent: 'idem',
+      payload: { optionIdx: 9, voter: 'B' }
+    })
+    const listed = (await callQuery(tt, api.votes.list, { paginationOpts, parent: 'idem' })) as ListResult
+    expect(listed.page).toHaveLength(1)
+  })
   test('list scopes by parent', async () => {
     const tt = await seedUser(t())
     await callMutate(tt, api.votes.append, { parent: 'p-A', payload: { optionIdx: 0, voter: 'X' } })

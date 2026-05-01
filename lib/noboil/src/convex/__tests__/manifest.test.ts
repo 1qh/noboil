@@ -246,6 +246,68 @@ describe('manifest helpers', () => {
       rmSync(dir, { force: true, recursive: true })
     }
   })
+  test('viz run exits when no convex/_generated and no schema file', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'noboil-viz-empty-'))
+    const origCwd = process.cwd()
+    try {
+      process.chdir(dir)
+      const { log } = console
+      console.log = () => undefined
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      const origExit = process.exit
+      let exited = 0
+      process.exit = () => {
+        exited += 1
+        throw new Error('__exit__')
+      }
+      try {
+        try {
+          vizRun([])
+        } catch (error) {
+          if (!(error instanceof Error) || error.message !== '__exit__') throw error
+        }
+      } finally {
+        console.log = log
+        process.exit = origExit
+      }
+      expect(exited).toBeGreaterThan(0)
+    } finally {
+      process.chdir(origCwd)
+      rmSync(dir, { force: true, recursive: true })
+    }
+  })
+  test('viz run finds convex/ via subdir recursion + exits when schema lacks markers', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'noboil-viz-sub-'))
+    const origCwd = process.cwd()
+    try {
+      mkdirSync(join(dir, 'app', 'convex', '_generated'), { recursive: true })
+      writeFileSync(join(dir, 'app', 'plain.ts'), 'export const x = 1', 'utf8')
+      process.chdir(dir)
+      const { log } = console
+      console.log = () => undefined
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      const origExit = process.exit
+      let exited = 0
+      process.exit = () => {
+        exited += 1
+        throw new Error('__exit__')
+      }
+      try {
+        try {
+          vizRun([])
+        } catch (error) {
+          if (!(error instanceof Error) || error.message !== '__exit__') throw error
+        }
+      } finally {
+        console.log = log
+        process.exit = origExit
+      }
+      expect(exited).toBeGreaterThan(0)
+    } finally {
+      process.chdir(origCwd)
+      rmSync(dir, { force: true, recursive: true })
+    }
+  })
   test('migrate run --snapshot reads tmp schema', () => {
     const dir = mkdtempSync(join(tmpdir(), 'noboil-migrate-snap-'))
     const origCwd = process.cwd()

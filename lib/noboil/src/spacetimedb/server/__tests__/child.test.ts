@@ -167,6 +167,46 @@ describe('stdb makeChildCrud', () => {
     rmFn({ db: {}, sender: ident('me'), timestamp: tsAtMs(5) } as never, { id: 1 } as never)
     expect(rows).toHaveLength(0)
   })
+  test('beforeUpdate/afterUpdate hooks fire on update', () => {
+    const { reducer, reducers } = captureReducers()
+    const { rows, tbl } = mkChildTable()
+    const parent = mkParentTable()
+    parent.rows.push({ id: 1, userId: ident('me') })
+    let beforeFired = false
+    let afterFired = false
+    makeChildCrud(
+      { reducer },
+      {
+        fields: { text: { optional: () => ({}) } as never },
+        foreignKeyField: {} as never,
+        foreignKeyName: 'chatId',
+        idField: {} as never,
+        options: {
+          hooks: {
+            afterUpdate: () => {
+              afterFired = true
+            },
+            beforeUpdate: (_c, a) => {
+              beforeFired = true
+              return a.patch
+            }
+          }
+        },
+        parentPk: t => (t as unknown as { id: never }).id,
+        parentTable: () => parent.tbl as never,
+        pk: t => (t as unknown as { id: never }).id,
+        table: () => tbl as never,
+        tableName: 'message'
+      }
+    )
+    const createFn = reducers.create_message as (c: never, a: never) => void
+    const updateFn = reducers.update_message as (c: never, a: never) => void
+    createFn({ db: {}, sender: ident('me'), timestamp: tsAtMs(0) } as never, { chatId: 1, text: 'a' } as never)
+    updateFn({ db: {}, sender: ident('me'), timestamp: tsAtMs(1) } as never, { id: 1, text: 'b' } as never)
+    expect(beforeFired).toBe(true)
+    expect(afterFired).toBe(true)
+    expect(rows[0]?.text).toBe('b')
+  })
   test('create succeeds when parent exists', () => {
     const { reducer, reducers } = captureReducers()
     const { rows, tbl } = mkChildTable()
