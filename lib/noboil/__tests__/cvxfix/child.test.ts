@@ -88,6 +88,29 @@ describe('makeChildCrud integration', () => {
     await callMutate(tt, api.messages.create, { chatId, text: 'private' })
     await expect(callQuery(tt, api.messages.pubList, { chatId })).rejects.toThrow()
   })
+  test('create with items[] inserts bulk + update with items[] + rm with ids[]', async () => {
+    const { chatId, tt } = await seedUserAndChat(t())
+    const ids = (await callMutate(tt, api.messages.create, {
+      chatId,
+      items: [
+        { chatId, text: 'a' },
+        { chatId, text: 'b' },
+        { chatId, text: 'c' }
+      ]
+    })) as string[]
+    expect(ids).toHaveLength(3)
+    const updates = (await callMutate(tt, api.messages.update, {
+      items: [
+        { id: ids[0], text: 'a-up' },
+        { id: ids[1], text: 'b-up' }
+      ]
+    })) as { text: string }[]
+    expect(updates).toHaveLength(2)
+    const deleted = (await callMutate(tt, api.messages.rm, { ids: ids.slice(0, 2) })) as number
+    expect(deleted).toBe(2)
+    const after = (await callQuery(tt, api.messages.list, { chatId })) as MessageDoc[]
+    expect(after).toHaveLength(1)
+  })
   test('list scopes by chatId', async () => {
     const { chatId: c1, tt } = await seedUserAndChat(t())
     const userId = (await tt.run(async ctx => (await ctx.db.query('users').collect())[0]?._id ?? '')) as string
