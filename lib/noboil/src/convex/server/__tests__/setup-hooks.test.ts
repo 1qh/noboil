@@ -67,4 +67,9 @@ describe('setup with global hooks wires merge functions', () => {
     const wired = setup(cfg) as Record<string, unknown>
     for (const name of ['m', 'q', 'pq', 'cm', 'cq']) expect(wired[name]).toBeDefined()
   })
+  test('setup with orgSchema produces org endpoints', () => {
+    const orgZod = z.object({ name: z.string(), slug: z.string() })
+    const wired = setup({ ...(cfg as object), orgSchema: orgZod } as never) as Record<string, unknown>
+    expect(wired.org).toBeDefined()
+  })
 })
