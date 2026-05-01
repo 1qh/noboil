@@ -133,7 +133,7 @@ describe('useBulkMutate (shared)', () => {
         mutate,
         options: {
           toast: {
-            error: (_e: unknown) => 'failed',
+            error: () => 'failed',
             loading: (p: { total: number }) => `loading ${p.total}`,
             success: (n: number) => `done ${n}`
           }
