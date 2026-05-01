@@ -17,6 +17,7 @@ const apiMod = (await import('./convex/_generated/api')) as {
   api: {
     votes: {
       append: unknown
+      authIndexed: unknown
       list: unknown
       listAfter: unknown
       purgeByParent: unknown
@@ -120,6 +121,26 @@ describe('makeLog integration', () => {
     await callMutate(tt, api.votes.append, { parent: 'la', payload: { optionIdx: 2, voter: 'Z' } })
     const after = (await callQuery(tt, api.votes.listAfter, { parent: 'la', seq: 1 })) as VoteDoc[]
     expect(after.length).toBeGreaterThanOrEqual(2)
+  })
+  test('purgeByParent with purge=1 hard-deletes despite softDelete', async () => {
+    const tt = await seedUser(t())
+    await callMutate(tt, api.votes.append, { parent: 'hd', payload: { optionIdx: 0, voter: 'A' } })
+    await callMutate(tt, api.votes.purgeByParent, { parent: 'hd', purge: 1 })
+    await callMutate(tt, api.votes.restoreByParent, { parent: 'hd' })
+    const list3 = (await callQuery(tt, api.votes.list, { paginationOpts, parent: 'hd' })) as ListResult
+    expect(list3.page).toHaveLength(0)
+  })
+  test('authIndexed queries via secondary index', async () => {
+    const tt = await seedUser(t())
+    await callMutate(tt, api.votes.append, { parent: 'ai-1', payload: { optionIdx: 0, voter: 'A' } })
+    await callMutate(tt, api.votes.append, { parent: 'ai-1', payload: { optionIdx: 1, voter: 'B' } })
+    await callMutate(tt, api.votes.append, { parent: 'ai-2', payload: { optionIdx: 0, voter: 'C' } })
+    const r = (await callQuery(tt, api.votes.authIndexed, {
+      index: 'by_parent',
+      key: 'parent',
+      value: 'ai-1'
+    })) as VoteDoc[]
+    expect(r.length).toBe(2)
   })
   test('append with idempotencyKey dedupes second insert', async () => {
     const tt = await seedUser(t())
