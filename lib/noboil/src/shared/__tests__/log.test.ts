@@ -28,4 +28,19 @@ describe('log', () => {
     setLogSink(null)
     expect(() => log('info', 'restored')).not.toThrow()
   })
+  test('default sink routes error level through console.error', () => {
+    /* eslint-disable no-console */
+    const orig = console.error
+    let captured = ''
+    console.error = (line: string) => {
+      captured = line
+    }
+    try {
+      setLogSink(null)
+      log('error', 'fatal', { code: 'X' })
+    } finally {
+      console.error = orig
+    }
+    expect(captured).toContain('fatal')
+  })
 })
