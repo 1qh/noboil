@@ -52,6 +52,23 @@ describe('stdb check helpers', () => {
     })
     expect(true).toBe(true)
   })
+  test('migrate run --snapshot reads stdb schema', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'noboil-stdb-migrate-snap-'))
+    const orig = process.cwd()
+    try {
+      writeFileSync(
+        join(dir, 'schema.ts'),
+        'export default schema({ tables: { todo: table(t.u64(), { id: t.u64(), title: t.string() }) } })',
+        'utf8'
+      )
+      process.chdir(dir)
+      silenced(() => migrateRun(['--snapshot']))
+      expect(true).toBe(true)
+    } finally {
+      process.chdir(orig)
+      rmSync(dir, { force: true, recursive: true })
+    }
+  })
   test('print* helpers do not throw on empty input', () => {
     const dir = mkdtempSync(join(tmpdir(), 'noboil-stdb-print-'))
     try {
