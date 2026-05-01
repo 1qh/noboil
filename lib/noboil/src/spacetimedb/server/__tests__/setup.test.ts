@@ -39,7 +39,11 @@ describe('stdb setup wires factories with global hooks', () => {
     const wired = setup({ reducer } as never, {
       hooks: {
         afterCreate: () => undefined,
-        beforeCreate: (_c, p) => p.data
+        afterDelete: () => undefined,
+        afterUpdate: () => undefined,
+        beforeCreate: (_c, p) => p.data,
+        beforeDelete: () => undefined,
+        beforeUpdate: (_c, p) => p.patch
       }
     }) as Record<string, unknown>
     for (const name of ['crud', 'orgCrud', 'childCrud', 'singletonCrud', 'cacheCrud', 'org', 'allExports'])
