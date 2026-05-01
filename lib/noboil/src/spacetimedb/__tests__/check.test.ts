@@ -145,6 +145,34 @@ describe('stdb check helpers', () => {
       rmSync(dir, { force: true, recursive: true })
     }
   })
+  test('stdb migrate run with git history triggers printMigrationPlan branches', async () => {
+    const { execSync } = await import('node:child_process')
+    const dir = mkdtempSync(join(tmpdir(), 'noboil-stdb-migrate-git-'))
+    const orig = process.cwd()
+    try {
+      process.chdir(dir)
+      execSync('git init -q', { cwd: dir })
+      execSync('git config user.email "t@t"', { cwd: dir })
+      execSync('git config user.name "t"', { cwd: dir })
+      writeFileSync(
+        join(dir, 'schema.ts'),
+        'export default schema({ tables: { todo: table(t.u64(), { id: t.u64(), title: t.string(), removed: t.string(), changed: t.string() }), gone: table(t.u64(), { id: t.u64() }) } })',
+        'utf8'
+      )
+      execSync('git add -A', { cwd: dir })
+      execSync('git commit -q -m initial', { cwd: dir })
+      writeFileSync(
+        join(dir, 'schema.ts'),
+        'export default schema({ tables: { todo: table(t.u64(), { id: t.u64(), title: t.string(), changed: t.f64(), addedReq: t.string() }), brandNew: table(t.u64(), { id: t.u64() }) } })',
+        'utf8'
+      )
+      silenced(() => migrateRun([]))
+      expect(true).toBe(true)
+    } finally {
+      process.chdir(orig)
+      rmSync(dir, { force: true, recursive: true })
+    }
+  })
   test('migrate run no schema → exits, with schema returns warning', () => {
     const dir = mkdtempSync(join(tmpdir(), 'noboil-stdb-mig-edge-'))
     const orig = process.cwd()

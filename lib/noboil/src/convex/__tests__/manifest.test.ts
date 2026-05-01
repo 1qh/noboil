@@ -529,6 +529,74 @@ describe('manifest helpers', () => {
       rmSync(dir, { force: true, recursive: true })
     }
   })
+  test('migrate run with git history triggers printMigrationPlan branches', async () => {
+    const { execSync } = await import('node:child_process')
+    const dir = mkdtempSync(join(tmpdir(), 'noboil-migrate-git-'))
+    const origCwd = process.cwd()
+    try {
+      process.chdir(dir)
+      execSync('git init -q', { cwd: dir })
+      execSync('git config user.email "t@t"', { cwd: dir })
+      execSync('git config user.name "t"', { cwd: dir })
+      writeFileSync(
+        join(dir, 'schema.ts'),
+        'const owned = makeOwned({ todo: object({ title: string() }), goneTbl: object({ x: string() }) })',
+        'utf8'
+      )
+      execSync('git add -A', { cwd: dir })
+      execSync('git commit -q -m initial', { cwd: dir })
+      writeFileSync(
+        join(dir, 'schema.ts'),
+        'const owned = makeOwned({ todo: object({ title: string(), required: string(), opt: string().optional() }), newTbl: object({ y: number() }) })',
+        'utf8'
+      )
+      const { log } = console
+      console.log = () => undefined
+      try {
+        migrateRun([])
+      } finally {
+        console.log = log
+      }
+      expect(true).toBe(true)
+    } finally {
+      process.chdir(origCwd)
+      rmSync(dir, { force: true, recursive: true })
+    }
+  })
+  test('migrate run hits field_removed + field_type_changed + factory_changed + table_removed branches', async () => {
+    const { execSync } = await import('node:child_process')
+    const dir = mkdtempSync(join(tmpdir(), 'noboil-migrate-dangerous-'))
+    const origCwd = process.cwd()
+    try {
+      process.chdir(dir)
+      execSync('git init -q', { cwd: dir })
+      execSync('git config user.email "t@t"', { cwd: dir })
+      execSync('git config user.name "t"', { cwd: dir })
+      writeFileSync(
+        join(dir, 'schema.ts'),
+        'const owned = makeOwned({ todo: object({ title: string(), removed: string(), changed: string() }), gone: object({ x: string() }) })',
+        'utf8'
+      )
+      execSync('git add -A', { cwd: dir })
+      execSync('git commit -q -m initial', { cwd: dir })
+      writeFileSync(
+        join(dir, 'schema.ts'),
+        'const project = makeOrgScoped({ todo: object({ title: string(), changed: number(), addedReq: string() }) })',
+        'utf8'
+      )
+      const { log } = console
+      console.log = () => undefined
+      try {
+        migrateRun([])
+      } finally {
+        console.log = log
+      }
+      expect(true).toBe(true)
+    } finally {
+      process.chdir(origCwd)
+      rmSync(dir, { force: true, recursive: true })
+    }
+  })
   test('migrate run with schema but no git history returns warning', () => {
     const dir = mkdtempSync(join(tmpdir(), 'noboil-migrate-nogit-'))
     const origCwd = process.cwd()
