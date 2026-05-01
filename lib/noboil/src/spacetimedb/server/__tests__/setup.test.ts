@@ -50,6 +50,36 @@ describe('stdb setup wires factories with global hooks', () => {
     for (const name of ['crud', 'orgCrud', 'childCrud', 'singletonCrud', 'cacheCrud', 'org', 'allExports'])
       expect(typeof wired[name]).toBe('function')
   })
+  test('async hooks rejected via requireSync at reducer call time', () => {
+    const { reducer, reducers } = captureReducers()
+    const wired = setup(
+      { reducer } as never,
+      {
+        hooks: {
+          beforeCreate: async (_c: unknown, p: { data: unknown }) => {
+            await Promise.resolve()
+            return p.data
+          }
+        }
+      } as never
+    ) as Record<string, unknown>
+    const project = mkPkTable()
+    const crud = wired.crud as (cfg: unknown) => unknown
+    crud({
+      fields: { title: { optional: () => ({}) } as never },
+      idField: {} as never,
+      pk: (t: unknown) => (t as { id: never }).id,
+      table: () => project.tbl,
+      tableName: 'project'
+    })
+    const createFn = reducers.create_project as (c: never, a: never) => void
+    expect(() => {
+      createFn(
+        { db: {}, sender: { __id: 'me', isEqual: () => true, toHexString: () => 'me' }, timestamp: { __ms: 0 } } as never,
+        { title: 'x' } as never
+      )
+    }).toThrow(/VALIDATION_FAILED|synchronous/u)
+  })
   test('setup with both config.hooks AND middleware merges via mergeGlobalHooks', () => {
     const { reducer } = captureReducers()
     const wired = setup(

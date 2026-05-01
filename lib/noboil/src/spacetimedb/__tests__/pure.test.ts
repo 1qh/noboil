@@ -7186,6 +7186,35 @@ describe('noboil-stdb add command', () => {
       expect(fields).toHaveLength(2)
       expect(fields[1]?.name).toBe('externalId')
     })
+    test('log has kind and message', () => {
+      const fields = defaultFields('log')
+      expect(fields).toHaveLength(2)
+      expect(fields[0]?.name).toBe('kind')
+    })
+    test('kv has active and message', () => {
+      const fields = defaultFields('kv')
+      expect(fields).toHaveLength(2)
+      expect(fields[0]?.type).toBe('boolean')
+    })
+    test('quota has no fields', () => {
+      expect(defaultFields('quota')).toEqual([])
+    })
+  })
+  describe('genSchemaContent log/kv/quota branches', () => {
+    test('log generates schema parent + fields', () => {
+      const content = genSchemaContent('audit', 'log', [{ name: 'kind', optional: false, type: 'string' }])
+      expect(content).toContain('audit')
+      expect(content).toContain('kind: string()')
+    })
+    test('kv generates schema with writeRole', () => {
+      const content = genSchemaContent('settings', 'kv', [{ name: 'active', optional: false, type: 'boolean' }])
+      expect(content).toContain('writeRole')
+    })
+    test('quota generates durationMs+limit', () => {
+      const content = genSchemaContent('throttle', 'quota', [])
+      expect(content).toContain('durationMs')
+      expect(content).toContain('limit')
+    })
   })
   describe('genSchemaContent', () => {
     test('generates owned schema', () => {
@@ -7284,6 +7313,12 @@ describe('noboil-stdb add command', () => {
       })
       expect(content).toContain('makeChildCrud')
       expect(content).toContain("parent: 'chat'")
+    })
+    test('generates log/kv/quota placeholder pointing at lazy.ts', () => {
+      for (const type of ['log', 'kv', 'quota'] as const) {
+        const content = genEndpointContent({ fields: [], name: 't', parent: '', type })
+        expect(content).toContain('lazy.ts')
+      }
     })
   })
   describe('genPageContent', () => {
