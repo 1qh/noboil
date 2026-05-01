@@ -47,6 +47,7 @@ export default defineSchema({
     tmdb_id: v.string(),
     updatedAt: v.optional(v.number())
   }).index('by_tmdb_id', ['tmdb_id']),
+  hardLog: logTable(voteSchema),
   movie: defineTable({
     rating: v.number(),
     title: v.string(),
