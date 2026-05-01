@@ -65,6 +65,58 @@ describe('manifest helpers', () => {
     expect(findCommand(reg, ['p1', 'cmd_b'])?.path).toEqual(['p1', 'cmd_b'])
     expect(findCommand(reg, ['nope'])).toBeNull()
   })
+  test('buildArgs maps optional+literal+unknown kinds', () => {
+    const out = buildArgs({
+      lit: { description: '', v: { kind: 'literal', value: 'X' } as never } as never,
+      mystery: { description: '', v: { kind: 'optional', value: { kind: 'literal', value: 'Y' } } as never } as never,
+      weird: { description: '', v: { kind: 'unknown' } as never } as never
+    })
+    expect(out.find(o => o.name === '--lit')?.type).toBe('enum')
+    expect(out.find(o => o.name === '--mystery')?.type).toBe('enum')
+    expect(out.find(o => o.name === '--weird')?.type).toBe('unknown')
+  })
+  test('buildCommand via buildTree: examples from fixture and schemaToJson covers all kinds', () => {
+    const reg = {
+      a: mkEntry(['p', 'cmd'], {
+        argSpecs: { x: { description: '', v: { kind: 'string' } as never } as never },
+        inferredSchema: {
+          kind: 'object',
+          shape: {
+            arr: { optional: false, schema: { element: { kind: 'string' }, kind: 'array' } },
+            b: { optional: false, schema: { kind: 'boolean' } },
+            n: { optional: false, schema: { kind: 'null' } },
+            num: { optional: false, schema: { kind: 'number' } },
+            opt: {
+              optional: false,
+              schema: { kind: 'union', members: [{ kind: 'string' }, { kind: 'null' }] }
+            },
+            t: { optional: false, schema: { kind: 'enum', values: ['a', 'b'] } },
+            unk: { optional: false, schema: { kind: 'union', members: [{ kind: 'number' }, { kind: 'string' }] } }
+          }
+        },
+        meta: {
+          cost: 'low',
+          description: 'desc',
+          deterministic: true,
+          errorCodes: [],
+          examples: [],
+          exclusive: [],
+          selfTest: { age: 5, label: 'has space', name: 'a' },
+          version: '1'
+        }
+      })
+    }
+    const tree = buildTree({ providers: {}, registry: reg })
+    const cmd = tree.p?.children?.cmd?.command
+    expect(cmd?.examples[0]).toContain('--name a')
+    expect(cmd?.examples[0]).toContain('--age 5')
+    expect(cmd?.examples[0]).toContain('"has space"')
+    const out = cmd?.output as { shape: Record<string, { type: string }>; type: string }
+    expect(out.type).toBe('object')
+    expect(out.shape.opt?.type).toBe('string')
+    expect(out.shape.unk?.type).toBe('unknown')
+    expect(out.shape.arr?.type).toBe('array')
+  })
   test('findValidPath returns the longest matching prefix and child names', () => {
     const reg = {
       a: mkEntry(['p1', 'a']),
