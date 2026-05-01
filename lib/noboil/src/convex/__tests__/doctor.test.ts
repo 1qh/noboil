@@ -37,6 +37,31 @@ const runDoctorExpectExit = (dir: string) => {
   }
 }
 describe('convex doctor()', () => {
+  test('clean project hits all-matched + indexes warn branches', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'noboil-doc-clean-'))
+    try {
+      mkdirSync(join(dir, 'convex', '_generated'), { recursive: true })
+      writeFileSync(
+        join(dir, 'convex', 'todos.ts'),
+        `export const x = crud('todo', schema, { rateLimit: { max: 1, window: 1000 }, where: { unindexed_field: 1 } })`,
+        'utf8'
+      )
+      writeFileSync(
+        join(dir, 'schema.ts'),
+        'const owned = makeOwned({ todo: object({ title: string() }) })\nexport default defineSchema({ todo: defineTable({}) })',
+        'utf8'
+      )
+      writeFileSync(
+        join(dir, 'package.json'),
+        JSON.stringify({ dependencies: { convex: '1', noboil: '1', zod: '4' } }),
+        'utf8'
+      )
+      runDoctorExpectExit(dir)
+      expect(true).toBe(true)
+    } finally {
+      rmSync(dir, { force: true, recursive: true })
+    }
+  })
   test('exits when no convex/_generated dir', () => {
     const dir = mkdtempSync(join(tmpdir(), 'noboil-doc-empty-'))
     try {

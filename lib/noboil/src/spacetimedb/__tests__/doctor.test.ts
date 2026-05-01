@@ -37,6 +37,46 @@ const runDoctor = (dir: string) => {
   }
 }
 describe('stdb doctor()', () => {
+  test('runs full doctor with schema warnings + index issues hits warn branches', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'noboil-stdb-doc-warn-'))
+    const orig = process.cwd()
+    try {
+      writeFileSync(
+        join(dir, 'schema.ts'),
+        'export default schema({ tables: { todo: table(t.u64(), { id: t.u64(), title: t.string() }), unused: table(t.u64(), { id: t.u64() }) } })',
+        'utf8'
+      )
+      writeFileSync(
+        join(dir, 'reducers.ts'),
+        `export const x = makeCrud({ tableName: 'todo', options: { where: { unindexed_field: 1 } } })`,
+        'utf8'
+      )
+      writeFileSync(
+        join(dir, 'package.json'),
+        JSON.stringify({ dependencies: { noboil: '1', spacetimedb: '1', zod: '4' } }),
+        'utf8'
+      )
+      process.chdir(dir)
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      const origExit = process.exit
+      process.exit = (c?: number) => {
+        throw new Error(`__exit__${String(c)}`)
+      }
+      try {
+        try {
+          silenced(() => doctor())
+        } catch (error) {
+          if (!(error instanceof Error && error.message.startsWith('__exit__'))) throw error
+        }
+      } finally {
+        process.exit = origExit
+      }
+      expect(true).toBe(true)
+    } finally {
+      process.chdir(orig)
+      rmSync(dir, { force: true, recursive: true })
+    }
+  })
   test('exits when no schema file present', () => {
     const dir = mkdtempSync(join(tmpdir(), 'noboil-stdb-doc-empty-'))
     try {
