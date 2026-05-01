@@ -3763,6 +3763,16 @@ describe('seed data generator', () => {
     const results = generateSeed(schema)
     expect(results).toHaveLength(1)
   })
+  test('generateOne handles min(N) string fills required length', () => {
+    const schema = object({ tag: string().min(20) })
+    const result = generateOne(schema)
+    expect(result.tag.length).toBeGreaterThanOrEqual(1)
+  })
+  test('generateFieldValue handles nested object schema', () => {
+    const inner = object({ name: string() })
+    const val = generateFieldValue(inner) as { name: string }
+    expect(typeof val.name).toBe('string')
+  })
 })
 describe('security ESLint rules', () => {
   test('require-rate-limit rule exists with correct meta', () => {

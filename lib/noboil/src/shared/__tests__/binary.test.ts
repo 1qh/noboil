@@ -1,5 +1,7 @@
-import { describe, expect, test } from 'bun:test'
-import { arrayBufferToBase64, base64ToBytes } from '../binary'
+import { GlobalRegistrator } from '@happy-dom/global-registrator'
+if (typeof document === 'undefined') GlobalRegistrator.register()
+const { describe, expect, test } = await import('bun:test')
+const { arrayBufferToBase64, base64ToBytes, downloadBlob } = await import('../binary')
 describe('arrayBufferToBase64', () => {
   test('encodes small buffer', () => {
     const buf = new TextEncoder().encode('hello').buffer
@@ -21,5 +23,26 @@ describe('base64ToBytes', () => {
   })
   test('decodes empty', () => {
     expect(base64ToBytes('')).toEqual(new Uint8Array())
+  })
+})
+describe('downloadBlob', () => {
+  test('creates anchor + clicks + revokes URL', () => {
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    const origCreate = URL.createObjectURL
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    const origRevoke = URL.revokeObjectURL
+    let revoked = ''
+    URL.createObjectURL = () => 'blob:mock'
+    URL.revokeObjectURL = (u: string) => {
+      revoked = u
+    }
+    try {
+      const blob = new Blob(['hi'], { type: 'text/plain' })
+      downloadBlob('out.txt', blob)
+      expect(revoked).toBe('blob:mock')
+    } finally {
+      URL.createObjectURL = origCreate
+      URL.revokeObjectURL = origRevoke
+    }
   })
 })
