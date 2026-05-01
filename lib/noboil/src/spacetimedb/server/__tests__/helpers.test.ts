@@ -1,5 +1,21 @@
 import { describe, expect, test } from 'bun:test'
-import { idFromWire, idToWire, isErrorCode, isMutationError, ownGet, readCtx } from '../helpers'
+import {
+  addUrls,
+  dbDelete,
+  dbInsert,
+  dbPatch,
+  enforceRateLimit,
+  idFromWire,
+  idToWire,
+  isErrorCode,
+  isMutationError,
+  normalizeRateLimit,
+  ownGet,
+  readCtx,
+  resetRateLimitState
+} from '../helpers'
+const ident = (label: string) =>
+  ({ __id: label, isEqual: (o: unknown) => (o as { __id?: string }).__id === label, toHexString: () => label }) as never
 describe('stdb helpers', () => {
   test('idToWire stringifies, idFromWire parses', () => {
     expect(idToWire(42)).toBe('42')
@@ -37,5 +53,60 @@ describe('stdb helpers', () => {
   test('isErrorCode + isMutationError reject plain errors', () => {
     expect(isMutationError(new Error('boom'))).toBe(false)
     expect(isErrorCode(new Error('boom'), 'X')).toBe(false)
+  })
+  test('normalizeRateLimit number → object', () => {
+    expect(normalizeRateLimit(10)).toEqual({ max: 10, window: 60_000 })
+    expect(normalizeRateLimit({ max: 5, window: 1000 })).toEqual({ max: 5, window: 1000 })
+  })
+  test('addUrls returns doc unchanged for empty fileFields', async () => {
+    const doc = { _id: 'r', title: 't' }
+    const out = await addUrls({
+      doc,
+      fileFields: [],
+      storage: { delete: async () => undefined, getUrl: async () => null }
+    })
+    expect(out).toEqual(doc as never)
+  })
+  test('addUrls adds {field}Url + {field}Urls for single + array', async () => {
+    const storage = {
+      delete: async () => undefined,
+      getUrl: async (id: string) => `u/${id}`
+    } as never
+    const out = (await addUrls({
+      doc: { avatar: 'a1', gallery: ['g1', 'g2'], missing: null },
+      fileFields: ['avatar', 'gallery', 'missing'],
+      storage
+    })) as { avatarUrl?: string; galleryUrls?: (null | string)[]; missingUrl?: string }
+    expect(out.avatarUrl).toBe('u/a1')
+    expect(out.galleryUrls).toEqual(['u/g1', 'u/g2'])
+    expect(out.missingUrl).toBeUndefined()
+  })
+  test('enforceRateLimit allows up to max, throws RATE_LIMITED beyond', () => {
+    resetRateLimitState()
+    const sender = ident('id-1')
+    enforceRateLimit('todo', sender, { max: 2, window: 60_000 }, 1000)
+    enforceRateLimit('todo', sender, { max: 2, window: 60_000 }, 1100)
+    expect(() => enforceRateLimit('todo', sender, { max: 2, window: 60_000 }, 1200)).toThrow(/RATE_LIMITED/u)
+    enforceRateLimit('todo', sender, { max: 2, window: 60_000 }, 1000 + 60_001)
+    resetRateLimitState()
+  })
+  test('dbInsert/dbPatch/dbDelete proxy to db methods', async () => {
+    const calls: { args: unknown[]; op: string }[] = []
+    const db = {
+      delete: async (...args: unknown[]) => {
+        calls.push({ args, op: 'delete' })
+      },
+      insert: async (...args: unknown[]) => {
+        calls.push({ args, op: 'insert' })
+        return 'new-id'
+      },
+      patch: async (...args: unknown[]) => {
+        calls.push({ args, op: 'patch' })
+      }
+    } as never
+    expect(await dbInsert(db, 'todo', { title: 'a' })).toBe('new-id')
+    await dbPatch(db, 'r1', { done: true })
+    await dbDelete(db, 'r1')
+    expect(calls.map(c => c.op)).toEqual(['insert', 'patch', 'delete'])
   })
 })
