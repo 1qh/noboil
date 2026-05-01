@@ -1,7 +1,7 @@
 /* oxlint-disable promise/prefer-await-to-callbacks */
 import { describe, expect, test } from 'bun:test'
 import { z } from 'zod/v4'
-import { setup, setupCrud } from '../setup'
+import { noboil, setup, setupCrud } from '../setup'
 const captureReducers = () => {
   const out: Record<string, unknown> = {}
   const reducer = (opts: { name: string }, _params: unknown, fn: unknown) => {
@@ -170,5 +170,20 @@ describe('stdb setup wires factories with global hooks', () => {
     expect(tryCall(() => singletonCrud('profile', schema))).not.toBeUndefined()
     const orgCrud = wired.orgCrud as (n: string, fields: unknown) => unknown
     expect(tryCall(() => orgCrud('project', schema))).not.toBeUndefined()
+  })
+  test('noboil() helper builds spacetimedb schema with tables callback', () => {
+    const result = noboil({
+      tables: (h: unknown) => {
+        const helpers = h as {
+          ownedTable: (s: unknown) => unknown
+          singletonTable: (s: unknown) => unknown
+        }
+        return {
+          profile: helpers.singletonTable(z.object({ name: z.string() })),
+          todo: helpers.ownedTable(z.object({ title: z.string() }))
+        } as never
+      }
+    })
+    expect(result).toBeDefined()
   })
 })
