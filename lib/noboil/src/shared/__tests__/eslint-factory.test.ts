@@ -153,4 +153,38 @@ describe('buildRules', () => {
     })
     expect(reports.some(r => r.messageId === 'unknownModule')).toBe(true)
   })
+  test('require-rate-limit fires on write factories without rateLimit', () => {
+    const reports: { messageId: string }[] = []
+    const rules = buildRules({
+      apiCasing: { casingMismatchMsg: '', getApiBaseName: () => undefined, unknownModuleMsg: '' },
+      bindings: { discoveryFailedMsg: '', discoveryMissingLabel: '' },
+      cast: { isCastTarget: () => false, unsafeApiCastMsg: '' },
+      connection: { dataFns: new Set(), missingConnectionMsg: '', unhandledFetchMsg: '' },
+      crud: { factories: new Set(['crud']), writeFactories: new Set(['crud']) },
+      list: { hookName: 'useQuery', msg: '', propNames: new Set() },
+      mutation: { authIdents: [], requireDbInBody: false },
+      orgQuery: { isHook: () => false, msg: '' },
+      pluginName: 'p',
+      provider: { missingErrorBoundaryMsg: '', nameMatchers: [] },
+      schema: {
+        findSchemaContent: () => '',
+        findSchemaContentFresh: () => '',
+        getModules: () => [],
+        getModulesFresh: () => []
+      }
+    } as never) as Record<string, { create: (ctx: unknown) => Record<string, unknown> }>
+    const rule = rules['require-rate-limit']
+    if (!rule) throw new Error('expected require-rate-limit')
+    const visitor = rule.create({
+      cwd: '/tmp',
+      filename: '/tmp/x.ts',
+      report: (d: { messageId: string }) => reports.push(d)
+    }) as { CallExpression: (n: unknown) => void }
+    visitor.CallExpression({
+      arguments: [{ type: 'Literal' }, { properties: [], type: 'ObjectExpression' }],
+      callee: { name: 'crud', type: 'Identifier' },
+      type: 'CallExpression'
+    })
+    expect(reports.some(r => r.messageId === 'missingRateLimit')).toBe(true)
+  })
 })
