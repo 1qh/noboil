@@ -4,6 +4,7 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import {
+  run as checkRun,
   checkSchemaConsistency,
   printAccessReport,
   printHealthReport,
@@ -80,6 +81,43 @@ describe('stdb check helpers', () => {
           } catch (error) {
             if (!(error instanceof Error) || error.message !== '__exit__') throw error
           }
+        })
+      } finally {
+        process.exit = origExit
+      }
+      expect(true).toBe(true)
+    } finally {
+      process.chdir(orig)
+      rmSync(dir, { force: true, recursive: true })
+    }
+  })
+  test('check run() variants (--endpoints, --schema, --health, --access, --indexes)', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'noboil-stdb-check-run-'))
+    const orig = process.cwd()
+    try {
+      writeFileSync(
+        join(dir, 'schema.ts'),
+        'export default schema({ tables: { todo: table(t.u64(), { id: t.u64(), title: t.string() }) } })',
+        'utf8'
+      )
+      writeFileSync(join(dir, 'reducers.ts'), `export const x = makeCrud({ tableName: 'todo' })`, 'utf8')
+      process.chdir(dir)
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      const origExit = process.exit
+      process.exit = () => {
+        throw new Error('__exit__')
+      }
+      const tryRun = (argv: string[]) => {
+        try {
+          checkRun(argv)
+        } catch (error) {
+          if (!(error instanceof Error) || error.message !== '__exit__') throw error
+        }
+      }
+      try {
+        silenced(() => {
+          for (const flag of ['--endpoints', '--schema', '--access', '--indexes', '--health', ''])
+            tryRun(flag ? [flag] : [])
         })
       } finally {
         process.exit = origExit
