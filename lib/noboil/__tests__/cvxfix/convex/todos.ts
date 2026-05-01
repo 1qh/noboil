@@ -6,9 +6,9 @@ const endpoints = makeCrud({
   schema: todoSchema,
   table: 'todo'
 })
-const { auth, create, pub, rm, update } = endpoints
+const { auth, create, pub, pubIndexed, rm, update } = endpoints
 const { list } = auth
 const { read } = auth
 const pubList = pub.list
 const pubRead = pub.read
-export { create, list, pubList, pubRead, read, rm, update }
+export { create, list, pubIndexed, pubList, pubRead, read, rm, update }

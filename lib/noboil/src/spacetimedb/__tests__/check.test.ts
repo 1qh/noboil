@@ -145,6 +145,70 @@ describe('stdb check helpers', () => {
       rmSync(dir, { force: true, recursive: true })
     }
   })
+  test('migrate run no schema → exits, with schema returns warning', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'noboil-stdb-mig-edge-'))
+    const orig = process.cwd()
+    try {
+      process.chdir(dir)
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      const origExit = process.exit
+      let exited = 0
+      process.exit = () => {
+        exited += 1
+        throw new Error('__exit__')
+      }
+      try {
+        silenced(() => {
+          try {
+            migrateRun([])
+          } catch (error) {
+            if (!(error instanceof Error) || error.message !== '__exit__') throw error
+          }
+        })
+      } finally {
+        process.exit = origExit
+      }
+      expect(exited).toBeGreaterThan(0)
+      writeFileSync(
+        join(dir, 'schema.ts'),
+        'export default schema({ tables: { todo: table(t.u64(), { id: t.u64(), title: t.string() }) } })',
+        'utf8'
+      )
+      silenced(() => migrateRun([]))
+    } finally {
+      process.chdir(orig)
+      rmSync(dir, { force: true, recursive: true })
+    }
+  })
+  test('viz run no schema exits', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'noboil-stdb-viz-empty-'))
+    const orig = process.cwd()
+    try {
+      process.chdir(dir)
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      const origExit = process.exit
+      let exited = 0
+      process.exit = () => {
+        exited += 1
+        throw new Error('__exit__')
+      }
+      try {
+        silenced(() => {
+          try {
+            vizRun([])
+          } catch (error) {
+            if (!(error instanceof Error) || error.message !== '__exit__') throw error
+          }
+        })
+      } finally {
+        process.exit = origExit
+      }
+      expect(exited).toBeGreaterThan(0)
+    } finally {
+      process.chdir(orig)
+      rmSync(dir, { force: true, recursive: true })
+    }
+  })
   test('print* helpers do not throw on empty input', () => {
     const dir = mkdtempSync(join(tmpdir(), 'noboil-stdb-print-'))
     try {

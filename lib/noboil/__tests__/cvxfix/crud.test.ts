@@ -18,6 +18,7 @@ const apiMod = (await import('./convex/_generated/api')) as {
     todos: {
       create: unknown
       list: unknown
+      pubIndexed: unknown
       read: unknown
       rm: unknown
       update: unknown
@@ -119,6 +120,18 @@ describe('makeCrud (owned) integration', () => {
       where: { done: true, or: [{ done: false, own: true }], own: true }
     })) as ListResult
     expect(listed.page.length).toBeGreaterThanOrEqual(2)
+  })
+  test('pubIndexed queries via by_user index', async () => {
+    const root = t()
+    const { tt, userId } = await seedUser(root)
+    await callMutate(tt, api.todos.create, { done: false, title: 'a' })
+    await callMutate(tt, api.todos.create, { done: true, title: 'b' })
+    const docs = (await callQuery(root, api.todos.pubIndexed, {
+      index: 'by_user',
+      key: 'userId',
+      value: userId
+    })) as TodoDoc[]
+    expect(docs.length).toBe(2)
   })
   test('list with own:true scopes to authenticated user', async () => {
     const root = t()

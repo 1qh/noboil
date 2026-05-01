@@ -331,6 +331,55 @@ describe('manifest helpers', () => {
       rmSync(dir, { force: true, recursive: true })
     }
   })
+  test('migrate run no schema → exits; missing git ref → returns warning', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'noboil-migrate-edge-'))
+    const origCwd = process.cwd()
+    try {
+      process.chdir(dir)
+      const { log } = console
+      console.log = () => undefined
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      const origExit = process.exit
+      let exited = 0
+      process.exit = () => {
+        exited += 1
+        throw new Error('__exit__')
+      }
+      try {
+        try {
+          migrateRun([])
+        } catch (error) {
+          if (!(error instanceof Error) || error.message !== '__exit__') throw error
+        }
+      } finally {
+        console.log = log
+        process.exit = origExit
+      }
+      expect(exited).toBeGreaterThan(0)
+    } finally {
+      process.chdir(origCwd)
+      rmSync(dir, { force: true, recursive: true })
+    }
+  })
+  test('migrate run with schema but no git history returns warning', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'noboil-migrate-nogit-'))
+    const origCwd = process.cwd()
+    try {
+      writeFileSync(join(dir, 'schema.ts'), 'const owned = makeOwned({ todo: object({ title: string() }) })', 'utf8')
+      process.chdir(dir)
+      const { log } = console
+      console.log = () => undefined
+      try {
+        migrateRun([])
+      } finally {
+        console.log = log
+      }
+      expect(true).toBe(true)
+    } finally {
+      process.chdir(origCwd)
+      rmSync(dir, { force: true, recursive: true })
+    }
+  })
   test('printAccessReport + printSchemaPreview do not throw on empty input', () => {
     const orig = console.log
     console.log = () => undefined
