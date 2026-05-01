@@ -1,4 +1,9 @@
+/* eslint-disable no-console */
 import { describe, expect, test } from 'bun:test'
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { checkSchemaConsistency, printAccessReport, printSchemaPreview } from '../check'
 import { buildArgs, buildTree, findCommand, findValidPath } from '../tools/manifest'
 const mkEntry = (path: string[], extra: Record<string, unknown> = {}) =>
   ({
@@ -116,6 +121,35 @@ describe('manifest helpers', () => {
     expect(out.shape.opt?.type).toBe('string')
     expect(out.shape.unk?.type).toBe('unknown')
     expect(out.shape.arr?.type).toBe('array')
+  })
+  test('checkSchemaConsistency reports duplicate + missing-table + filename-mismatch', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'noboil-check-'))
+    try {
+      writeFileSync(
+        join(dir, 'todos.ts'),
+        `export const x = crud('todo', schema)\nexport const y = crud('mismatch', schema)`,
+        'utf8'
+      )
+      writeFileSync(join(dir, 'orphan.ts'), `export const z = crud('todo', schema)`, 'utf8')
+      const schemaContent = 'defineSchema({ todo: defineTable({}), missingFactory: defineTable({}) })'
+      const issues = checkSchemaConsistency(dir, { content: schemaContent, path: join(dir, 'schema.ts') })
+      expect(issues.some(i => i.message.includes('Duplicate factory'))).toBe(true)
+      expect(issues.some(i => i.message.includes('no "mismatch" table'))).toBe(true)
+      expect(issues.length).toBeGreaterThan(0)
+    } finally {
+      rmSync(dir, { force: true, recursive: true })
+    }
+  })
+  test('printAccessReport + printSchemaPreview do not throw on empty input', () => {
+    const orig = console.log
+    console.log = () => undefined
+    try {
+      printAccessReport([])
+      printSchemaPreview('schema content', [])
+    } finally {
+      console.log = orig
+    }
+    expect(true).toBe(true)
   })
   test('findValidPath returns the longest matching prefix and child names', () => {
     const reg = {
