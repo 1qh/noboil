@@ -1,5 +1,8 @@
 import { describe, expect, test } from 'bun:test'
-import { extractJSDoc, extractSignature, resolveReExports } from '../docs-gen'
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { extractJSDoc, extractSignature, processEntryPoint, resolveReExports } from '../docs-gen'
 describe('resolveReExports', () => {
   test('parses named, type, default re-exports', () => {
     const src = [
@@ -43,5 +46,35 @@ describe('extractSignature', () => {
   })
   test('returns empty for unknown symbol', () => {
     expect(extractSignature('const a = 1', 'missing')).toBe('')
+  })
+})
+describe('processEntryPoint', () => {
+  test('returns 0 when entry path missing', () => {
+    const lines: string[] = []
+    expect(processEntryPoint({ label: 'X', path: 'nope.ts' }, '/tmp', lines)).toBe(0)
+  })
+  test('returns 0 when index file has no re-exports', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'noboil-pep-'))
+    try {
+      writeFileSync(join(dir, 'index.ts'), 'export const x = 1', 'utf8')
+      const lines: string[] = []
+      expect(processEntryPoint({ label: 'X', path: 'index.ts' }, dir, lines)).toBe(0)
+    } finally {
+      rmSync(dir, { force: true, recursive: true })
+    }
+  })
+  test('emits markdown table rows for each re-export', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'noboil-pep-'))
+    try {
+      mkdirSync(join(dir, 'sub'), { recursive: true })
+      writeFileSync(join(dir, 'sub', 'foo.ts'), '/** does foo */\nconst foo = (a: string) => a', 'utf8')
+      writeFileSync(join(dir, 'index.ts'), `export { foo } from './sub/foo'\n`, 'utf8')
+      const lines: string[] = []
+      expect(processEntryPoint({ label: 'noboil/x', path: 'index.ts' }, dir, lines)).toBe(1)
+      expect(lines.join('\n')).toContain('## noboil/x')
+      expect(lines.join('\n')).toContain('foo')
+    } finally {
+      rmSync(dir, { force: true, recursive: true })
+    }
   })
 })
