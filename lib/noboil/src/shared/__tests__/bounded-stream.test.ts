@@ -75,4 +75,35 @@ describe('withCancelHook', () => {
     await reader.cancel('test')
     expect(cancelled).toBe(true)
   })
+  test('fires onCancel + propagates error when source read fails', async () => {
+    let cancelled = false
+    const errSrc = new ReadableStream<Uint8Array>({
+      pull: () => {
+        throw new Error('upstream broke')
+      }
+    })
+    const wrapped = withCancelHook(errSrc, () => {
+      cancelled = true
+    })
+    await expect(drain(wrapped)).rejects.toThrow('upstream broke')
+    expect(cancelled).toBe(true)
+  })
+})
+describe('boundedBody idle timer (sse + onAbort)', () => {
+  test('idle timer fires after idleMs in sse mode emitting error event then aborting', async () => {
+    let aborted = false
+    const slowSrc = new ReadableStream<Uint8Array>({
+      start: () => undefined
+    })
+    const wrapped = boundedBody(slowSrc, 1000, {
+      idleMs: 30,
+      onAbort: () => {
+        aborted = true
+      },
+      sse: true
+    })
+    if (!wrapped) throw new Error('expected stream')
+    await expect(drain(wrapped)).rejects.toThrow('upstream idle')
+    expect(aborted).toBe(true)
+  })
 })
