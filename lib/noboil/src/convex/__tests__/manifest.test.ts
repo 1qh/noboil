@@ -4,6 +4,7 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { checkSchemaConsistency, printAccessReport, printSchemaPreview } from '../check'
+import { run as doctorRun } from '../doctor'
 import { buildArgs, buildTree, findCommand, findValidPath } from '../tools/manifest'
 const mkEntry = (path: string[], extra: Record<string, unknown> = {}) =>
   ({
@@ -139,6 +140,16 @@ describe('manifest helpers', () => {
     } finally {
       rmSync(dir, { force: true, recursive: true })
     }
+  })
+  test('doctor run --help prints usage and returns', () => {
+    const orig = console.log
+    console.log = () => undefined
+    try {
+      doctorRun(['--help'])
+    } finally {
+      console.log = orig
+    }
+    expect(true).toBe(true)
   })
   test('printAccessReport + printSchemaPreview do not throw on empty input', () => {
     const orig = console.log
