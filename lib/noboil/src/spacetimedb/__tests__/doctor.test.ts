@@ -13,7 +13,38 @@ const silenced = (fn: () => unknown) => {
     console.log = orig
   }
 }
+const runDoctor = (dir: string) => {
+  const orig = process.cwd()
+  try {
+    process.chdir(dir)
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    const origExit = process.exit
+    let exited = 0
+    process.exit = () => {
+      exited += 1
+      throw new Error('__exit__')
+    }
+    try {
+      silenced(() => doctor())
+    } catch (error) {
+      if (!(error instanceof Error) || error.message !== '__exit__') throw error
+    } finally {
+      process.exit = origExit
+    }
+    return exited
+  } finally {
+    process.chdir(orig)
+  }
+}
 describe('stdb doctor()', () => {
+  test('exits when no schema file present', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'noboil-stdb-doc-empty-'))
+    try {
+      expect(runDoctor(dir)).toBeGreaterThan(0)
+    } finally {
+      rmSync(dir, { force: true, recursive: true })
+    }
+  })
   test('runs full health check against tmp project with valid schema + module', () => {
     const dir = mkdtempSync(join(tmpdir(), 'noboil-stdb-doctor-'))
     const orig = process.cwd()

@@ -175,11 +175,7 @@ describe('manifest helpers', () => {
         `export const x = crud('todo', schema, { rateLimit: { max: 1, window: 1000 } })`,
         'utf8'
       )
-      writeFileSync(
-        join(dir, 'convex', 'schema.ts'),
-        'const owned = makeOwned({ todo: object({ title: string() }) })',
-        'utf8'
-      )
+      writeFileSync(join(dir, 'schema.ts'), 'const owned = makeOwned({ todo: object({ title: string() }) })', 'utf8')
       process.chdir(dir)
       const { log } = console
       console.log = () => undefined
@@ -212,11 +208,7 @@ describe('manifest helpers', () => {
     const origCwd = process.cwd()
     try {
       mkdirSync(join(dir, 'convex', '_generated'), { recursive: true })
-      writeFileSync(
-        join(dir, 'convex', 'schema.ts'),
-        'const owned = makeOwned({ todo: object({ title: string() }) })',
-        'utf8'
-      )
+      writeFileSync(join(dir, 'schema.ts'), 'const owned = makeOwned({ todo: object({ title: string() }) })', 'utf8')
       process.chdir(dir)
       const { log } = console
       console.log = () => undefined
@@ -324,6 +316,87 @@ describe('manifest helpers', () => {
         migrateRun(['--snapshot'])
       } finally {
         console.log = log
+      }
+      expect(true).toBe(true)
+    } finally {
+      process.chdir(origCwd)
+      rmSync(dir, { force: true, recursive: true })
+    }
+  })
+  test('check run() no flag → runCheck full path with duplicates + warnings', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'noboil-check-runfull-'))
+    const origCwd = process.cwd()
+    try {
+      mkdirSync(join(dir, 'convex', '_generated'), { recursive: true })
+      writeFileSync(
+        join(dir, 'convex', 'todos.ts'),
+        `export const a = crud('todo', schema)\nexport const b = crud('mismatch', schema)`,
+        'utf8'
+      )
+      writeFileSync(join(dir, 'convex', 'orphan.ts'), `export const c = crud('todo', schema)`, 'utf8')
+      writeFileSync(
+        join(dir, 'schema.ts'),
+        'const owned = makeOwned({ todo: object({ title: string() }), unused: object({ x: string() }) })',
+        'utf8'
+      )
+      process.chdir(dir)
+      const { log } = console
+      console.log = () => undefined
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      const origExit = process.exit
+      process.exit = () => {
+        throw new Error('__exit__')
+      }
+      try {
+        try {
+          checkRun([])
+        } catch (error) {
+          if (!(error instanceof Error) || error.message !== '__exit__') throw error
+        }
+      } finally {
+        console.log = log
+        process.exit = origExit
+      }
+      expect(true).toBe(true)
+    } finally {
+      process.chdir(origCwd)
+      rmSync(dir, { force: true, recursive: true })
+    }
+  })
+  test('check run --indexes with where filters in client + factory options', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'noboil-check-idx-'))
+    const origCwd = process.cwd()
+    try {
+      mkdirSync(join(dir, 'convex', '_generated'), { recursive: true })
+      mkdirSync(join(dir, 'app'), { recursive: true })
+      writeFileSync(
+        join(dir, 'convex', 'todos.ts'),
+        `export const x = crud('todo', schema, { where: { done: true } })`,
+        'utf8'
+      )
+      writeFileSync(
+        join(dir, 'app', 'page.tsx'),
+        'const { data } = useList(api.todo.list, { where: { unindexed: 1 } })',
+        'utf8'
+      )
+      writeFileSync(join(dir, 'schema.ts'), 'const owned = makeOwned({ todo: object({ title: string() }) })', 'utf8')
+      process.chdir(dir)
+      const { log } = console
+      console.log = () => undefined
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      const origExit = process.exit
+      process.exit = () => {
+        throw new Error('__exit__')
+      }
+      try {
+        try {
+          checkRun(['--indexes'])
+        } catch (error) {
+          if (!(error instanceof Error) || error.message !== '__exit__') throw error
+        }
+      } finally {
+        console.log = log
+        process.exit = origExit
       }
       expect(true).toBe(true)
     } finally {

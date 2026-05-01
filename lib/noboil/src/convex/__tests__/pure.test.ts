@@ -5887,6 +5887,16 @@ describe('middleware', () => {
     test('handles empty record', () => {
       expect(sanitizeRec({})).toEqual({})
     })
+    test('sanitizes string array elements + nested object', () => {
+      const result = sanitizeRec({
+        nested: { inner: '<script>x</script>ok' },
+        tags: ['<script>a</script>x', { deep: '<script>y</script>z' }, 42]
+      })
+      expect((result.tags as unknown[])[0]).toBe('x')
+      expect(((result.tags as unknown[])[1] as { deep: string }).deep).toBe('z')
+      expect((result.tags as unknown[])[2]).toBe(42)
+      expect((result.nested as { inner: string }).inner).toBe('ok')
+    })
   })
   describe('middleware composition with composeMiddleware', () => {
     test('multiple middleware run in order on create', async () => {
