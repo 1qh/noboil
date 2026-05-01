@@ -4,6 +4,7 @@ if (typeof document === 'undefined') GlobalRegistrator.register()
 const { act, renderHook } = await import('@testing-library/react')
 const { describe, expect, test } = await import('bun:test')
 const { collectSettled, resolveBulkError, useBulkMutate } = await import('../use-bulk-mutate')
+const { usePendingMutations } = await import('../optimistic-store')
 describe('stdb useBulkMutate wrapper', () => {
   test('renderHook returns isPending=false initially', () => {
     const { result } = renderHook(() => useBulkMutate(async () => undefined))
@@ -27,5 +28,9 @@ describe('stdb useBulkMutate wrapper', () => {
   })
   test('resolveBulkError returns undefined when onError=false', () => {
     expect(resolveBulkError({ onError: false })).toBeUndefined()
+  })
+  test('usePendingMutations without provider returns empty array', () => {
+    const { result } = renderHook(() => usePendingMutations())
+    expect(result.current).toEqual([])
   })
 })
