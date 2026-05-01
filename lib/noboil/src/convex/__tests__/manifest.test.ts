@@ -153,6 +153,29 @@ describe('manifest helpers', () => {
     }
     expect(true).toBe(true)
   })
+  test('migrate run --snapshot reads tmp schema', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'noboil-migrate-snap-'))
+    const origCwd = process.cwd()
+    try {
+      writeFileSync(
+        join(dir, 'schema.ts'),
+        'const owned = makeOwned({ todo: object({ title: string(), done: boolean() }) })',
+        'utf8'
+      )
+      process.chdir(dir)
+      const { log } = console
+      console.log = () => undefined
+      try {
+        migrateRun(['--snapshot'])
+      } finally {
+        console.log = log
+      }
+      expect(true).toBe(true)
+    } finally {
+      process.chdir(origCwd)
+      rmSync(dir, { force: true, recursive: true })
+    }
+  })
   test('printAccessReport + printSchemaPreview do not throw on empty input', () => {
     const orig = console.log
     console.log = () => undefined
