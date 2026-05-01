@@ -294,4 +294,98 @@ describe('buildRules', () => {
     expect(ids.has('duplicateCrud')).toBe(true)
     expect(ids.has('searchTrue')).toBe(true)
   })
+  test('more eslint rules: no-unprotected-mutation, no-unlimited-file-size, no-raw-fetch-in-server-component, require-error-boundary, discovery-check, form-field-exists, form-field-kind, require-connection', () => {
+    const reports: { messageId: string }[] = []
+    const cfg = {
+      apiCasing: { casingMismatchMsg: '', getApiBaseName: () => undefined, unknownModuleMsg: '' },
+      bindings: { discoveryFailedMsg: 'missing {{missing}}', discoveryMissingLabel: 'lbl' },
+      cast: { isCastTarget: () => false, unsafeApiCastMsg: '' },
+      connection: { dataFns: new Set(['fetchQuery']), missingConnectionMsg: '', unhandledFetchMsg: '' },
+      crud: { factories: new Set(['crud']), writeFactories: new Set(['crud']) },
+      list: { hookName: 'useQuery', msg: '', propNames: new Set() },
+      mutation: { authIdents: ['getAuthUserId'], requireDbInBody: false },
+      orgQuery: { isHook: () => false, msg: '' },
+      pluginName: 'p',
+      provider: { missingErrorBoundaryMsg: '', nameMatchers: ['Provider'] },
+      schema: {
+        findSchemaContent: () => 'const owned = makeOwned({ todo: object({ avatar: file(), title: string() }) })',
+        findSchemaContentFresh: () => '',
+        getModules: () => [],
+        getModulesFresh: () => []
+      }
+    } as never
+    const rules = buildRules(cfg) as Record<string, { create: (ctx: unknown) => Record<string, unknown> }>
+    const ctx = {
+      cwd: '/tmp',
+      filename: '/tmp/x.ts',
+      report: (d: { messageId: string }) => reports.push(d),
+      sourceCode: { getAncestors: () => [] }
+    }
+    const get = (k: string) => {
+      const r = rules[k]
+      if (!r) throw new Error(`missing rule: ${k}`)
+      return r
+    }
+    const um = (get('no-unprotected-mutation').create(ctx) as { CallExpression: (n: unknown) => void }).CallExpression
+    um({
+      arguments: [
+        {
+          properties: [
+            {
+              key: { name: 'handler', type: 'Identifier' },
+              type: 'Property',
+              value: {
+                body: {
+                  body: [{ name: 'doSomething', type: 'Identifier' }],
+                  type: 'BlockStatement'
+                },
+                type: 'ArrowFunctionExpression'
+              }
+            }
+          ],
+          type: 'ObjectExpression'
+        }
+      ],
+      callee: { name: 'm', type: 'Identifier' },
+      type: 'CallExpression'
+    })
+    const fileSize = (get('no-unlimited-file-size').create(ctx) as { Program: (n: unknown) => void }).Program
+    fileSize({ type: 'Program' })
+    const noRaw = (get('no-raw-fetch-in-server-component').create(ctx) as { CallExpression: (n: unknown) => void })
+      .CallExpression
+    noRaw({ callee: { name: 'fetchQuery', type: 'Identifier' }, type: 'CallExpression' })
+    const reb = get('require-error-boundary').create(ctx) as {
+      JSXOpeningElement: (n: unknown) => void
+      'Program:exit': () => void
+    }
+    reb.JSXOpeningElement({ name: { name: 'ConvexProvider', type: 'JSXIdentifier' } })
+    reb['Program:exit']()
+    const dRule = get('discovery-check').create(ctx) as { Program?: (n: unknown) => void }
+    if (dRule.Program) dRule.Program({ type: 'Program' })
+    const ffe = (get('form-field-exists').create(ctx) as { JSXOpeningElement?: (n: unknown) => void }).JSXOpeningElement
+    if (ffe)
+      ffe({
+        attributes: [
+          {
+            name: { name: 'name' },
+            type: 'JSXAttribute',
+            value: { type: 'Literal', value: 'unknownField' }
+          }
+        ],
+        name: { name: 'Text', type: 'JSXIdentifier' }
+      })
+    const ffk = (get('form-field-kind').create(ctx) as { JSXOpeningElement?: (n: unknown) => void }).JSXOpeningElement
+    if (ffk)
+      ffk({
+        attributes: [{ name: { name: 'name' }, type: 'JSXAttribute', value: { type: 'Literal', value: 'title' } }],
+        name: { name: 'Toggle', type: 'JSXIdentifier' }
+      })
+    const rc = (get('require-connection').create(ctx) as { CallExpression?: (n: unknown) => void }).CallExpression
+    if (rc) rc({ callee: { name: 'fetchQuery', type: 'Identifier' }, type: 'CallExpression' })
+    const ids = new Set(reports.map(r => r.messageId))
+    expect(ids.has('unprotectedMutation')).toBe(true)
+    expect(ids.has('unlimitedFileSize')).toBe(true)
+    expect(ids.has('unhandledFetch')).toBe(true)
+    expect(ids.has('missingErrorBoundary')).toBe(true)
+  })
 })
