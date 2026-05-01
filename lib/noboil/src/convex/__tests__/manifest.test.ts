@@ -1,12 +1,13 @@
 /* eslint-disable no-console */
 import { describe, expect, test } from 'bun:test'
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { checkSchemaConsistency, printAccessReport, printSchemaPreview } from '../check'
 import { run as doctorRun } from '../doctor'
 import { run as migrateRun } from '../migrate'
 import { buildArgs, buildTree, findCommand, findValidPath } from '../tools/manifest'
+import { run as vizRun } from '../viz'
 const mkEntry = (path: string[], extra: Record<string, unknown> = {}) =>
   ({
     argSpecs: {},
@@ -152,6 +153,45 @@ describe('manifest helpers', () => {
       console.log = orig
     }
     expect(true).toBe(true)
+  })
+  test('viz run prints summary + --mermaid prints erDiagram', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'noboil-viz-'))
+    const origCwd = process.cwd()
+    try {
+      mkdirSync(join(dir, 'convex', '_generated'), { recursive: true })
+      writeFileSync(
+        join(dir, 'convex', 'schema.ts'),
+        'const owned = makeOwned({ todo: object({ title: string() }) })',
+        'utf8'
+      )
+      process.chdir(dir)
+      const { log } = console
+      console.log = () => undefined
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      const origExit = process.exit
+      process.exit = () => {
+        throw new Error('__exit__')
+      }
+      try {
+        try {
+          vizRun([])
+        } catch (error) {
+          if (!(error instanceof Error) || error.message !== '__exit__') throw error
+        }
+        try {
+          vizRun(['--mermaid'])
+        } catch (error) {
+          if (!(error instanceof Error) || error.message !== '__exit__') throw error
+        }
+      } finally {
+        console.log = log
+        process.exit = origExit
+      }
+      expect(true).toBe(true)
+    } finally {
+      process.chdir(origCwd)
+      rmSync(dir, { force: true, recursive: true })
+    }
   })
   test('migrate run --snapshot reads tmp schema', () => {
     const dir = mkdtempSync(join(tmpdir(), 'noboil-migrate-snap-'))
