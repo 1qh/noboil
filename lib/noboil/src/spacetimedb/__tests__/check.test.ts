@@ -11,6 +11,7 @@ import {
   printSchemaPreview
 } from '../check'
 import { run as doctorRun } from '../doctor'
+import { run as migrateRun } from '../migrate'
 const silenced = (fn: () => unknown) => {
   const orig = console.log
   console.log = () => undefined
@@ -44,8 +45,11 @@ describe('stdb check helpers', () => {
       rmSync(dir, { force: true, recursive: true })
     }
   })
-  test('doctor run --help prints usage and returns', () => {
-    silenced(() => doctorRun(['--help']))
+  test('doctor + migrate run --help prints usage and returns', () => {
+    silenced(() => {
+      doctorRun(['--help'])
+      migrateRun(['--help'])
+    })
     expect(true).toBe(true)
   })
   test('print* helpers do not throw on empty input', () => {

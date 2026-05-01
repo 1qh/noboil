@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { checkSchemaConsistency, printAccessReport, printSchemaPreview } from '../check'
 import { run as doctorRun } from '../doctor'
+import { run as migrateRun } from '../migrate'
 import { buildArgs, buildTree, findCommand, findValidPath } from '../tools/manifest'
 const mkEntry = (path: string[], extra: Record<string, unknown> = {}) =>
   ({
@@ -141,11 +142,12 @@ describe('manifest helpers', () => {
       rmSync(dir, { force: true, recursive: true })
     }
   })
-  test('doctor run --help prints usage and returns', () => {
+  test('doctor + migrate run --help prints usage and returns', () => {
     const orig = console.log
     console.log = () => undefined
     try {
       doctorRun(['--help'])
+      migrateRun(['--help'])
     } finally {
       console.log = orig
     }
