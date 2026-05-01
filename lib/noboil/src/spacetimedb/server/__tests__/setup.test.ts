@@ -59,9 +59,9 @@ describe('stdb setup wires factories with global hooks', () => {
           afterCreate: () => undefined,
           afterDelete: () => undefined,
           afterUpdate: () => undefined,
-          beforeCreate: (_c, p) => p.data,
+          beforeCreate: (_c: unknown, p: { data: unknown }) => p.data,
           beforeDelete: () => undefined,
-          beforeUpdate: (_c, p) => p.patch
+          beforeUpdate: (_c: unknown, p: { patch: unknown }) => p.patch
         },
         middleware: [
           {
