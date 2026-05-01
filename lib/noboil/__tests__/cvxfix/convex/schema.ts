@@ -36,7 +36,9 @@ export default defineSchema({
     owner: v.string(),
     periodKey: v.string(),
     reservations: v.optional(v.array(v.any()))
-  }).index('by_owner', ['owner']),
+  })
+    .index('by_owner', ['owner'])
+    .index('by_periodKey', ['periodKey']),
   fetchMovie: defineTable({
     rating: v.number(),
     title: v.string(),

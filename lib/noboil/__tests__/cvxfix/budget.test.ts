@@ -14,7 +14,16 @@ const loadModules = () => {
 }
 const t = () => convexTest(schema, loadModules())
 const apiMod = (await import('./convex/_generated/api')) as {
-  api: { budgets: { add: unknown; check: unknown; reserve: unknown; settle: unknown } }
+  api: {
+    budgets: {
+      add: unknown
+      auditInvariants: unknown
+      check: unknown
+      pruneStale: unknown
+      reserve: unknown
+      settle: unknown
+    }
+  }
 }
 const { api } = apiMod
 interface CheckResult {
@@ -84,5 +93,24 @@ describe('makeBudget integration (via wired builders)', () => {
     })
     const r = (await callQuery(tt, api.budgets.check, { owner: 'noop' })) as CheckResult
     expect(r.balance).toBe(0)
+  })
+  test('auditInvariants tallies overshoot rows', async () => {
+    const tt = t()
+    await callMutate(tt, api.budgets.add, { amount: 9999, owner: 'over1' })
+    await callMutate(tt, api.budgets.reserve, { amount: 100, owner: 'over2' })
+    const r = (await callMutate(tt, api.budgets.auditInvariants, {})) as {
+      overshootBalance: number
+      overshootInflight: number
+      rows: number
+      stuckInflight: number
+    }
+    expect(r.rows).toBeGreaterThan(0)
+    expect(r.overshootBalance).toBeGreaterThanOrEqual(1)
+  })
+  test('pruneStale runs without error when nothing is stale', async () => {
+    const tt = t()
+    await callMutate(tt, api.budgets.reserve, { amount: 50, owner: 'fresh' })
+    await callMutate(tt, api.budgets.pruneStale, {})
+    expect(true).toBe(true)
   })
 })
