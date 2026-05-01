@@ -415,8 +415,9 @@ describe('buildRules', () => {
       report: (d: { messageId: string }) => reports.push(d),
       sourceCode: { getAncestors: () => [] }
     }
-    const naming = (rules['consistent-crud-naming']?.create(ctx) as { CallExpression: (n: unknown) => void })
-      .CallExpression
+    const namingRule = rules['consistent-crud-naming']
+    if (!namingRule) throw new Error('expected rule')
+    const naming = (namingRule.create(ctx) as { CallExpression: (n: unknown) => void }).CallExpression
     naming({
       arguments: [
         {
