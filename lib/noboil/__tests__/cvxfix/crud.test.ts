@@ -133,6 +133,20 @@ describe('makeCrud (owned) integration', () => {
     })) as TodoDoc[]
     expect(docs.length).toBe(2)
   })
+  test('bulk update via items[] applies all patches', async () => {
+    const { tt } = await seedUser(t())
+    const a = (await callMutate(tt, api.todos.create, { done: false, title: 'A' })) as string
+    const b = (await callMutate(tt, api.todos.create, { done: false, title: 'B' })) as string
+    await callMutate(tt, api.todos.update, {
+      items: [
+        { done: true, id: a },
+        { done: true, id: b, title: 'B2' }
+      ]
+    })
+    const all = (await callQuery(tt, api.todos.list, { paginationOpts, where: { own: true } })) as ListResult
+    expect(all.page.every(r => r.done)).toBe(true)
+    expect(all.page.find(r => r.title === 'B2')).toBeDefined()
+  })
   test('list with own:true scopes to authenticated user', async () => {
     const root = t()
     const { tt: tt1 } = await seedUser(root)
