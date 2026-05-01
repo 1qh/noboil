@@ -21,7 +21,10 @@ const apiMod = (await import('./convex/_generated/api')) as {
       editors: unknown
       list: unknown
       read: unknown
+      removeEditor: unknown
+      restore: unknown
       rm: unknown
+      setEditors: unknown
       update: unknown
     }
   }
@@ -94,6 +97,35 @@ describe('makeOrgCrud integration', () => {
     await callMutate(tt, api.projects.addEditor, { editorId: otherUserId, orgId, projectId })
     const list = (await callQuery(tt, api.projects.editors, { orgId, projectId })) as { userId: string }[]
     expect(list.some(e => e.userId === otherUserId)).toBe(true)
+  })
+  test('removeEditor + setEditors flow', async () => {
+    const { orgId, tt } = await seedOrgWithMember(t())
+    const projectId = (await callMutate(tt, api.projects.create, { name: 'p', orgId })) as string
+    const u1 = (await tt.run(async ctx => {
+      const u = await ctx.db.insert('users', { name: 'u1' })
+      await ctx.db.insert('orgMember', { isAdmin: false, orgId, updatedAt: Date.now(), userId: u })
+      return u
+    })) as string
+    const u2 = (await tt.run(async ctx => {
+      const u = await ctx.db.insert('users', { name: 'u2' })
+      await ctx.db.insert('orgMember', { isAdmin: false, orgId, updatedAt: Date.now(), userId: u })
+      return u
+    })) as string
+    await callMutate(tt, api.projects.addEditor, { editorId: u1, orgId, projectId })
+    await callMutate(tt, api.projects.removeEditor, { editorId: u1, orgId, projectId })
+    const afterRm = (await callQuery(tt, api.projects.editors, { orgId, projectId })) as { userId: string }[]
+    expect(afterRm.some(e => e.userId === u1)).toBe(false)
+    await callMutate(tt, api.projects.setEditors, { editorIds: [u1, u2], orgId, projectId })
+    const afterSet = (await callQuery(tt, api.projects.editors, { orgId, projectId })) as { userId: string }[]
+    expect(afterSet).toHaveLength(2)
+  })
+  test('restore brings back soft-deleted row', async () => {
+    const { orgId, tt } = await seedOrgWithMember(t())
+    const id = (await callMutate(tt, api.projects.create, { name: 'rs', orgId })) as string
+    await callMutate(tt, api.projects.rm, { id, orgId })
+    await callMutate(tt, api.projects.restore, { id, orgId })
+    const got = (await callQuery(tt, api.projects.read, { id, orgId })) as ProjectDoc
+    expect(got.name).toBe('rs')
   })
   test('rm soft-deletes', async () => {
     const { orgId, tt } = await seedOrgWithMember(t())

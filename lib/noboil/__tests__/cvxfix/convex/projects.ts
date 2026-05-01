@@ -3,6 +3,7 @@ import { m, q } from './auth-builders'
 import { projectSchema } from './s'
 const endpoints = makeOrgCrud({
   builders: { m, q },
+  options: { softDelete: true },
   schema: projectSchema,
   table: 'project'
 })
