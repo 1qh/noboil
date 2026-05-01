@@ -187,4 +187,111 @@ describe('buildRules', () => {
     })
     expect(reports.some(r => r.messageId === 'missingRateLimit')).toBe(true)
   })
+  test('multiple eslint rules fire on crafted nodes (consistent-crud-naming, prefer-useList, no-unsafe-api-cast, no-duplicate-crud, no-empty-search-config, prefer-useOrgQuery)', () => {
+    const reports: { messageId: string }[] = []
+    const cfg = {
+      apiCasing: { casingMismatchMsg: '', getApiBaseName: () => undefined, unknownModuleMsg: '' },
+      bindings: { discoveryFailedMsg: '', discoveryMissingLabel: '' },
+      cast: {
+        isCastTarget: (n: { type: string }) => n.type === 'Identifier',
+        unsafeApiCastMsg: ''
+      },
+      connection: { dataFns: new Set(['fetchQuery']), missingConnectionMsg: '', unhandledFetchMsg: '' },
+      crud: { factories: new Set(['crud']), writeFactories: new Set(['crud']) },
+      list: { hookName: 'useQuery', msg: '', propNames: new Set(['list']) },
+      mutation: { authIdents: ['getAuthUserId'], requireDbInBody: false },
+      orgQuery: { isHook: (callee: string) => callee === 'useQuery', msg: '' },
+      pluginName: 'p',
+      provider: { missingErrorBoundaryMsg: '', nameMatchers: ['Provider'] },
+      schema: {
+        findSchemaContent: () => '',
+        findSchemaContentFresh: () => '',
+        getModules: () => [],
+        getModulesFresh: () => []
+      }
+    } as never
+    const rules = buildRules(cfg) as Record<string, { create: (ctx: unknown) => Record<string, unknown> }>
+    const ctx = {
+      cwd: '/tmp',
+      filename: '/tmp/x.ts',
+      report: (d: { messageId: string }) => reports.push(d),
+      sourceCode: { getAncestors: () => [] }
+    }
+    const get = (k: string) => {
+      const r = rules[k]
+      if (!r) throw new Error(`missing rule: ${k}`)
+      return r
+    }
+    const naming = (get('consistent-crud-naming').create(ctx) as { CallExpression: (n: unknown) => void }).CallExpression
+    naming({
+      arguments: [
+        { type: 'Literal', value: 'todo' },
+        {
+          object: { name: 'schema', type: 'Identifier' },
+          property: { name: 'mismatched', type: 'Identifier' },
+          type: 'MemberExpression'
+        }
+      ],
+      callee: { name: 'crud', type: 'Identifier' },
+      type: 'CallExpression'
+    })
+    const ulRule = (get('prefer-useList').create(ctx) as { CallExpression: (n: unknown) => void }).CallExpression
+    ulRule({
+      arguments: [
+        {
+          object: { name: 'api', type: 'Identifier' },
+          property: { name: 'list', type: 'Identifier' },
+          type: 'MemberExpression'
+        }
+      ],
+      callee: { name: 'useQuery', type: 'Identifier' },
+      type: 'CallExpression'
+    })
+    const cast = (get('no-unsafe-api-cast').create(ctx) as { TSAsExpression: (n: unknown) => void }).TSAsExpression
+    cast({ expression: { type: 'Identifier' }, type: 'TSAsExpression' })
+    const dup = (get('no-duplicate-crud').create(ctx) as { CallExpression: (n: unknown) => void }).CallExpression
+    dup({
+      arguments: [{ type: 'Literal', value: 'shared' }, { type: 'ObjectExpression' }],
+      callee: { name: 'crud', type: 'Identifier' },
+      type: 'CallExpression'
+    })
+    dup({
+      arguments: [{ type: 'Literal', value: 'shared' }, { type: 'ObjectExpression' }],
+      callee: { name: 'crud', type: 'Identifier' },
+      type: 'CallExpression'
+    })
+    const empty = (get('no-empty-search-config').create(ctx) as { CallExpression: (n: unknown) => void }).CallExpression
+    empty({
+      arguments: [
+        { type: 'Literal', value: 'todo' },
+        { type: 'Identifier' },
+        {
+          properties: [
+            { key: { name: 'search', type: 'Identifier' }, type: 'Property', value: { type: 'Literal', value: true } }
+          ],
+          type: 'ObjectExpression'
+        }
+      ],
+      callee: { name: 'crud', type: 'Identifier' },
+      type: 'CallExpression'
+    })
+    const orgRule = (get('prefer-useOrgQuery').create(ctx) as { CallExpression: (n: unknown) => void }).CallExpression
+    orgRule({
+      arguments: [
+        { type: 'MemberExpression' },
+        {
+          properties: [{ key: { name: 'orgId', type: 'Identifier' }, type: 'Property', value: { type: 'Identifier' } }],
+          type: 'ObjectExpression'
+        }
+      ],
+      callee: { name: 'useQuery', type: 'Identifier' },
+      type: 'CallExpression'
+    })
+    const ids = new Set(reports.map(r => r.messageId))
+    expect(ids.has('crudNameMismatch')).toBe(true)
+    expect(ids.has('preferUseList')).toBe(true)
+    expect(ids.has('unsafeApiCast')).toBe(true)
+    expect(ids.has('duplicateCrud')).toBe(true)
+    expect(ids.has('searchTrue')).toBe(true)
+  })
 })
