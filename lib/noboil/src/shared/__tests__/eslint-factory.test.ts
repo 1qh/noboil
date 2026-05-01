@@ -388,4 +388,76 @@ describe('buildRules', () => {
     expect(ids.has('unhandledFetch')).toBe(true)
     expect(ids.has('missingErrorBoundary')).toBe(true)
   })
+  test('require-connection rule exercises async-body walker (with + without connection())', () => {
+    const reports: { messageId: string }[] = []
+    const cfg = {
+      apiCasing: { casingMismatchMsg: '', getApiBaseName: () => undefined, unknownModuleMsg: '' },
+      bindings: { discoveryFailedMsg: '', discoveryMissingLabel: '' },
+      cast: { isCastTarget: () => false, unsafeApiCastMsg: '' },
+      connection: { dataFns: new Set(['fetchQuery']), missingConnectionMsg: 'no conn', unhandledFetchMsg: '' },
+      crud: { factories: new Set(), writeFactories: new Set() },
+      list: { hookName: 'useQuery', msg: '', propNames: new Set() },
+      mutation: { authIdents: [], requireDbInBody: false },
+      orgQuery: { isHook: () => false, msg: '' },
+      pluginName: 'p',
+      provider: { missingErrorBoundaryMsg: '', nameMatchers: [] },
+      schema: {
+        findSchemaContent: () => '',
+        findSchemaContentFresh: () => '',
+        getModules: () => [],
+        getModulesFresh: () => []
+      }
+    } as never
+    const rules = buildRules(cfg) as Record<string, { create: (ctx: unknown) => Record<string, unknown> }>
+    const fetchNode = { callee: { name: 'fetchQuery', type: 'Identifier' }, type: 'CallExpression' }
+    const asyncBlockWithoutConnection = {
+      async: true,
+      body: {
+        body: [{ expression: { argument: fetchNode, type: 'AwaitExpression' }, type: 'ExpressionStatement' }],
+        type: 'BlockStatement'
+      },
+      type: 'ArrowFunctionExpression'
+    }
+    const asyncBlockWithConnection = {
+      async: true,
+      body: {
+        body: [
+          {
+            expression: {
+              argument: { arguments: [], callee: { name: 'connection', type: 'Identifier' }, type: 'CallExpression' },
+              type: 'AwaitExpression'
+            },
+            type: 'ExpressionStatement'
+          },
+          { expression: { argument: fetchNode, type: 'AwaitExpression' }, type: 'ExpressionStatement' }
+        ],
+        type: 'BlockStatement'
+      },
+      type: 'ArrowFunctionExpression'
+    }
+    const get = (k: string) => {
+      const r = rules[k]
+      if (!r) throw new Error(`missing rule: ${k}`)
+      return r
+    }
+    const visitor = get('require-connection').create({
+      cwd: '/tmp',
+      filename: '/tmp/page.tsx',
+      report: (d: { messageId: string }) => reports.push(d),
+      sourceCode: {
+        getAncestors: () => [asyncBlockWithoutConnection]
+      }
+    }) as { CallExpression: (n: unknown) => void }
+    visitor.CallExpression(fetchNode)
+    expect(reports.some(r => r.messageId === 'missingConnection')).toBe(true)
+    reports.length = 0
+    const visitor2 = get('require-connection').create({
+      cwd: '/tmp',
+      filename: '/tmp/page.tsx',
+      report: (d: { messageId: string }) => reports.push(d),
+      sourceCode: { getAncestors: () => [asyncBlockWithConnection] }
+    }) as { CallExpression: (n: unknown) => void }
+    visitor2.CallExpression(fetchNode)
+    expect(reports.length).toBe(0)
+  })
 })
