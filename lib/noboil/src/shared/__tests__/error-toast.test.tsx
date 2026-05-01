@@ -93,6 +93,16 @@ describe('createErrorToastHooks', () => {
     })
     expect(result).toBe(false)
   })
+  test('toastFieldError returns false when custom extractor returns nothing', () => {
+    const result = hooks.toastFieldError(
+      { code: 'X' },
+      () => {
+        /* Never */
+      },
+      () => undefined
+    )
+    expect(result).toBe(false)
+  })
   test('toastFieldError uses custom extractor when provided', () => {
     let toasted = ''
     const result = hooks.toastFieldError(
