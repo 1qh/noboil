@@ -75,6 +75,30 @@ describe('useBulkSelection (shared)', () => {
     expect(received.ids?.toSorted()).toEqual(['a', 'c'])
     expect(successCount).toBe(2)
   })
+  test('handleBulkDelete with t + restore registers undo toast', async () => {
+    let toastCalls = 0
+    let restoreCalls = 0
+    const t = (_msg: string, _opts?: { action?: { onClick?: () => void } }) => {
+      toastCalls += 1
+      if (_opts?.action?.onClick) _opts.action.onClick()
+    }
+    const rm = async () => undefined
+    const restore = async () => {
+      restoreCalls += 1
+    }
+    const { result } = renderHook(() =>
+      useBulkSelection({ items, orgId: 'o', restore, rm, toast: t, undoLabel: 'todo', undoMs: 100 })
+    )
+    act(() => {
+      result.current.toggleSelect('a')
+      result.current.toggleSelect('b')
+    })
+    await act(async () => {
+      await result.current.handleBulkDelete()
+    })
+    expect(toastCalls).toBeGreaterThanOrEqual(1)
+    expect(restoreCalls).toBeGreaterThanOrEqual(1)
+  })
   test('handleBulkDelete calls onError when rm throws', async () => {
     let captured: unknown
     const rm = async () => {
