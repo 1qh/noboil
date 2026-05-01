@@ -21,9 +21,11 @@ const endpoints = makeCacheCrud({
   }),
   hooks: { onFetch: data => ({ ...(data as Record<string, unknown>), title: 'hooked' }) },
   key: 'tmdb_id',
+  rateLimit: { max: 100, window: 60_000 },
   schema: movieSchema,
   staleWhileRevalidate: true,
   table: 'fetchMovie',
   ttl: 60_000
 })
-export const { all, create, get, getInternal, invalidate, list, load, purge, read, refresh, rm, set, update } = endpoints
+export const { all, checkRL, create, get, getInternal, invalidate, list, load, purge, read, refresh, rm, set, update } =
+  endpoints

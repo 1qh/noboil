@@ -8,6 +8,7 @@ import {
   ownedTable,
   presenceTable,
   quotaTable,
+  rateLimitTable,
   singletonTable,
   uploadTables
 } from '../../../src/convex/server'
@@ -29,6 +30,7 @@ export default defineSchema({
   ...orgTables(),
   pollVoteQuota: quotaTable(),
   ...presenceTable(),
+  ...rateLimitTable(),
   ...uploadTables(),
   budget: defineTable({
     balance: v.number(),
