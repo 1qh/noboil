@@ -155,6 +155,32 @@ describe('manifest helpers', () => {
     }
     expect(true).toBe(true)
   })
+  test('add --dry-run for each table type generates content + add real run writes files', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'noboil-add-'))
+    const origCwd = process.cwd()
+    try {
+      process.chdir(dir)
+      const orig = console.log
+      console.log = () => undefined
+      try {
+        for (const type of ['owned', 'org', 'log', 'kv', 'singleton', 'cache', 'quota']) {
+          const r = await addCmd(['--name', `t_${type}`, '--type', type, '--dry-run'])
+          expect(r).toEqual({ created: 0, skipped: 0 })
+        }
+        const cr = await addCmd(['--name', 'todo_real', '--type', 'owned', '--field', 'title:string'])
+        expect(cr.created).toBeGreaterThan(0)
+        const re = await addCmd(['--name', 'todo_real', '--type', 'owned', '--field', 'title:string'])
+        expect(re.skipped).toBeGreaterThan(0)
+        const child = await addCmd(['--name', 'msg', '--type', 'child', '--parent', 'todo_real', '--dry-run'])
+        expect(child).toEqual({ created: 0, skipped: 0 })
+      } finally {
+        console.log = orig
+      }
+    } finally {
+      process.chdir(origCwd)
+      rmSync(dir, { force: true, recursive: true })
+    }
+  })
   test('add command --help returns counts', async () => {
     const orig = console.log
     console.log = () => undefined

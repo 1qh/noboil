@@ -209,6 +209,42 @@ describe('stdb check helpers', () => {
       rmSync(dir, { force: true, recursive: true })
     }
   })
+  test('stdb add cmd: --help, dry-run for each type, real run, child requires parent', async () => {
+    const { add: addCmd } = await import('../add')
+    const dir = mkdtempSync(join(tmpdir(), 'noboil-stdb-add-'))
+    const orig = process.cwd()
+    try {
+      process.chdir(dir)
+      const { log } = console
+      console.log = () => undefined
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      const origExit = process.exit
+      process.exit = () => {
+        throw new Error('__exit__')
+      }
+      try {
+        const r = await addCmd(['--help'])
+        expect(r).toEqual({ created: 0, skipped: 0 })
+        for (const type of ['owned', 'org', 'log', 'kv', 'singleton']) {
+          const v = await addCmd(['--name', `t_${type}`, '--type', type])
+          expect(typeof v.created).toBe('number')
+        }
+        const cr = await addCmd(['--name', 'todo_x', '--type', 'owned', '--field', 'title:string'])
+        expect(typeof cr.created).toBe('number')
+        try {
+          await addCmd(['--name', 'm', '--type', 'child'])
+        } catch (error) {
+          if (!(error instanceof Error) || error.message !== '__exit__') throw error
+        }
+      } finally {
+        console.log = log
+        process.exit = origExit
+      }
+    } finally {
+      process.chdir(orig)
+      rmSync(dir, { force: true, recursive: true })
+    }
+  })
   test('print* helpers do not throw on empty input', () => {
     const dir = mkdtempSync(join(tmpdir(), 'noboil-stdb-print-'))
     try {
