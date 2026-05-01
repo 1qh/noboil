@@ -1,6 +1,7 @@
 /* oxlint-disable promise/prefer-await-to-callbacks */
 import { describe, expect, test } from 'bun:test'
-import { setup } from '../setup'
+import { z } from 'zod/v4'
+import { setup, setupCrud } from '../setup'
 const captureReducers = () => {
   const out: Record<string, unknown> = {}
   const reducer = (opts: { name: string }, _params: unknown, fn: unknown) => {
@@ -142,5 +143,32 @@ describe('stdb setup wires factories with global hooks', () => {
       tableName: 'project'
     })
     expect(result).toBeDefined()
+  })
+  test('setupCrud high-level wrapper builds factories with default fields', () => {
+    const { reducer } = captureReducers()
+    const wired = setupCrud({ reducer } as never) as Record<string, unknown>
+    expect(typeof wired.crud).toBe('function')
+    expect(typeof wired.childCrud).toBe('function')
+    expect(typeof wired.cacheCrud).toBe('function')
+    expect(typeof wired.singletonCrud).toBe('function')
+    expect(typeof wired.orgCrud).toBe('function')
+    const tryCall = (fn: () => unknown) => {
+      try {
+        return fn()
+      } catch {
+        return null
+      }
+    }
+    const schema = z.object({ title: z.string() })
+    const crud = wired.crud as (n: string, fields: unknown) => unknown
+    expect(tryCall(() => crud('todo', schema))).not.toBeUndefined()
+    const childCrud = wired.childCrud as (n: string, parent: unknown, fields: unknown) => unknown
+    expect(tryCall(() => childCrud('msg', { foreignKey: 'parentId', table: 'todo' }, schema))).not.toBeUndefined()
+    const cacheCrud = wired.cacheCrud as (n: string, k: string, fields: unknown) => unknown
+    expect(tryCall(() => cacheCrud('movie', 'tmdb_id', schema))).not.toBeUndefined()
+    const singletonCrud = wired.singletonCrud as (n: string, fields: unknown) => unknown
+    expect(tryCall(() => singletonCrud('profile', schema))).not.toBeUndefined()
+    const orgCrud = wired.orgCrud as (n: string, fields: unknown) => unknown
+    expect(tryCall(() => orgCrud('project', schema))).not.toBeUndefined()
   })
 })
