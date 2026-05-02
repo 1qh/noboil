@@ -130,7 +130,12 @@ describe('stdb helpers', () => {
         if (row) Object.assign(row, data)
       },
       query: () => ({
-        withIndex: () => ({ first: async () => row })
+        withIndex: (_name: string, build: (q: unknown) => unknown) => {
+          build({
+            eq: (_field: string, _value: unknown) => ({ eq: (_f: string, _v: unknown) => undefined })
+          })
+          return { first: async () => row }
+        }
       })
     } as never
     const cfg = { max: 2, window: 60_000 }

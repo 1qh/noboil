@@ -189,6 +189,35 @@ describe('stdb makeOrg lifecycle', () => {
       update({ db: {}, sender: f2, timestamp: tsAtMs(1) } as never, { orgId: 2, slug: 'taken' } as never)
     }).toThrow(/ORG_SLUG_TAKEN/u)
   })
+  test('org_remove with cascadeTables removes child rows', () => {
+    const { reducer, reducers } = captureReducers()
+    const orgT = mkPkTable<OrgRow>()
+    const memberT = mkPkTable<MemberRow>()
+    const inviteT = mkPkTable<OrgRow>()
+    const joinT = mkPkTable<OrgRow>()
+    const childRows = [{ id: 100, orgId: 1 }]
+    const cfg = {
+      ...mkConfig({ inviteT, joinT, memberT, orgT }),
+      cascadeTables: [
+        {
+          deleteById: (_db: unknown, id: number) => {
+            const idx = childRows.findIndex(r => r.id === id)
+            if (idx === -1) return false
+            childRows.splice(idx, 1)
+            return true
+          },
+          rowsByOrg: (_db: unknown, _orgId: number) => childRows.filter(r => r.orgId === 1)
+        }
+      ]
+    }
+    makeOrg({ reducer } as never, cfg as never)
+    const create = reducers.org_create as (c: never, a: never) => void
+    const remove = reducers.org_remove as (c: never, a: never) => void
+    const founder = ident('f')
+    create({ db: {}, sender: founder, timestamp: tsAtMs(0) } as never, { name: 'A', slug: 's' } as never)
+    remove({ db: {}, sender: founder, timestamp: tsAtMs(1) } as never, { orgId: 1 } as never)
+    expect(childRows).toHaveLength(0)
+  })
   test('org_update NOT_FOUND for missing org', () => {
     const { reducers } = setup()
     const update = reducers.org_update as (c: never, a: never) => void
