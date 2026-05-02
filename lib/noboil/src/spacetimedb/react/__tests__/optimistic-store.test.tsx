@@ -1,5 +1,9 @@
-import { describe, expect, mock, test } from 'bun:test'
-import { createOptimisticStore, makeTempId } from '../optimistic-store'
+import { GlobalRegistrator } from '@happy-dom/global-registrator'
+if (typeof document === 'undefined') GlobalRegistrator.register()
+const { describe, expect, mock, test } = await import('bun:test')
+const { renderHook } = await import('@testing-library/react')
+const React = await import('react')
+const { createOptimisticStore, makeTempId, OptimisticProvider, usePendingMutations } = await import('../optimistic-store')
 const mkRow = (id: string, extra: Record<string, unknown> = {}): { _id: string; name?: string } => ({ _id: id, ...extra })
 describe('stdb optimistic-store', () => {
   test('makeTempId returns unique strings', () => {
@@ -40,6 +44,11 @@ describe('stdb optimistic-store', () => {
     s.add({ args: {}, id: 'r1', tempId: 't1', timestamp: 0, type: 'update' })
     s.reconcileRows([{ _id: 'r1' }])
     expect(s.getSnapshot()).toHaveLength(0)
+  })
+  test('OptimisticProvider renders children with store context', () => {
+    const wrap = ({ children }: { children: React.ReactNode }) => React.createElement(OptimisticProvider, null, children)
+    const { result } = renderHook(() => usePendingMutations(), { wrapper: wrap })
+    expect(result.current).toEqual([])
   })
   test('remove + subscribe notify listeners', () => {
     const s = createOptimisticStore()
