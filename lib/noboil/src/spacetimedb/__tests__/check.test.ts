@@ -561,6 +561,35 @@ describe('stdb check helpers', () => {
       rmSync(dir, { force: true, recursive: true })
     }
   })
+  test('stdb add exits with no name + child without parent', async () => {
+    const { add: addCmd } = await import('../add')
+    /* eslint-disable no-console */
+    const { log } = console
+    console.log = () => undefined
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    const origExit = process.exit
+    let exited = 0
+    process.exit = (c?: number) => {
+      exited += 1
+      throw new Error(`__exit__${String(c)}`)
+    }
+    try {
+      try {
+        await addCmd(['--type=owned'])
+      } catch (error) {
+        if (!(error instanceof Error && error.message.startsWith('__exit__'))) throw error
+      }
+      try {
+        await addCmd(['--name', 'm', '--type=child'])
+      } catch (error) {
+        if (!(error instanceof Error && error.message.startsWith('__exit__'))) throw error
+      }
+    } finally {
+      console.log = log
+      process.exit = origExit
+    }
+    expect(exited).toBeGreaterThan(0)
+  })
   test('print* helpers do not throw on empty input', () => {
     const dir = mkdtempSync(join(tmpdir(), 'noboil-stdb-print-'))
     try {
