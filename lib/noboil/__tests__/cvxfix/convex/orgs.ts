@@ -7,6 +7,7 @@ const getAuthUserId = async (ctx: GenericMutationCtx<never> | GenericQueryCtx<ne
   return id ? id.subject : null
 }
 const endpoints = makeOrg({
+  cascadeTables: [{ fileFields: [], table: 'project' }],
   getAuthUserId,
   mutation,
   query,

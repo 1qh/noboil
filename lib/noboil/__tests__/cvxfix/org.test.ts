@@ -258,6 +258,17 @@ describe('makeOrg integration', () => {
     expect(list.some(e => e.role === 'owner')).toBe(true)
     expect(list.some(e => e.role === 'member')).toBe(true)
   })
+  test('remove cleans up avatar storage when org has avatarId', async () => {
+    const owner = await seedUser(t())
+    const avatarId = (await owner.tt.run(async ctx => ctx.storage.store(new Blob(['ava'])))) as string
+    const { orgId } = (await callMutate(owner.tt, api.orgs.create, { data: { name: 'AV', slug: 'avrm' } })) as {
+      orgId: string
+    }
+    await callMutate(owner.tt, api.orgs.update, { data: { avatarId }, orgId })
+    await callMutate(owner.tt, api.orgs.remove, { orgId })
+    const got = await owner.root.run(async ctx => ctx.db.get(orgId))
+    expect(got).toBeNull()
+  })
   test('remove deletes org + invites + join requests + members', async () => {
     const owner = await seedUser(t())
     const { orgId } = (await callMutate(owner.tt, api.orgs.create, { data: { name: 'R', slug: 'rm' } })) as {
