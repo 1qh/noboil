@@ -199,6 +199,60 @@ describe('stdb setup wires factories with global hooks', () => {
     }
     expect(calls).toContain('g.beforeUpdate')
   })
+  test('global+local childCrud hooks fire across reducers (mergeCrudHooks via wired.childCrud)', () => {
+    const { reducer, reducers } = captureReducers()
+    const calls: string[] = []
+    const wired = setup(
+      { reducer } as never,
+      {
+        hooks: {
+          afterCreate: () => {
+            calls.push('g.afterCreate')
+          },
+          beforeCreate: (_c: unknown, p: { data: unknown }) => {
+            calls.push('g.beforeCreate')
+            return p.data
+          }
+        }
+      } as never
+    ) as Record<string, unknown>
+    const tbl = mkPkTable()
+    const parent = mkPkTable()
+    parent.rows.push({ id: 1 })
+    parent.rows[0] = { id: 1, userId: { __id: 'me', isEqual: () => true, toHexString: () => 'me' } as never } as never
+    const cc = wired.childCrud as (cfg: unknown) => unknown
+    cc({
+      fields: { text: { optional: () => ({}) } as never },
+      foreignKeyField: {} as never,
+      foreignKeyName: 'parentId',
+      idField: {} as never,
+      options: {
+        hooks: {
+          afterCreate: () => {
+            calls.push('l.afterCreate')
+          },
+          beforeCreate: (_c: unknown, p: { data: unknown }) => {
+            calls.push('l.beforeCreate')
+            return p.data
+          }
+        }
+      },
+      parentPk: (t: unknown) => (t as { id: never }).id,
+      parentTable: () => parent.tbl,
+      pk: (t: unknown) => (t as { id: never }).id,
+      table: () => tbl.tbl,
+      tableName: 'message'
+    })
+    const ctx = {
+      db: {},
+      sender: { __id: 'me', isEqual: () => true, toHexString: () => 'me' },
+      timestamp: { __ms: 0 }
+    }
+    const createFn = reducers.create_message as (c: never, a: never) => void
+    createFn(ctx as never, { parentId: 1, text: 'hi' } as never)
+    expect(calls).toContain('g.beforeCreate')
+    expect(calls).toContain('l.beforeCreate')
+  })
   test('async hooks rejected via requireSync at reducer call time', () => {
     const { reducer, reducers } = captureReducers()
     const wired = setup(
