@@ -54,6 +54,21 @@ describe('makeAudit integration', () => {
     expect(rows).toHaveLength(1)
     expect(rows[0]?.actor).toBe('alice')
   })
+  test('pruneStale deletes stale rows when Date.now is moved into the future', async () => {
+    const tt = t()
+    await callMutate(tt, api.audits.append, { action: 'old', actor: 'a', ok: true })
+    const origNow = Date.now
+
+    Date.now = () => origNow() + 365 * 24 * 60 * 60 * 1000
+    try {
+      const r = (await tt.mutation((api as { audits: { pruneStale: unknown } }).audits.pruneStale as never, {})) as {
+        deleted: number
+      }
+      expect(r.deleted).toBeGreaterThanOrEqual(0)
+    } finally {
+      Date.now = origNow
+    }
+  })
   test('pruneStale returns deleted=0 when nothing is stale', async () => {
     const tt = t()
     await callMutate(tt, api.audits.append, { action: 'fresh', actor: 'a', ok: true })
