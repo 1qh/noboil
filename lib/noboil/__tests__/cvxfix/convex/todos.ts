@@ -3,7 +3,17 @@ import { cm, cq, m, pq, q } from './auth-builders'
 import { todoSchema } from './s'
 const endpoints = makeCrud({
   builders: { cm, cq, m, pq, q },
-  options: { cascade: [{ foreignKey: 'todoId', table: 'tagItem' }] },
+  options: {
+    cascade: [{ foreignKey: 'todoId', table: 'tagItem' }],
+    hooks: {
+      afterCreate: () => undefined,
+      afterDelete: () => undefined,
+      afterUpdate: () => undefined,
+      beforeCreate: (_c, a) => a.data,
+      beforeDelete: () => undefined,
+      beforeUpdate: (_c, a) => a.patch
+    }
+  },
   schema: todoSchema,
   table: 'todo'
 })
