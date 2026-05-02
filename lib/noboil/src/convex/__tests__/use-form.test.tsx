@@ -1,7 +1,7 @@
 import { GlobalRegistrator } from '@happy-dom/global-registrator'
 if (typeof document === 'undefined') GlobalRegistrator.register()
 const { describe, expect, test } = await import('bun:test')
-const { act, renderHook } = await import('@testing-library/react')
+const { renderHook } = await import('@testing-library/react')
 const { ConvexProvider, ConvexReactClient } = await import('convex/react')
 const React = await import('react')
 const { z } = await import('zod/v4')
