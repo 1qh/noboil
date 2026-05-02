@@ -50,6 +50,93 @@ describe('stdb setup wires factories with global hooks', () => {
     for (const name of ['crud', 'orgCrud', 'childCrud', 'singletonCrud', 'cacheCrud', 'org', 'allExports'])
       expect(typeof wired[name]).toBe('function')
   })
+  test('global+local sync hooks fire across create/update/rm reducers', () => {
+    const { reducer, reducers } = captureReducers()
+    const calls: string[] = []
+    const wired = setup(
+      { reducer } as never,
+      {
+        hooks: {
+          afterCreate: () => {
+            calls.push('g.afterCreate')
+          },
+          afterDelete: () => {
+            calls.push('g.afterDelete')
+          },
+          afterUpdate: () => {
+            calls.push('g.afterUpdate')
+          },
+          beforeCreate: (_c: unknown, p: { data: unknown }) => {
+            calls.push('g.beforeCreate')
+            return p.data
+          },
+          beforeDelete: () => {
+            calls.push('g.beforeDelete')
+          },
+          beforeUpdate: (_c: unknown, p: { patch: unknown }) => {
+            calls.push('g.beforeUpdate')
+            return p.patch
+          }
+        }
+      } as never
+    ) as Record<string, unknown>
+    const project = mkPkTable()
+    const crud = wired.crud as (cfg: unknown) => unknown
+    crud({
+      fields: { title: { optional: () => ({}) } as never },
+      idField: {} as never,
+      options: {
+        hooks: {
+          afterCreate: () => {
+            calls.push('l.afterCreate')
+          },
+          afterDelete: () => {
+            calls.push('l.afterDelete')
+          },
+          afterUpdate: () => {
+            calls.push('l.afterUpdate')
+          },
+          beforeCreate: (_c: unknown, p: { data: unknown }) => {
+            calls.push('l.beforeCreate')
+            return p.data
+          },
+          beforeDelete: () => {
+            calls.push('l.beforeDelete')
+          },
+          beforeUpdate: (_c: unknown, p: { patch: unknown }) => {
+            calls.push('l.beforeUpdate')
+            return p.patch
+          }
+        }
+      },
+      pk: (t: unknown) => (t as { id: never }).id,
+      table: () => project.tbl,
+      tableName: 'project'
+    })
+    const ctx = {
+      db: {},
+      sender: { __id: 'me', isEqual: () => true, toHexString: () => 'me' },
+      timestamp: { __ms: 0 }
+    }
+    const createFn = reducers.create_project as (c: never, a: never) => void
+    const updateFn = reducers.update_project as (c: never, a: never) => void
+    const rmFn = reducers.rm_project as (c: never, a: never) => void
+    createFn(ctx as never, { title: 'x' } as never)
+    updateFn(ctx as never, { id: 1, title: 'y' } as never)
+    rmFn(ctx as never, { id: 1 } as never)
+    expect(calls).toContain('g.beforeCreate')
+    expect(calls).toContain('l.beforeCreate')
+    expect(calls).toContain('g.afterCreate')
+    expect(calls).toContain('l.afterCreate')
+    expect(calls).toContain('g.beforeUpdate')
+    expect(calls).toContain('l.beforeUpdate')
+    expect(calls).toContain('g.afterUpdate')
+    expect(calls).toContain('l.afterUpdate')
+    expect(calls).toContain('g.beforeDelete')
+    expect(calls).toContain('l.beforeDelete')
+    expect(calls).toContain('g.afterDelete')
+    expect(calls).toContain('l.afterDelete')
+  })
   test('async hooks rejected via requireSync at reducer call time', () => {
     const { reducer, reducers } = captureReducers()
     const wired = setup(
