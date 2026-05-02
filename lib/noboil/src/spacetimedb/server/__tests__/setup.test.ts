@@ -191,7 +191,7 @@ describe('stdb setup wires factories with global hooks', () => {
       sender: { __id: 'me', isEqual: () => true, toHexString: () => 'me' },
       timestamp: { __ms: 0 }
     }
-    const upsert = reducers.upsert_profile as (c: never, a: never) => void
+    const upsert = reducers.upsert_profile as ((c: never, a: never) => void) | undefined
     if (upsert) upsert(ctx as never, { name: 'a' } as never)
     expect(calls.length).toBeGreaterThan(0)
   })
