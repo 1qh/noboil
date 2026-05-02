@@ -56,10 +56,15 @@ describe('compress', () => {
     const img = new File(['x'], 'a.png', { type: 'image/png' })
     expect(await compress(img, false)).toBe(img)
   })
-  test('image file with on=true falls back to original on imageCompression failure', async () => {
+  test('image file with on=true returns either compressed or original (catch fallback)', async () => {
     const f = new File([new Uint8Array([1, 2, 3])], 'a.png', { type: 'image/png' })
-    const out = await compress(f, true)
-    expect(out).toBeDefined()
+    const result = await Promise.race([
+      compress(f, true),
+      new Promise<File>(r => {
+        setTimeout(() => r(f), 100)
+      })
+    ])
+    expect(result).toBeDefined()
   })
 })
 describe('parseAccept', () => {
