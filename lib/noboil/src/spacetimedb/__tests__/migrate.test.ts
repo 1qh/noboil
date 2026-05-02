@@ -5,6 +5,18 @@ describe('stdb migrate', () => {
     expect(isOptionalField('t.option(t.string())')).toBe(true)
     expect(isOptionalField('t.string()')).toBe(false)
   })
+  test('parseFieldsFromBlock recognizes array + map types', () => {
+    const block = `
+      tags: t.array(),
+      meta: t.map(),
+      weird: t.custom(),
+    `
+    const out = parseFieldsFromBlock(block)
+    const byName = new Map(out.map(f => [f.name, f]))
+    expect(byName.get('tags')?.type).toBe('array')
+    expect(byName.get('meta')?.type).toBe('map')
+    expect(byName.get('weird')?.type).toBe('unknown')
+  })
   test('parseFieldsFromBlock detects field types', () => {
     const block = `
       id: t.u64(),

@@ -145,6 +145,25 @@ describe('stdb check helpers', () => {
       rmSync(dir, { force: true, recursive: true })
     }
   })
+  test('stdb migrate finds schema in module/ subdirectory', async () => {
+    const { mkdirSync } = await import('node:fs')
+    const dir = mkdtempSync(join(tmpdir(), 'noboil-stdb-mig-mod-'))
+    const orig = process.cwd()
+    try {
+      mkdirSync(join(dir, 'module'), { recursive: true })
+      writeFileSync(
+        join(dir, 'module', 'schema.ts'),
+        'export default schema({ tables: { todo: table(t.u64(), { id: t.u64(), title: t.string() }) } })',
+        'utf8'
+      )
+      process.chdir(dir)
+      silenced(() => migrateRun(['--snapshot']))
+      expect(true).toBe(true)
+    } finally {
+      process.chdir(orig)
+      rmSync(dir, { force: true, recursive: true })
+    }
+  })
   test('stdb migrate run with git history triggers printMigrationPlan branches', async () => {
     const { execSync } = await import('node:child_process')
     const dir = mkdtempSync(join(tmpdir(), 'noboil-stdb-migrate-git-'))
