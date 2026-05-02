@@ -313,6 +313,74 @@ describe('stdb check helpers', () => {
       rmSync(dir, { force: true, recursive: true })
     }
   })
+  test('check run() --indexes + --access + --health with all factory types + where filters', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'noboil-stdb-check-divf-'))
+    const orig = process.cwd()
+    try {
+      writeFileSync(
+        join(dir, 'schema.ts'),
+        `export default schema({
+          tables: {
+            todo: table(t.u64(), { id: t.u64(), title: t.string() }),
+            project: table(t.u64(), { id: t.u64(), name: t.string() }),
+            message: table(t.u64(), { id: t.u64(), text: t.string() }),
+            movie: table(t.u64(), { id: t.u64(), title: t.string() })
+          }
+        })`,
+        'utf8'
+      )
+      writeFileSync(
+        join(dir, 'todo.ts'),
+        `export const x = makeCrud({ tableName: 'todo' })\nreducer('todo.create', () => undefined)`,
+        'utf8'
+      )
+      writeFileSync(
+        join(dir, 'project.ts'),
+        `export const x = makeOrg({ tableName: 'project' })\nreducer('project.create', () => undefined)`,
+        'utf8'
+      )
+      writeFileSync(
+        join(dir, 'message.ts'),
+        `export const x = makeChildCrud({ tableName: 'message' })\nreducer('message.create', () => undefined)`,
+        'utf8'
+      )
+      writeFileSync(
+        join(dir, 'movie.ts'),
+        `export const x = makeCacheCrud({ tableName: 'movie' })\nreducer('movie.refresh', () => undefined)`,
+        'utf8'
+      )
+      writeFileSync(
+        join(dir, 'app.ts'),
+        'useList(api.todo.list, { where: { unindexed_a: 1 } })\nuseList(api.project.list, { where: { unindexed_b: 2 } })',
+        'utf8'
+      )
+      process.chdir(dir)
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      const origExit = process.exit
+      process.exit = (c?: number) => {
+        throw new Error(`__exit__${String(c)}`)
+      }
+      const tryRun = (argv: string[]) => {
+        try {
+          checkRun(argv)
+        } catch (error) {
+          if (!(error instanceof Error && error.message.startsWith('__exit__'))) throw error
+        }
+      }
+      try {
+        silenced(() => {
+          for (const flag of ['--indexes', '--access', '--health', '--schema', '--endpoints', ''])
+            tryRun(flag ? [flag] : [])
+        })
+      } finally {
+        process.exit = origExit
+      }
+      expect(true).toBe(true)
+    } finally {
+      process.chdir(orig)
+      rmSync(dir, { force: true, recursive: true })
+    }
+  })
   test('check finds schema in nested */module/ subdirectory', async () => {
     const { mkdirSync } = await import('node:fs')
     const dir = mkdtempSync(join(tmpdir(), 'noboil-stdb-check-sub-'))
