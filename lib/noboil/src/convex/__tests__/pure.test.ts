@@ -7142,6 +7142,35 @@ describe('noboil-convex add command', () => {
       const flags = parseAddFlags(['todo'])
       expect(flags.type).toBe('owned')
     })
+    test('parseAddFlags exits on invalid --type', () => {
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      const origExit = process.exit
+
+      const origLog = console.log
+      let exited = 0
+      process.exit = (c?: number) => {
+        exited += 1
+        throw new Error(`__exit__${String(c)}`)
+      }
+
+      console.log = () => undefined
+      try {
+        try {
+          parseAddFlags(['todo', '--type=garbage'])
+        } catch (error) {
+          if (!(error instanceof Error && error.message.startsWith('__exit__'))) throw error
+        }
+        expect(exited).toBeGreaterThan(0)
+      } finally {
+        process.exit = origExit
+
+        console.log = origLog
+      }
+    })
+    test('parseAddFlags accepts trailing positional args as additional fields', () => {
+      const flags = parseAddFlags(['todo', '--fields=title:string', 'done:boolean'])
+      expect(flags.fields.length).toBe(2)
+    })
     test('default convexDir is convex', () => {
       const flags = parseAddFlags(['todo'])
       expect(flags.convexDir).toBe('convex')
