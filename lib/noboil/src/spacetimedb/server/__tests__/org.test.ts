@@ -177,6 +177,18 @@ describe('stdb makeOrg lifecycle', () => {
       remove({ db: {}, sender: ident('admin'), timestamp: tsAtMs(2) } as never, { orgId: 1 } as never)
     }).toThrow(/FORBIDDEN/u)
   })
+  test('org_update with new slug rejects ORG_SLUG_TAKEN when slug exists', () => {
+    const { reducers } = setup()
+    const create = reducers.org_create as (c: never, a: never) => void
+    const update = reducers.org_update as (c: never, a: never) => void
+    const f1 = ident('f1')
+    const f2 = ident('f2')
+    create({ db: {}, sender: f1, timestamp: tsAtMs(0) } as never, { name: 'A', slug: 'taken' } as never)
+    create({ db: {}, sender: f2, timestamp: tsAtMs(0) } as never, { name: 'B', slug: 'mine' } as never)
+    expect(() => {
+      update({ db: {}, sender: f2, timestamp: tsAtMs(1) } as never, { orgId: 2, slug: 'taken' } as never)
+    }).toThrow(/ORG_SLUG_TAKEN/u)
+  })
   test('org_update NOT_FOUND for missing org', () => {
     const { reducers } = setup()
     const update = reducers.org_update as (c: never, a: never) => void

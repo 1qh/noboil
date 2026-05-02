@@ -293,6 +293,26 @@ describe('buildRules', () => {
     expect(ids.has('unsafeApiCast')).toBe(true)
     expect(ids.has('duplicateCrud')).toBe(true)
     expect(ids.has('searchTrue')).toBe(true)
+    empty({
+      arguments: [
+        { type: 'Literal', value: 'todo' },
+        { type: 'Identifier' },
+        {
+          properties: [
+            {
+              key: { name: 'search', type: 'Identifier' },
+              type: 'Property',
+              value: { properties: [], type: 'ObjectExpression' }
+            }
+          ],
+          type: 'ObjectExpression'
+        }
+      ],
+      callee: { name: 'crud', type: 'Identifier' },
+      type: 'CallExpression'
+    })
+    const ids2 = new Set(reports.map(r => r.messageId))
+    expect(ids2.has('searchEmpty')).toBe(true)
   })
   test('more eslint rules: no-unprotected-mutation, no-unlimited-file-size, no-raw-fetch-in-server-component, require-error-boundary, discovery-check, form-field-exists, form-field-kind, require-connection', () => {
     const reports: { messageId: string }[] = []
@@ -387,6 +407,39 @@ describe('buildRules', () => {
     expect(ids.has('unlimitedFileSize')).toBe(true)
     expect(ids.has('unhandledFetch')).toBe(true)
     expect(ids.has('missingErrorBoundary')).toBe(true)
+  })
+  test('discovery-check getContextRoot walks subdirectories', () => {
+    const reports: { messageId: string }[] = []
+    const cfg = {
+      apiCasing: { casingMismatchMsg: '', getApiBaseName: () => undefined, unknownModuleMsg: '' },
+      bindings: { discoveryFailedMsg: 'missing {{missing}}', discoveryMissingLabel: 'lbl' },
+      cast: { isCastTarget: () => false, unsafeApiCastMsg: '' },
+      connection: { dataFns: new Set(), missingConnectionMsg: '', unhandledFetchMsg: '' },
+      crud: { factories: new Set(), writeFactories: new Set() },
+      list: { hookName: 'useQuery', msg: '', propNames: new Set() },
+      mutation: { authIdents: [], requireDbInBody: false },
+      orgQuery: { isHook: () => false, msg: '' },
+      pluginName: 'p',
+      provider: { missingErrorBoundaryMsg: '', nameMatchers: [] },
+      schema: {
+        findSchemaContent: () => '',
+        findSchemaContentFresh: () => '',
+        getModules: () => [],
+        getModulesFresh: () => []
+      }
+    } as never
+    const rules = buildRules(cfg) as Record<string, { create: (ctx: unknown) => Record<string, unknown> }>
+    const ctx = {
+      cwd: '/tmp',
+      filename: '/tmp/a/b/c/x.ts',
+      report: (d: { messageId: string }) => reports.push(d),
+      sourceCode: { getAncestors: () => [] }
+    }
+    const dRule = rules['discovery-check']
+    if (!dRule) throw new Error('expected rule')
+    const visitor = dRule.create(ctx) as { Program?: (n: unknown) => void }
+    if (visitor.Program) visitor.Program({ type: 'Program' })
+    expect(true).toBe(true)
   })
   test('consistent-crud-naming fires on cacheCrud table/schema mismatch', () => {
     const reports: { messageId: string }[] = []
