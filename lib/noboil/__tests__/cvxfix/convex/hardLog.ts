@@ -7,5 +7,7 @@ const endpoints = makeLog({
   schema: voteSchema,
   table: 'hardLog'
 })
+const ep = endpoints as typeof endpoints & { pubIndexed?: unknown }
 const { append, list, purgeByParent, read, rm } = endpoints
-export { append, list, purgeByParent, read, rm }
+const { pubIndexed } = ep
+export { append, list, pubIndexed, purgeByParent, read, rm }

@@ -18,6 +18,7 @@ const apiMod = (await import('./convex/_generated/api')) as {
     hardLog: {
       append: unknown
       list: unknown
+      pubIndexed: unknown
       purgeByParent: unknown
       rm: unknown
     }
@@ -45,6 +46,16 @@ describe('makeLog (hard-delete) integration', () => {
     await callMutate(tt, api.hardLog.rm, { id })
     const after = (await callQuery(tt, api.hardLog.list, { paginationOpts, parent: 'p' })) as ListResult
     expect(after.page).toHaveLength(0)
+  })
+  test('pubIndexed exists when pub enabled and queries via by_parent index', async () => {
+    const tt = await seedUser(t())
+    await callMutate(tt, api.hardLog.append, { parent: 'pi', payload: { optionIdx: 0, voter: 'A' } })
+    const r = (await callQuery(tt, api.hardLog.pubIndexed, {
+      index: 'by_parent',
+      key: 'parent',
+      value: 'pi'
+    })) as { _id: string }[]
+    expect(r.length).toBe(1)
   })
   test('purgeByParent without softDelete hard-deletes', async () => {
     const tt = await seedUser(t())
