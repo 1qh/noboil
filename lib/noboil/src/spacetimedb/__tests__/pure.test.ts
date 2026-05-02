@@ -7365,6 +7365,13 @@ describe('noboil-stdb add command', () => {
       const content = genPageContent('movie', 'cache')
       expect(content).toContain("spacetime.callReducer('movie.list'")
     })
+    test('generates page for kv/log/quota/singleton/child types', () => {
+      expect(genPageContent('settings', 'kv')).toContain('useKv')
+      expect(genPageContent('audit', 'log')).toContain('useLog')
+      expect(genPageContent('throttle', 'quota')).toContain('useQuota')
+      expect(genPageContent('profile', 'singleton')).toContain('Profile')
+      expect(genPageContent('message', 'child')).toContain('message')
+    })
   })
   describe('add function', () => {
     test('add with --help returns zero counts', async () => {
