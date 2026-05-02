@@ -29,10 +29,14 @@ describe('stdb check helpers', () => {
     try {
       writeFileSync(
         join(dir, 'todos.ts'),
-        `export const a = makeCrud({ tableName: 'todo' })\nexport const b = makeCrud({ tableName: 'mismatch' })`,
+        `export const a = makeCrud({ tableName: 'todo' })\nreducer('todo.create', () => undefined)\nreducer('mismatch.create', () => undefined)`,
         'utf8'
       )
-      writeFileSync(join(dir, 'orphan.ts'), `export const c = makeCrud({ tableName: 'todo' })`, 'utf8')
+      writeFileSync(
+        join(dir, 'orphan.ts'),
+        `export const c = makeCrud({ tableName: 'todo' })\nreducer('todo.list', () => undefined)`,
+        'utf8'
+      )
       const schemaContent = `
         export default schema({
           tables: {
