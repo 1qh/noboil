@@ -441,6 +441,52 @@ describe('buildRules', () => {
     if (visitor.Program) visitor.Program({ type: 'Program' })
     expect(true).toBe(true)
   })
+  test('no-duplicate-crud detects duplicate cacheCrud table via getCacheCrudTable', () => {
+    const reports: { messageId: string }[] = []
+    const cfg = {
+      apiCasing: { casingMismatchMsg: '', getApiBaseName: () => undefined, unknownModuleMsg: '' },
+      bindings: { discoveryFailedMsg: '', discoveryMissingLabel: '' },
+      cast: { isCastTarget: () => false, unsafeApiCastMsg: '' },
+      connection: { dataFns: new Set(), missingConnectionMsg: '', unhandledFetchMsg: '' },
+      crud: { factories: new Set(), writeFactories: new Set() },
+      list: { hookName: 'useQuery', msg: '', propNames: new Set() },
+      mutation: { authIdents: [], requireDbInBody: false },
+      orgQuery: { isHook: () => false, msg: '' },
+      pluginName: 'p',
+      provider: { missingErrorBoundaryMsg: '', nameMatchers: [] },
+      schema: {
+        findSchemaContent: () => '',
+        findSchemaContentFresh: () => '',
+        getModules: () => [],
+        getModulesFresh: () => []
+      }
+    } as never
+    const rules = buildRules(cfg) as Record<string, { create: (ctx: unknown) => Record<string, unknown> }>
+    const ctx = {
+      cwd: '/tmp',
+      filename: '/tmp/x.ts',
+      report: (d: { messageId: string }) => reports.push(d),
+      sourceCode: { getAncestors: () => [] }
+    }
+    const dupRule = rules['no-duplicate-crud']
+    if (!dupRule) throw new Error('expected rule')
+    const dup = (dupRule.create(ctx) as { CallExpression: (n: unknown) => void }).CallExpression
+    const node = {
+      arguments: [
+        {
+          properties: [
+            { key: { name: 'table', type: 'Identifier' }, type: 'Property', value: { type: 'Literal', value: 'movie' } }
+          ],
+          type: 'ObjectExpression'
+        }
+      ],
+      callee: { name: 'cacheCrud', type: 'Identifier' },
+      type: 'CallExpression'
+    }
+    dup(node)
+    dup(node)
+    expect(reports.some(r => r.messageId === 'duplicateCrud')).toBe(true)
+  })
   test('consistent-crud-naming fires on cacheCrud table/schema mismatch', () => {
     const reports: { messageId: string }[] = []
     const cfg = {

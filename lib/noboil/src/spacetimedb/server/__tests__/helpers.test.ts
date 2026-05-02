@@ -185,7 +185,13 @@ describe('stdb helpers', () => {
     const ctx = {
       db: {
         query: () => ({
-          filter: () => ({ first: async () => null })
+          filter: (build: (f: unknown) => unknown) => {
+            build({
+              eq: () => undefined,
+              field: () => undefined
+            })
+            return { first: async () => null }
+          }
         })
       }
     }
