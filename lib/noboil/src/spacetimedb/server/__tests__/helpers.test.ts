@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'bun:test'
 import {
   addUrls,
+  checkRateLimit,
   dbDelete,
   dbInsert,
   dbPatch,
@@ -10,6 +11,7 @@ import {
   idToWire,
   isErrorCode,
   isMutationError,
+  makeUnique,
   normalizeRateLimit,
   ownGet,
   readCtx,
@@ -116,9 +118,6 @@ describe('stdb helpers', () => {
     await expect(getUser({ ctx, db, getAuthUserId: async () => 'absent' })).rejects.toThrow(/USER_NOT_FOUND/u)
   })
   test('checkRateLimit inserts on first call, patches reset after window, patches count, throws RATE_LIMITED at max', async () => {
-    const { checkRateLimit } = (await import('../helpers')) as {
-      checkRateLimit: typeof import('../helpers').checkRateLimit
-    }
     let row: null | Record<string, unknown> = null
     const db = {
       delete: async () => undefined,
@@ -144,6 +143,49 @@ describe('stdb helpers', () => {
     )
     await checkRateLimit(db, { config: cfg, key: 'u', table: 't', timestamp: 1000 + 60_001 })
     expect((row as null | Record<string, unknown>)?.count).toBe(1)
+  })
+  test('makeUnique returns true when no existing row, false when present and not excluded', async () => {
+    let captured: ((c: unknown, a: unknown) => unknown) | undefined
+    const pq = ((opts: { handler: (c: unknown, a: unknown) => unknown }) => {
+      captured = opts.handler
+      return opts.handler
+    }) as never
+    makeUnique({ field: 'slug', index: 'by_slug', pq, table: 'org' })
+    if (!captured) throw new Error('handler not captured')
+    let firstResult: null | Record<string, unknown> = null
+    const ctx = {
+      db: {
+        query: () => ({
+          filter: () => ({ first: async () => firstResult }),
+          withIndex: () => ({ first: async () => firstResult })
+        })
+      }
+    }
+    const noneFound = (await captured(ctx, { value: 'foo' })) as boolean
+    expect(noneFound).toBe(true)
+    firstResult = { _id: 'org-1', slug: 'foo' }
+    const found = (await captured(ctx, { value: 'foo' })) as boolean
+    expect(found).toBe(false)
+    const excluded = (await captured(ctx, { exclude: 'org-1', value: 'foo' })) as boolean
+    expect(excluded).toBe(true)
+  })
+  test('makeUnique without index uses filter path', async () => {
+    let captured: ((c: unknown, a: unknown) => unknown) | undefined
+    const pq = ((opts: { handler: (c: unknown, a: unknown) => unknown }) => {
+      captured = opts.handler
+      return opts.handler
+    }) as never
+    makeUnique({ field: 'slug', pq, table: 'org' })
+    if (!captured) throw new Error('handler not captured')
+    const ctx = {
+      db: {
+        query: () => ({
+          filter: () => ({ first: async () => null })
+        })
+      }
+    }
+    const r = (await captured(ctx, { value: 'x' })) as boolean
+    expect(r).toBe(true)
   })
   test('dbInsert/dbPatch/dbDelete proxy to db methods', async () => {
     const calls: { args: unknown[]; op: string }[] = []
