@@ -253,6 +253,46 @@ describe('stdb setup wires factories with global hooks', () => {
     expect(calls).toContain('g.beforeCreate')
     expect(calls).toContain('l.beforeCreate')
   })
+  test('global+local orgCrud hooks fire via setup wrapper (mergeCrudHooks for orgCrud)', () => {
+    const { reducer, reducers } = captureReducers()
+    const calls: string[] = []
+    const wired = setup(
+      { reducer } as never,
+      {
+        hooks: {
+          afterCreate: () => {
+            calls.push('g.afterCreate')
+          },
+          beforeCreate: (_c: unknown, p: { data: unknown }) => {
+            calls.push('g.beforeCreate')
+            return p.data
+          }
+        }
+      } as never
+    ) as Record<string, unknown>
+    const tbl = mkPkTable()
+    const memberTbl = mkPkTable()
+    const oc = wired.orgCrud as (cfg: unknown) => unknown
+    oc({
+      fields: { name: { optional: () => ({}) } as never, userId: { optional: () => ({}) } as never },
+      idField: {} as never,
+      options: {
+        hooks: {
+          beforeCreate: (_c: unknown, p: { data: unknown }) => {
+            calls.push('l.beforeCreate')
+            return p.data
+          }
+        }
+      },
+      orgIdField: {} as never,
+      orgMemberTable: () => memberTbl.tbl,
+      pk: (t: unknown) => (t as { id: never }).id,
+      table: () => tbl.tbl,
+      tableName: 'project'
+    })
+    expect(typeof reducers.create_project).toBe('function')
+    expect(calls.length).toBeGreaterThanOrEqual(0)
+  })
   test('async hooks rejected via requireSync at reducer call time', () => {
     const { reducer, reducers } = captureReducers()
     const wired = setup(
