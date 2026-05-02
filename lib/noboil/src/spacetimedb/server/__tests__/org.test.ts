@@ -206,7 +206,7 @@ describe('stdb makeOrg lifecycle', () => {
             childRows.splice(idx, 1)
             return true
           },
-          rowsByOrg: (_db: unknown) => childRows.filter(r => r.orgId === 1)
+          rowsByOrg: () => childRows.filter(r => r.orgId === 1)
         }
       ]
     }

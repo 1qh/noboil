@@ -132,7 +132,7 @@ describe('stdb helpers', () => {
       query: () => ({
         withIndex: (_name: string, build: (q: unknown) => unknown) => {
           build({
-            eq: (_field: string, _value: unknown) => ({ eq: (_f: string, _v: unknown) => undefined })
+            eq: () => ({ eq: () => undefined })
           })
           return { first: async () => row }
         }
