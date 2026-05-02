@@ -46,6 +46,25 @@ describe('spacetimedb eslint plugin export', () => {
       rmSync(dir, { force: true, recursive: true })
     }
   })
+  test('no-unsafe-api-cast fires isSpacetimeExpression recursive walk', () => {
+    const reports: { messageId: string }[] = []
+    const cast = (rules as Record<string, { create: (ctx: unknown) => Record<string, unknown> }>)['no-unsafe-api-cast']
+    if (!cast) throw new Error('expected rule')
+    const visitor = cast.create({
+      cwd: '/tmp',
+      filename: '/tmp/x.ts',
+      report: (d: { messageId: string }) => reports.push(d)
+    }) as { TSAsExpression: (n: unknown) => void }
+    visitor.TSAsExpression({
+      expression: {
+        object: { name: 'reducers', type: 'Identifier' },
+        property: { name: 'todo', type: 'Identifier' },
+        type: 'MemberExpression'
+      },
+      type: 'TSAsExpression'
+    })
+    expect(reports.some(r => r.messageId === 'unsafeApiCast')).toBe(true)
+  })
   test('api-casing visitor exercises stdb module-bindings discovery helpers', () => {
     const dir = mkdtempSync(join(tmpdir(), 'noboil-stdb-eslint-plug-'))
     try {
