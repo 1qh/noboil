@@ -109,6 +109,7 @@ describe('stdb check helpers', () => {
         `export const x = makeCrud({ tableName: 'todo' })\nreducer('todo.create', () => undefined)\nreducer('todo.list', () => undefined)\nreducer('todo.rm', () => undefined)`,
         'utf8'
       )
+      writeFileSync(join(dir, 'app.ts'), 'useList(api.todo.list, { where: { unindexed_field: 1 } })', 'utf8')
       process.chdir(dir)
       // eslint-disable-next-line @typescript-eslint/unbound-method
       const origExit = process.exit
