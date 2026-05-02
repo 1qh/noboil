@@ -212,6 +212,18 @@ describe('makeOrg integration', () => {
     expect(got.slug).toBe('u-new')
     expect(got.name).toBe('New')
   })
+  test('update with avatarId replacement deletes old storage', async () => {
+    const owner = await seedUser(t())
+    const oldId = (await owner.tt.run(async ctx => ctx.storage.store(new Blob(['old'])))) as string
+    const newId = (await owner.tt.run(async ctx => ctx.storage.store(new Blob(['new'])))) as string
+    const { orgId } = (await callMutate(owner.tt, api.orgs.create, {
+      data: { name: 'A', slug: 'av-1' }
+    })) as { orgId: string }
+    await callMutate(owner.tt, api.orgs.update, { data: { avatarId: oldId }, orgId })
+    await callMutate(owner.tt, api.orgs.update, { data: { avatarId: newId }, orgId })
+    const got = (await callQuery(owner.tt, api.orgs.get, { orgId })) as { avatarId?: string }
+    expect(got.avatarId).toBe(newId)
+  })
   test('update fails with ORG_SLUG_TAKEN when slug already used', async () => {
     const owner = await seedUser(t())
     await callMutate(owner.tt, api.orgs.create, { data: { name: 'A', slug: 'taken' } })

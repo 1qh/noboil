@@ -6,7 +6,7 @@ const kvSchema = object({ active: boolean(), message: string() })
 const chatSchema = object({ published: boolean(), title: string() })
 const messageSchema = object({ chatId: string(), text: string() })
 const projectSchema = object({ name: string() })
-const orgZodSchema = object({ name: string(), slug: string() })
+const orgZodSchema = object({ avatarId: string().optional(), name: string(), slug: string() })
 const movieSchema = object({ rating: number(), title: string(), tmdb_id: string() })
 export {
   chatSchema,
