@@ -408,6 +408,42 @@ describe('buildRules', () => {
     expect(ids.has('unhandledFetch')).toBe(true)
     expect(ids.has('missingErrorBoundary')).toBe(true)
   })
+  test('no-raw-fetch isInsideTryBlock skips inside TryStatement and async-in-CallExpression', () => {
+    const reports: { messageId: string }[] = []
+    const cfg = {
+      apiCasing: { casingMismatchMsg: '', getApiBaseName: () => undefined, unknownModuleMsg: '' },
+      bindings: { discoveryFailedMsg: '', discoveryMissingLabel: '' },
+      cast: { isCastTarget: () => false, unsafeApiCastMsg: '' },
+      connection: { dataFns: new Set(['fetchQuery']), missingConnectionMsg: '', unhandledFetchMsg: '' },
+      crud: { factories: new Set(), writeFactories: new Set() },
+      list: { hookName: 'useQuery', msg: '', propNames: new Set() },
+      mutation: { authIdents: [], requireDbInBody: false },
+      orgQuery: { isHook: () => false, msg: '' },
+      pluginName: 'p',
+      provider: { missingErrorBoundaryMsg: '', nameMatchers: [] },
+      schema: {
+        findSchemaContent: () => '',
+        findSchemaContentFresh: () => '',
+        getModules: () => [],
+        getModulesFresh: () => []
+      }
+    } as never
+    const rules = buildRules(cfg) as Record<string, { create: (ctx: unknown) => Record<string, unknown> }>
+    const rule = rules['no-raw-fetch-in-server-component']
+    if (!rule) throw new Error('expected rule')
+    const insideTry = [{ type: 'TryStatement' }] as never[]
+    const insideAsyncCall = [{ type: 'CallExpression' }, { type: 'ArrowFunctionExpression' }] as never[]
+    const ctxFor = (anc: never[]) => ({
+      cwd: '/tmp',
+      filename: '/tmp/x.ts',
+      report: (d: { messageId: string }) => reports.push(d),
+      sourceCode: { getAncestors: () => anc }
+    })
+    const node = { callee: { name: 'fetchQuery', type: 'Identifier' }, type: 'CallExpression' }
+    ;(rule.create(ctxFor(insideTry)) as { CallExpression: (n: unknown) => void }).CallExpression(node)
+    ;(rule.create(ctxFor(insideAsyncCall)) as { CallExpression: (n: unknown) => void }).CallExpression(node)
+    expect(reports.length).toBe(0)
+  })
   test('require-rate-limit skips when options has rateLimit prop (hasProperty path)', () => {
     const reports: { messageId: string }[] = []
     const cfg = {

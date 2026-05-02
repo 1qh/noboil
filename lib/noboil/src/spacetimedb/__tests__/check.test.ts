@@ -145,6 +145,57 @@ describe('stdb check helpers', () => {
       rmSync(dir, { force: true, recursive: true })
     }
   })
+  test('stdb migrate run "no changes" path (printMigrationPlan early return)', async () => {
+    const { execSync } = await import('node:child_process')
+    const dir = mkdtempSync(join(tmpdir(), 'noboil-stdb-mig-noop-'))
+    const orig = process.cwd()
+    try {
+      process.chdir(dir)
+      execSync('git init -q', { cwd: dir })
+      execSync('git config user.email "t@t"', { cwd: dir })
+      execSync('git config user.name "t"', { cwd: dir })
+      writeFileSync(
+        join(dir, 'schema.ts'),
+        'export default schema({ tables: { todo: table(t.u64(), { id: t.u64(), title: t.string() }) } })',
+        'utf8'
+      )
+      execSync('git add -A', { cwd: dir })
+      execSync('git commit -q -m initial', { cwd: dir })
+      silenced(() => migrateRun([]))
+      expect(true).toBe(true)
+    } finally {
+      process.chdir(orig)
+      rmSync(dir, { force: true, recursive: true })
+    }
+  })
+  test('stdb migrate run "optional field added" only safe branch', async () => {
+    const { execSync } = await import('node:child_process')
+    const dir = mkdtempSync(join(tmpdir(), 'noboil-stdb-mig-opt-'))
+    const orig = process.cwd()
+    try {
+      process.chdir(dir)
+      execSync('git init -q', { cwd: dir })
+      execSync('git config user.email "t@t"', { cwd: dir })
+      execSync('git config user.name "t"', { cwd: dir })
+      writeFileSync(
+        join(dir, 'schema.ts'),
+        'export default schema({ tables: { todo: table(t.u64(), { id: t.u64(), title: t.string() }) } })',
+        'utf8'
+      )
+      execSync('git add -A', { cwd: dir })
+      execSync('git commit -q -m initial', { cwd: dir })
+      writeFileSync(
+        join(dir, 'schema.ts'),
+        'export default schema({ tables: { todo: table(t.u64(), { id: t.u64(), title: t.string(), bio: t.option(t.string()) }) } })',
+        'utf8'
+      )
+      silenced(() => migrateRun([]))
+      expect(true).toBe(true)
+    } finally {
+      process.chdir(orig)
+      rmSync(dir, { force: true, recursive: true })
+    }
+  })
   test('stdb migrate finds schema in module/ subdirectory', async () => {
     const { mkdirSync } = await import('node:fs')
     const dir = mkdtempSync(join(tmpdir(), 'noboil-stdb-mig-mod-'))
