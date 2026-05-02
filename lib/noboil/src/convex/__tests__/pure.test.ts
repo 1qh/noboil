@@ -7145,14 +7145,12 @@ describe('noboil-convex add command', () => {
     test('parseAddFlags exits on invalid --type', () => {
       // eslint-disable-next-line @typescript-eslint/unbound-method
       const origExit = process.exit
-
       const origLog = console.log
       let exited = 0
       process.exit = (c?: number) => {
         exited += 1
         throw new Error(`__exit__${String(c)}`)
       }
-
       console.log = () => undefined
       try {
         try {
@@ -7163,7 +7161,6 @@ describe('noboil-convex add command', () => {
         expect(exited).toBeGreaterThan(0)
       } finally {
         process.exit = origExit
-
         console.log = origLog
       }
     })
@@ -7236,6 +7233,34 @@ describe('noboil-convex add command', () => {
       const fields = defaultFields('cache')
       expect(fields).toHaveLength(2)
       expect(fields[1]?.name).toBe('externalId')
+    })
+    test('log has kind + message; kv has active + message; quota empty', () => {
+      expect(defaultFields('log').map(f => f.name)).toEqual(['kind', 'message'])
+      expect(defaultFields('kv').map(f => f.name)).toEqual(['active', 'message'])
+      expect(defaultFields('quota')).toEqual([])
+    })
+  })
+  describe('convex add genSchemaContent log/kv/quota + genEndpointContent + genPageContent', () => {
+    test('log/kv/quota generate schema snippets', () => {
+      expect(genSchemaContent('audit', 'log', [{ name: 'kind', optional: false, type: 'string' }])).toContain('audit')
+      expect(genSchemaContent('settings', 'kv', [{ name: 'active', optional: false, type: 'boolean' }])).toContain(
+        'settings'
+      )
+      expect(genSchemaContent('throttle', 'quota', [])).toContain('throttle')
+    })
+    test('log/kv/quota generate endpoint snippets', () => {
+      expect(genEndpointContent('audit', 'log')).toContain('audit')
+      expect(genEndpointContent('settings', 'kv')).toContain('settings')
+      expect(genEndpointContent('throttle', 'quota')).toContain('throttle')
+    })
+    test('log/kv/quota generate page snippets', () => {
+      expect(genPageContent('audit', 'log')).toContain('audit')
+      expect(genPageContent('settings', 'kv')).toContain('settings')
+      expect(genPageContent('throttle', 'quota')).toContain('throttle')
+    })
+    test('child page snippet uses parent prop', () => {
+      const content = genPageContent('message', 'child')
+      expect(content).toContain('message')
     })
   })
   describe('genSchemaContent', () => {
