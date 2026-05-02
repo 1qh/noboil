@@ -7120,6 +7120,31 @@ describe('noboil-stdb add command', () => {
       const flags = parseAddFlags(['todo'])
       expect(flags.type).toBe('owned')
     })
+    test('parseAddFlags exits on invalid --type', () => {
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      const origExit = process.exit
+
+      const origLog = console.log
+      let exited = 0
+      process.exit = (c?: number) => {
+        exited += 1
+        throw new Error(`__exit__${String(c)}`)
+      }
+
+      console.log = () => undefined
+      try {
+        try {
+          parseAddFlags(['todo', '--type=garbage'])
+        } catch (error) {
+          if (!(error instanceof Error && error.message.startsWith('__exit__'))) throw error
+        }
+        expect(exited).toBeGreaterThan(0)
+      } finally {
+        process.exit = origExit
+
+        console.log = origLog
+      }
+    })
     test('default moduleDir is module', () => {
       const flags = parseAddFlags(['todo'])
       expect(flags.moduleDir).toBe('module')
