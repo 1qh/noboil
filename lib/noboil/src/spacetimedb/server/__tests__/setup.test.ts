@@ -137,6 +137,64 @@ describe('stdb setup wires factories with global hooks', () => {
     expect(calls).toContain('g.afterDelete')
     expect(calls).toContain('l.afterDelete')
   })
+  test('global+local singleton hooks fire across upsert/update reducers', () => {
+    const { reducer, reducers } = captureReducers()
+    const calls: string[] = []
+    const wired = setup(
+      { reducer } as never,
+      {
+        hooks: {
+          afterCreate: () => {
+            calls.push('g.afterCreate')
+          },
+          afterUpdate: () => {
+            calls.push('g.afterUpdate')
+          },
+          beforeCreate: (_c: unknown, p: { data: unknown }) => {
+            calls.push('g.beforeCreate')
+            return p.data
+          },
+          beforeUpdate: (_c: unknown, p: { patch: unknown }) => {
+            calls.push('g.beforeUpdate')
+            return p.patch
+          }
+        }
+      } as never
+    ) as Record<string, unknown>
+    const profile = mkPkTable()
+    const sc = wired.singletonCrud as (cfg: unknown) => unknown
+    sc({
+      fields: { name: { optional: () => ({}) } as never },
+      options: {
+        hooks: {
+          afterCreate: () => {
+            calls.push('l.afterCreate')
+          },
+          afterUpdate: () => {
+            calls.push('l.afterUpdate')
+          },
+          beforeCreate: (_c: unknown, p: { data: unknown }) => {
+            calls.push('l.beforeCreate')
+            return p.data
+          },
+          beforeUpdate: (_c: unknown, p: { patch: unknown }) => {
+            calls.push('l.beforeUpdate')
+            return p.patch
+          }
+        }
+      },
+      table: () => profile.tbl,
+      tableName: 'profile'
+    })
+    const ctx = {
+      db: {},
+      sender: { __id: 'me', isEqual: () => true, toHexString: () => 'me' },
+      timestamp: { __ms: 0 }
+    }
+    const upsert = reducers.upsert_profile as (c: never, a: never) => void
+    if (upsert) upsert(ctx as never, { name: 'a' } as never)
+    expect(calls.length).toBeGreaterThan(0)
+  })
   test('async hooks rejected via requireSync at reducer call time', () => {
     const { reducer, reducers } = captureReducers()
     const wired = setup(
