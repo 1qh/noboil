@@ -7123,14 +7123,12 @@ describe('noboil-stdb add command', () => {
     test('parseAddFlags exits on invalid --type', () => {
       // eslint-disable-next-line @typescript-eslint/unbound-method
       const origExit = process.exit
-
       const origLog = console.log
       let exited = 0
       process.exit = (c?: number) => {
         exited += 1
         throw new Error(`__exit__${String(c)}`)
       }
-
       console.log = () => undefined
       try {
         try {
@@ -7141,7 +7139,6 @@ describe('noboil-stdb add command', () => {
         expect(exited).toBeGreaterThan(0)
       } finally {
         process.exit = origExit
-
         console.log = origLog
       }
     })

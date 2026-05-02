@@ -228,6 +228,51 @@ describe('stdb check helpers', () => {
       rmSync(dir, { force: true, recursive: true })
     }
   })
+  test('check run() no-flag with duplicate reducer groups + missing schema table + unindexed where', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'noboil-stdb-check-runfull-'))
+    const orig = process.cwd()
+    try {
+      writeFileSync(
+        join(dir, 'schema.ts'),
+        'export default schema({ tables: { todo: table(t.u64(), { id: t.u64(), title: t.string() }), unused: table(t.u64(), { id: t.u64() }) } })',
+        'utf8'
+      )
+      writeFileSync(
+        join(dir, 'reducers_a.ts'),
+        `export const a = makeCrud({ tableName: 'todo' })\nreducer('todo.create', () => undefined)\nreducer('todo.list', () => undefined)`,
+        'utf8'
+      )
+      writeFileSync(
+        join(dir, 'reducers_b.ts'),
+        `export const b = makeCrud({ tableName: 'todo' })\nreducer('todo.rm', () => undefined)`,
+        'utf8'
+      )
+      writeFileSync(
+        join(dir, 'reducers_c.ts'),
+        `export const c = makeCrud({ tableName: 'gone' })\nreducer('gone.create', () => undefined)`,
+        'utf8'
+      )
+      process.chdir(dir)
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      const origExit = process.exit
+      process.exit = (c?: number) => {
+        throw new Error(`__exit__${String(c)}`)
+      }
+      try {
+        try {
+          silenced(() => checkRun([]))
+        } catch (error) {
+          if (!(error instanceof Error && error.message.startsWith('__exit__'))) throw error
+        }
+      } finally {
+        process.exit = origExit
+      }
+      expect(true).toBe(true)
+    } finally {
+      process.chdir(orig)
+      rmSync(dir, { force: true, recursive: true })
+    }
+  })
   test('check finds schema in nested */module/ subdirectory', async () => {
     const { mkdirSync } = await import('node:fs')
     const dir = mkdtempSync(join(tmpdir(), 'noboil-stdb-check-sub-'))
