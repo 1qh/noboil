@@ -408,6 +408,38 @@ describe('buildRules', () => {
     expect(ids.has('unhandledFetch')).toBe(true)
     expect(ids.has('missingErrorBoundary')).toBe(true)
   })
+  test('no-unlimited-file-size continues past .max() and silent on schema with no file()', () => {
+    const reports: { messageId: string }[] = []
+    const cfg = {
+      apiCasing: { casingMismatchMsg: '', getApiBaseName: () => undefined, unknownModuleMsg: '' },
+      bindings: { discoveryFailedMsg: '', discoveryMissingLabel: '' },
+      cast: { isCastTarget: () => false, unsafeApiCastMsg: '' },
+      connection: { dataFns: new Set(), missingConnectionMsg: '', unhandledFetchMsg: '' },
+      crud: { factories: new Set(), writeFactories: new Set() },
+      list: { hookName: 'useQuery', msg: '', propNames: new Set() },
+      mutation: { authIdents: [], requireDbInBody: false },
+      orgQuery: { isHook: () => false, msg: '' },
+      pluginName: 'p',
+      provider: { missingErrorBoundaryMsg: '', nameMatchers: [] },
+      schema: {
+        findSchemaContent: () =>
+          'const owned = makeOwned({ todo: object({ avatar: file().max(1024), tag: file().max(2048) }) })',
+        findSchemaContentFresh: () => '',
+        getModules: () => [],
+        getModulesFresh: () => []
+      }
+    } as never
+    const rules = buildRules(cfg) as Record<string, { create: (ctx: unknown) => Record<string, unknown> }>
+    const rule = rules['no-unlimited-file-size']
+    if (!rule) throw new Error('expected rule')
+    const visitor = rule.create({
+      cwd: '/tmp',
+      filename: '/tmp/x.ts',
+      report: (d: { messageId: string }) => reports.push(d)
+    }) as { Program: (n: unknown) => void }
+    visitor.Program({ type: 'Program' })
+    expect(reports.length).toBe(0)
+  })
   test('no-raw-fetch isInsideTryBlock skips inside TryStatement and async-in-CallExpression', () => {
     const reports: { messageId: string }[] = []
     const cfg = {
