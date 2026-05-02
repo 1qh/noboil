@@ -192,8 +192,12 @@ describe('stdb setup wires factories with global hooks', () => {
       timestamp: { __ms: 0 }
     }
     const upsert = reducers.upsert_profile as ((c: never, a: never) => void) | undefined
-    if (upsert) upsert(ctx as never, { name: 'a' } as never)
-    expect(calls.length).toBeGreaterThan(0)
+    if (upsert) {
+      upsert(ctx as never, { name: 'a' } as never)
+      profile.rows.push({ id: 1, userId: ctx.sender as never } as never)
+      upsert(ctx as never, { name: 'b' } as never)
+    }
+    expect(calls).toContain('g.beforeUpdate')
   })
   test('async hooks rejected via requireSync at reducer call time', () => {
     const { reducer, reducers } = captureReducers()
