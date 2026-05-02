@@ -3,6 +3,7 @@ import { m, q } from './auth-builders'
 import { voteSchema } from './s'
 const endpoints = makeLog({
   builders: { m, q },
+  pub: true,
   schema: voteSchema,
   table: 'hardLog'
 })
