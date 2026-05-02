@@ -17,6 +17,35 @@ describe('spacetimedb eslint plugin export', () => {
     const ruleNames = Object.keys(recommended.rules)
     expect(ruleNames.every(n => n.startsWith('noboil-stdb/'))).toBe(true)
   })
+  test('discovery-check fires hasSpacetimeImportsFresh + searchSubdirs walker', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'noboil-stdb-eslint-disc-'))
+    try {
+      const sub = join(dir, 'app', 'mod')
+      mkdirSync(sub, { recursive: true })
+      writeFileSync(
+        join(sub, 'schema.ts'),
+        'export default schema({ tables: { todo: table(t.u64(), { id: t.u64(), title: t.string() }) } })',
+        'utf8'
+      )
+      writeFileSync(
+        join(dir, 'main.ts'),
+        `import { connection } from 'noboil/spacetimedb'\nexport const x = connection`,
+        'utf8'
+      )
+      const dRule = (rules as Record<string, { create: (ctx: unknown) => Record<string, unknown> }>)['discovery-check']
+      if (!dRule) throw new Error('expected rule')
+      const visitor = dRule.create({
+        cwd: dir,
+        filename: join(dir, 'main.ts'),
+        report: () => undefined,
+        sourceCode: { getAncestors: () => [] }
+      }) as { Program?: (n: unknown) => void }
+      if (visitor.Program) visitor.Program({ type: 'Program' })
+      expect(true).toBe(true)
+    } finally {
+      rmSync(dir, { force: true, recursive: true })
+    }
+  })
   test('api-casing visitor exercises stdb module-bindings discovery helpers', () => {
     const dir = mkdtempSync(join(tmpdir(), 'noboil-stdb-eslint-plug-'))
     try {

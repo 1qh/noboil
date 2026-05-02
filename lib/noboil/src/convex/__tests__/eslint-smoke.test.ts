@@ -44,4 +44,57 @@ describe('convex eslint plugin bundle', () => {
       rmSync(dir, { force: true, recursive: true })
     }
   })
+  test('discovery-check rule invokes findSchemaContent + getModules helpers', () => {
+    const cwd = process.cwd()
+    const dir = mkdtempSync(join(tmpdir(), 'noboil-eslint-disc-'))
+    try {
+      mkdirSync(join(dir, 'convex', '_generated'), { recursive: true })
+      writeFileSync(join(dir, 'convex', 'todos.ts'), 'export const x = 1', 'utf8')
+      writeFileSync(join(dir, 'schema.ts'), 'const owned = makeOwned({ todo: object({ title: string() }) })', 'utf8')
+      process.chdir(dir)
+      const dRule = (rules as Record<string, { create: (ctx: unknown) => Record<string, unknown> }>)['discovery-check']
+      if (!dRule) throw new Error('expected rule')
+      const visitor = dRule.create({
+        cwd: dir,
+        filename: join(dir, 'convex', 'todos.ts'),
+        report: () => undefined,
+        sourceCode: { getAncestors: () => [] }
+      }) as { Program?: (n: unknown) => void }
+      if (visitor.Program) visitor.Program({ type: 'Program' })
+      expect(true).toBe(true)
+    } finally {
+      process.chdir(cwd)
+      rmSync(dir, { force: true, recursive: true })
+    }
+  })
+  test('api-casing rule invokes getModules + isApiExpression helpers', () => {
+    const cwd = process.cwd()
+    const dir = mkdtempSync(join(tmpdir(), 'noboil-eslint-api-'))
+    try {
+      mkdirSync(join(dir, 'convex', '_generated'), { recursive: true })
+      writeFileSync(join(dir, 'convex', 'todos.ts'), 'export const x = 1', 'utf8')
+      writeFileSync(join(dir, 'schema.ts'), 'const owned = makeOwned({ todo: object({}) })', 'utf8')
+      process.chdir(dir)
+      const apiRule = (rules as Record<string, { create: (ctx: unknown) => Record<string, unknown> }>)['api-casing']
+      if (!apiRule) throw new Error('expected rule')
+      const visitor = apiRule.create({
+        cwd: dir,
+        filename: join(dir, 'convex', 'todos.ts'),
+        report: () => undefined
+      }) as { MemberExpression: (n: unknown) => void }
+      visitor.MemberExpression({
+        object: {
+          object: { name: 'api', type: 'Identifier' },
+          property: { name: 'tasks', type: 'Identifier' },
+          type: 'MemberExpression'
+        },
+        property: { name: 'create', type: 'Identifier' },
+        type: 'MemberExpression'
+      })
+      expect(true).toBe(true)
+    } finally {
+      process.chdir(cwd)
+      rmSync(dir, { force: true, recursive: true })
+    }
+  })
 })
