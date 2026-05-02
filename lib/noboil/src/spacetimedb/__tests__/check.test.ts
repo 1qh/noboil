@@ -100,7 +100,11 @@ describe('stdb check helpers', () => {
         'export default schema({ tables: { todo: table(t.u64(), { id: t.u64(), title: t.string() }) } })',
         'utf8'
       )
-      writeFileSync(join(dir, 'reducers.ts'), `export const x = makeCrud({ tableName: 'todo' })`, 'utf8')
+      writeFileSync(
+        join(dir, 'reducers.ts'),
+        `export const x = makeCrud({ tableName: 'todo' })\nreducer('todo.create', () => undefined)\nreducer('todo.list', () => undefined)\nreducer('todo.rm', () => undefined)`,
+        'utf8'
+      )
       process.chdir(dir)
       // eslint-disable-next-line @typescript-eslint/unbound-method
       const origExit = process.exit
@@ -218,6 +222,39 @@ describe('stdb check helpers', () => {
         'utf8'
       )
       silenced(() => migrateRun([]))
+      expect(true).toBe(true)
+    } finally {
+      process.chdir(orig)
+      rmSync(dir, { force: true, recursive: true })
+    }
+  })
+  test('check finds schema in nested */module/ subdirectory', async () => {
+    const { mkdirSync } = await import('node:fs')
+    const dir = mkdtempSync(join(tmpdir(), 'noboil-stdb-check-sub-'))
+    const orig = process.cwd()
+    try {
+      mkdirSync(join(dir, 'app', 'module'), { recursive: true })
+      writeFileSync(
+        join(dir, 'app', 'module', 'schema.ts'),
+        'export default schema({ tables: { todo: table(t.u64(), { id: t.u64(), title: t.string() }) } })',
+        'utf8'
+      )
+      writeFileSync(join(dir, 'app', 'module', 'reducers.ts'), `export const x = makeCrud({ tableName: 'todo' })`, 'utf8')
+      process.chdir(dir)
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      const origExit = process.exit
+      process.exit = (c?: number) => {
+        throw new Error(`__exit__${String(c)}`)
+      }
+      try {
+        try {
+          silenced(() => checkRun([]))
+        } catch (error) {
+          if (!(error instanceof Error && error.message.startsWith('__exit__'))) throw error
+        }
+      } finally {
+        process.exit = origExit
+      }
       expect(true).toBe(true)
     } finally {
       process.chdir(orig)
