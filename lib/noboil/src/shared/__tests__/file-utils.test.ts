@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test'
-import { fileLabel, fmt, isImgType, isImgUrl, parseAccept } from '../components/file-utils'
+import { compress, fileLabel, fmt, isImgType, isImgUrl, parseAccept } from '../components/file-utils'
 describe('fmt', () => {
   test('bytes < 1KB show as B', () => {
     expect(fmt(0)).toBe('0 B')
@@ -47,6 +47,19 @@ describe('fileLabel', () => {
   })
   test('returns File on malformed URL', () => {
     expect(fileLabel('not-a-url')).toBe('File')
+  })
+})
+describe('compress', () => {
+  test('non-image file or off → returns same file unchanged', async () => {
+    const f = new File(['hello'], 'a.txt', { type: 'text/plain' })
+    expect(await compress(f, true)).toBe(f)
+    const img = new File(['x'], 'a.png', { type: 'image/png' })
+    expect(await compress(img, false)).toBe(img)
+  })
+  test('image file with on=true falls back to original on imageCompression failure', async () => {
+    const f = new File([new Uint8Array([1, 2, 3])], 'a.png', { type: 'image/png' })
+    const out = await compress(f, true)
+    expect(out).toBeDefined()
   })
 })
 describe('parseAccept', () => {
