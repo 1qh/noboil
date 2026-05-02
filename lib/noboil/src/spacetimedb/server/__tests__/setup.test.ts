@@ -253,6 +253,28 @@ describe('stdb setup wires factories with global hooks', () => {
     expect(calls).toContain('g.beforeCreate')
     expect(calls).toContain('l.beforeCreate')
   })
+  test('cacheCrud through setup wrapper builds reducers', () => {
+    const { reducer, reducers } = captureReducers()
+    const wired = setup(
+      { reducer } as never,
+      {
+        hooks: {
+          beforeCreate: (_c: unknown, p: { data: unknown }) => p.data
+        }
+      } as never
+    ) as Record<string, unknown>
+    const tbl = mkPkTable()
+    const cc = wired.cacheCrud as (cfg: unknown) => unknown
+    cc({
+      fields: { title: { optional: () => ({}) } as never },
+      keyField: {} as never,
+      keyName: 'tmdb_id',
+      pk: (t: unknown) => (t as { tmdb_id: never }).tmdb_id,
+      table: () => tbl.tbl,
+      tableName: 'movie'
+    })
+    expect(typeof reducers.create_movie).toBe('function')
+  })
   test('global+local orgCrud hooks fire via setup wrapper (mergeCrudHooks for orgCrud)', () => {
     const { reducer, reducers } = captureReducers()
     const calls: string[] = []

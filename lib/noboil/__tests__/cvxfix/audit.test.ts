@@ -58,7 +58,6 @@ describe('makeAudit integration', () => {
     const tt = t()
     await callMutate(tt, api.audits.append, { action: 'old', actor: 'a', ok: true })
     const origNow = Date.now
-
     Date.now = () => origNow() + 365 * 24 * 60 * 60 * 1000
     try {
       const r = (await tt.mutation((api as { audits: { pruneStale: unknown } }).audits.pruneStale as never, {})) as {
