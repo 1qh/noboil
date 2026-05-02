@@ -6,8 +6,8 @@ const { z } = await import('zod/v4')
 const { createUseForm } = await import('../react/form')
 const deps = {
   defaultOnError: () => undefined,
-  extractErrorData: (e: unknown) => (e as { data?: Record<string, unknown> })?.data,
-  getErrorCode: (e: unknown) => (e as { data?: { code?: string } })?.data?.code ?? '',
+  extractErrorData: (e: unknown) => (e as { data?: Record<string, unknown> }).data,
+  getErrorCode: (e: unknown) => (e as { data?: { code?: string } }).data?.code ?? '',
   getErrorMessage: (e: unknown) => (e instanceof Error ? e.message : String(e)),
   isRecord: (v: unknown): v is Record<string, unknown> => Boolean(v) && typeof v === 'object' && !Array.isArray(v)
 }
