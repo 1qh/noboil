@@ -408,6 +408,54 @@ describe('buildRules', () => {
     expect(ids.has('unhandledFetch')).toBe(true)
     expect(ids.has('missingErrorBoundary')).toBe(true)
   })
+  test('require-rate-limit skips when options has rateLimit prop (hasProperty path)', () => {
+    const reports: { messageId: string }[] = []
+    const cfg = {
+      apiCasing: { casingMismatchMsg: '', getApiBaseName: () => undefined, unknownModuleMsg: '' },
+      bindings: { discoveryFailedMsg: '', discoveryMissingLabel: '' },
+      cast: { isCastTarget: () => false, unsafeApiCastMsg: '' },
+      connection: { dataFns: new Set(), missingConnectionMsg: '', unhandledFetchMsg: '' },
+      crud: { factories: new Set(['crud']), writeFactories: new Set(['crud']) },
+      list: { hookName: 'useQuery', msg: '', propNames: new Set() },
+      mutation: { authIdents: [], requireDbInBody: false },
+      orgQuery: { isHook: () => false, msg: '' },
+      pluginName: 'p',
+      provider: { missingErrorBoundaryMsg: '', nameMatchers: [] },
+      schema: {
+        findSchemaContent: () => '',
+        findSchemaContentFresh: () => '',
+        getModules: () => [],
+        getModulesFresh: () => []
+      }
+    } as never
+    const rules = buildRules(cfg) as Record<string, { create: (ctx: unknown) => Record<string, unknown> }>
+    const rule = rules['require-rate-limit']
+    if (!rule) throw new Error('expected rule')
+    const visitor = rule.create({
+      cwd: '/tmp',
+      filename: '/tmp/x.ts',
+      report: (d: { messageId: string }) => reports.push(d)
+    }) as { CallExpression: (n: unknown) => void }
+    visitor.CallExpression({
+      arguments: [
+        { type: 'Literal', value: 'todo' },
+        { type: 'Identifier' },
+        {
+          properties: [
+            {
+              key: { name: 'rateLimit', type: 'Identifier' },
+              type: 'Property',
+              value: { type: 'ObjectExpression' }
+            }
+          ],
+          type: 'ObjectExpression'
+        }
+      ],
+      callee: { name: 'crud', type: 'Identifier' },
+      type: 'CallExpression'
+    })
+    expect(reports.length).toBe(0)
+  })
   test('discovery-check getContextRoot walks subdirectories', () => {
     const reports: { messageId: string }[] = []
     const cfg = {
