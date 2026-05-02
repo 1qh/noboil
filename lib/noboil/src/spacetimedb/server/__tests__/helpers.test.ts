@@ -5,6 +5,7 @@ import {
   dbInsert,
   dbPatch,
   enforceRateLimit,
+  getUser,
   idFromWire,
   idToWire,
   isErrorCode,
@@ -89,6 +90,60 @@ describe('stdb helpers', () => {
     expect(() => enforceRateLimit('todo', sender, { max: 2, window: 60_000 }, 1200)).toThrow(/RATE_LIMITED/u)
     enforceRateLimit('todo', sender, { max: 2, window: 60_000 }, 1000 + 60_001)
     resetRateLimitState()
+  })
+  test('getUser resolves via sender identity hex when present', async () => {
+    const sender = ident('me')
+    const u = { _id: 'me', name: 'Alice' }
+    const db = { get: async (id: string) => (id === 'me' ? u : null) } as never
+    const ctx = { sender } as never
+    const res = await getUser({ ctx, db, getAuthUserId: async () => null })
+    expect(res._id).toBe('me')
+  })
+  test('getUser falls back to getAuthUserId when no sender', async () => {
+    const db = { get: async (id: string) => ({ _id: id, name: 'B' }) } as never
+    const ctx = {} as never
+    const res = await getUser({ ctx, db, getAuthUserId: async () => 'u-2' })
+    expect(res._id).toBe('u-2')
+  })
+  test('getUser throws NOT_AUTHENTICATED when no sender + no auth', async () => {
+    const db = { get: async () => null } as never
+    const ctx = {} as never
+    await expect(getUser({ ctx, db, getAuthUserId: async () => null })).rejects.toThrow(/NOT_AUTHENTICATED/u)
+  })
+  test('getUser throws USER_NOT_FOUND when user missing in db', async () => {
+    const db = { get: async () => null } as never
+    const ctx = {} as never
+    await expect(getUser({ ctx, db, getAuthUserId: async () => 'absent' })).rejects.toThrow(/USER_NOT_FOUND/u)
+  })
+  test('checkRateLimit inserts on first call, patches reset after window, patches count, throws RATE_LIMITED at max', async () => {
+    const { checkRateLimit } = (await import('../helpers')) as {
+      checkRateLimit: typeof import('../helpers').checkRateLimit
+    }
+    let row: null | Record<string, unknown> = null
+    const db = {
+      delete: async () => undefined,
+      get: async () => null,
+      insert: async (_t: string, data: Record<string, unknown>) => {
+        row = { _id: 'rl-1', ...data }
+        return 'rl-1'
+      },
+      patch: async (_id: string, data: Record<string, unknown>) => {
+        if (row) Object.assign(row, data)
+      },
+      query: () => ({
+        withIndex: () => ({ first: async () => row })
+      })
+    } as never
+    const cfg = { max: 2, window: 60_000 }
+    await checkRateLimit(db, { config: cfg, key: 'u', table: 't', timestamp: 1000 })
+    expect((row as null | Record<string, unknown>)?.count).toBe(1)
+    await checkRateLimit(db, { config: cfg, key: 'u', table: 't', timestamp: 1500 })
+    expect((row as null | Record<string, unknown>)?.count).toBe(2)
+    await expect(checkRateLimit(db, { config: cfg, key: 'u', table: 't', timestamp: 2000 })).rejects.toThrow(
+      /RATE_LIMITED/u
+    )
+    await checkRateLimit(db, { config: cfg, key: 'u', table: 't', timestamp: 1000 + 60_001 })
+    expect((row as null | Record<string, unknown>)?.count).toBe(1)
   })
   test('dbInsert/dbPatch/dbDelete proxy to db methods', async () => {
     const calls: { args: unknown[]; op: string }[] = []
