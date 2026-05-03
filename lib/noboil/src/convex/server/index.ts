@@ -58,5 +58,3 @@ export {
 } from './schema-helpers'
 export { setup } from './setup'
 export { makeSingletonCrud } from './singleton'
-export type { TestHarness } from './test-harness'
-export { createTestHarness } from './test-harness'

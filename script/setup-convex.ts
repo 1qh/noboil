@@ -82,7 +82,7 @@ if (skipDeploy) {
 step(5, TOTAL, 'Pushing backend env + deploying functions')
 const reread = readEnv()
 await syncConvexEnv(needsKeygen ? { jwks, pem } : {})
-await run(`cd ${config.paths.backendConvex} && nb-env npx convex dev --once`, { quiet: false })
+await run(`cd ${config.paths.backendConvex} && bunx --bun nb-env npx convex dev --once`, { quiet: false })
 const feat = [
   reread.AUTH_GOOGLE_ID
     ? `${c.green('✓')} Google OAuth`
