@@ -1,12 +1,12 @@
 import { readdirSync } from 'node:fs'
-import { dirname, join } from 'node:path'
+import { dirname, isAbsolute, join } from 'node:path'
 /** Scans a Convex directory for all `.ts` files (excluding tests) and returns a module map for `convex-test`. */
 const discoverModules = (
   convexDir: string,
   extras?: Record<string, () => Promise<unknown>>
 ): Record<string, () => Promise<unknown>> => {
   const modules: Record<string, () => Promise<unknown>> = {}
-  const absConvex = join(process.cwd(), convexDir)
+  const absConvex = isAbsolute(convexDir) ? convexDir : join(process.cwd(), convexDir)
   const parentDir = dirname(absConvex)
   const scanDir = (dir: string, prefix: string) => {
     for (const entry of readdirSync(dir, { withFileTypes: true }))

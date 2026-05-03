@@ -3,3 +3,6 @@ linker = "hoisted"
 
 [run]
 silent = true
+
+[test]
+pathIgnorePatterns = ["**/e2e/**"]

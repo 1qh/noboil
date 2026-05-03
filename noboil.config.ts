@@ -52,7 +52,7 @@ const config = {
     doc: 4300,
     minio: 4600,
     minioConsole: 4601,
-    postgres: 5432,
+    postgres: 5433,
     stdb: 4000
   },
   postgres: { db: 'convex_self_hosted' }
