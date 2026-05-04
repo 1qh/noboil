@@ -6,6 +6,9 @@ import { findProjectRoot, parseEnvFile } from '../env-file'
 describe('parseEnvFile', () => {
   const dir = mkdtempSync(join(tmpdir(), 'env-test-'))
   const path = join(dir, '.env')
+  afterAll(() => {
+    rmSync(dir, { force: true, recursive: true })
+  })
   test('parses key=value pairs', () => {
     writeFileSync(path, 'FOO=bar\nBAZ=qux\n')
     const r = parseEnvFile(path)
@@ -27,9 +30,6 @@ describe('parseEnvFile', () => {
   })
   test('missing file returns empty record', () => {
     expect(parseEnvFile(join(dir, 'absent'))).toEqual({})
-  })
-  afterAll(() => {
-    rmSync(dir, { force: true, recursive: true })
   })
 })
 describe('findProjectRoot', () => {
