@@ -12,15 +12,13 @@ const patchServer = (): void => {
   if (src.includes(marker)) return
   if (!existsSync(backup)) copyFileSync(target, backup)
   const stub = `${marker}
-const _noop = new Proxy(function () { return _noop }, {
-  get: (t, p) => p === Symbol.toPrimitive ? () => '' : (t[p] ?? _noop)
-})
-const _syscalls2_0 = new Proxy({}, { get: () => _noop })
-const moduleHooks = _noop
+const _noop = function () {}
+const moduleHooks = Symbol('moduleHooks')
+const sys = new Proxy({}, { get: () => _noop })
 `
   const patched = src
-    .replace(/^import \* as _syscalls2_0 from 'spacetime:sys@2\.0';\n?/mu, '')
-    .replace(/^import \{ moduleHooks \} from 'spacetime:sys@2\.0';\n?/mu, '')
+    .replaceAll(/^import (?:\* as _syscalls2_[01]|\{ moduleHooks \}) from 'spacetime:sys@2\.[01]';\n?/gmu, '')
+    .replace(/^var sys = \{ \.\.\._syscalls2_0, \.\.\._syscalls2_1 \};\n?/mu, '')
   writeFileSync(target, stub + patched)
   console.log('patched', target)
 }
