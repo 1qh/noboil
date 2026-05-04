@@ -44,6 +44,7 @@ class ChatPage extends BaseChatPage {
     await this.page.waitForLoadState('domcontentloaded')
   }
   public async togglePublic(): Promise<void> {
+    await this.waitForConnection()
     await this.getPublicToggle().click()
   }
 }

@@ -22,6 +22,7 @@ class BlogPage extends BasePage {
     content: string,
     options?: { category?: string; tags?: string[] }
   ): Promise<void> {
+    await this.waitForConnection()
     await this.getCreateTrigger().click()
     await this.getCreateDialog().waitFor({ state: 'visible' })
     await this.getTitleInput().fill(title)

@@ -30,7 +30,7 @@ Unused Next.js entry files, cross-package exports, `<img>` for storage URLs, SPA
 
 ## SpacetimeDB E2E flake — websocket drops mid-flow
 
-`createPoll` and similar dialog-driven write flows occasionally show "You are offline" mid-cycle. Cause: SDK websocket reconnects when dialog open/close triggers React re-render at the right moment. Mitigation in `lib/e2e/base-page.waitForConnection()` called before flow start (e.g. `createPoll`, `sendUserMessage`) — kills startup race. Mid-flow drops still happen; needs SDK fix in upstream `@clockworklabs/spacetimedb-sdk` reconnection logic. Affected suites: stdb/poll (~50% retry), stdb/blog (1 cascade fail), stdb/chat (public-chats). All recover on retry.
+`createPoll` and similar dialog-driven write flows occasionally show “You are offline” mid-cycle. Cause: SDK websocket reconnects when dialog open/close triggers React re-render at the right moment. Mitigation in `lib/e2e/base-page.waitForConnection()` called before flow start (e.g. `createPoll`, `sendUserMessage`) — kills startup race. Mid-flow drops still happen; needs SDK fix in upstream `@clockworklabs/spacetimedb-sdk` reconnection logic. Affected suites: stdb/poll (~50% retry), stdb/blog (1 cascade fail), stdb/chat (public-chats). All recover on retry.
 
 ## Ports — local conflicts
 
