@@ -47,7 +47,7 @@ Run `noboil` with no args for an interactive dashboard with single-key hotkeys:
 All commands also work non-interactively. <!-- AUTO-GENERATED:CLI-TABLE-TYPES -->
 `noboil init my-app --db=convex`, `noboil add post --type=owned --fields="title:string,content:string"`, etc. (Valid `--type=` values: cache, child, kv, log, org, owned, quota, singleton.) Run `noboil <cmd> --help` for options.
 
-<!-- /AUTO-GENERATED:CLI-TABLE-TYPES --> `noboil --version`, `noboil-convex --version`, and `noboil-stdb --version` each print the CLI version.
+<!-- /AUTO-GENERATED:CLI-TABLE-TYPES --> `noboil --version`, `noboil convex --version`, and `noboil stdb --version` each print the CLI version.
 
 Shell completions:
 
