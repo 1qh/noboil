@@ -42,7 +42,7 @@ const walkRel = (root: string, rel = ''): string[] => {
   const out: string[] = []
   const dir = join(root, rel)
   if (!statSync(dir, { throwIfNoEntry: false })) return out
-  for (const name of readdirSync(dir)) {
+  for (const name of readdirSync(dir).toSorted()) {
     if (name.startsWith('.') || SKIP_DIRS.has(name)) continue
     const full = join(dir, name)
     const s = statSync(full)
@@ -505,7 +505,9 @@ const auditNamingPair = (
 } => {
   if (!statSync(np.dir, { throwIfNoEntry: false }))
     return { cvxOnly: [], cvxUnaccounted: [], matched: 0, name: np.name, stdbOnly: [], stdbUnaccounted: [] }
-  const files = readdirSync(np.dir).filter(f => (f.endsWith('.ts') || f.endsWith('.sh')) && !f.endsWith('.test.ts'))
+  const files = readdirSync(np.dir)
+    .toSorted()
+    .filter(f => (f.endsWith('.ts') || f.endsWith('.sh')) && !f.endsWith('.test.ts'))
   const cvxFiles = files.filter(f => f.includes(np.cvxPrefix))
   const stdbFiles = files.filter(f => f.includes(np.stdbPrefix))
   const cvxStems = new Set(cvxFiles.map(f => namingStem(f, np.cvxPrefix)))
