@@ -18,41 +18,54 @@ const boundedBody = (
   if (!body) return null
   let seen = 0
   let idleTimer: null | ReturnType<typeof setTimeout> = null
-  const armIdle = (ctrl: TransformStreamDefaultController<Uint8Array>): void => {
-    if (!opts?.idleMs) return
-    if (idleTimer) clearTimeout(idleTimer)
-    idleTimer = setTimeout(() => {
-      if (opts.sse)
-        try {
-          ctrl.enqueue(new TextEncoder().encode('event: error\ndata: {"error":"upstream idle"}\n\n'))
-        } catch {
-          /* Already terminated */
-        }
-      opts.onAbort?.()
-      ctrl.error(new Error('upstream idle'))
-    }, opts.idleMs)
-  }
-  return body.pipeThrough(
-    new TransformStream<Uint8Array, Uint8Array>({
-      flush: () => {
+  const reader = body.getReader()
+  return new ReadableStream<Uint8Array>({
+    cancel: async reason => {
+      if (idleTimer) clearTimeout(idleTimer)
+      try {
+        await reader.cancel(reason)
+      } catch {
+        /* Already torn down */
+      }
+    },
+    pull: async controller => {
+      const armIdle = (): void => {
+        if (!opts?.idleMs) return
         if (idleTimer) clearTimeout(idleTimer)
-        opts?.onClose?.()
-      },
-      start: ctrl => armIdle(ctrl),
-      transform: (chunk, controller) => {
-        seen += chunk.byteLength
+        idleTimer = setTimeout(() => {
+          if (opts.sse)
+            try {
+              controller.enqueue(new TextEncoder().encode('event: error\ndata: {"error":"upstream idle"}\n\n'))
+            } catch {
+              /* Already terminated */
+            }
+          opts.onAbort?.()
+          controller.error(new Error('upstream idle'))
+        }, opts.idleMs)
+      }
+      try {
+        armIdle()
+        const { value, done } = await reader.read()
+        if (idleTimer) clearTimeout(idleTimer)
+        if (done) {
+          opts?.onClose?.()
+          controller.close()
+          return
+        }
+        seen += value.byteLength
         if (seen > max) {
-          if (idleTimer) clearTimeout(idleTimer)
           opts?.onExceed?.()
           opts?.onAbort?.()
           controller.error(new Error('body too large'))
           return
         }
-        controller.enqueue(chunk)
-        armIdle(controller)
+        controller.enqueue(value)
+      } catch (error) {
+        if (idleTimer) clearTimeout(idleTimer)
+        controller.error(error)
       }
-    })
-  )
+    }
+  })
 }
 /**
  * Tee a stream into a passthrough that fires `onCancel` when the consumer aborts. Use to
