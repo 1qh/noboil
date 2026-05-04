@@ -12,7 +12,7 @@ const STRIP_AUTOGEN_RE = /\{\/\* AUTO-GENERATED:[\s\S]*?\/AUTO-GENERATED:[^}]+\*
 const STRIP_HTML_AUTOGEN_RE = /<!-- AUTO-GENERATED:[\s\S]*?\/AUTO-GENERATED:[^>]+-->/gu
 const STRIP_FENCE_RE = /```[\s\S]*?```/gu
 const walk = (dir: string, out: string[] = []): string[] => {
-  for (const name of readdirSync(dir)) {
+  for (const name of readdirSync(dir).toSorted()) {
     if (name.startsWith('.')) continue
     const full = join(dir, name)
     if (statSync(full).isDirectory()) walk(full, out)

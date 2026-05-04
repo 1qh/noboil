@@ -17,8 +17,8 @@ const moduleHooks = Symbol('moduleHooks')
 const sys = new Proxy({}, { get: () => _noop })
 `
   const patched = src
-    .replaceAll(/^import (?:\* as _syscalls2_[01]|\{ moduleHooks \}) from 'spacetime:sys@2\.[01]';\n?/gmu, '')
-    .replace(/^var sys = \{ \.\.\._syscalls2_0, \.\.\._syscalls2_1 \};\n?/mu, '')
+    .replaceAll(/^import (?:\* as _syscalls\d+_\d+|\{ moduleHooks \}) from 'spacetime:sys@\d+\.\d+';\n?/gmu, '')
+    .replace(/^var sys = \{ (?:\.\.\._syscalls\d+_\d+(?:, )?)+ \};\n?/mu, '')
   writeFileSync(target, stub + patched)
   console.log('patched', target)
 }

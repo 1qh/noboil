@@ -12,7 +12,7 @@ const dbDescription: Record<string, string> = {
 const collect = (kind: 'cvx' | 'stdb'): string[] => {
   const root = join(REPO, 'web', kind)
   const entries: string[] = []
-  for (const name of readdirSync(root)) {
+  for (const name of readdirSync(root).toSorted()) {
     const dir = join(root, name)
     if (!statSync(dir).isDirectory()) continue
     if (!readFileSync(join(dir, 'package.json'), 'utf8').includes('"name"')) continue

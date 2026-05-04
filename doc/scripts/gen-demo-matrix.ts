@@ -27,7 +27,7 @@ const parseTables = (src: string): Map<string, string[]> => {
 }
 const walkSrc = (dir: string, out: string[] = []): string[] => {
   if (!statSync(dir, { throwIfNoEntry: false })) return out
-  for (const name of readdirSync(dir)) {
+  for (const name of readdirSync(dir).toSorted()) {
     if (name === 'node_modules' || name === '.next' || name === 'module_bindings' || name.startsWith('.')) continue
     const full = join(dir, name)
     const stat = statSync(full)

@@ -7,6 +7,7 @@ const REPO = resolve(import.meta.dir, '../..')
 const hooksFor = (kind: 'convex' | 'spacetimedb'): string[] => {
   const dir = `${REPO}/lib/noboil/src/${kind}/react`
   return readdirSync(dir)
+    .toSorted()
     .filter(f => f.startsWith('use-') && f.endsWith('.ts') && !f.endsWith('.test.ts'))
     .map(f => `use${f.slice(4, -3).replaceAll(/-./gu, m => m[1]?.toUpperCase() ?? '')}`)
     .toSorted()

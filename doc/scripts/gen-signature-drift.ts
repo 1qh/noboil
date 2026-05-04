@@ -25,7 +25,7 @@ const balancedParens = (src: string, openIdx: number): string => {
 const collectHooks = (root: string): Hook[] => {
   const out: Hook[] = []
   if (!statSync(root, { throwIfNoEntry: false })) return out
-  for (const f of readdirSync(root)) {
+  for (const f of readdirSync(root).toSorted()) {
     if (!(f.startsWith('use-') && f.endsWith('.ts')) || f.endsWith('.test.ts')) continue
     const src = readFileSync(`${root}/${f}`, 'utf8')
     let m = HOOK_RE.exec(src)
@@ -44,7 +44,7 @@ const collectHooks = (root: string): Hook[] => {
   return out
 }
 const walkDocs = (dir: string, out: string[] = []): string[] => {
-  for (const name of readdirSync(dir)) {
+  for (const name of readdirSync(dir).toSorted()) {
     if (name.startsWith('.')) continue
     const full = join(dir, name)
     if (statSync(full).isDirectory()) walkDocs(full, out)

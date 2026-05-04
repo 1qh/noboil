@@ -116,7 +116,7 @@ const tableUsedInLazy = (lazy: string, schemaTable: string): boolean =>
 const tableUsedInBackend = (backendDir: string, schemaTable: string): boolean => {
   if (!statSync(backendDir, { throwIfNoEntry: false })) return false
   const re = new RegExp(`\\bs\\.${schemaTable}\\b`, 'u')
-  for (const f of readdirSync(backendDir)) {
+  for (const f of readdirSync(backendDir).toSorted()) {
     if (!f.endsWith('.ts')) continue
     if (re.test(readFileSync(`${backendDir}/${f}`, 'utf8'))) return true
   }
@@ -136,7 +136,7 @@ const tableUsedInDemos = (demoRoots: string[], names: string[]): boolean => {
     while (stack.length > 0) {
       const dir = stack.pop()
       if (!dir) continue
-      for (const name of readdirSync(dir)) {
+      for (const name of readdirSync(dir).toSorted()) {
         if (name.startsWith('.') || name === 'node_modules' || name === '.next' || name === 'module_bindings') continue
         const full = join(dir, name)
         const s = statSync(full)
@@ -154,7 +154,7 @@ const tableUsedInDemos = (demoRoots: string[], names: string[]): boolean => {
 }
 const walkTests = (dir: string, out: string[] = []): string[] => {
   if (!statSync(dir, { throwIfNoEntry: false })) return out
-  for (const name of readdirSync(dir)) {
+  for (const name of readdirSync(dir).toSorted()) {
     if (name.startsWith('.') || name === 'node_modules') continue
     const full = join(dir, name)
     if (statSync(full).isDirectory()) walkTests(full, out)
@@ -203,6 +203,7 @@ const main = () => {
     const cvxTests = factoryAppearsInTests(cvxTestRoot, spec.cvxFactoryFn)
     const stdbTests = factoryAppearsInTests(stdbTestRoot, spec.stdbFactoryFn)
     const allDocs = readdirSync(docsDir)
+      .toSorted()
       .filter(f => f.endsWith('.mdx'))
       .map(f => readFileSync(`${docsDir}/${f}`, 'utf8'))
       .join('\n')

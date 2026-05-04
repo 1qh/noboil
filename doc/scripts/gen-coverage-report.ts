@@ -45,6 +45,7 @@ const targets = [
 ]
 const main = () => {
   const scripts = readdirSync(SCRIPTS_DIR)
+    .toSorted()
     .filter(f => f.startsWith('gen-') && f.endsWith('.ts') && f !== 'gen-all.ts' && f !== 'gen-coverage-report.ts')
     .toSorted()
   const allMarkers: { file: string; markers: string[] }[] = []

@@ -507,6 +507,7 @@ const auditNamingPair = (
     return { cvxOnly: [], cvxUnaccounted: [], matched: 0, name: np.name, stdbOnly: [], stdbUnaccounted: [] }
   const files = readdirSync(np.dir)
     .toSorted()
+    .toSorted()
     .filter(f => (f.endsWith('.ts') || f.endsWith('.sh')) && !f.endsWith('.test.ts'))
   const cvxFiles = files.filter(f => f.includes(np.cvxPrefix))
   const stdbFiles = files.filter(f => f.includes(np.stdbPrefix))

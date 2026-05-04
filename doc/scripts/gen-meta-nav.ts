@@ -44,6 +44,7 @@ const ORDER = [
 const main = () => {
   const onDisk = new Set(
     readdirSync(DOCS_DIR)
+      .toSorted()
       .filter(f => f.endsWith('.mdx'))
       .map(f => f.replace(/\.mdx$/u, ''))
   )

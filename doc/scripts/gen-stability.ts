@@ -9,7 +9,7 @@ const REPO = resolve(import.meta.dir, '../..')
 const TAGS = ['@beta', '@alpha', '@experimental', '@deprecated', '@internal'] as const
 type Tag = (typeof TAGS)[number]
 const walk = (dir: string, out: string[] = []): string[] => {
-  for (const name of readdirSync(dir)) {
+  for (const name of readdirSync(dir).toSorted()) {
     const full = join(dir, name)
     if (!statSync(full, { throwIfNoEntry: false })) continue
     if (statSync(full).isDirectory()) {

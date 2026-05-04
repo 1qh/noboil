@@ -7,15 +7,18 @@ const REPO = resolve(import.meta.dir, '../..')
 const main = () => {
   const root = `${REPO}/readonly/ui/src/components`
   const top = readdirSync(root)
+    .toSorted()
     .filter(f => f.endsWith('.tsx'))
     .map(f => f.slice(0, -'.tsx'.length))
     .toSorted()
   const subdirs = readdirSync(root)
+    .toSorted()
     .filter(f => statSync(`${root}/${f}`).isDirectory())
     .toSorted()
   const subLines: string[] = []
   for (const sub of subdirs) {
     const items = readdirSync(`${root}/${sub}`)
+      .toSorted()
       .filter(f => f.endsWith('.tsx'))
       .map(f => f.slice(0, -'.tsx'.length))
       .toSorted()

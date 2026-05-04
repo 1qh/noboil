@@ -7,7 +7,7 @@ import { join, relative, resolve } from 'node:path'
 import { replaceBetween } from './lib'
 const REPO = resolve(import.meta.dir, '../..')
 const walk = (dir: string, out: string[] = []): string[] => {
-  for (const name of readdirSync(dir)) {
+  for (const name of readdirSync(dir).toSorted()) {
     if (
       name.startsWith('.') ||
       name === 'node_modules' ||

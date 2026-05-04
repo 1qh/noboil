@@ -16,7 +16,9 @@ const slugify = (heading: string): string =>
     .replaceAll(/[^a-z0-9 -]/gu, '')
     .replaceAll(/\s+/gu, '-')
 const main = () => {
-  const files = readdirSync(DOCS_DIR).filter(f => f.endsWith('.mdx'))
+  const files = readdirSync(DOCS_DIR)
+    .toSorted()
+    .filter(f => f.endsWith('.mdx'))
   const slugs = new Set(files.map(f => f.replace(/\.mdx$/u, '')))
   const anchorsByFile = new Map<string, Set<string>>()
   for (const f of files) {

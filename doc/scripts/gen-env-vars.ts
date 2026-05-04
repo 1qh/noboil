@@ -8,7 +8,7 @@ import { replaceBetween } from './lib'
 const REPO = resolve(import.meta.dir, '../..')
 const ENV_RE = /process\.env\.(?<name>[A-Z][A-Z0-9_]+)/gu
 const walk = (dir: string, out: string[] = []): string[] => {
-  for (const name of readdirSync(dir)) {
+  for (const name of readdirSync(dir).toSorted()) {
     if (
       name.startsWith('.') ||
       name === 'node_modules' ||

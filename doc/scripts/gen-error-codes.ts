@@ -14,7 +14,7 @@ const PATTERNS = [
   /throwConvexError\(\s*'(?<code>[A-Z][A-Z_0-9]+)'/gu
 ]
 const walk = (dir: string, out: string[] = []): string[] => {
-  for (const name of readdirSync(dir)) {
+  for (const name of readdirSync(dir).toSorted()) {
     const full = join(dir, name)
     if (statSync(full).isDirectory()) walk(full, out)
     else if (name.endsWith('.ts') && !name.endsWith('.test.ts')) out.push(full)

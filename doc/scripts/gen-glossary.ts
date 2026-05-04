@@ -57,7 +57,7 @@ const main = () => {
     }
   }
   const docsDir = `${REPO}/doc/content/docs`
-  for (const file of readdirSync(docsDir)) {
+  for (const file of readdirSync(docsDir).toSorted()) {
     if (!file.endsWith('.mdx') || file === 'glossary.mdx') continue
     const src = readFileSync(`${docsDir}/${file}`, 'utf8').replaceAll(STRIP_AUTOGEN_RE, '').replaceAll(STRIP_FENCE_RE, '')
     const slug = basename(file, '.mdx')

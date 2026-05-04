@@ -46,9 +46,11 @@ const main = () => {
   const cvxRoot = `${REPO}/lib/noboil/src/convex/components`
   const stdbRoot = `${REPO}/lib/noboil/src/spacetimedb/components`
   const cvxFiles = readdirSync(cvxRoot)
+    .toSorted()
     .filter(f => f.endsWith('.tsx') || f === 'index.ts')
     .toSorted()
   const stdbFiles = readdirSync(stdbRoot)
+    .toSorted()
     .filter(f => f.endsWith('.tsx') || f === 'index.ts')
     .toSorted()
   const allFiles = [...new Set([...cvxFiles, ...stdbFiles])].toSorted()

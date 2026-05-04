@@ -110,7 +110,7 @@ const FACTORIES: FactorySpec[] = [
 const TEST_BLOCK_RE = /\b(?:test|it)\(\s*['"`][^'"`]+['"`][\s\S]*?^\s*\}\)/gmu
 const walk = (dir: string, out: string[] = []): string[] => {
   if (!statSync(dir, { throwIfNoEntry: false })) return out
-  for (const name of readdirSync(dir)) {
+  for (const name of readdirSync(dir).toSorted()) {
     if (name.startsWith('.') || name === 'node_modules') continue
     const full = join(dir, name)
     if (statSync(full).isDirectory()) walk(full, out)

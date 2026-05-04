@@ -7,7 +7,7 @@ const REPO = resolve(import.meta.dir, '../..')
 const DESCRIBE_RE = /describe\(\s*['"`](?<name>[^'"`]+)['"`]/gu
 const TEST_RE = /\b(?:test|it)\(\s*['"`](?<name>[^'"`]+)['"`]/gu
 const walk = (dir: string, out: string[] = []): string[] => {
-  for (const name of readdirSync(dir)) {
+  for (const name of readdirSync(dir).toSorted()) {
     const full = join(dir, name)
     if (statSync(full).isDirectory()) walk(full, out)
     else if (name.endsWith('.test.ts') || name.endsWith('.test.tsx')) out.push(full)

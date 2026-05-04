@@ -10,7 +10,7 @@ const DEMOS = ['blog', 'chat', 'movie', 'org', 'poll']
 const TEST_RE = /\b(?:test|it)\(\s*['"`]/gu
 const walk = (dir: string, out: string[] = []): string[] => {
   if (!statSync(dir, { throwIfNoEntry: false })) return out
-  for (const name of readdirSync(dir)) {
+  for (const name of readdirSync(dir).toSorted()) {
     if (name.startsWith('.') || name === 'node_modules' || name === '.next') continue
     const full = join(dir, name)
     if (statSync(full).isDirectory()) walk(full, out)
@@ -21,7 +21,7 @@ const walk = (dir: string, out: string[] = []): string[] => {
 const collectRoutes = (root: string, base = ''): string[] => {
   if (!statSync(root, { throwIfNoEntry: false })) return []
   const out: string[] = []
-  for (const name of readdirSync(root)) {
+  for (const name of readdirSync(root).toSorted()) {
     if (name.startsWith('.') || name === 'node_modules' || name === 'api') continue
     const full = join(root, name)
     const s = statSync(full)
@@ -33,7 +33,7 @@ const collectRoutes = (root: string, base = ''): string[] => {
 const countTests = (dir: string): number => {
   let n = 0
   if (!statSync(dir, { throwIfNoEntry: false })) return 0
-  for (const f of readdirSync(dir)) {
+  for (const f of readdirSync(dir).toSorted()) {
     if (!f.endsWith('.test.ts')) continue
     const src = readFileSync(`${dir}/${f}`, 'utf8')
     let m = TEST_RE.exec(src)

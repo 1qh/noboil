@@ -24,7 +24,7 @@ const collectDir = (dir: string): { describes: number; files: number; tests: num
   let describes = 0
   let tests = 0
   let files = 0
-  for (const name of readdirSync(dir)) {
+  for (const name of readdirSync(dir).toSorted()) {
     if (!name.endsWith('.test.ts')) continue
     const src = readFileSync(`${dir}/${name}`, 'utf8')
     files += 1

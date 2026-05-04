@@ -10,7 +10,7 @@ const DEMOS = ['blog', 'chat', 'movie', 'org', 'poll']
 const walkRoutes = (root: string, base = ''): string[] => {
   if (!statSync(root, { throwIfNoEntry: false })) return []
   const out: string[] = []
-  for (const name of readdirSync(root)) {
+  for (const name of readdirSync(root).toSorted()) {
     if (name.startsWith('.') || name === 'node_modules' || name === 'api') continue
     const full = join(root, name)
     const s = statSync(full)
