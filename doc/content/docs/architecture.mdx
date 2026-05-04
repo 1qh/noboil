@@ -734,14 +734,14 @@ Quantitative depth per factory: source LOC, hook file LOC, test count (cases tha
 
 | Factory     | src LOC (cvx/stdb) | hook LOC (cvx/stdb) | tests (cvx/stdb) | doc page | tabs (cvx/stdb) |
 | ----------- | ------------------ | ------------------- | ---------------- | -------- | --------------- |
-| `base`      | 245 / 173          | 90 / 86             | 17 / 17          | 236L     | 4 / 4 ✓         |
-| `child`     | 264 / 164          | 36 / 36             | 11 / 13          | 240L     | 4 / 4 ✓         |
-| `kv`        | 164 / 148          | 38 / 44             | 10 / 10          | 270L     | 4 / 4 ✓         |
-| `log`       | 390 / 256          | 71 / 73             | 12 / 10          | 357L     | 5 / 5 ✓         |
-| `orgScoped` | 486 / 400          | 36 / 36             | 35 / 33          | 255L     | 4 / 4 ✓         |
-| `owned`     | 429 / 139          | 36 / 36             | 36 / 38          | 266L     | 5 / 5 ✓         |
-| `quota`     | 110 / 110          | 31 / 78             | 9 / 9            | 257L     | 4 / 4 ✓         |
-| `singleton` | 70 / 113           | 25 / 39             | 22 / 22          | 227L     | 4 / 4 ✓         |
+| `base`      | 252 / 173          | 90 / 86             | 18 / 25          | 236L     | 4 / 4 ✓         |
+| `child`     | 271 / 164          | 42 / 40             | 13 / 27          | 240L     | 4 / 4 ✓         |
+| `kv`        | 170 / 148          | 42 / 48             | 10 / 23          | 270L     | 4 / 4 ✓         |
+| `log`       | 397 / 256          | 76 / 77             | 12 / 17          | 357L     | 5 / 5 ✓         |
+| `orgScoped` | 493 / 400          | 42 / 40             | 38 / 47          | 255L     | 4 / 4 ✓         |
+| `owned`     | 441 / 139          | 42 / 40             | 54 / 57          | 266L     | 5 / 5 ✓         |
+| `quota`     | 117 / 110          | 35 / 79             | 14 / 15          | 257L     | 4 / 4 ✓         |
+| `singleton` | 76 / 113           | 29 / 40             | 23 / 30          | 227L     | 4 / 4 ✓         |
 {/* AUTO-GENERATED:FACTORY-DEPTH:END */}
 
 ## Option/feature parity
@@ -917,21 +917,22 @@ Whole-repo audit of `lib/noboil/src/{convex,spacetimedb}/` cross-backend. Walks 
 {/* AUTO-GENERATED:MEGA-PARITY:START */}
 Whole-repo audit. Walks every `*.ts/.tsx/.json/.sh/.toml/.md/.yml/.yaml` (excl. tests/codegen output via SKIP_DIRS) in 7 parallel cvx/stdb directory pairs (lib + backend + 5 demos). 150 file-level + 207 symbol-level architectural exemptions registered. Test files (`*.test.ts`) ARE included in file-presence check (symbol parity skipped for tests).
 
-**238 shared files · 74 cvx-only · 35 stdb-only · 1 files with cross-backend symbol divergence.** Status: 🔴 32 unaccounted-for gap(s).
+**244 shared files · 85 cvx-only · 60 stdb-only · 1 files with cross-backend symbol divergence.** Status: 🔴 68 unaccounted-for gap(s).
 
-| Pair                     | shared    | cvx-only            | stdb-only          | symbol gaps | status |
-| ------------------------ | --------: | ------------------- | ------------------ | ----------: | ------ |
-| **lib/noboil/src**       | 78        | 35 (31 unaccounted) | 22 (0 unaccounted) | 1           | 🔴     |
-| **backend**              | 4         | 31 (0 unaccounted)  | 6 (0 unaccounted)  | 0           | 🟢     |
-| **web/blog**             | 32        | 1 (0 unaccounted)   | 0 (0 unaccounted)  | 0           | 🟢     |
-| **web/chat**             | 23        | 1 (0 unaccounted)   | 1 (0 unaccounted)  | 0           | 🟢     |
-| **web/movie**            | 16        | 1 (0 unaccounted)   | 1 (0 unaccounted)  | 0           | 🟢     |
-| **web/org**              | 48        | 2 (0 unaccounted)   | 4 (0 unaccounted)  | 0           | 🟢     |
-| **web/poll**             | 37        | 3 (0 unaccounted)   | 1 (0 unaccounted)  | 0           | 🟢     |
-| **script (naming pair)** | 0 matched | 2 (0 unaccounted)   | 4 (0 unaccounted)  | —           | 🟢     |
+| Pair                     | shared    | cvx-only            | stdb-only           | symbol gaps | status |
+| ------------------------ | --------: | ------------------- | ------------------- | ----------: | ------ |
+| **lib/noboil/src**       | 84        | 46 (42 unaccounted) | 47 (25 unaccounted) | 1           | 🔴     |
+| **backend**              | 4         | 31 (0 unaccounted)  | 6 (0 unaccounted)   | 0           | 🟢     |
+| **web/blog**             | 32        | 1 (0 unaccounted)   | 0 (0 unaccounted)   | 0           | 🟢     |
+| **web/chat**             | 23        | 1 (0 unaccounted)   | 1 (0 unaccounted)   | 0           | 🟢     |
+| **web/movie**            | 16        | 1 (0 unaccounted)   | 1 (0 unaccounted)   | 0           | 🟢     |
+| **web/org**              | 48        | 2 (0 unaccounted)   | 4 (0 unaccounted)   | 0           | 🟢     |
+| **web/poll**             | 37        | 3 (0 unaccounted)   | 1 (0 unaccounted)   | 0           | 🟢     |
+| **script (naming pair)** | 0 matched | 2 (0 unaccounted)   | 4 (0 unaccounted)   | —           | 🟢     |
 
 ### Unaccounted gaps
 
-- **lib/noboil/src**: cvx-only file `tools/caller-runtime.ts`, `tools/define-provider.ts`, `tools/prompt-blocks.ts`, `tools/http.ts`, `tools/validate.ts`, `tools/builder.ts`, `tools/parser.ts`, `tools/codegen/schema.ts`, `tools/codegen/emit.ts`, `tools/codegen/scan.ts`, `tools/codegen/extract-meta.ts`, `tools/codegen/index.ts`, `tools/types.ts`, `tools/__tests__/dispatch.test.ts`, `tools/__tests__/manifest.test.ts`, `tools/__tests__/parser.test.ts`, `tools/__tests__/boundary.test.ts`, `tools/__tests__/step-sink.test.ts`, `tools/__tests__/to-dispatch-error.test.ts`, `tools/__tests__/error.test.ts`, `tools/manifest.ts`, `tools/hermetic.ts`, `tools/index.ts`, `tools/error.ts`, `server/budget.ts`, `server/test-harness.ts`, `server/audit.ts`, `__tests__/budget.property.test.ts`, `__tests__/audit.test.ts`, `__tests__/budget.test.ts`, `__tests__/budget.synthetic.test.ts`
-- `lib/noboil/src/server/index.ts` — cvx-only: `createTestHarness`, `makeAudit`, `makeBudget`, `periodKeyFor` · stdb-only: —
+- **lib/noboil/src**: cvx-only file `tools/caller-runtime.ts`, `tools/define-provider.ts`, `tools/prompt-blocks.ts`, `tools/http.ts`, `tools/validate.ts`, `tools/builder.ts`, `tools/parser.ts`, `tools/codegen/schema.ts`, `tools/codegen/emit.ts`, `tools/codegen/scan.ts`, `tools/codegen/extract-meta.ts`, `tools/codegen/index.ts`, `tools/types.ts`, `tools/__tests__/dispatch.test.ts`, `tools/__tests__/manifest.test.ts`, `tools/__tests__/parser.test.ts`, `tools/__tests__/boundary.test.ts`, `tools/__tests__/step-sink.test.ts`, `tools/__tests__/to-dispatch-error.test.ts`, `tools/__tests__/error.test.ts`, `tools/manifest.ts`, `tools/hermetic.ts`, `tools/index.ts`, `tools/error.ts`, `server/__tests__/setup-hooks.test.ts`, `server/__tests__/test-harness.test.ts`, `server/budget.ts`, `server/test-harness.ts`, `server/audit.ts`, `__tests__/manifest.test.ts`, `__tests__/budget.property.test.ts`, `__tests__/audit.test.ts`, `__tests__/budget.test.ts`, `__tests__/use-list.test.tsx`, `__tests__/budget.synthetic.test.ts`, `__tests__/use-mutate.test.ts`, `__tests__/use-bulk-mutate.test.tsx`, `__tests__/eslint-smoke.test.ts`, `__tests__/optimistic-store.test.tsx`, `__tests__/devtools.test.ts`, `__tests__/builder.test.ts`, `__tests__/use-form.test.tsx`
+- **lib/noboil/src**: stdb-only file `server/__tests__/org.test.ts`, `server/__tests__/singleton.test.ts`, `server/__tests__/org-invites.test.ts`, `server/__tests__/child.test.ts`, `server/__tests__/org-members.test.ts`, `server/__tests__/cache-crud.test.ts`, `server/__tests__/org-crud.test.ts`, `server/__tests__/log.test.ts`, `server/__tests__/file.test.ts`, `server/__tests__/test.test.ts`, `server/__tests__/stdb-tables.test.ts`, `server/__tests__/presence.test.ts`, `server/__tests__/kv.test.ts`, `server/__tests__/quota.test.ts`, `server/__tests__/crud.test.ts`, `server/__tests__/setup.test.ts`, `server/__tests__/rls.test.ts`, `server/__tests__/org-join.test.ts`, `__tests__/migrate.test.ts`, `__tests__/check.test.ts`, `react/__tests__/use-list.test.tsx`, `react/__tests__/use-mutate.test.ts`, `react/__tests__/use-bulk-mutate.test.tsx`, `react/__tests__/optimistic-store.test.tsx`, `react/__tests__/devtools.test.ts`
+- `lib/noboil/src/server/index.ts` — cvx-only: `makeAudit`, `makeBudget`, `periodKeyFor` · stdb-only: —
 {/* AUTO-GENERATED:MEGA-PARITY:END */}
