@@ -16,6 +16,7 @@ class PollPage extends BasePage {
     await this.getBannerClear().click()
   }
   public async createPoll(question: string, options: string[]): Promise<void> {
+    await this.waitForConnection()
     await this.$('create-poll-trigger').click()
     const qInput = this.getQuestionInput()
     await qInput.waitFor({ state: 'visible', timeout: 15_000 })

@@ -46,6 +46,7 @@ abstract class BaseChatPage extends BasePage {
     await this.getSendButton().click()
   }
   public async sendUserMessage(message: string): Promise<void> {
+    await this.waitForConnection()
     await this.typeMessage(message)
     await this.sendMessage()
     await this.page.waitForURL(this.urlPattern, { timeout: 60_000 })
