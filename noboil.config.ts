@@ -35,25 +35,25 @@ const config = {
   },
   ports: {
     apps: {
-      'cvx-blog': 4100,
-      'cvx-chat': 4101,
-      'cvx-movie': 4102,
-      'cvx-org': 4103,
-      'cvx-poll': 4104,
-      'stdb-blog': 4200,
-      'stdb-chat': 4201,
-      'stdb-movie': 4202,
-      'stdb-org': 4203,
-      'stdb-poll': 4204
+      'cvx-blog': 4110,
+      'cvx-chat': 4111,
+      'cvx-movie': 4112,
+      'cvx-org': 4113,
+      'cvx-poll': 4114,
+      'stdb-blog': 4210,
+      'stdb-chat': 4211,
+      'stdb-movie': 4212,
+      'stdb-org': 4213,
+      'stdb-poll': 4214
     },
-    convexApi: 4001,
-    convexDashboard: 4500,
-    convexSite: 4002,
+    convexApi: 4100,
+    convexDashboard: 4102,
+    convexSite: 4101,
     doc: 4300,
-    minio: 4600,
-    minioConsole: 4601,
-    postgres: 5433,
-    stdb: 4000
+    minio: 4104,
+    minioConsole: 4105,
+    postgres: 4103,
+    stdb: 4200
   },
   postgres: { db: 'convex_self_hosted' }
 } as const
@@ -129,4 +129,16 @@ const urls = () => ({
   siteStdb: `http://localhost:${config.ports.apps['stdb-blog']}`,
   stdbWs: `ws://localhost:${config.ports.stdb}`
 })
-export { allAppPorts, type AppId, appPort, config, infraVars, portVars, urls }
+const urlVars = (): Record<string, string> => {
+  const u = urls()
+  return {
+    CONVEX_SELF_HOSTED_URL: u.convexApi,
+    CONVEX_SITE_URL: u.convexSite,
+    CONVEX_URL: u.convexApi,
+    NEXT_PUBLIC_CONVEX_URL: u.convexApi,
+    NEXT_PUBLIC_SPACETIMEDB_URI: u.stdbWs,
+    SITE_URL: u.siteCvx,
+    SPACETIMEDB_URI: u.stdbWs
+  }
+}
+export { allAppPorts, type AppId, appPort, config, infraVars, portVars, urls, urlVars }

@@ -13,7 +13,7 @@ const STDB_BIN = `${REPO}/lib/noboil/src/spacetimedb/cli.ts`
 const mdxPath = resolve(import.meta.dir, '../content/docs/cli.mdx')
 const START = '{/* AUTO-GENERATED:HELP:START */}'
 const END = '{/* AUTO-GENERATED:HELP:END */}'
-const STRIP_ANSI = /\x1B\[[\d;]*m/gu
+const STRIP_ANSI = /\u001B\[[\d;]*m/gu
 const runHelp = async (bin: string, args: string[]): Promise<string> => {
   const proc = await $`bun ${bin} ${args} --help`.quiet().nothrow()
   return proc.stdout.toString().replaceAll(STRIP_ANSI, '').trim()

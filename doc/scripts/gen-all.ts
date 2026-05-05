@@ -16,6 +16,7 @@ const SCRIPTS = [
   'gen-hook-reference.ts',
   'gen-cli-types.ts',
   'gen-error-codes.ts',
+  'gen-port-table.ts',
   'gen-test-counts.ts',
   'gen-meta-nav.ts',
   'gen-auto-fields.ts',

@@ -2,7 +2,7 @@
 /** biome-ignore-all lint/nursery/noContinue: sequential */
 /** biome-ignore-all lint/suspicious/noEmptyBlockStatements: silent cleanup */
 /* eslint-disable no-empty */
-import { config, infraVars, portVars } from '@a/config'
+import { config, infraVars, portVars, urlVars } from '@a/config'
 import { existsSync, lstatSync, readdirSync, symlinkSync, unlinkSync } from 'node:fs'
 import { join } from 'node:path'
 import { patchEnv, root } from './utils'
@@ -47,7 +47,7 @@ const linkAppEnvs = () => {
   }
 }
 const emit = () => {
-  const entries = [...Object.entries(portVars()), ...Object.entries(infraVars())].map(
+  const entries = [...Object.entries(portVars()), ...Object.entries(infraVars()), ...Object.entries(urlVars())].map(
     ([k, v]) => [k, v] as [string, string]
   )
   patchEnv(entries)

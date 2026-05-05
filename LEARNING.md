@@ -32,9 +32,9 @@ Unused Next.js entry files, cross-package exports, `<img>` for storage URLs, SPA
 
 `createPoll` and similar dialog-driven write flows occasionally show “You are offline” mid-cycle. Cause: SDK websocket reconnects when dialog open/close triggers React re-render at the right moment. Mitigation in `lib/e2e/base-page.waitForConnection()` called before flow start (e.g. `createPoll`, `sendUserMessage`) — kills startup race. Mid-flow drops still happen; needs SDK fix in upstream `@clockworklabs/spacetimedb-sdk` reconnection logic. Affected suites: stdb/poll (~50% retry), stdb/blog (1 cascade fail), stdb/chat (public-chats). All recover on retry.
 
-## Ports — local conflicts
+## Ports
 
-`PORT_POSTGRES=5432` collides with colima ssh mux on macOS. `noboil.config.ts` ports.postgres=5433 to avoid. Re-run `bun script/emit-env.ts` after config changes to regenerate `.env`.
+Single source of truth: `noboil.config.ts`. After editing, run `bun doc/scripts/gen-all.ts` (regen RULES.md table) and `bun script/emit-env.ts` (regen `.env`). Layout: 41xx Convex camp, 42xx STDB camp, 4300 doc. Postgres host mapping is for Convex self-hosted backing — STDB has its own commitlog and uses no Postgres.
 
 ## Convex deploy chain
 
