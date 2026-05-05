@@ -11,23 +11,23 @@ Two camps, mirrored: **41xx Convex**, **42xx SpacetimeDB**. App slots align (411
 
 | Port | Service                         |
 | ---- | ------------------------------- |
-| 4001 | Convex API                      |
-| 4002 | Convex site                     |
-| 4500 | Convex dashboard                |
-| 5433 | Postgres (Convex backing store) |
-| 4600 | MinIO (S3-compatible)           |
-| 4601 | MinIO console                   |
-| 4100 | cvx/blog                        |
-| 4101 | cvx/chat                        |
-| 4102 | cvx/movie                       |
-| 4103 | cvx/org                         |
-| 4104 | cvx/poll                        |
-| 4000 | SpacetimeDB daemon              |
-| 4200 | stdb/blog                       |
-| 4201 | stdb/chat                       |
-| 4202 | stdb/movie                      |
-| 4203 | stdb/org                        |
-| 4204 | stdb/poll                       |
+| 4100 | Convex API                      |
+| 4101 | Convex site                     |
+| 4102 | Convex dashboard                |
+| 4103 | Postgres (Convex backing store) |
+| 4104 | MinIO (S3-compatible)           |
+| 4105 | MinIO console                   |
+| 4110 | cvx/blog                        |
+| 4111 | cvx/chat                        |
+| 4112 | cvx/movie                       |
+| 4113 | cvx/org                         |
+| 4114 | cvx/poll                        |
+| 4200 | SpacetimeDB daemon              |
+| 4210 | stdb/blog                       |
+| 4211 | stdb/chat                       |
+| 4212 | stdb/movie                      |
+| 4213 | stdb/org                        |
+| 4214 | stdb/poll                       |
 | 4300 | Doc site                        |
 
 <!-- /AUTO-GENERATED:PORT-TABLE -->

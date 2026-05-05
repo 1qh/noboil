@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /* eslint-disable no-console */
-import { config } from '@a/config'
 import { resolve } from 'node:path'
+import { config } from '../../noboil.config'
 import { replaceLineBetween } from './lib'
 const REPO = resolve(import.meta.dir, '../..')
 const main = () => {
