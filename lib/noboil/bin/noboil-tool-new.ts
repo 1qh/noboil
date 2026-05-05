@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /* eslint-disable no-console */
-/* oxlint-disable eslint-plugin-unicorn(no-process-exit) */
+/* oxlint-disable unicorn/no-process-exit */
 /** biome-ignore-all lint/style/useFilenamingConvention: script */
 import { $ } from 'bun'
 import { mkdirSync, writeFileSync } from 'node:fs'

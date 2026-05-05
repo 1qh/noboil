@@ -11,12 +11,12 @@
 /** biome-ignore-all lint/style/useExplicitLengthCheck: crawler */
 /** biome-ignore-all lint/suspicious/noControlCharactersInRegex: crawler */
 /** biome-ignore-all lint/suspicious/noEmptyBlockStatements: crawler */
-/* oxlint-disable no-empty, eslint-plugin-unicorn(no-process-exit) */
+/* oxlint-disable no-empty, unicorn/no-process-exit */
 /* eslint-disable @typescript-eslint/max-params, @typescript-eslint/no-shadow, complexity, no-await-in-loop, no-control-regex, no-empty, no-promise-executor-return, no-useless-assignment */
 /** biome-ignore-all lint/complexity/noExcessiveCognitiveComplexity: crawler */
 /** biome-ignore-all lint/correctness/noUnusedVariables: crawler */
 /* oxlint-disable unicorn/consistent-function-scoping */
-/* oxlint-disable eslint(max-params), eslint(no-await-in-loop), eslint(no-control-regex), eslint(no-promise-executor-return), eslint(no-shadow), eslint(no-useless-assignment), eslint-plugin-promise(always-return), eslint-plugin-promise(param-names), eslint-plugin-promise(prefer-await-to-then), eslint-plugin-unicorn(no-process-exit), typescript-eslint(no-non-null-assertion) */
+/* oxlint-disable max-params, no-await-in-loop, no-control-regex, no-promise-executor-return, no-shadow, no-useless-assignment, promise/always-return, promise/param-names, promise/prefer-await-to-then, unicorn/no-process-exit, typescript/no-non-null-assertion */
 import type { Browser, BrowserContext, Page } from 'playwright'
 import { appPort, urls } from '@a/config'
 import { tmpdir } from 'node:os'

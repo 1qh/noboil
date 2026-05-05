@@ -1,4 +1,4 @@
-/* oxlint-disable no-promise-executor-return, eslint-plugin-promise(param-names), typescript-eslint(strict-void-return), eslint-plugin-promise(prefer-await-to-then), eslint(complexity) */
+/* oxlint-disable no-promise-executor-return, promise/param-names, typescript/strict-void-return, promise/prefer-await-to-then, complexity */
 /* eslint-disable complexity */
 import { Box, render, Text, useApp, useInput } from 'ink'
 import { existsSync, readFileSync } from 'node:fs'

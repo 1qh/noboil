@@ -455,6 +455,7 @@ const createFieldsModule = ({
                         disabled={disabled}
                         id={fieldName(f)}
                         onBlur={f.handleBlur}
+                        // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role
                         role='combobox'
                         variant='outline'>
                         {selected ? selected.label : <span className='text-muted-foreground'>{placeholder}</span>}

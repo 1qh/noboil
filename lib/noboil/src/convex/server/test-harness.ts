@@ -1,7 +1,7 @@
 /** biome-ignore-all lint/style/noProcessEnv: test env reset */
 /** biome-ignore-all lint/nursery/noUndeclaredEnvVars: test env reset */
 /* eslint-disable @typescript-eslint/no-dynamic-delete */
-/* oxlint-disable typescript-eslint(no-dynamic-delete) */
+/* oxlint-disable typescript/no-dynamic-delete */
 import type { TestConvex } from 'convex-test'
 import type { GenericSchema, SchemaDefinition } from 'convex/server'
 import { Glob } from 'bun'

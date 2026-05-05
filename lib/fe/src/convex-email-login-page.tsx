@@ -40,7 +40,7 @@ const EmailLoginPage = ({
         setPending(true)
         const fd = new FormData(ev.currentTarget)
         signIn('password', fd)
-          // oxlint-disable-next-line promise/prefer-await-to-then, eslint-plugin-promise(always-return)
+          // oxlint-disable-next-line promise/prefer-await-to-then, promise/always-return
           .then(() => {
             router.replace(redirectTo)
           })

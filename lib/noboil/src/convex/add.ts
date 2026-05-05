@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/* oxlint-disable eslint(complexity) */
+/* oxlint-disable complexity */
 /* eslint-disable no-console, complexity */
 import { join } from 'node:path'
 import { bold, dim, green, red, yellow } from '../ansi'

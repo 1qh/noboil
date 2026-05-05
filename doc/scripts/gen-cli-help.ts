@@ -2,7 +2,7 @@
 /** biome-ignore-all lint/performance/noAwaitInLoops: sequential CLI spawns */
 /** biome-ignore-all lint/suspicious/noControlCharactersInRegex: ANSI escape stripping */
 /* oxlint-disable eslint(no-await-in-loop), eslint(no-control-regex), eslint-plugin-unicorn(no-hex-escape), eslint-plugin-unicorn(no-immediate-mutation) */
-/* eslint-disable no-console, no-await-in-loop, no-control-regex */
+/* eslint-disable no-console, no-control-regex */
 import { $ } from 'bun'
 import { readFileSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
@@ -20,14 +20,19 @@ const runHelp = async (bin: string, args: string[]): Promise<string> => {
 }
 const codeBlock = (title: string, body: string): string => `**${title}**\n\n\`\`\`text\n${body}\n\`\`\``
 const main = async () => {
-  const blocks: string[] = []
-  blocks.push(codeBlock('noboil --help', await runHelp(BIN, [])))
-  for (const cmd of ['init', 'doctor', 'status', 'sync', 'eject', 'upgrade'])
-    blocks.push(codeBlock(`noboil ${cmd} --help`, await runHelp(BIN, [cmd])))
-  blocks.push(codeBlock('noboil convex --help', await runHelp(CONVEX_BIN, [])))
-  blocks.push(codeBlock('noboil convex add --help', await runHelp(CONVEX_BIN, ['add'])))
-  blocks.push(codeBlock('noboil stdb --help', await runHelp(STDB_BIN, [])))
-  blocks.push(codeBlock('noboil stdb add --help', await runHelp(STDB_BIN, ['add'])))
+  const items: { args: string[]; bin: string; label: string }[] = [
+    { args: [], bin: BIN, label: 'noboil --help' },
+    ...['init', 'doctor', 'status', 'sync', 'eject', 'upgrade'].map(cmd => ({
+      args: [cmd],
+      bin: BIN,
+      label: `noboil ${cmd} --help`
+    })),
+    { args: [], bin: CONVEX_BIN, label: 'noboil convex --help' },
+    { args: ['add'], bin: CONVEX_BIN, label: 'noboil convex add --help' },
+    { args: [], bin: STDB_BIN, label: 'noboil stdb --help' },
+    { args: ['add'], bin: STDB_BIN, label: 'noboil stdb add --help' }
+  ]
+  const blocks = await Promise.all(items.map(async i => codeBlock(i.label, await runHelp(i.bin, i.args))))
   const section = `\n${blocks.join('\n\n')}\n`
   const mdx = readFileSync(mdxPath, 'utf8')
   const startIdx = mdx.indexOf(START)

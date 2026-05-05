@@ -1,6 +1,6 @@
 /** biome-ignore-all lint/performance/noAwaitInLoops: sequential delete-by-creation-time */
 /* eslint-disable no-await-in-loop */
-/* oxlint-disable eslint(no-await-in-loop), eslint-plugin-unicorn(prefer-ternary), eslint(max-params), eslint-plugin-unicorn(useAwait) */
+/* oxlint-disable no-await-in-loop, unicorn/prefer-ternary, max-params, unicorn/useAwait */
 /* eslint-disable @typescript-eslint/max-params */
 /** biome-ignore-all lint/suspicious/useAwait: handlers return thenable chains */
 /** biome-ignore-all lint/complexity/useMaxParams: internal helper */

@@ -1,6 +1,6 @@
 /** biome-ignore-all lint/suspicious/noArrayIndexKey: stable per-field */
 /** biome-ignore-all lint/style/noNonNullAssertion: bounded pick-list */
-/* oxlint-disable eslint-plugin-react(no-array-index-key), no-promise-executor-return, eslint-plugin-promise(param-names), typescript-eslint(strict-void-return), typescript-eslint(no-unnecessary-condition), typescript-eslint(no-non-null-assertion) */
+/* oxlint-disable react/no-array-index-key, no-promise-executor-return, promise/param-names, typescript/strict-void-return, typescript/no-unnecessary-condition, typescript/no-non-null-assertion */
 /* eslint-disable react/no-array-index-key, @eslint-react/no-array-index-key, @typescript-eslint/no-non-null-assertion */
 import type { ReactNode } from 'react'
 import { Box, render, Text, useApp, useInput } from 'ink'

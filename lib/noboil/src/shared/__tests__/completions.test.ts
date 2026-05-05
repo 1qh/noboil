@@ -5,7 +5,7 @@ describe('printCompletions', () => {
   test('bash produces bash completion script', async () => {
     const originalLog = console.log
     let captured = ''
-    // oxlint-disable-next-line typescript-eslint(no-unused-vars)
+    // oxlint-disable-next-line typescript/no-unused-vars
     console.log = (msg: string) => {
       captured += `${msg}\n`
     }

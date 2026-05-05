@@ -38,12 +38,11 @@ describe(makeError, () => {
     ['EXTRACT_EXPIRED', 'permanent', false],
     ['EXTRACT_NOT_FOUND', 'permanent', false]
   ]
-  for (const [code, category, retryable] of mapping)
-    it(`${code} → ${category} retryable=${retryable}`, () => {
-      const e = makeError({ code, message: 'x' })
-      expect(e.category).toBe(category)
-      expect(e.retryable).toBe(retryable)
-    })
+  it.each(mapping)('%s → %s retryable=%s', (code, category, retryable) => {
+    const e = makeError({ code, message: 'x' })
+    expect(e.category).toBe(category)
+    expect(e.retryable).toBe(retryable)
+  })
 })
 describe(toDispatchError, () => {
   it('toolError preserves code + details', () => {

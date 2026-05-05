@@ -1,6 +1,6 @@
 /** biome-ignore-all lint/style/noProcessEnv: test env mutation */
 /** biome-ignore-all lint/nursery/noUndeclaredEnvVars: test-only env keys */
-/* oxlint-disable typescript-eslint(no-dynamic-delete) */
+/* oxlint-disable typescript/no-dynamic-delete */
 import { afterEach, describe, expect, test } from 'bun:test'
 import { object, string } from 'zod/v4'
 import { createEnv, createOptionalEnv } from '../env-zod'

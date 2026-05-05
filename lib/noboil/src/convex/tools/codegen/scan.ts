@@ -1,7 +1,7 @@
 /** biome-ignore-all lint/nursery/noContinue: classify-or-skip loop */
 /** biome-ignore-all lint/performance/useTopLevelRegex: codegen script */
 /* eslint-disable no-continue */
-/* oxlint-disable eslint-plugin-unicorn(prefer-spread) */
+/* oxlint-disable unicorn/prefer-spread */
 import { Glob } from 'bun'
 import { readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'

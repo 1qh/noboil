@@ -284,7 +284,7 @@ type EnrichedDoc<S extends ZodRawShape> = WithUrls<
     userId: string
   }
 >
-// oxlint-disable-next-line typescript-eslint(ban-types)
+// oxlint-disable-next-line typescript/ban-types
 type ErrorCode = BuiltinErrorCode | (string & {})
 type FID = GenericId<'_storage'>
 interface FilterLike {

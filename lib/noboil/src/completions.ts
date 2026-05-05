@@ -1,4 +1,4 @@
-/* oxlint-disable eslint-plugin-unicorn(no-process-exit) */
+/* oxlint-disable unicorn/no-process-exit */
 /* eslint-disable no-console */
 import { homedir } from 'node:os'
 const TOP = 'add completions convex doctor eject init status stdb sync tool upgrade --help --version'

@@ -2,7 +2,7 @@
 /** biome-ignore-all lint/suspicious/useAwait: handlers return thenable chains */
 /** biome-ignore-all lint/complexity/noExcessiveCognitiveComplexity: factory with many optional features */
 /** biome-ignore-all lint/nursery/noContinue: bulk-loop skip on missing doc */
-/* oxlint-disable eslint(no-await-in-loop), eslint(complexity) */
+/* oxlint-disable no-await-in-loop, complexity */
 /* eslint-disable complexity, no-await-in-loop, no-continue */
 import type { ZodObject, ZodRawShape } from 'zod/v4'
 import { zid } from 'convex-helpers/server/zod4'

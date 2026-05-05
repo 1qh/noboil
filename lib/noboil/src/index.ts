@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /** biome-ignore-all lint/performance/noAwaitInLoops: dashboard session loop */
 /** biome-ignore-all lint/nursery/noUnnecessaryConditions: dashboard loop intentionally infinite until exit */
-/* oxlint-disable eslint-plugin-promise(prefer-await-to-then), eslint(no-useless-assignment), eslint(no-constant-condition) */
+/* oxlint-disable promise/prefer-await-to-then, no-useless-assignment, no-constant-condition */
 /* eslint-disable no-console, no-await-in-loop, @typescript-eslint/no-unnecessary-condition */
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'

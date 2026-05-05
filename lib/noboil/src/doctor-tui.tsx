@@ -1,6 +1,6 @@
 /** biome-ignore-all lint/performance/noAwaitInLoops: sequential diagnostic steps */
 /** biome-ignore-all lint/suspicious/noArrayIndexKey: stable per-run */
-/* oxlint-disable no-promise-executor-return, eslint-plugin-promise(param-names), typescript-eslint(strict-void-return), eslint(no-await-in-loop), react-web-api(no-leaked-timeout), eslint-plugin-react(no-array-index-key), eslint-plugin-promise(prefer-await-to-then), typescript-eslint(no-unnecessary-condition) */
+/* oxlint-disable no-promise-executor-return, promise/param-names, typescript/strict-void-return, no-await-in-loop, react-web-api(no-leaked-timeout), react/no-array-index-key, promise/prefer-await-to-then, typescript/no-unnecessary-condition */
 /* eslint-disable @typescript-eslint/strict-void-return, no-promise-executor-return, no-await-in-loop, @eslint-react/web-api/no-leaked-timeout, @eslint-react/no-array-index-key, react/no-array-index-key, @typescript-eslint/no-unnecessary-condition */
 import { Box, render, Text, useApp, useInput } from 'ink'
 import Spinner from 'ink-spinner'

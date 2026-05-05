@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /* eslint-disable no-console */
 /** biome-ignore-all lint/nursery/noUndeclaredEnvVars: consumer codegen reads CONVEX_DIR */
-/* oxlint-disable eslint-plugin-unicorn(no-process-exit) */
+/* oxlint-disable unicorn/no-process-exit */
 /** biome-ignore-all lint/style/noProcessEnv: CLI script env read */
 import { createHash } from 'node:crypto'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'

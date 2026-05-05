@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /* eslint-disable no-console, no-continue */
-/* oxlint-disable eslint-plugin-unicorn(no-process-exit) */
+/* oxlint-disable unicorn/no-process-exit */
 /** biome-ignore-all lint/style/noProcessEnv: CLI script */
 /** biome-ignore-all lint/nursery/noUndeclaredEnvVars: CLI script */
 /** biome-ignore-all lint/nursery/noContinue: classify-or-skip loop */

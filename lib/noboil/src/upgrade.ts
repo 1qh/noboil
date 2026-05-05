@@ -1,4 +1,4 @@
-/* oxlint-disable eslint-plugin-unicorn(no-process-exit) */
+/* oxlint-disable unicorn/no-process-exit */
 /* eslint-disable no-console */
 import { spawnSync } from 'node:child_process'
 import { bold, dim, green, red, yellow } from './ansi'

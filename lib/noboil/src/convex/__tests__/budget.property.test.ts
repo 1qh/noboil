@@ -1,4 +1,4 @@
-/* oxlint-disable eslint(no-await-in-loop), eslint(complexity), eslint(max-depth), eslint-plugin-unicorn(prefer-ternary) */
+/* oxlint-disable no-await-in-loop, complexity, max-depth, unicorn/prefer-ternary */
 /* eslint-disable no-continue, @typescript-eslint/no-unused-vars */
 /** biome-ignore-all lint/performance/noAwaitInLoops: sequential mutations in property test */
 /** biome-ignore-all lint/nursery/noContinue: skip iter on missing reservation */

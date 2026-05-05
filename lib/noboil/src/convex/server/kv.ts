@@ -1,5 +1,5 @@
 /** biome-ignore-all lint/suspicious/useAwait: handlers return thenable chains */
-/* oxlint-disable typescript-eslint(no-unnecessary-condition) */
+/* oxlint-disable typescript/no-unnecessary-condition */
 /* eslint-disable @typescript-eslint/no-unnecessary-condition */
 import type { ZodObject, ZodRawShape } from 'zod/v4'
 import { number, string } from 'zod/v4'

@@ -1,5 +1,5 @@
 /** biome-ignore-all lint/performance/noAwaitInLoops: sequential config file probe */
-/* oxlint-disable eslint(no-await-in-loop) */
+/* oxlint-disable no-await-in-loop */
 /* eslint-disable no-await-in-loop */
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'

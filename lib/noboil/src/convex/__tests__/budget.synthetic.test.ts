@@ -1,4 +1,4 @@
-/* oxlint-disable eslint(no-await-in-loop), eslint(no-unused-vars) */
+/* oxlint-disable no-await-in-loop, no-unused-vars */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /** biome-ignore-all lint/performance/noAwaitInLoops: sequential synthetic ops */
 /** biome-ignore-all lint/correctness/noUnusedFunctionParameters: mock signatures */

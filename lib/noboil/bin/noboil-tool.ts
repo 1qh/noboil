@@ -5,7 +5,7 @@
 /** biome-ignore-all lint/nursery/noContinue: parser skip-lines */
 /** biome-ignore-all lint/nursery/useImportsFirst: grouped by concern */
 /* eslint-disable no-console, no-continue, no-control-regex, @typescript-eslint/no-unnecessary-condition, complexity */
-/* oxlint-disable eslint(no-control-regex), eslint(complexity), eslint-plugin-promise(prefer-await-to-callbacks), eslint-plugin-promise(prefer-await-to-then), eslint-plugin-unicorn(prefer-top-level-await), eslint-plugin-import(first) */
+/* oxlint-disable no-control-regex, complexity, promise/prefer-await-to-callbacks, promise/prefer-await-to-then, unicorn/prefer-top-level-await, import/first */
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { didYouMean, parseFlags } from '../src/convex/tools/parser'

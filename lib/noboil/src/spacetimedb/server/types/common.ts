@@ -276,7 +276,7 @@ const ERROR_MESSAGES = {
   VALIDATION_FAILED: 'Some fields are invalid — check the highlighted fields and fix the errors'
 } as const
 type BuiltinErrorCode = keyof typeof ERROR_MESSAGES
-// oxlint-disable-next-line typescript-eslint(ban-types)
+// oxlint-disable-next-line typescript/ban-types
 type ErrorCode = BuiltinErrorCode | (string & {})
 declare const __brand: unique symbol
 type AssertSchema<T, Expected extends keyof BrandLabelMap> =
