@@ -816,18 +816,18 @@ Beyond factories: file upload, presence, org membership, helpers, middleware, se
 {/* AUTO-GENERATED:UTILITY-PARITY:START */}
 Per-domain parity for non-factory utilities. Compares the export surface of each utility module across both backends. Shared exports = symbols present on both sides; cvx-only/stdb-only counts exclude documented architectural exemptions.
 
-**8/8 domains at full parity.**
+**3/8 domains at full parity.**
 
-| Domain                  | shared | cvx exports | stdb exports | cvx-only (gap) | stdb-only (gap) | intentional asym | status |
-| ----------------------- | ------ | ----------: | -----------: | -------------: | --------------: | ---------------: | ------ |
-| **File upload**         | 4      | 4           | 4            | —              | —               | 0                | 🟢     |
-| **Presence**            | 4      | 4           | 4            | —              | —               | 0                | 🟢     |
-| **Org membership**      | 1      | 4           | 8            | —              | —               | 10               | 🟢     |
-| **Server helpers**      | 56     | 57          | 72           | —              | —               | 18               | 🟢     |
-| **Middleware**          | 6      | 6           | 6            | —              | —               | 0                | 🟢     |
-| **Setup / entry**       | 2      | 6           | 3            | —              | —               | 5                | 🟢     |
-| **Test helpers**        | 2      | 6           | 11           | —              | —               | 13               | 🟢     |
-| **RLS / subscriptions** | 0      | 0           | 9            | —              | —               | 9                | 🟢     |
+| Domain                  | shared | cvx exports | stdb exports | cvx-only (gap)                        | stdb-only (gap)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | intentional asym | status |
+| ----------------------- | ------ | ----------: | -----------: | ------------------------------------: | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: | ---------------: | ------ |
+| **File upload**         | 4      | 4           | 4            | —                                     | —                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | 0                | 🟢     |
+| **Presence**            | 4      | 4           | 4            | —                                     | —                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | 0                | 🟢     |
+| **Org membership**      | 6      | 9           | 42           | —                                     | `CascadeTableConfig`, `OrgByUserIndexLike`, `OrgConfig`, `OrgExports`, `OrgFieldBuilders`, `OrgInviteByOrgIndexLike`, `OrgInviteByTokenIndexLike`, `OrgInvitePkLike`, `OrgInviteReducersConfig`, `OrgInviteReducersExports`, `OrgInviteRowLike`, `OrgInviteTableLike`, `OrgJoinReducersConfig`, `OrgJoinReducersExports`, `OrgJoinRequestByOrgIndexLike`, `OrgJoinRequestByOrgStatusIndexLike`, `OrgJoinRequestPkLike`, `OrgJoinRequestRowLike`, `OrgJoinRequestTableLike`, `OrgMemberByOrgIndexLike`, `OrgMemberPkLike`, `OrgMemberReducersConfig`, `OrgMemberReducersExports`, `OrgMemberRowLike`, `OrgMemberTableLike`, `OrgPkLike`, `OrgRole`, `OrgRowLike`, `OrgSlugIndexLike` | 10               | 🟡     |
+| **Server helpers**      | 61     | 63          | 82           | `ConvexErrorData`                     | `FieldBuilders`, `OwnedRow`, `PkLike`, `TableLike`, `TypedFieldErrors`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | 18               | 🟡     |
+| **Middleware**          | 6      | 6           | 6            | —                                     | —                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | 0                | 🟢     |
+| **Setup / entry**       | 2      | 6           | 5            | —                                     | `CrudDefaults`, `OrgTypeBuilders`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | 5                | 🟡     |
+| **Test helpers**        | 3      | 9           | 14           | `OrgTestCrudConfig`, `TestAuthConfig` | `ErrorData`, `TestContext`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | 13               | 🟡     |
+| **RLS / subscriptions** | 0      | 0           | 16           | —                                     | `FieldBuilder`, `RlsCategory`, `RlsPub`, `StdbDeps`, `StdbTable`, `TableFields`, `ZodBridgeT`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | 9                | 🟡     |
 
 ### Intentional architectural asymmetries
 
@@ -895,19 +895,19 @@ Per-file React component audit (form, fields, file upload, step form, error boun
 {/* AUTO-GENERATED:COMPONENT-PARITY:START */}
 Per-file React component parity. Each `*.tsx` in `lib/noboil/src/{convex,spacetimedb}/components/` cross-checked. Shared = symbol present in both files; -only = symbol present in only one.
 
-**9/9 component files at full parity.**
+**7/9 component files at full parity.**
 
-| File                   | cvx    | stdb   | shared exports | cvx-only | stdb-only | status |
-| ---------------------- | ------ | ------ | -------------: | -------- | --------- | ------ |
-| `editors-section.tsx`  | ✓ 2L   | ✓ 2L   | 1              | —        | —         | 🟢     |
-| `error-boundary.tsx`   | ✓ 11L  | ✓ 11L  | 1              | —        | —         | 🟢     |
-| `fields.tsx`           | ✓ 23L  | ✓ 30L  | 4              | —        | —         | 🟢     |
-| `file-field.tsx`       | ✓ 243L | ✓ 389L | 3              | —        | —         | 🟢     |
-| `form.tsx`             | ✓ 168L | ✓ 195L | 6              | —        | —         | 🟢     |
-| `index.ts`             | ✓ 11L  | ✓ 12L  | 20             | —        | —         | 🟢     |
-| `misc.tsx`             | ✓ 11L  | ✓ 15L  | 3              | —        | —         | 🟢     |
-| `permission-guard.tsx` | ✓ 24L  | ✓ 24L  | 1              | —        | —         | 🟢     |
-| `step-form.tsx`        | ✓ 76L  | ✓ 82L  | 1              | —        | —         | 🟢     |
+| File                   | cvx    | stdb   | shared exports | cvx-only | stdb-only                                    | status |
+| ---------------------- | ------ | ------ | -------------: | -------- | -------------------------------------------- | ------ |
+| `editors-section.tsx`  | ✓ 2L   | ✓ 2L   | 1              | —        | —                                            | 🟢     |
+| `error-boundary.tsx`   | ✓ 11L  | ✓ 11L  | 1              | —        | —                                            | 🟢     |
+| `fields.tsx`           | ✓ 23L  | ✓ 30L  | 5              | —        | —                                            | 🟢     |
+| `file-field.tsx`       | ✓ 243L | ✓ 389L | 3              | —        | `FileApi`, `UploadOptions`, `UploadResponse` | 🟡     |
+| `form.tsx`             | ✓ 168L | ✓ 195L | 7              | —        | —                                            | 🟢     |
+| `index.ts`             | ✓ 11L  | ✓ 12L  | 21             | —        | `UploadOptions`, `UploadResponse`            | 🟡     |
+| `misc.tsx`             | ✓ 11L  | ✓ 15L  | 3              | —        | —                                            | 🟢     |
+| `permission-guard.tsx` | ✓ 24L  | ✓ 24L  | 1              | —        | —                                            | 🟢     |
+| `step-form.tsx`        | ✓ 76L  | ✓ 82L  | 1              | —        | —                                            | 🟢     |
 {/* AUTO-GENERATED:COMPONENT-PARITY:END */}
 
 ## Mega parity (every file, every symbol)
@@ -917,11 +917,11 @@ Whole-repo audit of `lib/noboil/src/{convex,spacetimedb}/` cross-backend. Walks 
 {/* AUTO-GENERATED:MEGA-PARITY:START */}
 Whole-repo audit. Walks every `*.ts/.tsx/.json/.sh/.toml/.md/.yml/.yaml` (excl. tests/codegen output via SKIP_DIRS) in 7 parallel cvx/stdb directory pairs (lib + backend + 5 demos). 150 file-level + 207 symbol-level architectural exemptions registered. Test files (`*.test.ts`) ARE included in file-presence check (symbol parity skipped for tests).
 
-**244 shared files · 85 cvx-only · 61 stdb-only · 2 files with cross-backend symbol divergence.** Status: 🔴 70 unaccounted-for gap(s).
+**244 shared files · 85 cvx-only · 61 stdb-only · 31 files with cross-backend symbol divergence.** Status: 🔴 99 unaccounted-for gap(s).
 
 | Pair                     | shared    | cvx-only            | stdb-only           | symbol gaps | status |
 | ------------------------ | --------: | ------------------- | ------------------- | ----------: | ------ |
-| **lib/noboil/src**       | 84        | 46 (42 unaccounted) | 48 (26 unaccounted) | 2           | 🔴     |
+| **lib/noboil/src**       | 84        | 46 (42 unaccounted) | 48 (26 unaccounted) | 31          | 🔴     |
 | **backend**              | 4         | 31 (0 unaccounted)  | 6 (0 unaccounted)   | 0           | 🟢     |
 | **web/blog**             | 32        | 1 (0 unaccounted)   | 0 (0 unaccounted)   | 0           | 🟢     |
 | **web/chat**             | 23        | 1 (0 unaccounted)   | 1 (0 unaccounted)   | 0           | 🟢     |
@@ -934,6 +934,35 @@ Whole-repo audit. Walks every `*.ts/.tsx/.json/.sh/.toml/.md/.yml/.yaml` (excl. 
 
 - **lib/noboil/src**: cvx-only file `__tests__/audit.test.ts`, `__tests__/budget.property.test.ts`, `__tests__/budget.synthetic.test.ts`, `__tests__/budget.test.ts`, `__tests__/builder.test.ts`, `__tests__/devtools.test.ts`, `__tests__/eslint-smoke.test.ts`, `__tests__/manifest.test.ts`, `__tests__/optimistic-store.test.tsx`, `__tests__/use-bulk-mutate.test.tsx`, `__tests__/use-form.test.tsx`, `__tests__/use-list.test.tsx`, `__tests__/use-mutate.test.ts`, `server/__tests__/setup-hooks.test.ts`, `server/__tests__/test-harness.test.ts`, `server/audit.ts`, `server/budget.ts`, `server/test-harness.ts`, `tools/__tests__/boundary.test.ts`, `tools/__tests__/dispatch.test.ts`, `tools/__tests__/error.test.ts`, `tools/__tests__/manifest.test.ts`, `tools/__tests__/parser.test.ts`, `tools/__tests__/step-sink.test.ts`, `tools/__tests__/to-dispatch-error.test.ts`, `tools/builder.ts`, `tools/caller-runtime.ts`, `tools/codegen/emit.ts`, `tools/codegen/extract-meta.ts`, `tools/codegen/index.ts`, `tools/codegen/scan.ts`, `tools/codegen/schema.ts`, `tools/define-provider.ts`, `tools/error.ts`, `tools/hermetic.ts`, `tools/http.ts`, `tools/index.ts`, `tools/manifest.ts`, `tools/parser.ts`, `tools/prompt-blocks.ts`, `tools/types.ts`, `tools/validate.ts`
 - **lib/noboil/src**: stdb-only file `__tests__/check.test.ts`, `__tests__/migrate.test.ts`, `defaults.ts`, `react/__tests__/devtools.test.ts`, `react/__tests__/optimistic-store.test.tsx`, `react/__tests__/use-bulk-mutate.test.tsx`, `react/__tests__/use-list.test.tsx`, `react/__tests__/use-mutate.test.ts`, `server/__tests__/cache-crud.test.ts`, `server/__tests__/child.test.ts`, `server/__tests__/crud.test.ts`, `server/__tests__/file.test.ts`, `server/__tests__/kv.test.ts`, `server/__tests__/log.test.ts`, `server/__tests__/org-crud.test.ts`, `server/__tests__/org-invites.test.ts`, `server/__tests__/org-join.test.ts`, `server/__tests__/org-members.test.ts`, `server/__tests__/org.test.ts`, `server/__tests__/presence.test.ts`, `server/__tests__/quota.test.ts`, `server/__tests__/rls.test.ts`, `server/__tests__/setup.test.ts`, `server/__tests__/singleton.test.ts`, `server/__tests__/stdb-tables.test.ts`, `server/__tests__/test.test.ts`
-- `lib/noboil/src/index.ts` — cvx-only: — · stdb-only: `DEFAULT_HTTP_URI`, `DEFAULT_PORT`, `DEFAULT_TOKEN_KEY`, `DEFAULT_WS_URI`, `TOKEN_COOKIE_KEY`, `wsToHttp`
-- `lib/noboil/src/server/index.ts` — cvx-only: `makeAudit`, `makeBudget`, `periodKeyFor` · stdb-only: —
+- `lib/noboil/src/components/file-field.tsx` — cvx-only: — · stdb-only: `FileApi`, `UploadOptions`, `UploadResponse`
+- `lib/noboil/src/components/index.ts` — cvx-only: — · stdb-only: `UploadOptions`, `UploadResponse`
+- `lib/noboil/src/index.ts` — cvx-only: `Api`, `ConflictData`, `ConvexErrorData`, `DefType`, `DevError`, `DevSubscription`, `ErrorData`, `ErrorHandler`, `FieldKind`, `FieldMeta`, `FieldMetaMap`, `FileKind`, `FormReturn`, `OrgContextValue`, `OrgDoc`, `OrgProviderProps`, `SoftDeleteOpts`, `ToastFn`, `ZodSchema` · stdb-only: `BaseSchema`, `DEFAULT_HTTP_URI`, `DEFAULT_PORT`, `DEFAULT_TOKEN_KEY`, `DEFAULT_WS_URI`, `InferCreate`, `InferReducerArgs`, `InferReducerInputs`, `InferReducerOutputs`, `InferReducerReturn`, `InferRow`, `InferRows`, `InferUpdate`, `OrgDefSchema`, `OrgSchema`, `OwnedSchema`, `Register`, `RegisteredDefaultError`, `RegisteredMeta`, `SchemaPhantoms`, `SingletonSchema`, `TOKEN_COOKIE_KEY`, `wsToHttp`
+- `lib/noboil/src/next/index.ts` — cvx-only: — · stdb-only: `ActiveOrgQuery`, `SqlQueryConfig`, `TableQueryConfig`
+- `lib/noboil/src/react/devtools.ts` — cvx-only: — · stdb-only: `DevConnection`
+- `lib/noboil/src/react/error-toast.ts` — cvx-only: `ErrorHandler` · stdb-only: —
+- `lib/noboil/src/react/form.ts` — cvx-only: — · stdb-only: `FormToastOption`, `Widen`
+- `lib/noboil/src/react/index.ts` — cvx-only: `Api`, `ConvexCrudRefs`, `ConvexKvRefs`, `ConvexLogRefs`, `ConvexQuotaRefs`, `ConvexSingletonRefs`, `ListItems` · stdb-only: `ActiveOrgState`, `CreateSpacetimeClientOptions`, `ErrorData`, `ErrorHandler`, `FileRow`, `InfiniteListResult`, `InfiniteListWhere`, `KvRowBase`, `ListSort`, `ListWhere`, `LogRowBase`, `MutationFail`, `MutationOk`, `MutationResult`, `OrgMembership`, `PresenceHeartbeatArgs`, `QuotaRowBase`, `SingletonRowBase`, `SkipInfiniteListResult`, `SkipListResult`, `SortDirection`, `SortMap`, `SortObject`, `SpacetimeConnectionBuilder`, `SpacetimeConnectionFactory`, `StdbCrudRefs`, `StdbKvRefs`, `StdbLogRefs`, `StdbQuotaRefs`, `StdbSingletonRefs`, `TokenStore`, `TypedFieldErrors`, `UseListResult`, `WhereFieldValue`, `WhereGroup`, `Widen`
+- `lib/noboil/src/react/org.tsx` — cvx-only: — · stdb-only: `ActiveOrgState`, `OrgMembership`
+- `lib/noboil/src/react/use-crud.ts` — cvx-only: `ConvexCrudRefs` · stdb-only: `StdbCrudRefs`
+- `lib/noboil/src/react/use-infinite-list.ts` — cvx-only: — · stdb-only: `InfiniteListResult`, `InfiniteListWhere`, `SkipInfiniteListResult`
+- `lib/noboil/src/react/use-kv.ts` — cvx-only: `ConvexKvRefs` · stdb-only: `KvRowBase`, `StdbKvRefs`
+- `lib/noboil/src/react/use-list.ts` — cvx-only: `ListItems` · stdb-only: `ListWhere`, `SkipListResult`, `UseListResult`, `WhereGroup`
+- `lib/noboil/src/react/use-log.ts` — cvx-only: `ConvexLogRefs` · stdb-only: `LogRowBase`, `StdbLogRefs`
+- `lib/noboil/src/react/use-presence.ts` — cvx-only: — · stdb-only: `PresenceHeartbeatArgs`, `PresenceRow`
+- `lib/noboil/src/react/use-quota.ts` — cvx-only: `ConvexQuotaRefs` · stdb-only: `QuotaRowBase`, `StdbQuotaRefs`
+- `lib/noboil/src/react/use-singleton.ts` — cvx-only: `ConvexSingletonRefs` · stdb-only: `SingletonRowBase`, `StdbSingletonRefs`
+- `lib/noboil/src/react/use-upload.ts` — cvx-only: — · stdb-only: `UploadCallOptions`
+- `lib/noboil/src/server/helpers.ts` — cvx-only: `ConvexErrorData` · stdb-only: `TypedFieldErrors`
+- `lib/noboil/src/server/index.ts` — cvx-only: `AuditAppendInput`, `AuditExports`, `AuditHooks`, `AuditRow`, `BudgetAuditSummary`, `BudgetCheckResult`, `BudgetExports`, `BudgetHooks`, `BudgetReserveResult`, `ConvexErrorData`, `makeAudit`, `makeBudget`, `periodKeyFor` · stdb-only: `CrudDefaults`, `OrgRole`, `OrgTypeBuilders`, `StdbDeps`, `TestContext`, `TestUser`
+- `lib/noboil/src/server/kv.ts` — cvx-only: — · stdb-only: `KvConfig`, `KvExports`, `KvHooks`, `KvOptions`, `KvRow`, `KvTableLike`
+- `lib/noboil/src/server/log.ts` — cvx-only: — · stdb-only: `LogConfig`, `LogExports`, `LogHooks`, `LogOptions`, `LogRow`, `LogTableLike`
+- `lib/noboil/src/server/org-crud.ts` — cvx-only: `OrgCrudOptions` · stdb-only: —
+- `lib/noboil/src/server/org-invites.ts` — cvx-only: `InviteDocLike` · stdb-only: `OrgInviteByTokenIndexLike`, `OrgInvitePkLike`, `OrgInviteReducersConfig`, `OrgInviteReducersExports`, `OrgInviteRowLike`, `OrgInviteTableLike`, `OrgJoinRequestByOrgStatusIndexLike`, `OrgJoinRequestPkLike`, `OrgJoinRequestRowLike`, `OrgJoinRequestTableLike`, `OrgMemberRowLike`, `OrgMemberTableLike`, `OrgPkLike`, `OrgRowLike`
+- `lib/noboil/src/server/org-join.ts` — cvx-only: `JoinRequestItem` · stdb-only: `OrgJoinReducersConfig`, `OrgJoinReducersExports`, `OrgJoinRequestByOrgStatusIndexLike`, `OrgJoinRequestPkLike`, `OrgJoinRequestRowLike`, `OrgJoinRequestTableLike`, `OrgMemberRowLike`, `OrgMemberTableLike`, `OrgPkLike`, `OrgRowLike`
+- `lib/noboil/src/server/org-members.ts` — cvx-only: `OrgMemberItem` · stdb-only: `OrgMemberPkLike`, `OrgMemberReducersConfig`, `OrgMemberReducersExports`, `OrgMemberRowLike`, `OrgMemberTableLike`, `OrgPkLike`, `OrgRole`, `OrgRowLike`
+- `lib/noboil/src/server/org.ts` — cvx-only: — · stdb-only: `CascadeTableConfig`, `OrgByUserIndexLike`, `OrgConfig`, `OrgExports`, `OrgFieldBuilders`, `OrgInviteByOrgIndexLike`, `OrgInviteRowLike`, `OrgJoinRequestByOrgIndexLike`, `OrgJoinRequestRowLike`, `OrgMemberByOrgIndexLike`, `OrgMemberRowLike`, `OrgRowLike`, `OrgSlugIndexLike`
+- `lib/noboil/src/server/quota.ts` — cvx-only: — · stdb-only: `QuotaConfig`, `QuotaExports`, `QuotaRow`, `QuotaTableLike`
+- `lib/noboil/src/server/setup.ts` — cvx-only: — · stdb-only: `CrudDefaults`, `OrgTypeBuilders`
+- `lib/noboil/src/server/test.ts` — cvx-only: `OrgTestCrudConfig`, `TestAuthConfig` · stdb-only: `ErrorData`, `TestContext`
+- `lib/noboil/src/zod.ts` — cvx-only: — · stdb-only: `UndefinedToOptional`
 {/* AUTO-GENERATED:MEGA-PARITY:END */}

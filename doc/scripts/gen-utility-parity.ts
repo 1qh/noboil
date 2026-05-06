@@ -1,12 +1,11 @@
 #!/usr/bin/env bun
-/* eslint-disable no-console, no-continue, max-depth */
+/* eslint-disable no-console, no-continue */
 /** biome-ignore-all lint/performance/useTopLevelRegex: small file */
 /** biome-ignore-all lint/nursery/noContinue: parser */
 import { existsSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { replaceBetween } from './lib'
+import { collectBraceExports, replaceBetween } from './lib'
 const REPO = resolve(import.meta.dir, '../..')
-const EXPORT_BRACE_RE = /export\s+\{(?<syms>[^}]+)\}/gu
 const EXPORT_DECL_RE = /export\s+(?:const|function|class)\s+(?<name>\w+)/gu
 interface UtilDomain {
   cvxFiles: string[]
@@ -124,19 +123,7 @@ const collectExports = (root: string, files: string[]): Set<string> => {
     const path = `${root}/${f}`
     if (!existsSync(path)) continue
     const src = readFileSync(path, 'utf8')
-    let m = EXPORT_BRACE_RE.exec(src)
-    while (m) {
-      if (m.groups?.syms)
-        for (const part of m.groups.syms.split(',')) {
-          const trimmed = part.trim()
-          if (!trimmed) continue
-          const aliasIdx = trimmed.indexOf(' as ')
-          const name = aliasIdx === -1 ? trimmed.replace(/^type\s+/u, '') : trimmed.slice(aliasIdx + 4).trim()
-          if (name && name !== 'type') out.add(name)
-        }
-      m = EXPORT_BRACE_RE.exec(src)
-    }
-    EXPORT_BRACE_RE.lastIndex = 0
+    collectBraceExports(src, out)
     let dm = EXPORT_DECL_RE.exec(src)
     while (dm) {
       if (dm.groups?.name) out.add(dm.groups.name)

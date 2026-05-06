@@ -4,27 +4,15 @@
 /** biome-ignore-all lint/nursery/noContinue: walker */
 import { readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
 import { basename, relative, resolve } from 'node:path'
+import { collectBraceExports } from './lib'
 const REPO = resolve(import.meta.dir, '../..')
-const EXPORT_BRACE_RE = /export\s+(?:type\s+)?\{(?<syms>[^}]+)\}/gu
 const EXPORT_DECL_RE = /export\s+(?:const|function|class|interface|type)\s+(?<name>\w+)/gu
 const STRIP_AUTOGEN_RE = /\{\/\* AUTO-GENERATED:[\s\S]*?\/AUTO-GENERATED:[^}]+\*\/\}/gu
 const STRIP_FENCE_RE = /```[\s\S]*?```/gu
 const collectExports = (file: string): Set<string> => {
   const out = new Set<string>()
   const src = readFileSync(file, 'utf8')
-  let m = EXPORT_BRACE_RE.exec(src)
-  while (m) {
-    if (m.groups?.syms)
-      for (const part of m.groups.syms.split(',')) {
-        const trimmed = part.trim()
-        if (!trimmed) continue
-        const aliasIdx = trimmed.indexOf(' as ')
-        const name = aliasIdx === -1 ? trimmed.replace(/^type\s+/u, '') : trimmed.slice(aliasIdx + 4).trim()
-        if (name && name !== 'type') out.add(name)
-      }
-    m = EXPORT_BRACE_RE.exec(src)
-  }
-  EXPORT_BRACE_RE.lastIndex = 0
+  collectBraceExports(src, out)
   let dm = EXPORT_DECL_RE.exec(src)
   while (dm) {
     if (dm.groups?.name) out.add(dm.groups.name)

@@ -4,9 +4,8 @@
 /** biome-ignore-all lint/nursery/noContinue: walker */
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join, resolve } from 'node:path'
-import { replaceBetween } from './lib'
+import { collectBraceExports, replaceBetween } from './lib'
 const REPO = resolve(import.meta.dir, '../..')
-const EXPORT_BRACE_RE = /export\s+\{(?<syms>[^}]+)\}/gu
 const EXPORT_DECL_RE =
   /export\s+(?:const|function|class|interface|type|default\s+(?:const|function|class)?)\s+(?<name>\w+)/gu
 const SKIP_DIRS = new Set([
@@ -67,19 +66,7 @@ const collectExports = (path: string): Set<string> => {
   const out = new Set<string>()
   if (!statSync(path, { throwIfNoEntry: false })) return out
   const src = stripStrings(readFileSync(path, 'utf8'))
-  let m = EXPORT_BRACE_RE.exec(src)
-  while (m) {
-    if (m.groups?.syms)
-      for (const part of m.groups.syms.split(',')) {
-        const t = part.trim()
-        if (!t) continue
-        const idx = t.indexOf(' as ')
-        const name = idx === -1 ? t.replace(/^type\s+/u, '') : t.slice(idx + 4).trim()
-        if (name && name !== 'type') out.add(name)
-      }
-    m = EXPORT_BRACE_RE.exec(src)
-  }
-  EXPORT_BRACE_RE.lastIndex = 0
+  collectBraceExports(src, out)
   let dm = EXPORT_DECL_RE.exec(src)
   while (dm) {
     if (dm.groups?.name) out.add(dm.groups.name)

@@ -7,6 +7,23 @@ const BLANK_AFTER_START_RE = /^\n\s*\n/u
 const BLANK_BEFORE_END_RE = /\n\s*\n$/u
 const TABLE_SEP_RE = /^\|[\s|:-]*-{3,}[\s|:-]*\|$/u
 const TABLE_SEP_CELL_RE = /^:?-+:?$/u
+const EXPORT_BRACE_RE = /export\s+(?:type\s+)?\{(?<syms>[^}]+)\}/gu
+const TYPE_PREFIX_RE = /^type\s+/u
+const collectBraceExports = (src: string, out: Set<string>) => {
+  let m = EXPORT_BRACE_RE.exec(src)
+  while (m) {
+    if (m.groups?.syms)
+      for (const part of m.groups.syms.split(',')) {
+        const t = part.trim()
+        if (!t) continue
+        const idx = t.indexOf(' as ')
+        const name = idx === -1 ? t.replace(TYPE_PREFIX_RE, '') : t.slice(idx + 4).trim()
+        if (name && name !== 'type') out.add(name)
+      }
+    m = EXPORT_BRACE_RE.exec(src)
+  }
+  EXPORT_BRACE_RE.lastIndex = 0
+}
 const isCheck = (): boolean => process.argv.includes('--check')
 const padMarkdownTables = (text: string): string => {
   const lines = text.split('\n')
@@ -97,4 +114,4 @@ const replaceLineBetween = (path: string, name: string, body: string): boolean =
   writeFileSync(path, next)
   return true
 }
-export { isCheck, padMarkdownTables, replaceBetween, replaceLineBetween }
+export { collectBraceExports, EXPORT_BRACE_RE, isCheck, padMarkdownTables, replaceBetween, replaceLineBetween }
