@@ -1551,7 +1551,7 @@ Both `noboil/convex/eslint` and `noboil/spacetimedb/eslint` ship the same rule s
 JSDoc-tagged exports are surfaced here so consumers can tell stable API from in-flux surface. The generator picks up `@beta`, `@alpha`, `@experimental`, `@deprecated`, `@internal` on the line above any `export`/`const`/`function`/`class`/`interface`/`type` declaration.
 
 {/* AUTO-GENERATED:STABILITY:START */}
-Scanned **351 files**, **7625 declared symbols**. No `@beta`/`@alpha`/`@experimental`/`@deprecated`/`@internal` JSDoc tags found — entire public surface is **stable**.
+Scanned **351 files**, **7627 declared symbols**. No `@beta`/`@alpha`/`@experimental`/`@deprecated`/`@internal` JSDoc tags found — entire public surface is **stable**.
 
 To mark API stability, add JSDoc tags above an export:
 
@@ -1619,7 +1619,7 @@ Each module in `backend/convex/convex/` re-exports the factory-generated CRUD pl
 Every entry in `noboil/package.json#exports`. Use these exact paths in `import` statements — bundlers resolve via the `customConditions` setting in your `tsconfig`.
 
 {/* AUTO-GENERATED:PACKAGE-EXPORTS:START */}
-**42 subpath exports** from `noboil` package.json. Use exact import paths for tree-shaking.
+**43 subpath exports** from `noboil` package.json. Use exact import paths for tree-shaking.
 
 | Import path                        | Runtime entry                               | Types entry |
 | ---------------------------------- | ------------------------------------------- | ----------- |
@@ -1640,6 +1640,7 @@ Every entry in `noboil/package.json#exports`. Use these exact paths in `import` 
 | `noboil/convex/tools`              | `./src/convex/tools/index.ts`               | —           |
 | `noboil/convex/tools/codegen`      | `./src/convex/tools/codegen/index.ts`       | —           |
 | `noboil/convex/zod`                | `./src/convex/zod.ts`                       | —           |
+| `noboil/env-file`                  | `./src/shared/env-file.ts`                  | —           |
 | `noboil/eslint`                    | `./src/convex/eslint.ts`                    | ``          |
 | `noboil/next`                      | `./src/convex/next/index.ts`                | ``          |
 | `noboil/package.json`              | `./package.json`                            | —           |
@@ -1685,9 +1686,9 @@ Every explicit `http.route(...)` registration in `backend/convex/convex/http.ts`
 How many of `noboil`'s public exports are mentioned anywhere in the docs. Anything in the "undocumented" list is callable but never described — use as a punch list.
 
 {/* AUTO-GENERATED:SYMBOL-COVERAGE:START */}
-Coverage of public exports (every name reachable through `noboil/...` subpaths) by mention in `doc/content/docs/*.mdx`. **497/497 mentioned (100%).**
+Coverage of public exports (every name reachable through `noboil/...` subpaths) by mention in `doc/content/docs/*.mdx`. **497/500 mentioned (99%).**
 
-Undocumented (first 0 of 0):
+Undocumented (first 3 of 3):
 
-_(none — full coverage)_
+`findProjectRoot`, `parseEnvFile`, `parseEnvLine`
 {/* AUTO-GENERATED:SYMBOL-COVERAGE:END */}

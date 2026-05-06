@@ -4,34 +4,15 @@
 /** biome-ignore-all lint/suspicious/noControlCharactersInRegex: sanitize strips control chars */
 /** biome-ignore-all lint/nursery/noContinue: parser skip-lines */
 /** biome-ignore-all lint/nursery/useImportsFirst: grouped by concern */
-/* eslint-disable no-console, no-continue, no-control-regex, @typescript-eslint/no-unnecessary-condition, complexity */
+/* eslint-disable no-console, no-control-regex, @typescript-eslint/no-unnecessary-condition, complexity */
 /* oxlint-disable no-control-regex, complexity, promise/prefer-await-to-callbacks, promise/prefer-await-to-then, unicorn/prefer-top-level-await, import/first */
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { didYouMean, parseFlags } from '../src/convex/tools/parser'
+import { parseEnvFile } from '../src/shared/env-file'
 const STRIP_RE = /[\u0000-\u001F\u007F-\u009F\u200B-\u200F\u202A-\u202E\u2060-\u2069\uFEFF]/gu
 const KEBAB_RE = /^[a-z][a-z0-9-]*$/u
 const strip = (s: string): string => s.replaceAll(STRIP_RE, '')
-const parseEnvFile = (path: string): Record<string, string> => {
-  const vars: Record<string, string> = {}
-  try {
-    const text = readFileSync(path, 'utf8')
-    for (const line of text.split('\n')) {
-      const trimmed = line.trim()
-      if (!trimmed || trimmed.startsWith('#')) continue
-      const eq = trimmed.indexOf('=')
-      if (eq === -1) continue
-      const key = trimmed.slice(0, eq).trim()
-      let value = trimmed.slice(eq + 1).trim()
-      if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'")))
-        value = value.slice(1, -1).trim()
-      vars[key] = value
-    }
-  } catch {
-    /* Ok */
-  }
-  return vars
-}
 const findProjectRoot = (): string => {
   let dir = process.cwd()
   for (let i = 0; i < 20; i += 1)

@@ -1,7 +1,18 @@
-/* eslint-disable no-continue */
 /** biome-ignore-all lint/nursery/noContinue: line skip on comments/empty */
 import { existsSync, readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
+/** Parse a single `KEY=VALUE` line. Returns null on comment/empty/malformed. Strips surrounding quotes. */
+const parseEnvLine = (line: string): [string, string] | null => {
+  const trimmed = line.trim()
+  if (!trimmed || trimmed.startsWith('#')) return null
+  const eq = trimmed.indexOf('=')
+  if (eq < 1) return null
+  const key = trimmed.slice(0, eq).trim()
+  let value = trimmed.slice(eq + 1).trim()
+  if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'")))
+    value = value.slice(1, -1).trim()
+  return [key, value]
+}
 /** Parse a `.env` file into `Record<string,string>`. Returns `{}` on missing file. Strips quotes, ignores comments. */
 const parseEnvFile = (path: string): Record<string, string> => {
   const vars: Record<string, string> = {}
@@ -12,15 +23,8 @@ const parseEnvFile = (path: string): Record<string, string> => {
     return vars
   }
   for (const line of text.split('\n')) {
-    const trimmed = line.trim()
-    if (!trimmed || trimmed.startsWith('#')) continue
-    const eq = trimmed.indexOf('=')
-    if (eq === -1) continue
-    const key = trimmed.slice(0, eq).trim()
-    let value = trimmed.slice(eq + 1).trim()
-    if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'")))
-      value = value.slice(1, -1).trim()
-    vars[key] = value
+    const parsed = parseEnvLine(line)
+    if (parsed) vars[parsed[0]] = parsed[1]
   }
   return vars
 }
@@ -36,4 +40,4 @@ const findProjectRoot = (start = process.cwd(), markers: readonly string[] = ['p
   }
   return start
 }
-export { findProjectRoot, parseEnvFile }
+export { findProjectRoot, parseEnvFile, parseEnvLine }

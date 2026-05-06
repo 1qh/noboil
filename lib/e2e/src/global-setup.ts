@@ -5,21 +5,12 @@ import type { FunctionReference } from 'convex/server'
 import { config } from '@a/config'
 import { ConvexHttpClient } from 'convex/browser'
 import { anyApi } from 'convex/server'
+import { parseEnvLine } from 'noboil/env-file'
 import { execSync } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 const REPO_ROOT = resolve(import.meta.dirname, '../../..')
 const BACKEND_CWD = join(REPO_ROOT, config.paths.backendConvex)
-const parseEnvLine = (line: string): [string, string] | null => {
-  const trimmed = line.trim()
-  if (!trimmed || trimmed.startsWith('#')) return null
-  const eqIdx = trimmed.indexOf('=')
-  if (eqIdx < 1) return null
-  const key = trimmed.slice(0, eqIdx)
-  let val = trimmed.slice(eqIdx + 1)
-  if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) val = val.slice(1, -1)
-  return [key, val]
-}
 const loadRootEnv = () => {
   const envPath = join(REPO_ROOT, '.env')
   if (!existsSync(envPath)) return
