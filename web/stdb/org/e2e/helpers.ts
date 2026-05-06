@@ -1,7 +1,7 @@
 /* eslint-disable no-await-in-loop */
 /** biome-ignore-all lint/performance/noAwaitInLoops: sequential test operations */
 import type { Page } from '@playwright/test'
-import { ACTIVE_ORG_COOKIE } from 'noboil/spacetimedb'
+import { ACTIVE_ORG_COOKIE, DEFAULT_TOKEN_KEY, TOKEN_COOKIE_KEY } from 'noboil/spacetimedb'
 import { readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 interface InviteResponse {
@@ -88,17 +88,17 @@ const login = async (page?: Page): Promise<void> => {
   await page
     .context()
     .addCookies([
-      { domain: 'localhost', name: 'spacetimedb_token', path: '/', value: encodeURIComponent(data.token) },
+      { domain: 'localhost', name: TOKEN_COOKIE_KEY, path: '/', value: encodeURIComponent(data.token) },
       ...(data.orgId ? [{ domain: 'localhost', name: ACTIVE_ORG_COOKIE, path: '/', value: data.orgId }] : [])
     ])
   await page.addInitScript(
-    ({ t }) => {
+    ({ k, t }) => {
       const g = globalThis as Record<string, unknown>
       g.PLAYWRIGHT = '1'
       globalThis.localStorage.clear()
-      globalThis.localStorage.setItem('spacetimedb.token', t)
+      globalThis.localStorage.setItem(k, t)
     },
-    { t: data.token }
+    { k: DEFAULT_TOKEN_KEY, t: data.token }
   )
   const pending = readPendingActions()
   if (pending.length > 0) {

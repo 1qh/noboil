@@ -3,6 +3,7 @@
 import { cookies } from 'next/headers'
 import type { ActiveOrgQuery } from './active-org-types'
 import { ACTIVE_ORG_COOKIE, ACTIVE_ORG_SLUG_COOKIE, ONE_YEAR_SECONDS } from '../constants'
+import { TOKEN_COOKIE_KEY } from '../defaults'
 import { queryTable } from './query'
 /** Detects whether auth helpers are running in test mode. */
 const isTestMode = () =>
@@ -20,7 +21,7 @@ const toHttpUri = (uri: string) => {
 /** Reads the SpacetimeDB auth token from cookies, with test fallback. */
 const getToken = async (): Promise<string | undefined> => {
   const cookieStore = await cookies()
-  const token = cookieStore.get('spacetimedb_token')?.value
+  const token = cookieStore.get(TOKEN_COOKIE_KEY)?.value
   if (token) return token
   if (isTestMode()) return process.env.SPACETIMEDB_TEST_TOKEN ?? process.env.NOBOIL_TEST_TOKEN
 }

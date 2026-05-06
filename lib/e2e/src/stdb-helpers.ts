@@ -2,6 +2,7 @@
 // biome-ignore-all lint/nursery/useGlobalThis: test helper
 import type { Page } from '@playwright/test'
 import { config } from '@a/config'
+import { DEFAULT_TOKEN_KEY, TOKEN_COOKIE_KEY } from 'noboil/spacetimedb'
 import { writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 const DEFAULT_HTTP_URL =
@@ -28,28 +29,28 @@ const createStdbLogin = (dir: string) => {
     await page.context().addCookies([
       {
         domain: 'localhost',
-        name: 'spacetimedb_token',
+        name: TOKEN_COOKIE_KEY,
         path: '/',
         value: encodeURIComponent(data.token)
       }
     ])
     await page.addInitScript(
-      ({ t }) => {
+      ({ k, t }) => {
         const g = globalThis as Record<string, unknown>
         g.PLAYWRIGHT = '1'
         globalThis.localStorage.clear()
-        globalThis.localStorage.setItem('spacetimedb.token', t)
+        globalThis.localStorage.setItem(k, t)
       },
-      { t: data.token }
+      { k: DEFAULT_TOKEN_KEY, t: data.token }
     )
     const currentUrl = page.url()
     if (currentUrl !== 'about:blank' && !currentUrl.startsWith('chrome'))
       await page.evaluate(
-        ({ t }) => {
+        ({ k, t }) => {
           globalThis.localStorage.clear()
-          globalThis.localStorage.setItem('spacetimedb.token', t)
+          globalThis.localStorage.setItem(k, t)
         },
-        { t: data.token }
+        { k: DEFAULT_TOKEN_KEY, t: data.token }
       )
   }
   const cleanupTestData = async () => {

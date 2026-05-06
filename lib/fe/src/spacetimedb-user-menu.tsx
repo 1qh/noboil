@@ -2,6 +2,7 @@ import type { PopoverTrigger } from '@a/ui/popover'
 import type { ComponentProps } from 'react'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
+import { TOKEN_COOKIE_KEY } from 'noboil/spacetimedb'
 import { queryTable } from 'noboil/spacetimedb/next'
 import env from './env'
 import UserMenuShell from './user-menu-shell'
@@ -34,7 +35,7 @@ const readUserProfile = async (token: string): Promise<UserInfo> => {
 }
 const UserMenu = async ({ shellProps, ...triggerProps }: UserMenuProps) => {
   const cookieStore = await cookies()
-  const token = cookieStore.get('spacetimedb_token')?.value
+  const token = cookieStore.get(TOKEN_COOKIE_KEY)?.value
   const profile = token ? await readUserProfile(token) : null
   const email = profile?.email
   const image = profile?.image
@@ -42,7 +43,7 @@ const UserMenu = async ({ shellProps, ...triggerProps }: UserMenuProps) => {
   const onLogout = async () => {
     'use server'
     const store = await cookies()
-    store.delete('spacetimedb_token')
+    store.delete(TOKEN_COOKIE_KEY)
     redirect('/login')
   }
   return (
