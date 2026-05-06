@@ -8,15 +8,6 @@ import { replaceLineBetween } from './lib'
 const REPO = resolve(import.meta.dir, '../..')
 const PASS_RE = /(?<pass>\d+)\s+pass/u
 const TEST_CALL_RE = /(?:^|[\s;,([])(?:test|it)(?:\.skip|\.only|\.each\(.+?\))?\s*\(/gu
-const runCount = async (cwd: string, file: string): Promise<number> => {
-  const proc = await $`bun test ${file}`.cwd(cwd).quiet().nothrow()
-  const out = (proc.stdout.toString() + proc.stderr.toString()).split('\n')
-  for (const line of out) {
-    const m = PASS_RE.exec(line)
-    if (m?.groups?.pass) return Number(m.groups.pass)
-  }
-  return 0
-}
 const runFullCount = async (cwd: string): Promise<number> => {
   const proc = await $`bun test`.cwd(cwd).quiet().nothrow()
   const out = (proc.stdout.toString() + proc.stderr.toString()).split('\n')
@@ -50,11 +41,9 @@ const countE2EApp = (appDir: string): number => {
 }
 const main = async () => {
   console.log('Counting tests (this takes ~30s)...')
-  const [cvxPure, stdbPure, cvxFTest, libTotal] = await Promise.all([
-    runCount(`${REPO}/lib/noboil`, 'src/convex/__tests__/pure.test.ts'),
-    runCount(`${REPO}/lib/noboil`, 'src/spacetimedb/__tests__/pure.test.ts'),
-    runCount(`${REPO}/backend/convex`, 'convex/f.test.ts'),
-    runFullCount(`${REPO}/lib/noboil`)
+  const [unit, integration] = await Promise.all([
+    runFullCount(`${REPO}/lib/noboil`),
+    runFullCount(`${REPO}/backend/convex`)
   ])
   const e2eApps: string[] = []
   for (const kind of ['cvx', 'stdb']) {
@@ -67,8 +56,8 @@ const main = async () => {
     .filter(x => x.count > 0)
   const e2eTotal = e2eCounts.reduce((s, x) => s + x.count, 0)
   const e2eBreakdown = e2eCounts.map(x => `${x.count} ${x.name}`).join(', ')
-  const total = libTotal + cvxFTest + e2eTotal
-  const summary = `${total} tests — ${libTotal} unit (incl. ${cvxPure} cvx pure + ${stdbPure} stdb pure) + ${cvxFTest} cvx integration + ${e2eTotal} e2e (${e2eBreakdown}).`
+  const total = unit + integration + e2eTotal
+  const summary = `${total} tests — ${unit} unit + ${integration} integration + ${e2eTotal} e2e (${e2eBreakdown}).`
   const todo = `${REPO}/TODO.md`
   const dirty = replaceLineBetween(todo, 'TEST-COUNTS', summary)
   console.log(dirty ? `Updated test counts: ${total} total` : `Test counts up to date: ${total} total`)
