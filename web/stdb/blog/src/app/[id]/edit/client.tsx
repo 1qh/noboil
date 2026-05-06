@@ -4,6 +4,7 @@
 import type { Blog } from '@a/be-spacetimedb/spacetimedb/types'
 import type { ComponentProps } from 'react'
 import { reducers } from '@a/be-spacetimedb/spacetimedb'
+import { isPlaywright } from '@a/fe/test-mode'
 import { cn } from '@a/ui'
 import { FieldGroup } from '@a/ui/field'
 import { Label } from '@a/ui/label'
@@ -143,8 +144,7 @@ const Setting = ({ blog }: { blog: Blog }) => {
 }
 const Client = ({ blog }: { blog: Blog | null }) => {
   const { identity } = useSpacetimeDB()
-  const isPlaywrightTest = process.env.NEXT_PUBLIC_PLAYWRIGHT === '1'
-  if (!(blog && (isPlaywrightTest || (identity && blog.userId.isEqual(identity)))))
+  if (!(blog && (isPlaywright || (identity && blog.userId.isEqual(identity)))))
     return (
       <p className='text-muted-foreground' data-testid='blog-not-found'>
         Blog not found

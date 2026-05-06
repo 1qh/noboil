@@ -5,6 +5,7 @@
 'use client'
 import type { ChangeEvent } from 'react'
 import { reducers, tables } from '@a/be-spacetimedb/spacetimedb'
+import { isPlaywright } from '@a/fe/test-mode'
 import { cn } from '@a/ui'
 import { Button } from '@a/ui/button'
 import { FieldGroup } from '@a/ui/field'
@@ -81,7 +82,6 @@ const AvatarUpload = () => {
 const Page = () => {
   const [profiles, isReady] = useTable(tables.pollProfile)
   const { identity } = useSpacetimeDB()
-  const isPlaywright = process.env.NEXT_PUBLIC_PLAYWRIGHT === '1'
   const profile = profiles.find(p => identity && p.userId.isEqual(identity)) ?? null
   const shouldShowContent = isReady || isPlaywright
   const resolvedAvatar = useResolveFileUrl(profile?.avatar)

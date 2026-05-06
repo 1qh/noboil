@@ -5,6 +5,7 @@
 'use client'
 import type { Blog } from '@a/be-spacetimedb/spacetimedb/types'
 import { reducers, tables } from '@a/be-spacetimedb/spacetimedb'
+import { isPlaywright } from '@a/fe/test-mode'
 import { cn } from '@a/ui'
 import {
   AlertDialog,
@@ -32,7 +33,6 @@ import { toast } from 'sonner'
 import { useReducer, useSpacetimeDB, useTable } from 'spacetimedb/react'
 import { createBlog } from '~/schema'
 import { Publish } from './[id]/edit/client'
-const isPlaywrightTest = process.env.NEXT_PUBLIC_PLAYWRIGHT === '1'
 const Delete = ({ id, onOptimisticRemove }: { id: number; onOptimisticRemove?: () => void }) => {
   const rmBlog = useMut(reducers.rmBlog, {
     toast: { error: 'Delete failed', success: 'Deleted' }
@@ -190,7 +190,7 @@ const Author = ({
   const authorProfile = profiles.find(p => p.userId.isEqual(userId))
   const authorName = authorProfile?.displayName ?? 'Author'
   const avatarUrl = useResolveFileUrl(authorProfile?.avatar)
-  const own = isPlaywrightTest || (identity ? userId.isEqual(identity) : false)
+  const own = isPlaywright || (identity ? userId.isEqual(identity) : false)
   const updatedAtDate = updatedAt.toDate()
   return (
     <div className={cn('flex items-center', className)}>

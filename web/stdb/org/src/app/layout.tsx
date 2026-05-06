@@ -9,6 +9,7 @@ import type { OrgRole } from 'noboil/spacetimedb'
 import type { ReactNode } from 'react'
 import { tables } from '@a/be-spacetimedb/spacetimedb'
 import AuthLayout from '@a/fe/spacetimedb-auth-layout'
+import { isPlaywright } from '@a/fe/test-mode'
 import { sameIdentity } from '@a/fe/utils'
 import { usePathname, useRouter } from 'next/navigation'
 import { Devtools } from 'noboil/spacetimedb/react'
@@ -47,7 +48,6 @@ const OrgLayoutInner = ({ children }: { children: ReactNode }) => {
   const { identity } = useSpacetimeDB()
   const [orgs, orgsReady] = useTable(tables.org)
   const [members, membersReady] = useTable(tables.orgMember)
-  const isPlaywright = process.env.NEXT_PUBLIC_PLAYWRIGHT === '1'
   const activeOrgId = readActiveOrgId()
   const [playwrightWaitExpired, setPlaywrightWaitExpired] = useState(false)
   /** biome-ignore lint/correctness/useExhaustiveDependencies: retrigger on navigation */
@@ -56,7 +56,7 @@ const OrgLayoutInner = ({ children }: { children: ReactNode }) => {
     setPlaywrightWaitExpired(false)
     const timer = window.setTimeout(() => setPlaywrightWaitExpired(true), 5000)
     return () => window.clearTimeout(timer)
-  }, [activeOrgId, isPlaywright, pathname])
+  }, [activeOrgId, pathname])
   if (!pathname) return children
   if (!needsOrgLayout(pathname)) return children
   if (!(identity || isPlaywright)) return null

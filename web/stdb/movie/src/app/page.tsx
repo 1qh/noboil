@@ -4,6 +4,7 @@
 // biome-ignore-all lint/style/noProcessEnv: intentional process.env access
 // biome-ignore-all lint/correctness/useImageSize: dynamic images
 'use client'
+import { isPlaywright } from '@a/fe/test-mode'
 import { Input } from '@a/ui/input'
 import Link from 'next/link'
 import { useErrorToast, useOnlineStatus } from 'noboil/spacetimedb/react'
@@ -63,7 +64,7 @@ const PLAYWRIGHT_MOVIES: SearchResult[] = [
 const searchMovies = async (query: string) => {
   const apiKey = process.env.NEXT_PUBLIC_TMDB_API_KEY
   if (!apiKey) {
-    if (process.env.NEXT_PUBLIC_PLAYWRIGHT === '1') {
+    if (isPlaywright) {
       const q = query.toLowerCase()
       const rows: SearchResult[] = []
       for (const m of PLAYWRIGHT_MOVIES) if (m.title.toLowerCase().includes(q)) rows.push(m)

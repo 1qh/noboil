@@ -9,6 +9,7 @@
     "./convex-next-config": "./src/convex-next-config.ts",
     "./convex-proxy": "./src/convex-proxy.ts",
     "./spacetimedb-next-config": "./src/spacetimedb-next-config.ts",
+    "./test-mode": "./src/test-mode.ts",
     "./theme-toggle": "./src/theme-toggle.tsx",
     "./ui-message": "./src/ui-message.ts",
     "./utils": "./src/utils.ts"

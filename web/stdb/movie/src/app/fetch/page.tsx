@@ -7,6 +7,7 @@
 import type { s } from '@a/be-spacetimedb/s'
 import type { InferCreate } from 'noboil/spacetimedb'
 import { reducers } from '@a/be-spacetimedb/spacetimedb'
+import { isPlaywright } from '@a/fe/test-mode'
 import { Badge } from '@a/ui/badge'
 import { Input } from '@a/ui/input'
 import { Skeleton } from '@a/ui/skeleton'
@@ -112,7 +113,7 @@ type MovieDetailData = InferCreate<typeof s.movie>
 const fetchMovie = async (id: number): Promise<MovieDetailData> => {
   const apiKey = process.env.NEXT_PUBLIC_TMDB_API_KEY
   if (!apiKey) {
-    if (process.env.NEXT_PUBLIC_PLAYWRIGHT === '1') {
+    if (isPlaywright) {
       const local = PLAYWRIGHT_MOVIES.get(id)
       if (local) return local
     }

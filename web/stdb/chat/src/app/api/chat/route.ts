@@ -1,5 +1,6 @@
 // biome-ignore-all lint/style/noProcessEnv: intentional process.env access
 import type { UIMessage } from 'ai'
+import { isStdbTestMode } from '@a/fe/test-mode'
 import { createUIMessageStream, createUIMessageStreamResponse } from 'ai'
 interface ApprovalResponse {
   approved: boolean
@@ -22,7 +23,6 @@ const WEATHER_LOCATION_RE = /weather(?:\s+in)?\s+(?<location>[a-zA-Z\s-]+)/u
 const TRAILING_PUNCT_RE = /[?.!,]+$/u
 const WEATHER_WORD_RE = /\bweather\b/iu
 const withUnavailable = () => Response.json({ error: 'AI not available' }, { status: 503 })
-const isTestMode = () => process.env.NEXT_PUBLIC_PLAYWRIGHT === '1' || process.env.SPACETIMEDB_TEST_MODE === 'true'
 const sleep = async (ms: number) =>
   new Promise<void>(resolve => {
     setTimeout(resolve, ms)
@@ -63,7 +63,7 @@ const getLocation = (text: string): string => {
   return location.replace(TRAILING_PUNCT_RE, '')
 }
 const POST = async (request: Request) => {
-  if (!isTestMode()) return withUnavailable()
+  if (!isStdbTestMode) return withUnavailable()
   const body = (await request.json()) as ChatRequestBody
   const messages = getMessages(body)
   const lastUserText = getLastUserText(messages)

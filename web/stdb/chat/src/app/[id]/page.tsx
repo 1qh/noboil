@@ -4,6 +4,7 @@ import type { Chat, Message } from '@a/be-spacetimedb/spacetimedb/types'
 import type { UIMessage } from 'ai'
 import { tables } from '@a/be-spacetimedb/spacetimedb'
 import Client from '@a/fe/chat-client'
+import { isPlaywright } from '@a/fe/test-mode'
 import { toUIMessage } from '@a/fe/ui-message'
 import { toIdentityKey } from '@a/fe/utils'
 import { useParams, useRouter } from 'next/navigation'
@@ -17,7 +18,6 @@ const Page = () => {
   const [allChats, isChatsReady] = useTable(tables.chat)
   const [allMessages, isMessagesReady] = useTable(tables.message)
   const { identity } = useSpacetimeDB()
-  const isPlaywright = process.env.NEXT_PUBLIC_PLAYWRIGHT === '1'
   const id = Number(params.id)
   const chat: Chat | undefined = Number.isNaN(id) ? undefined : allChats.find(c => c.id === id)
   const identityKey = toIdentityKey(identity)
@@ -28,7 +28,7 @@ const Page = () => {
     if (isPlaywright) return
     if (!isChatsReady || Number.isNaN(id) || !chat) return
     if (!hasAccess) router.replace('/')
-  }, [chat, hasAccess, id, isChatsReady, isPlaywright, router])
+  }, [chat, hasAccess, id, isChatsReady, router])
   if (isPlaywright && !Number.isNaN(id))
     return <Client chatId={String(id)} initialMessages={toUIMessages(messages)} readOnly={false} />
   if (isChatsReady && isMessagesReady && chat && hasAccess)
