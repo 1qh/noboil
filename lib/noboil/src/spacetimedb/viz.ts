@@ -1,49 +1,17 @@
 #!/usr/bin/env bun
 /* eslint-disable no-console */
-/* eslint-disable max-depth */
-import { existsSync, readdirSync, readFileSync } from 'node:fs'
-import { join } from 'node:path'
+import { readFileSync } from 'node:fs'
 import type { ChildInfo, TableInfo } from '../shared/viz'
 import { bold, dim, isSchemaFile, red } from '../shared/viz'
-import { listTypeScriptFiles } from '../shared/walk'
-const schemaMarkers = ['schema(', 'table(', 't.']
+import { findStdbModuleDirDeep, listTypeScriptFiles } from '../shared/walk'
 const tablePat = /(?<tname>\w+)\s*:\s*table\([^,]+,\s*\{/gu
 const fieldLinePat = /^\s*(?<fname>\w+)\s*:\s*(?<ftype>.+?)\s*,?$/u
-const findModuleDir = (root: string): string | undefined => {
-  const candidates = [
-    root,
-    join(root, 'module'),
-    join(root, 'src', 'module'),
-    join(root, 'src'),
-    join(root, 'backend', 'spacetimedb', 'src')
-  ]
-  for (const candidate of candidates)
-    if (existsSync(candidate)) {
-      const files = listTypeScriptFiles(candidate)
-      for (const file of files) {
-        const content = readFileSync(file, 'utf8')
-        if (isSchemaFile(content, schemaMarkers)) return candidate
-      }
-    }
-  if (!existsSync(root)) return
-  for (const sub of readdirSync(root, { withFileTypes: true }))
-    if (sub.isDirectory()) {
-      const nested = join(root, sub.name, 'module')
-      if (existsSync(nested)) {
-        const files = listTypeScriptFiles(nested)
-        for (const file of files) {
-          const content = readFileSync(file, 'utf8')
-          if (isSchemaFile(content, schemaMarkers)) return nested
-        }
-      }
-    }
-}
+const findModuleDir = findStdbModuleDirDeep
 const findSchemaFile = (moduleDir: string): undefined | { content: string; path: string } => {
   const files = listTypeScriptFiles(moduleDir)
   for (const full of files) {
     const content = readFileSync(full, 'utf8')
-    if (isSchemaFile(content, schemaMarkers) && content.includes('schema(') && content.includes('table('))
-      return { content, path: full }
+    if (isSchemaFile(content) && content.includes('schema(') && content.includes('table(')) return { content, path: full }
   }
 }
 const extractFieldType = (raw: string): string => {

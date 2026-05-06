@@ -1,11 +1,12 @@
 #!/usr/bin/env bun
 /* eslint-disable no-console */
-/* eslint-disable max-depth, complexity */
+/* eslint-disable complexity */
 /* oxlint-disable eslint/complexity, max-depth */
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { basename, join } from 'node:path'
 import { bold, dim, green, red, yellow } from '../ansi'
-import { listTypeScriptFiles } from '../shared/walk'
+import { isSchemaFile } from '../shared/viz'
+import { findStdbModuleDirDeep, listTypeScriptFiles } from '../shared/walk'
 interface AccessEntry {
   endpoints: string[]
   level: string
@@ -40,7 +41,6 @@ interface WhereField {
   source: string
   table: string
 }
-const schemaMarkers = ['schema(', 'table(', 't.']
 const reducerPat = /reducer\(\s*['"](?<table>\w+)\.(?<endpoint>[\w.]+)['"]/gu
 const helperPat = /make(?<helper>Crud|Org|CacheCrud|ChildCrud)\(/u
 const tablePat = /(?<tname>\w+)\s*:\s*table\([^,]+,\s*\{/gu
@@ -48,39 +48,7 @@ const fieldLinePat = /^\s*(?<fname>\w+)\s*:\s*(?<ftype>.+?)\s*,?$/u
 const trailingCommaPat = /,$/u
 const parenContentPat = /\([^)]*\)/gu
 const braceContentPat = /\{[^}]*\}/gu
-const isSchemaFile = (content: string): boolean => {
-  for (const marker of schemaMarkers) if (content.includes(marker)) return true
-  return false
-}
-const findModuleDir = (root: string): string | undefined => {
-  const candidates = [
-    root,
-    join(root, 'module'),
-    join(root, 'src', 'module'),
-    join(root, 'src'),
-    join(root, 'backend', 'spacetimedb', 'src')
-  ]
-  for (const candidate of candidates)
-    if (existsSync(candidate)) {
-      const files = listTypeScriptFiles(candidate)
-      for (const file of files) {
-        const content = readFileSync(file, 'utf8')
-        if (isSchemaFile(content)) return candidate
-      }
-    }
-  if (!existsSync(root)) return
-  for (const sub of readdirSync(root, { withFileTypes: true }))
-    if (sub.isDirectory()) {
-      const nested = join(root, sub.name, 'module')
-      if (existsSync(nested)) {
-        const files = listTypeScriptFiles(nested)
-        for (const file of files) {
-          const content = readFileSync(file, 'utf8')
-          if (isSchemaFile(content)) return nested
-        }
-      }
-    }
-}
+const findModuleDir = findStdbModuleDirDeep
 const findSchemaFile = (moduleDir: string): undefined | { content: string; path: string } => {
   const files = listTypeScriptFiles(moduleDir)
   for (const full of files) {

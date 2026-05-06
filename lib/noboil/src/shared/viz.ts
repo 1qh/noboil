@@ -19,7 +19,8 @@ const findBracketEnd = (text: string, startPos: number): number => {
   }
   return pos - 1
 }
-const isSchemaFile = (content: string, markers: string[]): boolean => {
+const SCHEMA_MARKERS = ['schema(', 'table(', 't.']
+const isSchemaFile = (content: string, markers: string[] = SCHEMA_MARKERS): boolean => {
   for (const marker of markers) if (content.includes(marker)) return true
   return false
 }
@@ -32,4 +33,4 @@ const printSummary = (tables: TableInfo[], children: ChildInfo[]) => {
   }
 }
 export type { ChildInfo, TableInfo }
-export { bold, dim, findBracketEnd, isSchemaFile, printSummary, red }
+export { bold, dim, findBracketEnd, isSchemaFile, printSummary, red, SCHEMA_MARKERS }

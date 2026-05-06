@@ -1,5 +1,6 @@
-import { existsSync, readdirSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { isSchemaFile } from './viz'
 const DEFAULT_SKIP = new Set(['.git', '.next', '.turbo', 'build', 'dist', 'node_modules'])
 interface WalkOpts {
   accept?: (name: string) => boolean
@@ -24,4 +25,28 @@ const walkFiles = (root: string, opts: WalkOpts = {}): string[] => {
 const isSourceTs = (name: string): boolean =>
   name.endsWith('.ts') && !name.includes('.test.') && !name.includes('.config.')
 const listTypeScriptFiles = (root: string): string[] => walkFiles(root, { accept: isSourceTs })
-export { isSourceTs, listTypeScriptFiles, walkFiles }
+const STDB_MODULE_CANDIDATES = (root: string): string[] => [
+  root,
+  join(root, 'module'),
+  join(root, 'src', 'module'),
+  join(root, 'src'),
+  join(root, 'backend', 'spacetimedb', 'src')
+]
+const findStdbModuleDir = (root: string): string | undefined => {
+  for (const candidate of STDB_MODULE_CANDIDATES(root))
+    if (existsSync(candidate)) {
+      const files = listTypeScriptFiles(candidate)
+      for (const file of files) if (isSchemaFile(readFileSync(file, 'utf8'))) return candidate
+    }
+}
+const findStdbModuleDirDeep = (root: string): string | undefined => {
+  const direct = findStdbModuleDir(root)
+  if (direct) return direct
+  if (!existsSync(root)) return
+  for (const sub of readdirSync(root, { withFileTypes: true }))
+    if (sub.isDirectory()) {
+      const nested = findStdbModuleDir(join(root, sub.name, 'module'))
+      if (nested) return nested
+    }
+}
+export { findStdbModuleDir, findStdbModuleDirDeep, isSourceTs, listTypeScriptFiles, walkFiles }
