@@ -1,6 +1,17 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
-import { join } from 'node:path'
+import { join, resolve } from 'node:path'
 import { isSchemaFile } from './viz'
+const findAncestorFile = (start: string, name: string, maxDepth = 10): null | string => {
+  let dir = resolve(start)
+  for (let i = 0; i < maxDepth; i += 1) {
+    const candidate = join(dir, name)
+    if (existsSync(candidate)) return candidate
+    const parent = resolve(dir, '..')
+    if (parent === dir) return null
+    dir = parent
+  }
+  return null
+}
 const DEFAULT_SKIP = new Set(['.git', '.next', '.turbo', 'build', 'dist', 'node_modules'])
 interface WalkOpts {
   accept?: (name: string) => boolean
@@ -49,4 +60,4 @@ const findStdbModuleDirDeep = (root: string): string | undefined => {
       if (nested) return nested
     }
 }
-export { findStdbModuleDir, findStdbModuleDirDeep, isSourceTs, listTypeScriptFiles, walkFiles }
+export { findAncestorFile, findStdbModuleDir, findStdbModuleDirDeep, isSourceTs, listTypeScriptFiles, walkFiles }

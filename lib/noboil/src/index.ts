@@ -3,13 +3,13 @@
 /** biome-ignore-all lint/nursery/noUnnecessaryConditions: dashboard loop intentionally infinite until exit */
 /* oxlint-disable promise/prefer-await-to-then, no-useless-assignment, no-constant-condition */
 /* eslint-disable no-console, no-await-in-loop, @typescript-eslint/no-unnecessary-condition */
-import { existsSync, readFileSync } from 'node:fs'
-import { join } from 'node:path'
+import { readFileSync } from 'node:fs'
 import { bold, dim, red } from './ansi'
 import { LOG_PATH, logCrash } from './shared/crash-log'
 import { didYouMean } from './shared/did-you-mean'
 import { pushRecent } from './shared/recent'
 import { getCliVersion } from './shared/version'
+import { findAncestorFile } from './shared/walk'
 const handleFatal = (label: string, err: unknown) => {
   logCrash(err).catch(() => null)
   console.error(`${red(label)} ${err instanceof Error ? err.message : String(err)}`)
@@ -39,17 +39,7 @@ const printHelp = () => {
   for (const [name, description] of Object.entries(COMMANDS)) console.log(`  ${name.padEnd(12)} ${dim(description)}`)
   console.log(`\nRun ${dim('noboil <command> --help')} for command-specific options.\n`)
 }
-const findManifest = (start: string): null | string => {
-  let dir = start
-  for (let i = 0; i < 10; i += 1) {
-    const p = join(dir, '.noboilrc.json')
-    if (existsSync(p)) return p
-    const parent = join(dir, '..')
-    if (parent === dir) break
-    dir = parent
-  }
-  return null
-}
+const findManifest = (start: string): null | string => findAncestorFile(start, '.noboilrc.json')
 const detectDb = (): 'convex' | 'spacetimedb' | null => {
   const p = findManifest(process.cwd())
   if (!p) return null

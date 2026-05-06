@@ -2,9 +2,9 @@
 /* eslint-disable no-console */
 /** biome-ignore-all lint/style/noProcessEnv: cli */
 import { spawnSync } from 'node:child_process'
-import { existsSync, readFileSync, writeFileSync } from 'node:fs'
-import { resolve } from 'node:path'
+import { readFileSync, writeFileSync } from 'node:fs'
 import { bold, dim, green, red } from '../ansi'
+import { findAncestorFile } from '../shared/walk'
 import { DEFAULT_WS_URI } from './defaults'
 type Target = 'cloud' | 'local'
 const TARGETS: Record<Target, { label: string; server: string; uri: string }> = {
@@ -12,17 +12,7 @@ const TARGETS: Record<Target, { label: string; server: string; uri: string }> = 
   local: { label: '🐳 Local Docker', server: 'local', uri: DEFAULT_WS_URI }
 }
 const URI_PAT = /^(?:NEXT_PUBLIC_SPACETIMEDB_URI|SPACETIMEDB_URI)=.*$/gmu
-const findEnvFile = (from: string): null | string => {
-  let dir = resolve(from)
-  for (let i = 0; i < 10; i += 1) {
-    const candidate = `${dir}/.env`
-    if (existsSync(candidate)) return candidate
-    const parent = resolve(dir, '..')
-    if (parent === dir) return null
-    dir = parent
-  }
-  return null
-}
+const findEnvFile = (from: string): null | string => findAncestorFile(from, '.env')
 const printUseHelp = () => {
   console.log(`${bold('noboil stdb use')} — switch SpacetimeDB target\n`)
   console.log(bold('Usage:'))

@@ -9,6 +9,7 @@ import { existsSync, readFileSync, watch } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { bold, dim, green, red, yellow } from '../ansi'
 import { sleep } from '../shared/constants'
+import { findAncestorFile } from '../shared/walk'
 import { DEFAULT_HTTP_URI } from './defaults'
 import { findEnvFile } from './use'
 interface DevFlags {
@@ -18,17 +19,7 @@ interface DevFlags {
   watch: boolean
 }
 const SPACE_PAT = /\s+/u
-const findPackageJsonFile = (from: string): null | string => {
-  let dir = resolve(from)
-  for (let i = 0; i < 10; i += 1) {
-    const candidate = join(dir, 'package.json')
-    if (existsSync(candidate)) return candidate
-    const parent = resolve(dir, '..')
-    if (parent === dir) return null
-    dir = parent
-  }
-  return null
-}
+const findPackageJsonFile = (from: string): null | string => findAncestorFile(from, 'package.json')
 const parseJsonFile = (path: string): null | Record<string, unknown> => {
   try {
     const raw = readFileSync(path, 'utf8')
