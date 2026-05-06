@@ -4,7 +4,7 @@
 /** biome-ignore-all lint/nursery/noContinue: walker */
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join, resolve } from 'node:path'
-import { collectBraceExports, replaceBetween } from './lib'
+import { collectBraceExports, replaceBetween, stripStrings } from './lib'
 const REPO = resolve(import.meta.dir, '../..')
 const EXPORT_DECL_RE =
   /export\s+(?:const|function|class|interface|type|default\s+(?:const|function|class)?)\s+(?<name>\w+)/gu
@@ -30,13 +30,6 @@ interface Pair {
   scanContentFiles?: string[]
   stdbRoot: string
 }
-const stripStrings = (src: string): string =>
-  src
-    .replaceAll(/`[\s\S]*?`/gu, '``')
-    .replaceAll(/'[^'\n]*'/gu, "''")
-    .replaceAll(/"[^"\n]*"/gu, '""')
-    .replaceAll(/\/\/[^\n]*/gu, '')
-    .replaceAll(/\/\*[\s\S]*?\*\//gu, '')
 const walkRel = (root: string, rel = ''): string[] => {
   const out: string[] = []
   const dir = join(root, rel)

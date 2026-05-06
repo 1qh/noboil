@@ -5,7 +5,7 @@ import { $ } from 'bun'
 import { walkFiles } from 'noboil/walk'
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join, resolve } from 'node:path'
-import { replaceLineBetween } from './lib'
+import { replaceLineBetween, stripComments } from './lib'
 const REPO = resolve(import.meta.dir, '../..')
 const PASS_RE = /(?<pass>\d+)\s+pass/u
 const TEST_CALL_RE = /(?:^|[\s;,([])(?:test|it)(?:\.skip|\.only|\.each\(.+?\))?\s*\(/gu
@@ -20,9 +20,7 @@ const runFullCount = async (cwd: string): Promise<number> => {
 }
 const walkE2E = (root: string): string[] => walkFiles(root, { accept: name => name.endsWith('.test.ts') })
 const countE2EFile = (path: string): number => {
-  const src = readFileSync(path, 'utf8')
-    .replaceAll(/\/\*[\s\S]*?\*\//gu, '')
-    .replaceAll(/\/\/[^\n]*/gu, '')
+  const src = stripComments(readFileSync(path, 'utf8'))
   return [...src.matchAll(TEST_CALL_RE)].length
 }
 const countE2EApp = (appDir: string): number => {

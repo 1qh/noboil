@@ -11,6 +11,19 @@ const EXPORT_BRACE_RE = /export\s+(?:type\s+)?\{(?<syms>[^}]+)\}/gu
 const TYPE_PREFIX_RE = /^type\s+/u
 const STRIP_AUTOGEN_RE = /\{\/\* AUTO-GENERATED:[\s\S]*?\/AUTO-GENERATED:[^}]+\*\/\}/gu
 const STRIP_FENCE_RE = /```[\s\S]*?```/gu
+const BLOCK_COMMENT_RE = /\/\*[\s\S]*?\*\//gu
+const LINE_COMMENT_RE = /\/\/[^\n]*/gu
+const BACKTICK_RE = /`[\s\S]*?`/gu
+const SQUOTE_RE = /'[^'\n]*'/gu
+const DQUOTE_RE = /"[^"\n]*"/gu
+const stripComments = (src: string): string => src.replaceAll(BLOCK_COMMENT_RE, '').replaceAll(LINE_COMMENT_RE, '')
+const stripStrings = (src: string): string =>
+  src
+    .replaceAll(BACKTICK_RE, '``')
+    .replaceAll(SQUOTE_RE, "''")
+    .replaceAll(DQUOTE_RE, '""')
+    .replaceAll(LINE_COMMENT_RE, '')
+    .replaceAll(BLOCK_COMMENT_RE, '')
 const collectBraceExports = (src: string, out: Set<string>) => {
   let m = EXPORT_BRACE_RE.exec(src)
   while (m) {
@@ -124,5 +137,7 @@ export {
   replaceBetween,
   replaceLineBetween,
   STRIP_AUTOGEN_RE,
-  STRIP_FENCE_RE
+  STRIP_FENCE_RE,
+  stripComments,
+  stripStrings
 }
