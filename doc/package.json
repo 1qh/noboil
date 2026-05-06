@@ -13,6 +13,7 @@
     "fumadocs-mdx": "latest",
     "fumadocs-ui": "latest",
     "next": "latest",
+    "noboil": "workspace:*",
     "react": "latest",
     "react-dom": "latest"
   }

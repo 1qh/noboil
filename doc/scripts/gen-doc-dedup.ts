@@ -1,25 +1,18 @@
 #!/usr/bin/env bun
-/* eslint-disable no-console, no-continue */
+/* eslint-disable no-console */
+import { walkFiles } from 'noboil/walk'
 /** biome-ignore-all lint/performance/useTopLevelRegex: per-file scan */
 /** biome-ignore-all lint/nursery/noContinue: walker */
 /* oxlint-disable oxc/branches-sharing-code */
-import { readdirSync, readFileSync, statSync } from 'node:fs'
-import { join, relative, resolve } from 'node:path'
+import { readFileSync } from 'node:fs'
+import { relative, resolve } from 'node:path'
 import { replaceBetween } from './lib'
 const REPO = resolve(import.meta.dir, '../..')
 const MIN_LEN = 120
 const STRIP_AUTOGEN_RE = /\{\/\* AUTO-GENERATED:[\s\S]*?\/AUTO-GENERATED:[^}]+\*\/\}/gu
 const STRIP_HTML_AUTOGEN_RE = /<!-- AUTO-GENERATED:[\s\S]*?\/AUTO-GENERATED:[^>]+-->/gu
 const STRIP_FENCE_RE = /```[\s\S]*?```/gu
-const walk = (dir: string, out: string[] = []): string[] => {
-  for (const name of readdirSync(dir).toSorted()) {
-    if (name.startsWith('.')) continue
-    const full = join(dir, name)
-    if (statSync(full).isDirectory()) walk(full, out)
-    else if (name.endsWith('.mdx')) out.push(full)
-  }
-  return out
-}
+const walk = (dir: string): string[] => walkFiles(dir, { accept: name => name.endsWith('.mdx') })
 const splitParas = (src: string): string[] => {
   const cleaned = src.replaceAll(STRIP_AUTOGEN_RE, '').replaceAll(STRIP_HTML_AUTOGEN_RE, '').replaceAll(STRIP_FENCE_RE, '')
   return cleaned

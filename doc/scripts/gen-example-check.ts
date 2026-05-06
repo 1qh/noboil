@@ -3,21 +3,13 @@
 /** biome-ignore-all lint/performance/useTopLevelRegex: per-file scan */
 /** biome-ignore-all lint/nursery/noContinue: walker */
 import { Transpiler } from 'bun'
-import { readdirSync, readFileSync, statSync } from 'node:fs'
-import { join, relative, resolve } from 'node:path'
+import { walkFiles } from 'noboil/walk'
+import { readFileSync } from 'node:fs'
+import { relative, resolve } from 'node:path'
 import { replaceBetween } from './lib'
 const REPO = resolve(import.meta.dir, '../..')
 const FENCE_RE = /```(?:ts|tsx|typescript)\n(?<code>[\s\S]*?)```/gu
-const walk = (dir: string, out: string[] = []): string[] => {
-  if (!statSync(dir, { throwIfNoEntry: false })) return out
-  for (const name of readdirSync(dir).toSorted()) {
-    if (name.startsWith('.') || name === 'node_modules') continue
-    const full = join(dir, name)
-    if (statSync(full).isDirectory()) walk(full, out)
-    else if (name.endsWith('.mdx')) out.push(full)
-  }
-  return out
-}
+const walk = (dir: string): string[] => walkFiles(dir, { accept: name => name.endsWith('.mdx') })
 interface Block {
   code: string
   file: string

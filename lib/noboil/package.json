@@ -78,6 +78,7 @@
       "default": "./src/convex/server/test-discover.ts"
     },
     "./test/utils": "./src/shared/test/index.ts",
+    "./walk": "./src/shared/walk.ts",
     "./convex": "./src/convex/index.ts",
     "./convex/server": "./src/convex/server/index.ts",
     "./convex/zod": "./src/convex/zod.ts",

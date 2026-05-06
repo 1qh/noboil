@@ -2,6 +2,7 @@
 /* eslint-disable no-console */
 /* oxlint-disable unicorn/prefer-top-level-await */
 import { $ } from 'bun'
+import { walkFiles } from 'noboil/walk'
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { replaceLineBetween } from './lib'
@@ -17,16 +18,7 @@ const runFullCount = async (cwd: string): Promise<number> => {
   }
   return 0
 }
-const walkE2E = (root: string): string[] => {
-  const out: string[] = []
-  if (!statSync(root, { throwIfNoEntry: false })?.isDirectory()) return out
-  for (const name of readdirSync(root).toSorted()) {
-    const p = join(root, name)
-    if (statSync(p).isDirectory()) out.push(...walkE2E(p))
-    else if (name.endsWith('.test.ts')) out.push(p)
-  }
-  return out
-}
+const walkE2E = (root: string): string[] => walkFiles(root, { accept: name => name.endsWith('.test.ts') })
 const countE2EFile = (path: string): number => {
   const src = readFileSync(path, 'utf8')
     .replaceAll(/\/\*[\s\S]*?\*\//gu, '')

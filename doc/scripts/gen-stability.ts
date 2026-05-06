@@ -1,24 +1,19 @@
 #!/usr/bin/env bun
-/* eslint-disable no-console, no-continue, max-depth */
+/* eslint-disable no-console, max-depth */
+import { walkFiles } from 'noboil/walk'
 /** biome-ignore-all lint/performance/useTopLevelRegex: per-file scan */
 /** biome-ignore-all lint/nursery/noContinue: parser */
-import { readdirSync, readFileSync, statSync } from 'node:fs'
-import { join, relative, resolve } from 'node:path'
+import { readFileSync } from 'node:fs'
+import { relative, resolve } from 'node:path'
 import { replaceBetween } from './lib'
 const REPO = resolve(import.meta.dir, '../..')
 const TAGS = ['@beta', '@alpha', '@experimental', '@deprecated', '@internal'] as const
 type Tag = (typeof TAGS)[number]
-const walk = (dir: string, out: string[] = []): string[] => {
-  for (const name of readdirSync(dir).toSorted()) {
-    const full = join(dir, name)
-    if (!statSync(full, { throwIfNoEntry: false })) continue
-    if (statSync(full).isDirectory()) {
-      if (name === '__tests__' || name === 'node_modules') continue
-      walk(full, out)
-    } else if ((name.endsWith('.ts') || name.endsWith('.tsx')) && !name.endsWith('.test.ts')) out.push(full)
-  }
-  return out
-}
+const walk = (dir: string): string[] =>
+  walkFiles(dir, {
+    accept: name => (name.endsWith('.ts') || name.endsWith('.tsx')) && !name.endsWith('.test.ts'),
+    skip: new Set(['__tests__', 'node_modules'])
+  })
 const SYM_RE = /(?:export\s+)?(?:const|function|class|interface|type)\s+(?<name>\w+)/u
 const main = () => {
   const root = `${REPO}/lib/noboil/src`
