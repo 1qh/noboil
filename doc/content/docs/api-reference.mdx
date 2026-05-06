@@ -1619,11 +1619,12 @@ Each module in `backend/convex/convex/` re-exports the factory-generated CRUD pl
 Every entry in `noboil/package.json#exports`. Use these exact paths in `import` statements — bundlers resolve via the `customConditions` setting in your `tsconfig`.
 
 {/* AUTO-GENERATED:PACKAGE-EXPORTS:START */}
-**43 subpath exports** from `noboil` package.json. Use exact import paths for tree-shaking.
+**44 subpath exports** from `noboil` package.json. Use exact import paths for tree-shaking.
 
 | Import path                        | Runtime entry                               | Types entry |
 | ---------------------------------- | ------------------------------------------- | ----------- |
 | `noboil`                           | `./src/noboil.ts`                           | —           |
+| `noboil/ansi`                      | `./src/ansi.ts`                             | —           |
 | `noboil/components`                | `./src/convex/components/index.ts`          | ``          |
 | `noboil/config`                    | `./src/config.ts`                           | —           |
 | `noboil/convex`                    | `./src/convex/index.ts`                     | —           |
@@ -1686,9 +1687,9 @@ Every explicit `http.route(...)` registration in `backend/convex/convex/http.ts`
 How many of `noboil`'s public exports are mentioned anywhere in the docs. Anything in the "undocumented" list is callable but never described — use as a punch list.
 
 {/* AUTO-GENERATED:SYMBOL-COVERAGE:START */}
-Coverage of public exports (every name reachable through `noboil/...` subpaths) by mention in `doc/content/docs/*.mdx`. **497/500 mentioned (99%).**
+Coverage of public exports (every name reachable through `noboil/...` subpaths) by mention in `doc/content/docs/*.mdx`. **502/508 mentioned (99%).**
 
-Undocumented (first 3 of 3):
+Undocumented (first 6 of 6):
 
-`findProjectRoot`, `parseEnvFile`, `parseEnvLine`
+`ANSI_RE`, `bold`, `cyan`, `dim`, `green`, `stripAnsi`
 {/* AUTO-GENERATED:SYMBOL-COVERAGE:END */}

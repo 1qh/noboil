@@ -2,8 +2,9 @@
 /** biome-ignore-all lint/performance/noAwaitInLoops: sequential CLI spawns */
 /** biome-ignore-all lint/suspicious/noControlCharactersInRegex: ANSI escape stripping */
 /* oxlint-disable eslint(no-await-in-loop), eslint(no-control-regex), eslint-plugin-unicorn(no-hex-escape), eslint-plugin-unicorn(no-immediate-mutation) */
-/* eslint-disable no-console, no-control-regex */
+/* eslint-disable no-console */
 import { $ } from 'bun'
+import { stripAnsi } from 'noboil/ansi'
 import { readFileSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 const REPO = resolve(import.meta.dir, '../..')
@@ -13,10 +14,9 @@ const STDB_BIN = `${REPO}/lib/noboil/src/spacetimedb/cli.ts`
 const mdxPath = resolve(import.meta.dir, '../content/docs/cli.mdx')
 const START = '{/* AUTO-GENERATED:HELP:START */}'
 const END = '{/* AUTO-GENERATED:HELP:END */}'
-const STRIP_ANSI = /\u001B\[[\d;]*m/gu
 const runHelp = async (bin: string, args: string[]): Promise<string> => {
   const proc = await $`bun ${bin} ${args} --help`.quiet().nothrow()
-  return proc.stdout.toString().replaceAll(STRIP_ANSI, '').trim()
+  return stripAnsi(proc.stdout.toString()).trim()
 }
 const codeBlock = (title: string, body: string): string => `**${title}**\n\n\`\`\`text\n${body}\n\`\`\``
 const main = async () => {

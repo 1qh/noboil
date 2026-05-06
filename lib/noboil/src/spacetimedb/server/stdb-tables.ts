@@ -1,5 +1,6 @@
 import type { AlgebraicTypeType, ColumnBuilder, table as stdbTable, TypeBuilder } from 'spacetimedb/server'
 import { schema as stdbSchema, t as stdbT, table as stdbTableFn } from 'spacetimedb/server'
+import { isRecord } from '../../shared/server/helpers'
 type FieldBuilder = ColumnBuilder<unknown, AlgebraicTypeType> | TypeBuilder<unknown, AlgebraicTypeType>
 type FieldFromSchemaFn = (schema: unknown, t: ZodBridgeT, path: string) => FieldBuilder
 interface KeyField {
@@ -47,7 +48,6 @@ interface ZodLike {
   shape?: Record<string, unknown>
   type?: unknown
 }
-const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null
 const isZodObject = (value: unknown): value is ZodLike =>
   isRecord(value) && value.type === 'object' && 'shape' in value && isRecord(value.shape)
 const hasOptional = (value: FieldBuilder): value is FieldBuilder & { optional: () => FieldBuilder } =>

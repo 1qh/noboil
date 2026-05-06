@@ -1,5 +1,6 @@
 import type { ZodObject, ZodType } from 'zod/v4'
 import { array, boolean, number, object, string, unknown, uuid, enum as zenum } from 'zod/v4'
+import { isRecord } from '../shared/server/helpers'
 interface RuntimeBuilder {
   algebraicType?: unknown
   columnMetadata?: unknown
@@ -33,8 +34,6 @@ const NUMBER_TAGS = new Set([
   'U128',
   'U256'
 ])
-/** Narrows unknown values to plain records. */
-const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null
 const toBuilder = (v: unknown): RuntimeBuilder => (isRecord(v) ? v : {})
 const toTypeBuilder = (v: unknown): RuntimeBuilder => {
   const b = toBuilder(v)
