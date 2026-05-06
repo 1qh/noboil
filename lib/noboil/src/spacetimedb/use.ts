@@ -5,10 +5,11 @@ import { spawnSync } from 'node:child_process'
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { bold, dim, green, red } from '../ansi'
+import { DEFAULT_WS_URI } from './defaults'
 type Target = 'cloud' | 'local'
 const TARGETS: Record<Target, { label: string; server: string; uri: string }> = {
   cloud: { label: '☁️  MainCloud', server: 'maincloud', uri: 'https://maincloud.spacetimedb.com' },
-  local: { label: '🐳 Local Docker', server: 'local', uri: 'ws://localhost:4000' }
+  local: { label: '🐳 Local Docker', server: 'local', uri: DEFAULT_WS_URI }
 }
 const URI_PAT = /^(?:NEXT_PUBLIC_SPACETIMEDB_URI|SPACETIMEDB_URI)=.*$/gmu
 const findEnvFile = (from: string): null | string => {
@@ -27,7 +28,7 @@ const printUseHelp = () => {
   console.log(bold('Usage:'))
   console.log('  noboil stdb use <target>\n')
   console.log(bold('Targets:'))
-  console.log(`  local    ${dim('ws://localhost:4000 (Docker)')}`)
+  console.log(`  local    ${dim(`${DEFAULT_WS_URI} (Docker)`)}`)
   console.log(`  cloud    ${dim('https://maincloud.spacetimedb.com')}\n`)
   console.log(bold('What it does:'))
   console.log(`  ${dim('1.')} Updates NEXT_PUBLIC_SPACETIMEDB_URI and SPACETIMEDB_URI in .env`)

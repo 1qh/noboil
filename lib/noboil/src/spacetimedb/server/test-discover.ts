@@ -1,3 +1,4 @@
+import { DEFAULT_HTTP_URI } from '../defaults'
 interface DiscoverModulesOptions {
   httpUrl?: string
   moduleName?: string
@@ -10,7 +11,7 @@ interface SchemaResponse {
   reducers?: { name?: string }[]
   tables?: { name?: string }[]
 }
-const DEFAULT_HTTP_URL = 'http://localhost:4000'
+const DEFAULT_HTTP_URL = DEFAULT_HTTP_URI
 const getEnv = (key: string) => {
   const processRef = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process
   return processRef?.env?.[key]

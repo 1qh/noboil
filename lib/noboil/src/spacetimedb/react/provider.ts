@@ -1,6 +1,7 @@
 // oxlint-disable no-document-cookie
 // biome-ignore-all lint/nursery/useGlobalThis: browser API
 import type { UploadOptions, UploadResponse } from '../components'
+import { DEFAULT_WS_URI } from '../defaults'
 import { err } from '../server/helpers'
 interface CreateSpacetimeClientOptions<
   TBuilder extends SpacetimeConnectionBuilder<TBuilder, TConnection, TIdentity>,
@@ -27,7 +28,7 @@ interface TokenStore {
 }
 const OCTET_STREAM = 'application/octet-stream'
 const WS_TO_HTTP_RE = /^ws/u
-const DEFAULT_SPACETIME_URI = 'ws://localhost:4000'
+const DEFAULT_SPACETIME_URI = DEFAULT_WS_URI
 const DEFAULT_TOKEN_KEY = 'spacetimedb.token'
 const TOKEN_COOKIE_KEY = 'spacetimedb_token'
 const clientCache = new WeakMap<object, Map<string, unknown>>()

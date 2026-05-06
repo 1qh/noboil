@@ -8,6 +8,7 @@ import { spawn, spawnSync } from 'node:child_process'
 import { existsSync, readFileSync, watch } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { bold, dim, green, red, yellow } from '../ansi'
+import { DEFAULT_HTTP_URI } from './defaults'
 import { findEnvFile } from './use'
 interface DevFlags {
   docker: boolean
@@ -129,7 +130,7 @@ const sleep = async (ms: number): Promise<void> =>
     setTimeout(_resolve, ms)
   })
 const pingSpacetime = async (): Promise<boolean> => {
-  const base = process.env.SPACETIMEDB_URI ?? 'http://localhost:4000'
+  const base = process.env.SPACETIMEDB_URI ?? DEFAULT_HTTP_URI
   const urls = [`${base}/v1/ping`, `${base}/database/ping`]
   const checks = urls.map(async url => {
     try {

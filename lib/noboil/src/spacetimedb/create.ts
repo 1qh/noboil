@@ -5,6 +5,7 @@ import { existsSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { bold, dim, green, yellow } from '../ansi'
 import { hasFlag, readEqFlag, writeFilesToDir } from '../shared/cli'
+import { DEFAULT_HTTP_URI } from './defaults'
 const TABLES_TS = `import { t } from 'spacetimedb'
 const blogTable = {
   id: t.u32(),
@@ -100,8 +101,8 @@ const BlogPage = () => {
 }
 export default BlogPage
 `
-const ENV_LOCAL = `SPACETIMEDB_URI=http://localhost:4000
-NEXT_PUBLIC_SPACETIMEDB_URI=http://localhost:4000
+const ENV_LOCAL = `SPACETIMEDB_URI=${DEFAULT_HTTP_URI}
+NEXT_PUBLIC_SPACETIMEDB_URI=${DEFAULT_HTTP_URI}
 `
 const TSCONFIG = JSON.stringify(
   {

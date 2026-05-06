@@ -1,6 +1,7 @@
 // biome-ignore-all lint/style/noProcessEnv: test env
 // biome-ignore-all lint/suspicious/useAwait: test async
 import { DbConnectionBuilder, DbConnectionImpl } from 'spacetimedb/sdk'
+import { DEFAULT_HTTP_URI, DEFAULT_WS_URI } from '../defaults'
 interface CreateTestContextOptions {
   httpUrl?: string
   moduleName?: string
@@ -36,14 +37,14 @@ interface TestUser {
   identity: string
   token: string
 }
-const DEFAULT_HTTP_URL = 'http://localhost:4000'
+const DEFAULT_HTTP_URL = DEFAULT_HTTP_URI
 const resolveModuleName = (moduleName?: string) =>
   moduleName ?? process.env.SPACETIMEDB_MODULE_NAME ?? process.env.NEXT_PUBLIC_SPACETIMEDB_MODULE_NAME
 const ensureModuleName = (moduleName?: string): string => {
   if (!moduleName) throw new Error('SPACETIMEDB_MODULE_NAME is required in createTestContext options or env')
   return moduleName
 }
-const DEFAULT_WS_URL = 'ws://localhost:4000'
+const DEFAULT_WS_URL = DEFAULT_WS_URI
 const CONNECT_TIMEOUT_MS = 10_000
 const IDENTIFIER_RE = /^[A-Za-z_][A-Za-z0-9_]*$/u
 const isTestMode = () => process.env.SPACETIMEDB_TEST_MODE === 'true'

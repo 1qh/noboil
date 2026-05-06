@@ -3,13 +3,14 @@
 import { existsSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { bold, dim, green, red, yellow } from '../ansi'
+import { DEFAULT_PORT } from './defaults'
 type GenerateTarget = 'docker'
 const DOCKER_COMPOSE = `services:
   spacetimedb:
     image: clockworklabs/spacetime:latest
     command: start --listen-addr 0.0.0.0:3000
     ports:
-      - "4000:3000"
+      - "${DEFAULT_PORT}:3000"
       - "5432:5432"
     volumes:
       - spacetimedb_data:/stdb
