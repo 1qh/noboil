@@ -45,7 +45,7 @@
     "verify": "bun run tsc && bun run check && bun run build"
   },
   "simple-git-hooks": {
-    "pre-commit": "sh up.sh && git add -u"
+    "pre-commit": "bun doc/scripts/gen-all.ts && sh up.sh && git add -u"
   },
   "dependencies": {
     "@a/config": "workspace:*"
