@@ -40,4 +40,14 @@ const findProjectRoot = (start = process.cwd(), markers: readonly string[] = ['p
   }
   return start
 }
-export { findProjectRoot, parseEnvFile, parseEnvLine }
+/** Read + parse JSON file. Throws on read or parse failure. Cast result at callsite. */
+const readJson = (path: string): unknown => JSON.parse(readFileSync(path, 'utf8'))
+/** Read + parse JSON file, returning null on any failure. Cast result at callsite. */
+const readJsonSafe = (path: string): unknown => {
+  try {
+    return readJson(path)
+  } catch {
+    return null
+  }
+}
+export { findProjectRoot, parseEnvFile, parseEnvLine, readJson, readJsonSafe }
