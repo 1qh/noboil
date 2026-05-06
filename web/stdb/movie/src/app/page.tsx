@@ -64,7 +64,7 @@ const PLAYWRIGHT_MOVIES: SearchResult[] = [
 const searchMovies = async (query: string) => {
   const apiKey = process.env.NEXT_PUBLIC_TMDB_API_KEY
   if (!apiKey) {
-    if (isPlaywright) {
+    if (isPlaywright()) {
       const q = query.toLowerCase()
       const rows: SearchResult[] = []
       for (const m of PLAYWRIGHT_MOVIES) if (m.title.toLowerCase().includes(q)) rows.push(m)

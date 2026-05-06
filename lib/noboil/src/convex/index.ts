@@ -1,3 +1,4 @@
+export { isCvxTestMode, isPlaywright, isStdbTestMode } from '../shared/test-mode'
 export {
   ACTIVE_ORG_COOKIE,
   ACTIVE_ORG_SLUG_COOKIE,

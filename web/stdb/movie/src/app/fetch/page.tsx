@@ -113,7 +113,7 @@ type MovieDetailData = InferCreate<typeof s.movie>
 const fetchMovie = async (id: number): Promise<MovieDetailData> => {
   const apiKey = process.env.NEXT_PUBLIC_TMDB_API_KEY
   if (!apiKey) {
-    if (isPlaywright) {
+    if (isPlaywright()) {
       const local = PLAYWRIGHT_MOVIES.get(id)
       if (local) return local
     }

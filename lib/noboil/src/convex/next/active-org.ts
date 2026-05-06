@@ -5,11 +5,9 @@ import { convexAuthNextjsToken } from '@convex-dev/auth/nextjs/server'
 import { ConvexHttpClient } from 'convex/browser'
 import { fetchQuery } from 'convex/nextjs'
 import { cookies } from 'next/headers'
+import { isCvxTestMode } from '../../shared/test-mode'
 import { ACTIVE_ORG_COOKIE, ACTIVE_ORG_SLUG_COOKIE, ONE_YEAR_SECONDS } from '../constants'
-const isTestMode = () =>
-  Boolean(
-    process.env.PLAYWRIGHT ?? process.env.NEXT_PUBLIC_PLAYWRIGHT ?? process.env.TEST_MODE ?? process.env.CONVEX_TEST_MODE
-  )
+const isTestMode = () => isCvxTestMode() || process.env.TEST_MODE === '1' || process.env.TEST_MODE === 'true'
 const directQuery = async (query: FunctionReference<'query'>, args: Record<string, unknown>): Promise<unknown> => {
   const url = process.env.NEXT_PUBLIC_CONVEX_URL ?? process.env.CONVEX_URL
   if (!url) return null

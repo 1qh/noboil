@@ -23,13 +23,13 @@ const Page = () => {
   const identityKey = toIdentityKey(identity)
   const isOwner = chat ? toIdentityKey(chat.userId) === identityKey : false
   const hasAccess = chat ? chat.isPublic || isOwner : false
-  const messages: Message[] = hasAccess || isPlaywright ? allMessages.filter(m => m.chatId === id) : []
+  const messages: Message[] = hasAccess || isPlaywright() ? allMessages.filter(m => m.chatId === id) : []
   useEffect(() => {
-    if (isPlaywright) return
+    if (isPlaywright()) return
     if (!isChatsReady || Number.isNaN(id) || !chat) return
     if (!hasAccess) router.replace('/')
   }, [chat, hasAccess, id, isChatsReady, router])
-  if (isPlaywright && !Number.isNaN(id))
+  if (isPlaywright() && !Number.isNaN(id))
     return <Client chatId={String(id)} initialMessages={toUIMessages(messages)} readOnly={false} />
   if (isChatsReady && isMessagesReady && chat && hasAccess)
     return <Client chatId={String(chat.id)} initialMessages={toUIMessages(messages)} readOnly={!isOwner} />

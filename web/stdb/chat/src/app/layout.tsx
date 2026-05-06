@@ -19,7 +19,7 @@ const isPublicPath = (pathname: string) => {
 const Layout = async ({ children }: { children: ReactNode }) => {
   const pathname = (await headers()).get('x-pathname') ?? '/'
   const token = (await cookies()).get(TOKEN_COOKIE_KEY)?.value
-  if (!(isPublicPath(pathname) || isPlaywright || (typeof token === 'string' && token.length > 0))) redirect('/login')
+  if (!(isPublicPath(pathname) || isPlaywright() || (typeof token === 'string' && token.length > 0))) redirect('/login')
   const showSidebar = !isPublicPath(pathname)
   return (
     <AuthLayout Provider={SpacetimeWrapper}>

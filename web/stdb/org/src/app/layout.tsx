@@ -52,14 +52,14 @@ const OrgLayoutInner = ({ children }: { children: ReactNode }) => {
   const [playwrightWaitExpired, setPlaywrightWaitExpired] = useState(false)
   /** biome-ignore lint/correctness/useExhaustiveDependencies: retrigger on navigation */
   useEffect(() => {
-    if (!isPlaywright) return
+    if (!isPlaywright()) return
     setPlaywrightWaitExpired(false)
     const timer = window.setTimeout(() => setPlaywrightWaitExpired(true), 5000)
     return () => window.clearTimeout(timer)
   }, [activeOrgId, pathname])
   if (!pathname) return children
   if (!needsOrgLayout(pathname)) return children
-  if (!(identity || isPlaywright)) return null
+  if (!(identity || isPlaywright())) return null
   if (!((orgsReady && membersReady) || playwrightWaitExpired)) return null
   // oxlint-disable-next-line jsx-no-new-array-as-prop
   const ownedOrgs = identity ? orgs.filter((o: Org) => sameIdentity(o.userId, identity)) : []
@@ -84,7 +84,7 @@ const OrgLayoutInner = ({ children }: { children: ReactNode }) => {
         role: 'owner' as const
       }))
   if (myOrgItems.length === 0) {
-    if (isPlaywright && !playwrightWaitExpired) return null
+    if (isPlaywright() && !playwrightWaitExpired) return null
     router.replace('/')
     return null
   }

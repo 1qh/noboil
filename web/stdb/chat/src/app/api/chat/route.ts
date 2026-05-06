@@ -63,7 +63,7 @@ const getLocation = (text: string): string => {
   return location.replace(TRAILING_PUNCT_RE, '')
 }
 const POST = async (request: Request) => {
-  if (!isStdbTestMode) return withUnavailable()
+  if (!isStdbTestMode()) return withUnavailable()
   const body = (await request.json()) as ChatRequestBody
   const messages = getMessages(body)
   const lastUserText = getLastUserText(messages)

@@ -83,7 +83,7 @@ const Page = () => {
   const [profiles, isReady] = useTable(tables.blogProfile)
   const { identity } = useSpacetimeDB()
   const profile = profiles.find(p => identity && p.userId.isEqual(identity)) ?? null
-  const shouldShowContent = isReady || isPlaywright
+  const shouldShowContent = isReady || isPlaywright()
   const resolvedAvatar = useResolveFileUrl(profile?.avatar)
   const form = useFormMutation({
     mutate: useReducer(reducers.upsertBlogProfile),

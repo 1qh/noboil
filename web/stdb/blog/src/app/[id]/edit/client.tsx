@@ -144,7 +144,7 @@ const Setting = ({ blog }: { blog: Blog }) => {
 }
 const Client = ({ blog }: { blog: Blog | null }) => {
   const { identity } = useSpacetimeDB()
-  if (!(blog && (isPlaywright || (identity && blog.userId.isEqual(identity)))))
+  if (!(blog && (isPlaywright() || (identity && blog.userId.isEqual(identity)))))
     return (
       <p className='text-muted-foreground' data-testid='blog-not-found'>
         Blog not found

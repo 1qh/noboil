@@ -2,17 +2,11 @@
 'use server'
 import { cookies } from 'next/headers'
 import type { ActiveOrgQuery } from './active-org-types'
+import { isStdbTestMode } from '../../shared/test-mode'
 import { ACTIVE_ORG_COOKIE, ACTIVE_ORG_SLUG_COOKIE, ONE_YEAR_SECONDS } from '../constants'
 import { TOKEN_COOKIE_KEY } from '../defaults'
 import { queryTable } from './query'
-/** Detects whether auth helpers are running in test mode. */
-const isTestMode = () =>
-  Boolean(
-    process.env.PLAYWRIGHT || // eslint-disable-line @typescript-eslint/prefer-nullish-coalescing
-      process.env.NEXT_PUBLIC_PLAYWRIGHT || // eslint-disable-line @typescript-eslint/prefer-nullish-coalescing
-      process.env.TEST_MODE || // eslint-disable-line @typescript-eslint/prefer-nullish-coalescing
-      process.env.SPACETIMEDB_TEST_MODE
-  )
+const isTestMode = () => isStdbTestMode() || process.env.TEST_MODE === '1' || process.env.TEST_MODE === 'true'
 const toHttpUri = (uri: string) => {
   if (uri.startsWith('wss://')) return uri.replace('wss://', 'https://')
   if (uri.startsWith('ws://')) return uri.replace('ws://', 'http://')

@@ -190,7 +190,7 @@ const Author = ({
   const authorProfile = profiles.find(p => p.userId.isEqual(userId))
   const authorName = authorProfile?.displayName ?? 'Author'
   const avatarUrl = useResolveFileUrl(authorProfile?.avatar)
-  const own = isPlaywright || (identity ? userId.isEqual(identity) : false)
+  const own = isPlaywright() || (identity ? userId.isEqual(identity) : false)
   const updatedAtDate = updatedAt.toDate()
   return (
     <div className={cn('flex items-center', className)}>

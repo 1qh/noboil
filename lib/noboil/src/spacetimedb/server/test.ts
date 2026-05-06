@@ -1,6 +1,7 @@
 // biome-ignore-all lint/style/noProcessEnv: test env
 // biome-ignore-all lint/suspicious/useAwait: test async
 import { DbConnectionBuilder, DbConnectionImpl } from 'spacetimedb/sdk'
+import { isStdbTestMode } from '../../shared/test-mode'
 import { DEFAULT_HTTP_URI, DEFAULT_WS_URI } from '../defaults'
 interface CreateTestContextOptions {
   httpUrl?: string
@@ -47,7 +48,7 @@ const ensureModuleName = (moduleName?: string): string => {
 const DEFAULT_WS_URL = DEFAULT_WS_URI
 const CONNECT_TIMEOUT_MS = 10_000
 const IDENTIFIER_RE = /^[A-Za-z_][A-Za-z0-9_]*$/u
-const isTestMode = () => process.env.SPACETIMEDB_TEST_MODE === 'true'
+const isTestMode = isStdbTestMode
 const REMOTE_MODULE = {
   procedures: [],
   reducers: [],
