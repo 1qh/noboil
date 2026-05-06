@@ -2,6 +2,7 @@
 import type { UIMessage } from 'ai'
 import { isStdbTestMode } from '@a/fe/test-mode'
 import { createUIMessageStream, createUIMessageStreamResponse } from 'ai'
+import { sleep } from 'noboil/spacetimedb'
 interface ApprovalResponse {
   approved: boolean
   id: string
@@ -23,10 +24,6 @@ const WEATHER_LOCATION_RE = /weather(?:\s+in)?\s+(?<location>[a-zA-Z\s-]+)/u
 const TRAILING_PUNCT_RE = /[?.!,]+$/u
 const WEATHER_WORD_RE = /\bweather\b/iu
 const withUnavailable = () => Response.json({ error: 'AI not available' }, { status: 503 })
-const sleep = async (ms: number) =>
-  new Promise<void>(resolve => {
-    setTimeout(resolve, ms)
-  })
 const getMessages = (body: ChatRequestBody): UIMessage[] => {
   if (body.messages && body.messages.length > 0) return body.messages
   if (body.message) return [body.message]

@@ -5,25 +5,10 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import type { ChildInfo, TableInfo } from '../shared/viz'
 import { bold, dim, isSchemaFile, red } from '../shared/viz'
+import { listTypeScriptFiles } from '../shared/walk'
 const schemaMarkers = ['schema(', 'table(', 't.']
 const tablePat = /(?<tname>\w+)\s*:\s*table\([^,]+,\s*\{/gu
 const fieldLinePat = /^\s*(?<fname>\w+)\s*:\s*(?<ftype>.+?)\s*,?$/u
-const listTypeScriptFiles = (root: string): string[] => {
-  const out: string[] = []
-  const skip = new Set(['.git', '.next', '.turbo', 'build', 'dist', 'node_modules'])
-  const walk = (dir: string) => {
-    if (!existsSync(dir)) return
-    for (const entry of readdirSync(dir, { withFileTypes: true })) {
-      const full = join(dir, entry.name)
-      if (entry.isDirectory()) {
-        if (!(skip.has(entry.name) || entry.name.startsWith('.'))) walk(full)
-      } else if (entry.name.endsWith('.ts') && !entry.name.includes('.test.') && !entry.name.includes('.config.'))
-        out.push(full)
-    }
-  }
-  walk(root)
-  return out
-}
 const findModuleDir = (root: string): string | undefined => {
   const candidates = [
     root,

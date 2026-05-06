@@ -1,5 +1,6 @@
 /* eslint-disable no-console */
 import { config } from '@a/config'
+import { sleep } from 'noboil/spacetimedb'
 import { callReducer, cleanup, createTestContext, queryTable } from 'noboil/spacetimedb/server'
 interface BlogRow {
   content: string
@@ -9,10 +10,6 @@ interface BlogRow {
   user_id: unknown
 }
 type Ctx = Awaited<ReturnType<typeof createTestContext>>
-const sleep = async (ms: number) =>
-  new Promise<void>(resolve => {
-    setTimeout(resolve, ms)
-  })
 const assert = (condition: boolean, msg: string) => {
   if (!condition) throw new Error(`ASSERTION_FAILED: ${msg}`)
 }

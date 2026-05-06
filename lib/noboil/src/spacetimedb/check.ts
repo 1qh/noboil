@@ -5,6 +5,7 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { basename, join } from 'node:path'
 import { bold, dim, green, red, yellow } from '../ansi'
+import { listTypeScriptFiles } from '../shared/walk'
 interface AccessEntry {
   endpoints: string[]
   level: string
@@ -50,22 +51,6 @@ const braceContentPat = /\{[^}]*\}/gu
 const isSchemaFile = (content: string): boolean => {
   for (const marker of schemaMarkers) if (content.includes(marker)) return true
   return false
-}
-const listTypeScriptFiles = (root: string): string[] => {
-  const out: string[] = []
-  const skip = new Set(['.git', '.next', '.turbo', 'build', 'dist', 'node_modules'])
-  const walk = (dir: string) => {
-    if (!existsSync(dir)) return
-    for (const entry of readdirSync(dir, { withFileTypes: true })) {
-      const full = join(dir, entry.name)
-      if (entry.isDirectory()) {
-        if (!(skip.has(entry.name) || entry.name.startsWith('.'))) walk(full)
-      } else if (entry.name.endsWith('.ts') && !entry.name.includes('.test.') && !entry.name.includes('.config.'))
-        out.push(full)
-    }
-  }
-  walk(root)
-  return out
 }
 const findModuleDir = (root: string): string | undefined => {
   const candidates = [

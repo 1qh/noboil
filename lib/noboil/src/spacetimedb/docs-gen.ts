@@ -6,25 +6,10 @@ import { join } from 'node:path'
 import type { FactoryCall } from './check'
 import { extractJSDoc, green, processEntryPoint, resolveReExports } from '../shared/docs-gen'
 import { bold, dim, isSchemaFile, red } from '../shared/viz'
+import { listTypeScriptFiles } from '../shared/walk'
 import { endpointsForFactory, extractSchemaFields } from './check'
 const schemaMarkers = ['schema(', 'table(', 't.']
 const reducerPat = /reducer\(\s*['"](?<table>\w+)\.(?<endpoint>[\w.]+)['"]/gu
-const listTypeScriptFiles = (root: string): string[] => {
-  const out: string[] = []
-  const skip = new Set(['.git', '.next', '.turbo', 'build', 'dist', 'node_modules'])
-  const walk = (dir: string) => {
-    if (!existsSync(dir)) return
-    for (const entry of readdirSync(dir, { withFileTypes: true })) {
-      const full = join(dir, entry.name)
-      if (entry.isDirectory()) {
-        if (!(skip.has(entry.name) || entry.name.startsWith('.'))) walk(full)
-      } else if (entry.name.endsWith('.ts') && !entry.name.includes('.test.') && !entry.name.includes('.config.'))
-        out.push(full)
-    }
-  }
-  walk(root)
-  return out
-}
 const findModuleDir = (root: string): string | undefined => {
   const candidates = [
     root,

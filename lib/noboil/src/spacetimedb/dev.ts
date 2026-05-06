@@ -8,6 +8,7 @@ import { spawn, spawnSync } from 'node:child_process'
 import { existsSync, readFileSync, watch } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { bold, dim, green, red, yellow } from '../ansi'
+import { sleep } from '../shared/constants'
 import { DEFAULT_HTTP_URI } from './defaults'
 import { findEnvFile } from './use'
 interface DevFlags {
@@ -125,10 +126,6 @@ const runSyncCommand = ({
   else console.log(`${red('Failed:')} ${label}`)
   return false
 }
-const sleep = async (ms: number): Promise<void> =>
-  new Promise(_resolve => {
-    setTimeout(_resolve, ms)
-  })
 const pingSpacetime = async (): Promise<boolean> => {
   const base = process.env.SPACETIMEDB_URI ?? DEFAULT_HTTP_URI
   const urls = [`${base}/v1/ping`, `${base}/database/ping`]
