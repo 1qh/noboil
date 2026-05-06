@@ -1,6 +1,7 @@
 /* eslint-disable no-await-in-loop */
 /** biome-ignore-all lint/performance/noAwaitInLoops: sequential test operations */
 import type { Page } from '@playwright/test'
+import { ACTIVE_ORG_COOKIE } from 'noboil/spacetimedb'
 import { readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 interface InviteResponse {
@@ -88,7 +89,7 @@ const login = async (page?: Page): Promise<void> => {
     .context()
     .addCookies([
       { domain: 'localhost', name: 'spacetimedb_token', path: '/', value: encodeURIComponent(data.token) },
-      ...(data.orgId ? [{ domain: 'localhost', name: 'activeOrgId', path: '/', value: data.orgId }] : [])
+      ...(data.orgId ? [{ domain: 'localhost', name: ACTIVE_ORG_COOKIE, path: '/', value: data.orgId }] : [])
     ])
   await page.addInitScript(
     ({ t }) => {

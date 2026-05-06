@@ -19,6 +19,7 @@
 /* oxlint-disable max-params, no-await-in-loop, no-control-regex, no-promise-executor-return, no-shadow, no-useless-assignment, promise/always-return, promise/param-names, promise/prefer-await-to-then, unicorn/no-process-exit, typescript/no-non-null-assertion */
 import type { Browser, BrowserContext, Page } from 'playwright'
 import { appPort, urls } from '@a/config'
+import { ACTIVE_ORG_COOKIE, ACTIVE_ORG_SLUG_COOKIE } from 'noboil/convex'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { chromium } from 'playwright'
@@ -218,8 +219,8 @@ const cvxCreateOrgViaApi = async (ctx: BrowserContext, app: AppSpec, issues: Iss
       return false
     }
     await ctx.addCookies([
-      { domain: 'localhost', name: 'activeOrgId', path: '/', value: body.value.orgId },
-      { domain: 'localhost', name: 'activeOrgSlug', path: '/', value: slug }
+      { domain: 'localhost', name: ACTIVE_ORG_COOKIE, path: '/', value: body.value.orgId },
+      { domain: 'localhost', name: ACTIVE_ORG_SLUG_COOKIE, path: '/', value: slug }
     ])
     const projRes = await fetch(`${urls().convexApi}/api/mutation`, {
       body: JSON.stringify({
