@@ -6,12 +6,10 @@ import { walkFiles } from 'noboil/walk'
 /* oxlint-disable oxc/branches-sharing-code */
 import { readFileSync } from 'node:fs'
 import { relative, resolve } from 'node:path'
-import { replaceBetween } from './lib'
+import { replaceBetween, STRIP_AUTOGEN_RE, STRIP_FENCE_RE } from './lib'
 const REPO = resolve(import.meta.dir, '../..')
 const MIN_LEN = 120
-const STRIP_AUTOGEN_RE = /\{\/\* AUTO-GENERATED:[\s\S]*?\/AUTO-GENERATED:[^}]+\*\/\}/gu
 const STRIP_HTML_AUTOGEN_RE = /<!-- AUTO-GENERATED:[\s\S]*?\/AUTO-GENERATED:[^>]+-->/gu
-const STRIP_FENCE_RE = /```[\s\S]*?```/gu
 const walk = (dir: string): string[] => walkFiles(dir, { accept: name => name.endsWith('.mdx') })
 const splitParas = (src: string): string[] => {
   const cleaned = src.replaceAll(STRIP_AUTOGEN_RE, '').replaceAll(STRIP_HTML_AUTOGEN_RE, '').replaceAll(STRIP_FENCE_RE, '')

@@ -9,6 +9,8 @@ const TABLE_SEP_RE = /^\|[\s|:-]*-{3,}[\s|:-]*\|$/u
 const TABLE_SEP_CELL_RE = /^:?-+:?$/u
 const EXPORT_BRACE_RE = /export\s+(?:type\s+)?\{(?<syms>[^}]+)\}/gu
 const TYPE_PREFIX_RE = /^type\s+/u
+const STRIP_AUTOGEN_RE = /\{\/\* AUTO-GENERATED:[\s\S]*?\/AUTO-GENERATED:[^}]+\*\/\}/gu
+const STRIP_FENCE_RE = /```[\s\S]*?```/gu
 const collectBraceExports = (src: string, out: Set<string>) => {
   let m = EXPORT_BRACE_RE.exec(src)
   while (m) {
@@ -114,4 +116,13 @@ const replaceLineBetween = (path: string, name: string, body: string): boolean =
   writeFileSync(path, next)
   return true
 }
-export { collectBraceExports, EXPORT_BRACE_RE, isCheck, padMarkdownTables, replaceBetween, replaceLineBetween }
+export {
+  collectBraceExports,
+  EXPORT_BRACE_RE,
+  isCheck,
+  padMarkdownTables,
+  replaceBetween,
+  replaceLineBetween,
+  STRIP_AUTOGEN_RE,
+  STRIP_FENCE_RE
+}

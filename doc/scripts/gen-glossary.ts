@@ -4,11 +4,9 @@
 /** biome-ignore-all lint/nursery/noContinue: walker */
 import { readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
 import { basename, relative, resolve } from 'node:path'
-import { collectBraceExports } from './lib'
+import { collectBraceExports, STRIP_AUTOGEN_RE, STRIP_FENCE_RE } from './lib'
 const REPO = resolve(import.meta.dir, '../..')
 const EXPORT_DECL_RE = /export\s+(?:const|function|class|interface|type)\s+(?<name>\w+)/gu
-const STRIP_AUTOGEN_RE = /\{\/\* AUTO-GENERATED:[\s\S]*?\/AUTO-GENERATED:[^}]+\*\/\}/gu
-const STRIP_FENCE_RE = /```[\s\S]*?```/gu
 const collectExports = (file: string): Set<string> => {
   const out = new Set<string>()
   const src = readFileSync(file, 'utf8')
