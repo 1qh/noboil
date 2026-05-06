@@ -2,7 +2,7 @@
 // biome-ignore-all lint/suspicious/useAwait: test async
 import { DbConnectionBuilder, DbConnectionImpl } from 'spacetimedb/sdk'
 import { isStdbTestMode } from '../../shared/test-mode'
-import { DEFAULT_HTTP_URI, DEFAULT_WS_URI } from '../defaults'
+import { DEFAULT_HTTP_URI, DEFAULT_WS_URI, wsToHttp } from '../defaults'
 interface CreateTestContextOptions {
   httpUrl?: string
   moduleName?: string
@@ -55,11 +55,7 @@ const REMOTE_MODULE = {
   tables: {},
   versionInfo: { cliVersion: '2.0.0' }
 }
-const toHttpUrl = (wsUrl: string): string => {
-  if (wsUrl.startsWith('ws://')) return `http://${wsUrl.slice('ws://'.length)}`
-  if (wsUrl.startsWith('wss://')) return `https://${wsUrl.slice('wss://'.length)}`
-  return wsUrl
-}
+const toHttpUrl = wsToHttp
 const parseJsonResponse = async <T>(response: Response): Promise<T> => {
   const text = await response.text()
   if (!response.ok) {

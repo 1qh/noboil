@@ -4,14 +4,10 @@ import { cookies } from 'next/headers'
 import type { ActiveOrgQuery } from './active-org-types'
 import { isStdbTestMode } from '../../shared/test-mode'
 import { ACTIVE_ORG_COOKIE, ACTIVE_ORG_SLUG_COOKIE, ONE_YEAR_SECONDS } from '../constants'
-import { TOKEN_COOKIE_KEY } from '../defaults'
+import { TOKEN_COOKIE_KEY, wsToHttp } from '../defaults'
 import { queryTable } from './query'
 const isTestMode = () => isStdbTestMode() || process.env.TEST_MODE === '1' || process.env.TEST_MODE === 'true'
-const toHttpUri = (uri: string) => {
-  if (uri.startsWith('wss://')) return uri.replace('wss://', 'https://')
-  if (uri.startsWith('ws://')) return uri.replace('ws://', 'http://')
-  return uri
-}
+const toHttpUri = wsToHttp
 /** Reads the SpacetimeDB auth token from cookies, with test fallback. */
 const getToken = async (): Promise<string | undefined> => {
   const cookieStore = await cookies()

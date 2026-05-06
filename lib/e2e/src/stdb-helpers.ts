@@ -2,12 +2,12 @@
 // biome-ignore-all lint/nursery/useGlobalThis: test helper
 import type { Page } from '@playwright/test'
 import { config } from '@a/config'
-import { DEFAULT_TOKEN_KEY, TOKEN_COOKIE_KEY } from 'noboil/spacetimedb'
+import { DEFAULT_TOKEN_KEY, TOKEN_COOKIE_KEY, wsToHttp } from 'noboil/spacetimedb'
 import { writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-const DEFAULT_HTTP_URL =
-  process.env.SPACETIMEDB_URI?.replace('ws://', 'http://').replace('wss://', 'https://') ??
-  `http://localhost:${config.ports.stdb}`
+const DEFAULT_HTTP_URL = process.env.SPACETIMEDB_URI
+  ? wsToHttp(process.env.SPACETIMEDB_URI)
+  : `http://localhost:${config.ports.stdb}`
 const DEFAULT_MODULE = process.env.SPACETIMEDB_MODULE_NAME ?? config.module
 let cachedToken: null | { identity: string; token: string } = null
 const ensureToken = async (tokenFile: string): Promise<{ identity: string; token: string }> => {

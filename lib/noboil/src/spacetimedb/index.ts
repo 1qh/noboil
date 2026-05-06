@@ -9,7 +9,7 @@ export {
   sleep,
   UNDO_MS
 } from './constants'
-export { DEFAULT_HTTP_URI, DEFAULT_PORT, DEFAULT_TOKEN_KEY, DEFAULT_WS_URI, TOKEN_COOKIE_KEY } from './defaults'
+export { DEFAULT_HTTP_URI, DEFAULT_PORT, DEFAULT_TOKEN_KEY, DEFAULT_WS_URI, TOKEN_COOKIE_KEY, wsToHttp } from './defaults'
 export { guardApi } from './guard'
 export { identityEquals, identityFromHex, identityToHex, idEquals, idFromWire, idToWire } from './server/helpers'
 export type {
