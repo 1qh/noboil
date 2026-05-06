@@ -19,7 +19,7 @@ Architecture mermaid · “first 10 minutes” walkthrough · `file-uploads.mdx`
 
 <!-- AUTO-GENERATED:TEST-COUNTS -->
 
-3315 tests passing — 3178 unit (incl. 967 cvx pure + 1199 stdb pure) + 137 cvx integration. Run e2e per app via `bun run test:e2e` — counts vary as suites grow.
+3919 tests — 3178 unit (incl. 967 cvx pure + 1199 stdb pure) + 137 cvx integration + 604 e2e (52 cvx/blog, 26 cvx/chat, 14 cvx/movie, 128 cvx/org, 82 cvx/poll, 52 stdb/blog, 26 stdb/chat, 14 stdb/movie, 128 stdb/org, 82 stdb/poll).
 
 <!-- /AUTO-GENERATED:TEST-COUNTS -->
 

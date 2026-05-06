@@ -6,26 +6,24 @@ import { replaceLineBetween } from './lib'
 const REPO = resolve(import.meta.dir, '../..')
 const main = () => {
   const p = config.ports
-  const rows = [
+  const cvxApps = Object.entries(p.apps)
+    .filter(([k]) => k.startsWith('cvx-'))
+    .toSorted(([, a], [, b]) => a - b)
+  const stdbApps = Object.entries(p.apps)
+    .filter(([k]) => k.startsWith('stdb-'))
+    .toSorted(([, a], [, b]) => a - b)
+  const rows: [number, string][] = [
     [p.convexApi, 'Convex API'],
     [p.convexSite, 'Convex site'],
     [p.convexDashboard, 'Convex dashboard'],
     [p.postgres, 'Postgres (Convex backing store)'],
     [p.minio, 'MinIO (S3-compatible)'],
     [p.minioConsole, 'MinIO console'],
-    [p.apps['cvx-blog'], 'cvx/blog'],
-    [p.apps['cvx-chat'], 'cvx/chat'],
-    [p.apps['cvx-movie'], 'cvx/movie'],
-    [p.apps['cvx-org'], 'cvx/org'],
-    [p.apps['cvx-poll'], 'cvx/poll'],
+    ...cvxApps.map(([k, v]) => [v, k.replace('cvx-', 'cvx/')] as [number, string]),
     [p.stdb, 'SpacetimeDB daemon'],
-    [p.apps['stdb-blog'], 'stdb/blog'],
-    [p.apps['stdb-chat'], 'stdb/chat'],
-    [p.apps['stdb-movie'], 'stdb/movie'],
-    [p.apps['stdb-org'], 'stdb/org'],
-    [p.apps['stdb-poll'], 'stdb/poll'],
+    ...stdbApps.map(([k, v]) => [v, k.replace('stdb-', 'stdb/')] as [number, string]),
     [p.doc, 'Doc site']
-  ] as const
+  ]
   const lines = ['| Port | Service |', '| ---- | ------- |', ...rows.map(([port, name]) => `| ${port} | ${name} |`)]
   const dirty = replaceLineBetween(`${REPO}/RULES.md`, 'PORT-TABLE', lines.join('\n'))
   console.log(dirty ? 'Updated port table' : 'Port table up to date')
