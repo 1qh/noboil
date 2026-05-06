@@ -8,6 +8,7 @@
     "./convex-logout-action": "./src/convex-logout-action.ts",
     "./convex-next-config": "./src/convex-next-config.ts",
     "./convex-proxy": "./src/convex-proxy.ts",
+    "./public-paths": "./src/public-paths.ts",
     "./spacetimedb-next-config": "./src/spacetimedb-next-config.ts",
     "./test-mode": "./src/test-mode.ts",
     "./theme-toggle": "./src/theme-toggle.tsx",

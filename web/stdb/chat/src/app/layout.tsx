@@ -1,6 +1,7 @@
 // biome-ignore-all lint/style/noProcessEnv: intentional process.env access
 import type { Metadata } from 'next'
 import type { ReactNode } from 'react'
+import { isPublicPath } from '@a/fe/public-paths'
 import AuthLayout from '@a/fe/spacetimedb-auth-layout'
 import { isPlaywright } from '@a/fe/test-mode'
 import { SidebarInset, SidebarProvider } from '@a/ui/sidebar'
@@ -11,11 +12,6 @@ import { Devtools } from 'noboil/spacetimedb/react'
 import { SpacetimeWrapper } from './providers'
 import Sidebar from './sidebar'
 const metadata: Metadata = { description: 'spacetimedb chat demo', title: 'Chat' }
-const PUBLIC_PATHS = ['/login', '/public']
-const isPublicPath = (pathname: string) => {
-  for (const p of PUBLIC_PATHS) if (pathname === p || pathname.startsWith(`${p}/`)) return true
-  return false
-}
 const Layout = async ({ children }: { children: ReactNode }) => {
   const pathname = (await headers()).get('x-pathname') ?? '/'
   const token = (await cookies()).get(TOKEN_COOKIE_KEY)?.value

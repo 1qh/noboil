@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import type { ReactNode } from 'react'
 import AuthLayout from '@a/fe/convex-auth-layout'
+import { isPublicPath } from '@a/fe/public-paths'
 import { SidebarInset, SidebarProvider } from '@a/ui/sidebar'
 import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
@@ -9,11 +10,6 @@ import { Devtools } from 'noboil/convex/react'
 import { ConvexWrapper } from './providers'
 import Sidebar from './sidebar'
 const metadata: Metadata = { description: 'noboil chat demo', title: 'Chat' }
-const PUBLIC_PATHS = ['/login', '/public']
-const isPublicPath = (pathname: string) => {
-  for (const p of PUBLIC_PATHS) if (pathname === p || pathname.startsWith(`${p}/`)) return true
-  return false
-}
 const Layout = async ({ children }: { children: ReactNode }) => {
   const requestHeaders = await headers()
   const pathname = requestHeaders.get('x-pathname') ?? '/'
