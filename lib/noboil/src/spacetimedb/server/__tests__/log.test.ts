@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 import { makeLog } from '../log'
+import { captureReducers, tsAtMs } from './_helpers'
 interface LogRow {
   createdAt: { microsSinceUnixEpoch: bigint }
   deletedAt?: null | { microsSinceUnixEpoch: bigint }
@@ -36,16 +37,7 @@ const mkTable = () => {
   }
   return { rows, tbl }
 }
-const tsAtMs = (ms: number) => ({ microsSinceUnixEpoch: BigInt(ms) * 1000n }) as never
 const senderIdent = {} as never
-const captureReducers = () => {
-  const out: Record<string, unknown> = {}
-  const reducer = (opts: { name: string }, _params: unknown, fn: unknown) => {
-    out[opts.name] = fn
-    return fn
-  }
-  return { reducer, reducers: out }
-}
 describe('stdb makeLog', () => {
   test('append inserts a new row with monotonic seq', () => {
     const { reducer, reducers } = captureReducers()

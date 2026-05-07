@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 import { makeKv } from '../kv'
+import { captureReducers, tsAtMs } from './_helpers'
 interface KvRow {
   active?: boolean
   deletedAt?: null | { microsSinceUnixEpoch: bigint }
@@ -33,16 +34,7 @@ const mkTable = () => {
   }
   return { rows, tbl }
 }
-const tsAtMs = (ms: number) => ({ microsSinceUnixEpoch: BigInt(ms) * 1000n }) as never
 const senderIdent = {} as never
-const captureReducers = () => {
-  const out: Record<string, unknown> = {}
-  const reducer = (opts: { name: string }, _params: unknown, fn: unknown) => {
-    out[opts.name] = fn
-    return fn
-  }
-  return { reducer, reducers: out }
-}
 describe('stdb makeKv', () => {
   test('set inserts a new row', () => {
     const { reducer, reducers } = captureReducers()

@@ -1,6 +1,7 @@
 /* oxlint-disable typescript/no-unsafe-call, typescript/no-unsafe-member-access */
 import { describe, expect, test } from 'bun:test'
 import { makeQuota } from '../quota'
+import { tsAtMs } from './_helpers'
 interface QuotaRow {
   id: number
   owner: string
@@ -27,7 +28,6 @@ const mkTable = () => {
   }
   return { rows, tbl }
 }
-const tsAtMs = (ms: number) => ({ microsSinceUnixEpoch: BigInt(ms) * 1000n }) as never
 const senderIdent = {} as never
 describe('stdb makeQuota', () => {
   test('record reducer inserts new row when owner unseen', () => {

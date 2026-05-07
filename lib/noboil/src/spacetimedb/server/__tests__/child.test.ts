@@ -1,19 +1,19 @@
 import { describe, expect, test } from 'bun:test'
+import type { IdentityFake, Ts } from './_helpers'
 import { makeChildCrud } from '../child'
+import { captureReducers, ident, tsAtMs } from './_helpers'
 interface ChildRow {
   chatId: number
-  createdAt: { microsSinceUnixEpoch: bigint }
+  createdAt: Ts
   id: number
   text?: string
-  updatedAt: { microsSinceUnixEpoch: bigint }
-  userId: { __id: string; isEqual: (o: unknown) => boolean }
+  updatedAt: Ts
+  userId: IdentityFake
 }
 interface ParentRow {
   id: number
-  userId: { __id: string; isEqual: (o: unknown) => boolean }
+  userId: IdentityFake
 }
-const ident = (label: string) =>
-  ({ __id: label, isEqual: (o: unknown) => (o as { __id?: string }).__id === label }) as never
 const mkChildTable = () => {
   const rows: ChildRow[] = []
   let nextId = 1
@@ -53,15 +53,6 @@ const mkParentTable = () => {
       }
     }
   }
-}
-const tsAtMs = (ms: number) => ({ microsSinceUnixEpoch: BigInt(ms) * 1000n }) as never
-const captureReducers = () => {
-  const out: Record<string, unknown> = {}
-  const reducer = (opts: { name: string }, _params: unknown, fn: unknown) => {
-    out[opts.name] = fn
-    return fn
-  }
-  return { reducer, reducers: out }
 }
 describe('stdb makeChildCrud', () => {
   test('create rejects when parent missing', () => {

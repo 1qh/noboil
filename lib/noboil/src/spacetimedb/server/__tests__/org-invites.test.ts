@@ -1,7 +1,9 @@
 import { describe, expect, test } from 'bun:test'
+import type { IdentityFake, Ts } from './_helpers'
 import { makeInviteReducers, makeInviteToken } from '../org-invites'
+import { captureReducers, ident, tsAtMs } from './_helpers'
 interface InviteRow {
-  createdAt: { microsSinceUnixEpoch: bigint }
+  createdAt: Ts
   email: string
   expiresAt: number
   id: number
@@ -10,27 +12,16 @@ interface InviteRow {
   token: string
 }
 interface MemberRow {
-  createdAt: { microsSinceUnixEpoch: bigint }
+  createdAt: Ts
   id: number
   isAdmin: boolean
   orgId: number
-  updatedAt: { microsSinceUnixEpoch: bigint }
-  userId: { __id: string; isEqual: (o: unknown) => boolean }
+  updatedAt: Ts
+  userId: IdentityFake
 }
 interface OrgRow {
   id: number
-  userId: { __id: string; isEqual: (o: unknown) => boolean }
-}
-const ident = (label: string) =>
-  ({ __id: label, isEqual: (o: unknown) => (o as { __id?: string }).__id === label }) as never
-const tsAtMs = (ms: number) => ({ microsSinceUnixEpoch: BigInt(ms) * 1000n }) as never
-const captureReducers = () => {
-  const out: Record<string, unknown> = {}
-  const reducer = (opts: { name: string }, _params: unknown, fn: unknown) => {
-    out[opts.name] = fn
-    return fn
-  }
-  return { reducer, reducers: out }
+  userId: IdentityFake
 }
 const setup = () => {
   const { reducer, reducers } = captureReducers()

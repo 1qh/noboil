@@ -1,15 +1,15 @@
 import { describe, expect, test } from 'bun:test'
+import type { IdentityFake, Ts } from './_helpers'
 import { makePresence } from '../presence'
+import { captureReducers, ident, tsAtMs } from './_helpers'
 interface PresenceRow {
   data?: unknown
-  expiresAt: { microsSinceUnixEpoch: bigint }
+  expiresAt: Ts
   id: number
-  lastSeenAt: { microsSinceUnixEpoch: bigint }
+  lastSeenAt: Ts
   roomId: string
-  userId: { __id: string; isEqual: (o: unknown) => boolean }
+  userId: IdentityFake
 }
-const ident = (label: string) =>
-  ({ __id: label, isEqual: (o: unknown) => (o as { __id?: string }).__id === label }) as never
 const mkTable = () => {
   const rows: PresenceRow[] = []
   let nextId = 1
@@ -37,15 +37,6 @@ const mkTable = () => {
     iter: () => rows[Symbol.iterator]()
   }
   return { rows, tbl }
-}
-const tsAtMs = (ms: number) => ({ microsSinceUnixEpoch: BigInt(ms) * 1000n }) as never
-const captureReducers = () => {
-  const out: Record<string, unknown> = {}
-  const reducer = (opts: { name: string }, _params: unknown, fn: unknown) => {
-    out[opts.name] = fn
-    return fn
-  }
-  return { reducer, reducers: out }
 }
 describe('stdb makePresence', () => {
   test('heartbeat creates a new row when none exists', () => {

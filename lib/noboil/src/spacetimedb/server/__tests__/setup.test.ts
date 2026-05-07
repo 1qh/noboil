@@ -2,14 +2,7 @@
 import { describe, expect, test } from 'bun:test'
 import { z } from 'zod/v4'
 import { noboil, setup, setupCrud } from '../setup'
-const captureReducers = () => {
-  const out: Record<string, unknown> = {}
-  const reducer = (opts: { name: string }, _params: unknown, fn: unknown) => {
-    out[opts.name] = fn
-    return fn
-  }
-  return { reducer, reducers: out }
-}
+import { captureReducers } from './_helpers'
 const mkPkTable = () => {
   const rows: { id: number }[] = []
   let nextId = 1

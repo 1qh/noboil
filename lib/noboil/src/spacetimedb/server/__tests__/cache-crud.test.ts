@@ -1,10 +1,12 @@
 import { describe, expect, test } from 'bun:test'
+import type { Ts } from './_helpers'
 import { makeCacheCrud } from '../cache-crud'
+import { captureReducers } from './_helpers'
 interface MovieRow {
   rating?: number
   title?: string
   tmdb_id: string
-  updatedAt: { microsSinceUnixEpoch: bigint }
+  updatedAt: Ts
 }
 const mkTable = () => {
   const rows: MovieRow[] = []
@@ -32,14 +34,6 @@ const mkTable = () => {
   return { rows, tbl }
 }
 const tsAtMs = (ms: number) => ({ microsSinceUnixEpoch: BigInt(ms) * 1000n, valueOf: () => ms }) as never
-const captureReducers = () => {
-  const out: Record<string, unknown> = {}
-  const reducer = (opts: { name: string }, _params: unknown, fn: unknown) => {
-    out[opts.name] = fn
-    return fn
-  }
-  return { reducer, reducers: out }
-}
 describe('stdb makeCacheCrud', () => {
   test('create inserts a new row when key is not present', () => {
     const { reducer, reducers } = captureReducers()

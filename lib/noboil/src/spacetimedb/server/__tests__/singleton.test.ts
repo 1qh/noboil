@@ -1,14 +1,14 @@
 import { describe, expect, test } from 'bun:test'
+import type { Ts } from './_helpers'
 import { makeSingletonCrud } from '../singleton'
+import { captureReducers, ident, tsAtMs } from './_helpers'
 interface SingletonRow {
   bio?: string
   id: number
   name?: string
-  updatedAt: { microsSinceUnixEpoch: bigint }
+  updatedAt: Ts
   userId: { isEqual: (o: unknown) => boolean }
 }
-const ident = (label: string) =>
-  ({ __id: label, isEqual: (o: unknown) => (o as { __id?: string }).__id === label }) as never
 const mkTable = () => {
   const rows: SingletonRow[] = []
   let nextId = 1
@@ -33,15 +33,6 @@ const mkTable = () => {
     }
   }
   return { rows, tbl }
-}
-const tsAtMs = (ms: number) => ({ microsSinceUnixEpoch: BigInt(ms) * 1000n }) as never
-const captureReducers = () => {
-  const out: Record<string, unknown> = {}
-  const reducer = (opts: { name: string }, _params: unknown, fn: unknown) => {
-    out[opts.name] = fn
-    return fn
-  }
-  return { reducer, reducers: out }
 }
 describe('stdb makeSingletonCrud', () => {
   test('upsert creates row when none exists', () => {
