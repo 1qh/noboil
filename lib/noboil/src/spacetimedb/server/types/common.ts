@@ -2,7 +2,15 @@
 import type { Identity, Timestamp } from 'spacetimedb'
 import type { AlgebraicTypeType, ColumnBuilder, ReducerExport, TypeBuilder } from 'spacetimedb/server'
 import type { z as _, ZodNullable, ZodNumber, ZodObject, ZodOptional, ZodRawShape } from 'zod/v4'
-import type { RateLimitConfig, RateLimitInput, SearchLike, StorageLike } from '../../../shared/server/types'
+import type {
+  AuthorInfo,
+  ComparisonOp,
+  PaginatedResult,
+  RateLimitConfig,
+  RateLimitInput,
+  SearchLike,
+  StorageLike
+} from '../../../shared/server/types'
 import type { OrgRole, Rec } from '../../../shared/types'
 type Ab<V extends Visibility = 'public'> = <A = Rec, R = unknown, C = Rec>(
   ...args: unknown[]
@@ -11,23 +19,10 @@ interface ActionCtxLike extends ReducerCtx<DbLike> {
   runMutation: (ref: string, args: Rec) => Promise<unknown>
   runQuery: (ref: string, args: Rec) => Promise<unknown>
 }
-interface AuthorInfo {
-  [key: string]: unknown
-  email?: string
-  image?: string
-  name?: string
-}
 interface BaseBuilders {
   m: Mb
   pq?: Qb
   q: Qb
-}
-interface ComparisonOp<V> {
-  $between?: [V, V]
-  $gt?: V
-  $gte?: V
-  $lt?: V
-  $lte?: V
 }
 interface DbCtx {
   db: DbLike
@@ -135,11 +130,6 @@ interface OrgUserLike {
 interface OwnedRow extends Record<string, unknown> {
   updatedAt: Timestamp
   userId: Identity
-}
-interface PaginatedResult<D> {
-  continueCursor: string
-  isDone: boolean
-  page: D[]
 }
 type PaginationOptsShape = Record<
   'cursor' | 'endCursor' | 'id' | 'maximumBytesRead' | 'maximumRowsRead' | 'numItems',

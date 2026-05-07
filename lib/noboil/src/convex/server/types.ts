@@ -14,7 +14,15 @@ import type {
 } from 'convex/server'
 import type { GenericId } from 'convex/values'
 import type { z as _, ZodNullable, ZodNumber, ZodObject, ZodOptional, ZodRawShape } from 'zod/v4'
-import type { RateLimitConfig, RateLimitInput, SearchLike, StorageLike } from '../../shared/server/types'
+import type {
+  AuthorInfo,
+  ComparisonOp,
+  PaginatedResult,
+  RateLimitConfig,
+  RateLimitInput,
+  SearchLike,
+  StorageLike
+} from '../../shared/server/types'
 import type { OrgRole, Rec } from '../../shared/types'
 interface BaseBuilders {
   m: Mb
@@ -61,13 +69,6 @@ interface ChildConfig {
   parent: string
   parentSchema?: ZodObject
   schema: ZodObject
-}
-interface ComparisonOp<V> {
-  $between?: [V, V]
-  $gt?: V
-  $gte?: V
-  $lt?: V
-  $lte?: V
 }
 interface CrudBuilders extends BaseBuilders {
   cm: Mb
@@ -183,12 +184,6 @@ type Ab<V extends FunctionVisibility = 'public'> = CustomBuilder<
 interface ActionCtxLike {
   runMutation: (ref: string, args: Rec) => Promise<unknown>
   runQuery: (ref: string, args: Rec) => Promise<unknown>
-}
-interface AuthorInfo {
-  [key: string]: unknown
-  email?: string
-  image?: string
-  name?: string
 }
 type BuiltinErrorCode = keyof typeof ERROR_MESSAGES
 interface CacheCrudResult<S extends ZodRawShape> {
@@ -338,11 +333,6 @@ type OrgEnrichedDoc<S extends ZodRawShape> = WithUrls<
     userId: string
   }
 >
-interface PaginatedResult<D> {
-  continueCursor: string
-  isDone: boolean
-  page: D[]
-}
 type PaginationOptsShape = Record<keyof typeof paginationOptsValidator.fields, ZodNullable | ZodNumber | ZodOptional>
 type Qb<V extends FunctionVisibility = 'public'> = CustomBuilder<
   'query',
