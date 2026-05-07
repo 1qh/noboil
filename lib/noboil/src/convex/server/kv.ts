@@ -3,7 +3,7 @@
 /* eslint-disable @typescript-eslint/no-unnecessary-condition */
 import type { ZodObject, ZodRawShape } from 'zod/v4'
 import { number, string } from 'zod/v4'
-import type { CrudHooks, DbCtx, DbLike, HookCtx, KvFactoryResult, Mb, MutCtx, Qb, RateLimitConfig, Rec } from './types'
+import type { CrudHooks, DbCtx, DbLike, KvFactoryResult, Mb, MutCtx, Qb, RateLimitConfig, Rec } from './types'
 import { idx, typed } from './bridge'
 import { isTestMode } from './env'
 import {
@@ -16,11 +16,11 @@ import {
   detectFiles,
   err,
   errValidation,
+  hk,
+  isSoftDeleted,
   pgOpts,
   time
 } from './helpers'
-const hk = (c: MutCtx): HookCtx => ({ db: c.db, storage: c.storage, userId: c.user._id as string })
-const isSoftDeleted = (doc: null | Rec): boolean => doc?.deletedAt !== undefined
 /**
  * Build a global key/value slice with `set`, `get`, `list`, `rm`, `restore`. One row per
  * `key` (string). Use for site config, feature flags, banner messages — small shared state.

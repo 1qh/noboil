@@ -4,7 +4,7 @@
 import { string } from 'zod/v4'
 import type { DbCtx, DbLike, HookCtx, Mb, MutCtx, Qb, QuotaFactoryResult, QuotaResult } from './types'
 import { idx, typed } from './bridge'
-import { dbInsert, dbPatch } from './helpers'
+import { dbInsert, dbPatch, hk } from './helpers'
 interface QuotaHooks {
   afterConsume?: (ctx: HookCtx, args: { owner: string; result: QuotaResult }) => Promise<void> | void
   afterRecord?: (ctx: HookCtx, args: { owner: string; result: QuotaResult }) => Promise<void> | void
@@ -12,7 +12,6 @@ interface QuotaHooks {
   beforeRecord?: (ctx: HookCtx, args: { owner: string }) => Promise<void> | void
   onExceeded?: (ctx: HookCtx, args: { owner: string; result: QuotaResult }) => Promise<void> | void
 }
-const hk = (c: MutCtx): HookCtx => ({ db: c.db, storage: c.storage, userId: c.user._id as string })
 const prune = (timestamps: number[], cutoff: number): number[] => {
   const out: number[] = []
   for (const t of timestamps) if (t >= cutoff) out.push(t)

@@ -7,7 +7,7 @@
 import { boolean, optional, string } from 'zod/v4'
 import type { DbCtx, DbLike, HookCtx, Mb, MutCtx, Qb } from './types'
 import { idx, typed } from './bridge'
-import { dbInsert } from './helpers'
+import { dbInsert, hk } from './helpers'
 const DEFAULT_TTL_MS = 30 * 24 * 60 * 60 * 1000
 const PRUNE_BATCH = 5000
 const LIST_DEFAULT_LIMIT = 100
@@ -42,7 +42,6 @@ interface AuditRow {
   ok: boolean
   traceId?: string
 }
-const hk = (c: MutCtx): HookCtx => ({ db: c.db, storage: c.storage, userId: c.user._id as string })
 const queryRecent = async (db: DbLike, table: string, limit: number): Promise<AuditRow[]> =>
   (await db.query(table).order('desc').take(limit)) as unknown as AuditRow[]
 const queryByActor = async (db: DbLike, table: string, actor: string, limit: number): Promise<AuditRow[]> =>

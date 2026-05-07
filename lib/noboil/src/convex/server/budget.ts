@@ -5,7 +5,7 @@
 import { number, optional, string } from 'zod/v4'
 import type { DbCtx, DbLike, HookCtx, Mb, MutCtx, Qb } from './types'
 import { idx, typed } from './bridge'
-import { dbInsert, dbPatch } from './helpers'
+import { dbInsert, dbPatch, hk } from './helpers'
 const DAY_MS = 24 * 60 * 60 * 1000
 const PRUNE_BATCH = 500
 const AUDIT_SCAN_BATCH = 1000
@@ -56,7 +56,6 @@ const periodKeyFor = (now: number, periodMs: number): string => {
   const idxNum = Math.floor(now / periodMs)
   return String(idxNum)
 }
-const hk = (c: MutCtx): HookCtx => ({ db: c.db, storage: c.storage, userId: c.user._id as string })
 const getRows = async (db: DbLike, table: string, owner: string): Promise<BudgetRow[]> =>
   (await db
     .query(table)

@@ -13,12 +13,15 @@ import type {
   DbLike,
   ErrorCode,
   FID,
+  HookCtx,
   MutationCtxLike,
+  MutCtx,
   PaginationOptsShape,
   Qb,
   QueryCtxLike,
   RateLimitConfig,
   RateLimitInput,
+  Rec,
   StorageLike,
   WithUrls
 } from './types'
@@ -328,6 +331,10 @@ const makeUnique = ({
       })
     })
   )
+/** Build a HookCtx from a mutation ctx. */
+const hk = (c: MutCtx): HookCtx => ({ db: c.db, storage: c.storage, userId: c.user._id as string })
+/** True when a doc is soft-deleted (has a non-undefined `deletedAt`). */
+const isSoftDeleted = (doc: null | Rec): boolean => doc?.deletedAt !== undefined
 export type { ConvexErrorData, ErrorData, ErrorHandler, MutationFail, MutationOk, MutationResult }
 export {
   addUrls,
@@ -349,11 +356,13 @@ export {
   groupList,
   handleConvexError,
   handleError,
+  hk,
   idEquals,
   isComparisonOp,
   isErrorCode,
   isMutationError,
   isRecord,
+  isSoftDeleted,
   log,
   makeUnique,
   matchError,

@@ -11,7 +11,6 @@ import type {
   CrudHooks,
   DbLike,
   FilterLike,
-  HookCtx,
   LogFactoryResult,
   Mb,
   MutCtx,
@@ -34,6 +33,8 @@ import {
   detectFiles,
   err,
   errValidation,
+  hk,
+  isSoftDeleted,
   matchW,
   pgOpts
 } from './helpers'
@@ -45,7 +46,6 @@ interface LogRow {
   parent: string
   seq: number
 }
-const hk = (c: MutCtx): HookCtx => ({ db: c.db, storage: c.storage, userId: c.user._id as string })
 const notDeleted = (f: FilterLike): unknown => f.eq(f.field('deletedAt'), undefined)
 /**
  * Build an append-only log slice keyed by a `parent` reference (e.g. votes per poll, events
@@ -367,7 +367,7 @@ const makeLog = <S extends ZodRawShape>({
     handler: typed(async (c: ReadCtx, { id }: { id: string }) => {
       const doc = (await c.db.get(id)) as null | { userId: string }
       if (!doc) return null
-      if (softDelete && (doc as unknown as Rec).deletedAt !== undefined) return null
+      if (softDelete && isSoftDeleted(doc)) return null
       const [enriched] = await enrich(c, [doc])
       return enriched
     })
