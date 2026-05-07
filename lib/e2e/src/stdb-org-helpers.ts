@@ -3,8 +3,7 @@
 /** biome-ignore-all lint/style/noProcessEnv: test helper */
 /** biome-ignore-all lint/performance/noAwaitInLoops: sequential test operations */
 /** biome-ignore-all lint/performance/useTopLevelRegex: test helper */
-import { config } from '@a/config'
-import { wsToHttp } from 'noboil/spacetimedb'
+import { STDB_HTTP_URL, STDB_MODULE } from './stdb-env'
 interface HttpCtx {
   baseHttpUrl: string
   moduleName: string
@@ -61,14 +60,10 @@ const REDUCER_NAME_RE = /REDUCER_CALL_FAILED\((?<reducer>[^)]+)\)/u
 const API_PATH_RE = /api\.(?<mod>\w+)\.(?<fn>\w+)/u
 let httpCtx: HttpCtx | null = null
 const userTokens = new Map<string, string>()
-const DEFAULT_HTTP_URL = process.env.SPACETIMEDB_URI
-  ? wsToHttp(process.env.SPACETIMEDB_URI)
-  : `http://localhost:${config.ports.stdb}`
-const DEFAULT_MODULE = process.env.SPACETIMEDB_MODULE_NAME ?? config.module
 const setToken = (token: string) => {
   httpCtx = {
-    baseHttpUrl: DEFAULT_HTTP_URL,
-    moduleName: DEFAULT_MODULE,
+    baseHttpUrl: STDB_HTTP_URL,
+    moduleName: STDB_MODULE,
     token
   }
 }
@@ -218,7 +213,7 @@ const delay = async (ms: number): Promise<void> => {
 }
 const ensureTestUser = async (): Promise<void> => {
   if (httpCtx) return
-  const response = await fetch(`${DEFAULT_HTTP_URL}/v1/identity`, {
+  const response = await fetch(`${STDB_HTTP_URL}/v1/identity`, {
     method: 'POST'
   })
   const data = (await response.json()) as IdentityResponse
@@ -232,7 +227,7 @@ const ensureTestUser = async (): Promise<void> => {
   }
 }
 const createTestUser = async (email: string, name: string): Promise<string> => {
-  const response = await fetch(`${DEFAULT_HTTP_URL}/v1/identity`, {
+  const response = await fetch(`${STDB_HTTP_URL}/v1/identity`, {
     method: 'POST'
   })
   const data = (await response.json()) as IdentityResponse

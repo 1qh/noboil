@@ -1,18 +1,13 @@
-/** biome-ignore-all lint/style/noProcessEnv: test helper */
 // biome-ignore-all lint/nursery/useGlobalThis: test helper
 import type { Page } from '@playwright/test'
-import { config } from '@a/config'
-import { DEFAULT_TOKEN_KEY, TOKEN_COOKIE_KEY, wsToHttp } from 'noboil/spacetimedb'
+import { DEFAULT_TOKEN_KEY, TOKEN_COOKIE_KEY } from 'noboil/spacetimedb'
 import { writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-const DEFAULT_HTTP_URL = process.env.SPACETIMEDB_URI
-  ? wsToHttp(process.env.SPACETIMEDB_URI)
-  : `http://localhost:${config.ports.stdb}`
-const DEFAULT_MODULE = process.env.SPACETIMEDB_MODULE_NAME ?? config.module
+import { STDB_HTTP_URL, STDB_MODULE } from './stdb-env'
 let cachedToken: null | { identity: string; token: string } = null
 const ensureToken = async (tokenFile: string): Promise<{ identity: string; token: string }> => {
   if (cachedToken) return cachedToken
-  const response = await fetch(`${DEFAULT_HTTP_URL}/v1/identity`, {
+  const response = await fetch(`${STDB_HTTP_URL}/v1/identity`, {
     method: 'POST'
   })
   const data = (await response.json()) as { identity: string; token: string }
@@ -55,7 +50,7 @@ const createStdbLogin = (dir: string) => {
   }
   const cleanupTestData = async () => {
     const data = await ensureToken(tokenFile)
-    await fetch(`${DEFAULT_HTTP_URL}/v1/database/${DEFAULT_MODULE}/call/cleanup_test_data`, {
+    await fetch(`${STDB_HTTP_URL}/v1/database/${STDB_MODULE}/call/cleanup_test_data`, {
       body: JSON.stringify([]),
       headers: {
         Authorization: `Bearer ${data.token}`,
