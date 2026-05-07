@@ -7500,7 +7500,7 @@ describe('doctor', () => {
     ).toBe('pass')
   })
   test('checkDeps — no package.json', () => {
-    expect(checkDeps().status).toBe('fail')
+    expect(checkDeps(null).status).toBe('fail')
   })
   test('calcHealthScore — all pass', () => {
     const results: CheckResult[] = [

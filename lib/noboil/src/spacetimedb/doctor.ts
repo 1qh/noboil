@@ -7,6 +7,7 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import type { FactoryCall } from './check'
 import { bold, dim, green, red, yellow } from '../ansi'
+import { readJsonSafe } from '../shared/env-file'
 import { listTypeScriptFiles } from '../shared/walk'
 import {
   accessForFactory,
@@ -127,7 +128,7 @@ const checkEslintContent = (content?: string): CheckResult => {
     title: 'ESLint Configuration'
   }
 }
-const checkDeps = (pkg?: Record<string, unknown>): CheckResult => {
+const checkDeps = (pkg: null | Record<string, unknown>): CheckResult => {
   if (!pkg) return { details: ['No package.json found'], status: 'fail', title: 'Dependencies' }
   const deps = (pkg.dependencies ?? {}) as Record<string, string>
   const devDeps = (pkg.devDependencies ?? {}) as Record<string, string>
@@ -213,7 +214,7 @@ const doctor = () => {
   const eslintContent = existsSync(lintmaxConfigPath) ? readFileSync(lintmaxConfigPath, 'utf8') : undefined
   results.push(checkEslintContent(eslintContent))
   const pkgPath = join(root, 'package.json')
-  const pkg = existsSync(pkgPath) ? (JSON.parse(readFileSync(pkgPath, 'utf8')) as Record<string, unknown>) : undefined
+  const pkg = readJsonSafe(pkgPath) as null | Record<string, unknown>
   results.push(checkDeps(pkg))
   for (const r of results) {
     const icon = STATUS_ICON[r.status] ?? '?'
