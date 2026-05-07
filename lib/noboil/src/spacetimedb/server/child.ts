@@ -11,7 +11,7 @@ import type {
 } from './types/child'
 import type { OwnedRow, PkLike, TableLike } from './types/common'
 import { enforceRateLimit } from './helpers'
-import { applyPatch, getOwnedRow, makeError, makeOptionalFields, pickPatch, timestampEquals } from './reducer-utils'
+import { applyPatch, getOwnedRow, hkCtx, makeError, makeOptionalFields, pickPatch, timestampEquals } from './reducer-utils'
 type UpdateArgs<F extends CrudFieldBuilders, Id> = Partial<CrudFieldValues<F>> & { expectedUpdatedAt?: Timestamp; id: Id }
 /** Creates owned child-table CRUD reducers with parent existence checks.
  * @param spacetimedb - SpacetimeDB reducer factory
@@ -78,7 +78,7 @@ const makeChildCrud = <
   const createReducer = spacetimedb.reducer({ name: createName }, createParams, (ctx, args) => {
     if (options?.rateLimit) enforceRateLimit(tableName, ctx.sender, options.rateLimit)
     const typedArgs = args as CrudFieldValues<F> & Record<string, unknown>
-    const hookCtx = { db: ctx.db, sender: ctx.sender, timestamp: ctx.timestamp }
+    const hookCtx = hkCtx(ctx)
     const table = tableAccessor(ctx.db)
     const parentId = typedArgs[foreignKeyName] as ParentId
     const parent = parentPkAccessor(parentTableAccessor(ctx.db)).find(parentId)
@@ -98,7 +98,7 @@ const makeChildCrud = <
   })
   const updateReducer = spacetimedb.reducer({ name: updateName }, updateParams, (ctx, args) => {
     const typedArgs = args as UpdateArgs<F, Id>
-    const hookCtx = { db: ctx.db, sender: ctx.sender, timestamp: ctx.timestamp }
+    const hookCtx = hkCtx(ctx)
     const table = tableAccessor(ctx.db)
     const { pk, row } = getOwnedRow({
       ctxSender: ctx.sender,
@@ -127,7 +127,7 @@ const makeChildCrud = <
   })
   const rmReducer = spacetimedb.reducer({ name: rmName }, { id: idField }, (ctx, args) => {
     const { id } = args as { id: Id }
-    const hookCtx = { db: ctx.db, sender: ctx.sender, timestamp: ctx.timestamp }
+    const hookCtx = hkCtx(ctx)
     const table = tableAccessor(ctx.db)
     const { pk, row } = getOwnedRow({
       ctxSender: ctx.sender,

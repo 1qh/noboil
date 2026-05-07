@@ -65,4 +65,20 @@ const getOwnedRow = <Row extends OwnedRow, Id, Tbl extends TableLike<Row>, Pk ex
   return { pk, row }
 }
 const idEquals = identityEquals
-export { applyPatch, getOwnedRow, identityEquals, idEquals, makeError, makeOptionalFields, pickPatch, timestampEquals }
+/** Build a hook ctx from a reducer ctx — the trio every reducer hook receives. */
+const hkCtx = <DB>(ctx: { db: DB; sender: Identity; timestamp: Timestamp }) => ({
+  db: ctx.db,
+  sender: ctx.sender,
+  timestamp: ctx.timestamp
+})
+export {
+  applyPatch,
+  getOwnedRow,
+  hkCtx,
+  identityEquals,
+  idEquals,
+  makeError,
+  makeOptionalFields,
+  pickPatch,
+  timestampEquals
+}

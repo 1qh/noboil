@@ -1,7 +1,7 @@
 import type { Identity, Timestamp } from 'spacetimedb'
 import type { AlgebraicTypeType, ColumnBuilder, TypeBuilder } from 'spacetimedb/server'
 import type { FieldBuilders, ReducerExportLike } from './types/common'
-import { makeError } from './reducer-utils'
+import { hkCtx, makeError } from './reducer-utils'
 const findByOwner = (table: QuotaTableLike, owner: string): QuotaRow | undefined => {
   for (const row of table) if (row.owner === owner) return row
 }
@@ -67,7 +67,7 @@ const makeQuota = <DB, Tbl extends QuotaTableLike>(
   const params: FieldBuilders = { owner: ownerField }
   const consumeReducer = spacetimedb.reducer({ name: consumeName }, params, (ctx, args) => {
     const { owner } = args as { owner: string }
-    const hookCtx = { db: ctx.db, sender: ctx.sender, timestamp: ctx.timestamp }
+    const hookCtx = hkCtx(ctx)
     if (hooks?.beforeConsume) hooks.beforeConsume(hookCtx, { owner })
     const now = timestampToMs(ctx.timestamp)
     const table = tableAccessor(ctx.db) as unknown as QuotaTableLike
@@ -86,7 +86,7 @@ const makeQuota = <DB, Tbl extends QuotaTableLike>(
   })
   const recordReducer = spacetimedb.reducer({ name: recordName }, params, (ctx, args) => {
     const { owner } = args as { owner: string }
-    const hookCtx = { db: ctx.db, sender: ctx.sender, timestamp: ctx.timestamp }
+    const hookCtx = hkCtx(ctx)
     if (hooks?.beforeRecord) hooks.beforeRecord(hookCtx, { owner })
     const now = timestampToMs(ctx.timestamp)
     const table = tableAccessor(ctx.db) as unknown as QuotaTableLike

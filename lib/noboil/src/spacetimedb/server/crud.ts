@@ -4,7 +4,7 @@ import type { ZodObject, ZodRawShape } from 'zod/v4'
 import type { OwnedRow, PkLike, TableLike } from './types/common'
 import type { CrudConfig, CrudExports, CrudFieldBuilders, CrudFieldValues, CrudPkLike, CrudTableLike } from './types/crud'
 import { enforceRateLimit } from './helpers'
-import { applyPatch, getOwnedRow, makeError, makeOptionalFields, pickPatch, timestampEquals } from './reducer-utils'
+import { applyPatch, getOwnedRow, hkCtx, makeError, makeOptionalFields, pickPatch, timestampEquals } from './reducer-utils'
 type UpdateArgs<F extends CrudFieldBuilders, Id> = Partial<CrudFieldValues<F>> & { expectedUpdatedAt?: Timestamp; id: Id }
 /** Creates create/update/remove reducers for owned tables.
  * @param spacetimedb - SpacetimeDB reducer factory
@@ -52,7 +52,7 @@ const makeCrud = <
     if (options?.rateLimit)
       enforceRateLimit(tableName, ctx.sender, options.rateLimit, Number(ctx.timestamp.microsSinceUnixEpoch / 1000n))
     const typedArgs = args as CrudFieldValues<F>
-    const hookCtx = { db: ctx.db, sender: ctx.sender, timestamp: ctx.timestamp }
+    const hookCtx = hkCtx(ctx)
     const table = tableAccessor(ctx.db)
     let data = typedArgs
     if (hooks?.beforeCreate) data = hooks.beforeCreate(hookCtx, { data }) as unknown as CrudFieldValues<F>
@@ -68,7 +68,7 @@ const makeCrud = <
   })
   const updateReducer = spacetimedb.reducer({ name: updateName }, updateParams, (ctx, args) => {
     const typedArgs = args as UpdateArgs<F, Id>
-    const hookCtx = { db: ctx.db, sender: ctx.sender, timestamp: ctx.timestamp }
+    const hookCtx = hkCtx(ctx)
     const table = tableAccessor(ctx.db)
     const { pk, row } = getOwnedRow({
       ctxSender: ctx.sender,
@@ -97,7 +97,7 @@ const makeCrud = <
   })
   const rmReducer = spacetimedb.reducer({ name: rmName }, { id: idField }, (ctx, args) => {
     const { id } = args as { id: Id }
-    const hookCtx = { db: ctx.db, sender: ctx.sender, timestamp: ctx.timestamp }
+    const hookCtx = hkCtx(ctx)
     const table = tableAccessor(ctx.db)
     const { pk, row } = getOwnedRow({
       ctxSender: ctx.sender,

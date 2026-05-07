@@ -3,7 +3,7 @@ import type { AlgebraicTypeType, ColumnBuilder, TypeBuilder } from 'spacetimedb/
 import type { RateLimitConfig } from './types'
 import type { FieldBuilders, ReducerExportLike } from './types/common'
 import { enforceRateLimit } from './helpers'
-import { applyPatch, makeError } from './reducer-utils'
+import { applyPatch, hkCtx, makeError } from './reducer-utils'
 const findByKey = (table: KvTableLike, key: string): KvRow | undefined => {
   for (const row of table) if (row.key === key) return row
 }
@@ -79,7 +79,7 @@ const makeKv = <DB, Tbl extends KvTableLike>(
     if (writeRole && !writeRole({ db: ctx.db, sender: ctx.sender, timestamp: ctx.timestamp }))
       throw makeError('FORBIDDEN', `${tableName}:set`)
     if (rateLimit) enforceRateLimit(tableName, ctx.sender, rateLimit, Number(ctx.timestamp.microsSinceUnixEpoch / 1000n))
-    const hookCtx = { db: ctx.db, sender: ctx.sender, timestamp: ctx.timestamp }
+    const hookCtx = hkCtx(ctx)
     const typedArgs = args as Record<string, unknown> & { expectedUpdatedAt?: Timestamp; key: string }
     const { expectedUpdatedAt, key, ...rawPayload } = typedArgs
     let payload: Record<string, unknown> = rawPayload
@@ -114,7 +114,7 @@ const makeKv = <DB, Tbl extends KvTableLike>(
     if (writeRole && !writeRole({ db: ctx.db, sender: ctx.sender, timestamp: ctx.timestamp }))
       throw makeError('FORBIDDEN', `${tableName}:rm`)
     if (rateLimit) enforceRateLimit(tableName, ctx.sender, rateLimit, Number(ctx.timestamp.microsSinceUnixEpoch / 1000n))
-    const hookCtx = { db: ctx.db, sender: ctx.sender, timestamp: ctx.timestamp }
+    const hookCtx = hkCtx(ctx)
     const typedArgs = args as { key: string }
     const table = tableAccessor(ctx.db) as unknown as KvTableLike
     const existing = findByKey(table, typedArgs.key)

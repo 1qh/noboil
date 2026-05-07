@@ -5,6 +5,7 @@ import type { AlgebraicTypeType, ColumnBuilder, TypeBuilder } from 'spacetimedb/
 import type { RateLimitConfig } from './types'
 import type { FieldBuilders, ReducerExportLike } from './types/common'
 import { enforceRateLimit } from './helpers'
+import { hkCtx } from './reducer-utils'
 interface LogConfig<DB, Tbl extends LogTableLike> {
   bulkItemsField?: ColumnBuilder<unknown, AlgebraicTypeType> | TypeBuilder<unknown, AlgebraicTypeType>
   fields: FieldBuilders
@@ -89,7 +90,7 @@ const makeLog = <DB, Tbl extends LogTableLike>(
   const purgeParams: FieldBuilders = { parent: parentField }
   const appendReducer = spacetimedb.reducer({ name: appendName }, appendParams, (ctx, args) => {
     if (rateLimit) enforceRateLimit(tableName, ctx.sender, rateLimit, Number(ctx.timestamp.microsSinceUnixEpoch / 1000n))
-    const hookCtx = { db: ctx.db, sender: ctx.sender, timestamp: ctx.timestamp }
+    const hookCtx = hkCtx(ctx)
     const typedArgs = args as Record<string, unknown> & { idempotencyKey?: string; parent: string }
     const table = tableAccessor(ctx.db) as unknown as LogTableLike
     let maxSeq = 0
@@ -114,7 +115,7 @@ const makeLog = <DB, Tbl extends LogTableLike>(
     if (hooks?.afterAppend) hooks.afterAppend(hookCtx, { data: payload, row })
   })
   const purgeReducer = spacetimedb.reducer({ name: purgeName }, purgeParams, (ctx, args) => {
-    const hookCtx = { db: ctx.db, sender: ctx.sender, timestamp: ctx.timestamp }
+    const hookCtx = hkCtx(ctx)
     const typedArgs = args as { parent: string }
     const table = tableAccessor(ctx.db) as unknown as LogTableLike & {
       id: { delete: (id: number) => void; update: (row: LogRow) => LogRow }
@@ -147,7 +148,7 @@ const makeLog = <DB, Tbl extends LogTableLike>(
         if (row.parent === parent && row.seq > maxSeq) maxSeq = row.seq
       }
     else for (const row of table) if (row.parent === parent && row.seq > maxSeq) maxSeq = row.seq
-    const hookCtx = { db: ctx.db, sender: ctx.sender, timestamp: ctx.timestamp }
+    const hookCtx = hkCtx(ctx)
     const payload = hooks?.beforeAppend ? hooks.beforeAppend(hookCtx, { data: rawPayload, parent }) : rawPayload
     const row = table.insert({
       ...payload,
