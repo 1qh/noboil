@@ -13,7 +13,6 @@ import type {
   DbLike,
   DbReadLike,
   FilterLike,
-  HookCtx,
   MutCtx,
   OrgCrudResult,
   OrgEnrichedDoc,
@@ -35,6 +34,7 @@ import {
   detectFiles,
   err,
   errValidation,
+  hk,
   log,
   normalizeRateLimit,
   pgOpts,
@@ -144,7 +144,6 @@ const resolveAclDoc = async (
   }
   return doc as { userId: string }
 }
-const ohk = (c: MutCtx): HookCtx => ({ db: c.db, storage: c.storage, userId: c.user._id as string })
 /**
  * Build an org-scoped CRUD slice (rows belong to an org, members of the org can read/write
  * per their role). Endpoints: `create`, `list`, `get`, `patch`, `remove`, `restore`, `bulk_*`.
@@ -201,18 +200,18 @@ const makeOrgCrud = <S extends ZodRawShape>({
           const parsed = schema.safeParse(item)
           if (!parsed.success) return errValidation('VALIDATION_FAILED', parsed.error)
           let data = parsed.data as Rec
-          if (hooks?.beforeCreate) data = await hooks.beforeCreate(ohk(c), { data })
+          if (hooks?.beforeCreate) data = await hooks.beforeCreate(hk(c), { data })
           const id = await dbInsert(c.db, table, { ...data, orgId, userId: c.user._id, ...time() })
-          if (hooks?.afterCreate) await hooks.afterCreate(ohk(c), { data, id })
+          if (hooks?.afterCreate) await hooks.afterCreate(hk(c), { data, id })
           ids.push(id)
         }
         return ids
       }
       if (rl && !isTestMode()) await checkRateLimit(c.db, { config: rl, key: c.user._id as string, table })
       let data = schema.parse(a) as Rec
-      if (hooks?.beforeCreate) data = await hooks.beforeCreate(ohk(c), { data })
+      if (hooks?.beforeCreate) data = await hooks.beforeCreate(hk(c), { data })
       const id = await dbInsert(c.db, table, { ...data, orgId, userId: c.user._id, ...time() })
-      if (hooks?.afterCreate) await hooks.afterCreate(ohk(c), { data, id })
+      if (hooks?.afterCreate) await hooks.afterCreate(hk(c), { data, id })
       return id
     })
   })
@@ -273,11 +272,11 @@ const makeOrgCrud = <S extends ZodRawShape>({
             /** biome-ignore lint/nursery/noContinue: guard clause reduces nesting */
             continue // eslint-disable-line no-continue
           let patch = partial.parse(rawItem) as Rec
-          if (hooks?.beforeUpdate) patch = await hooks.beforeUpdate(ohk(c), { id: rawItem.id, patch, prev: doc })
+          if (hooks?.beforeUpdate) patch = await hooks.beforeUpdate(hk(c), { id: rawItem.id, patch, prev: doc })
           const now = time()
           await cleanFiles({ doc, fileFields: fileFs, next: patch, storage: c.storage })
           await dbPatch(c.db, rawItem.id, { ...patch, ...now })
-          if (hooks?.afterUpdate) await hooks.afterUpdate(ohk(c), { id: rawItem.id, patch, prev: doc })
+          if (hooks?.afterUpdate) await hooks.afterUpdate(hk(c), { id: rawItem.id, patch, prev: doc })
           results.push({ ...doc, ...patch, ...now })
         }
         return results
@@ -299,11 +298,11 @@ const makeOrgCrud = <S extends ZodRawShape>({
         return err('FORBIDDEN', `${table}:update`)
       if (expectedUpdatedAt !== undefined && doc.updatedAt !== expectedUpdatedAt) return err('CONFLICT', `${table}:update`)
       let patch = partial.parse(a) as Rec
-      if (hooks?.beforeUpdate) patch = await hooks.beforeUpdate(ohk(c), { id, patch, prev: doc })
+      if (hooks?.beforeUpdate) patch = await hooks.beforeUpdate(hk(c), { id, patch, prev: doc })
       const now = time()
       await cleanFiles({ doc, fileFields: fileFs, next: patch, storage: c.storage })
       await dbPatch(c.db, id, { ...patch, ...now })
-      if (hooks?.afterUpdate) await hooks.afterUpdate(ohk(c), { id, patch, prev: doc })
+      if (hooks?.afterUpdate) await hooks.afterUpdate(hk(c), { id, patch, prev: doc })
       return { ...doc, ...patch, ...now }
     })
   })
@@ -330,14 +329,14 @@ const makeOrgCrud = <S extends ZodRawShape>({
           )
             /** biome-ignore lint/nursery/noContinue: guard clause reduces nesting */
             continue // eslint-disable-line no-continue
-          if (hooks?.beforeDelete) await hooks.beforeDelete(ohk(c), { doc, id })
+          if (hooks?.beforeDelete) await hooks.beforeDelete(hk(c), { doc, id })
           if (softDel) await dbPatch(c.db, id, { deletedAt: Date.now() })
           else {
             await cascadeDelete(c.db, id)
             await dbDelete(c.db, id)
           }
           await cleanFiles({ doc, fileFields: fileFs, storage: c.storage })
-          if (hooks?.afterDelete) await hooks.afterDelete(ohk(c), { doc, id })
+          if (hooks?.afterDelete) await hooks.afterDelete(hk(c), { doc, id })
           deleted += 1
         }
         return deleted
@@ -356,17 +355,17 @@ const makeOrgCrud = <S extends ZodRawShape>({
         })
       )
         return err('FORBIDDEN', `${table}:rm`)
-      if (hooks?.beforeDelete) await hooks.beforeDelete(ohk(c), { doc, id })
+      if (hooks?.beforeDelete) await hooks.beforeDelete(hk(c), { doc, id })
       if (softDel) {
         await dbPatch(c.db, id, { deletedAt: Date.now() })
-        if (hooks?.afterDelete) await hooks.afterDelete(ohk(c), { doc, id })
+        if (hooks?.afterDelete) await hooks.afterDelete(hk(c), { doc, id })
         log('info', 'crud:delete', { id, soft: true, table })
         return doc
       }
       await cascadeDelete(c.db, id)
       await dbDelete(c.db, id)
       await cleanFiles({ doc, fileFields: fileFs, storage: c.storage })
-      if (hooks?.afterDelete) await hooks.afterDelete(ohk(c), { doc, id })
+      if (hooks?.afterDelete) await hooks.afterDelete(hk(c), { doc, id })
       return doc
     })
   })

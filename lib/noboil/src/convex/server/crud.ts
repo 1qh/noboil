@@ -15,7 +15,6 @@ import type {
   DbLike,
   EnrichedDoc,
   FilterLike,
-  HookCtx,
   MutCtx,
   Qb,
   ReadCtx,
@@ -35,6 +34,7 @@ import {
   err,
   errValidation,
   groupList,
+  hk,
   isComparisonOp,
   log,
   matchW,
@@ -48,7 +48,6 @@ interface CrudMCtx extends MutCtx {
   get: (id: string) => Promise<Rec>
   patch: (id: string, data: Rec, expectedUpdatedAt?: number) => Promise<Rec>
 }
-const hk = (c: CrudMCtx): HookCtx => ({ db: c.db, storage: c.storage, userId: c.user._id as string })
 /**
  * Build a per-user-owned CRUD slice (create, list, get, patch, remove, restore, bulk_*).
  * Each row is automatically scoped to the authenticated user (`userId` field). Soft-delete
