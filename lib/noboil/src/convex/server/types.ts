@@ -14,6 +14,7 @@ import type {
 } from 'convex/server'
 import type { GenericId } from 'convex/values'
 import type { z as _, ZodNullable, ZodNumber, ZodObject, ZodOptional, ZodRawShape } from 'zod/v4'
+import type { BuiltinErrorCode } from '../../shared/error-messages'
 import type {
   AuthorInfo,
   ComparisonOp,
@@ -24,6 +25,20 @@ import type {
   StorageLike
 } from '../../shared/server/types'
 import type { OrgRole, Rec } from '../../shared/types'
+import { ERROR_MESSAGES } from '../../shared/error-messages'
+type Ab<V extends FunctionVisibility = 'public'> = CustomBuilder<
+  'action',
+  Record<string, never>,
+  Rec,
+  Record<string, never>,
+  unknown,
+  V,
+  Rec
+>
+interface ActionCtxLike {
+  runMutation: (ref: string, args: Rec) => Promise<unknown>
+  runQuery: (ref: string, args: Rec) => Promise<unknown>
+}
 interface BaseBuilders {
   m: Mb
   pq?: Qb
@@ -37,6 +52,22 @@ interface CacheBuilders<DM extends GenericDataModel = GenericDataModel> {
   internalQuery: QueryBuilder<DM, 'internal'>
   mutation: MutationBuilder<DM, 'public'>
   query: QueryBuilder<DM, 'public'>
+}
+interface CacheCrudResult<S extends ZodRawShape> {
+  all: RegisteredQuery<'public', Rec, DocBase<S>[]>
+  checkRL?: RegisteredMutation<'internal', Rec, void>
+  create: RegisteredMutation<'public', Rec, string>
+  get: RegisteredQuery<'public', Rec, (DocBase<S> & { cacheHit: true; stale: boolean }) | null>
+  getInternal: RegisteredQuery<'internal', Rec, DocBase<S> | null>
+  invalidate: RegisteredMutation<'public', Rec, DocBase<S> | null>
+  list: RegisteredQuery<'public', Rec, PaginatedResult<DocBase<S>>>
+  load: RegisteredAction<'public', Rec, _.output<ZodObject<S>> & { cacheHit: boolean }>
+  purge: RegisteredMutation<'public', Rec, number>
+  read: RegisteredQuery<'public', Rec, DocBase<S> | null>
+  refresh: RegisteredAction<'public', Rec, _.output<ZodObject<S>> & { cacheHit: boolean }>
+  rm: RegisteredMutation<'public', Rec, DocBase<S> | null>
+  set: RegisteredMutation<'internal', Rec, void>
+  update: RegisteredMutation<'public', Rec, DocBase<S>>
 }
 interface CacheHookCtx {
   db: DbLike
@@ -59,6 +90,15 @@ interface CacheOptions<S extends ZodRawShape, K extends keyof _.output<ZodObject
   table: string
   ttl?: number
 }
+interface CanEditOpts {
+  acl: boolean
+  doc: {
+    editors?: string[]
+    userId: string
+  }
+  role: OrgRole
+  userId: string
+}
 interface CascadeOption<T extends string = string> {
   foreignKey: string
   table: T
@@ -69,6 +109,17 @@ interface ChildConfig {
   parent: string
   parentSchema?: ZodObject
   schema: ZodObject
+}
+interface ChildCrudResult<S extends ZodRawShape> {
+  create: RegisteredMutation<'public', Rec, string | string[]>
+  get: RegisteredQuery<'public', Rec, DocBase<S> | null>
+  list: RegisteredQuery<'public', Rec, DocBase<S>[]>
+  pub?: {
+    get: RegisteredQuery<'public', Rec, DocBase<S> | null>
+    list: RegisteredQuery<'public', Rec, DocBase<S>[]>
+  }
+  rm: RegisteredMutation<'public', Rec, DocBase<S> | number>
+  update: RegisteredMutation<'public', Rec, DocBase<S> | DocBase<S>[] | null>
 }
 interface CrudBuilders extends BaseBuilders {
   cm: Mb
@@ -91,136 +142,6 @@ interface CrudOptions<S extends ZodRawShape> {
   rateLimit?: RateLimitInput
   search?: (keyof S & string) | true | { field?: keyof S & string; index?: string }
   softDelete?: boolean
-}
-interface DbCtx {
-  db: DbLike
-}
-interface GlobalHookCtx {
-  db: DbLike
-  storage?: StorageLike
-  table: string
-  userId?: string
-}
-interface GlobalHooks {
-  afterCreate?: (ctx: GlobalHookCtx, args: { data: Rec; id: string }) => Promise<void> | void
-  afterDelete?: (ctx: GlobalHookCtx, args: { doc: Rec; id: string }) => Promise<void> | void
-  afterUpdate?: (ctx: GlobalHookCtx, args: { id: string; patch: Rec; prev: Rec }) => Promise<void> | void
-  beforeCreate?: (ctx: GlobalHookCtx, args: { data: Rec }) => Promise<Rec> | Rec
-  beforeDelete?: (ctx: GlobalHookCtx, args: { doc: Rec; id: string }) => Promise<void> | void
-  beforeUpdate?: (ctx: GlobalHookCtx, args: { id: string; patch: Rec; prev: Rec }) => Promise<Rec> | Rec
-}
-interface HookCtx {
-  db: DbLike
-  storage: StorageLike
-  userId: string
-}
-interface Middleware {
-  afterCreate?: (ctx: MiddlewareCtx, args: { data: Rec; id: string }) => Promise<void> | void
-  afterDelete?: (ctx: MiddlewareCtx, args: { doc: Rec; id: string }) => Promise<void> | void
-  afterUpdate?: (ctx: MiddlewareCtx, args: { id: string; patch: Rec; prev: Rec }) => Promise<void> | void
-  beforeCreate?: (ctx: MiddlewareCtx, args: { data: Rec }) => Promise<Rec> | Rec
-  beforeDelete?: (ctx: MiddlewareCtx, args: { doc: Rec; id: string }) => Promise<void> | void
-  beforeUpdate?: (ctx: MiddlewareCtx, args: { id: string; patch: Rec; prev: Rec }) => Promise<Rec> | Rec
-  name: string
-}
-interface MiddlewareCtx extends GlobalHookCtx {
-  operation: 'create' | 'delete' | 'update'
-}
-interface MutCtx extends UserCtx {
-  storage: StorageLike
-}
-interface UserCtx extends DbCtx {
-  user: Rec
-}
-const ERROR_MESSAGES = {
-  ALREADY_ORG_MEMBER: 'This user is already a member — check the members list before inviting',
-  ALREADY_PROCESSED: 'This request was already handled — refresh to see the latest state',
-  CANNOT_MODIFY_ADMIN: 'Admins cannot modify other admins — only the org owner can',
-  CANNOT_MODIFY_OWNER: 'The org owner cannot be modified — transfer ownership first',
-  CHUNK_ALREADY_UPLOADED: 'This file chunk was already uploaded — the upload may be retrying',
-  CHUNK_NOT_FOUND: 'File chunk not found — the upload session may have expired, try uploading again',
-  CONFLICT: 'This record was modified by someone else — review the changes and try again',
-  EDITOR_REQUIRED: 'You need editor access to modify this — ask the owner to add you as an editor',
-  FILE_NOT_FOUND: 'The file was deleted or moved — refresh and try again',
-  FILE_TOO_LARGE: 'File exceeds the size limit — compress or resize before uploading',
-  FORBIDDEN: "You don't have permission — you can only modify your own records",
-  INCOMPLETE_UPLOAD: 'Upload is incomplete — some chunks are still missing, wait or retry',
-  INSUFFICIENT_ORG_ROLE: 'This action requires a higher role — ask an admin to upgrade your access',
-  INVALID_FILE_TYPE: 'This file type is not allowed — check the accepted formats',
-  INVALID_INVITE: 'This invite link is invalid — ask for a new one',
-  INVALID_KEY: 'This key is not in the registry — check the allowed keys list',
-  INVALID_MESSAGE: 'Message content is invalid — check the format and try again',
-  INVALID_SESSION_STATE: 'Session is in an unexpected state — try refreshing the page',
-  INVALID_TOOL_ARGS: 'Invalid tool arguments — check the parameter types',
-  INVALID_WHERE: 'Invalid filter — check that field names and values match the schema',
-  INVITE_EXPIRED: 'This invite has expired — ask for a new one',
-  JOIN_REQUEST_EXISTS: 'You already requested to join — wait for approval',
-  LIMIT_EXCEEDED: 'Request limit exceeded — wait a moment before trying again',
-  MESSAGE_NOT_SAVED: 'Message could not be saved — check your connection and retry',
-  MUST_TRANSFER_OWNERSHIP: 'Transfer ownership to another admin before leaving the organization',
-  NOT_AUTHENTICATED: 'Please log in to continue',
-  NOT_AUTHORIZED: "You are not authorized — make sure you're logged into the right account",
-  NOT_FOUND: "This record doesn't exist — it may have been deleted",
-  NOT_ORG_MEMBER: "You're not a member of this organization — request to join or ask for an invite",
-  NO_FETCHER: 'No data fetcher configured — pass a fetcher function in the cache table options',
-  NO_PRECEDING_USER_MESSAGE: 'No preceding user message found in the conversation',
-  ORG_SLUG_TAKEN: 'This organization URL is already taken — try a different slug',
-  RATE_LIMITED: 'Too many requests — please wait before trying again',
-  SESSION_NOT_FOUND: 'Session not found — it may have expired, try logging in again',
-  TARGET_MUST_BE_ADMIN: 'You can only transfer ownership to an existing admin',
-  UNAUTHORIZED: 'Authentication required — please log in',
-  USER_NOT_FOUND: 'User not found — they may have deleted their account',
-  VALIDATION_FAILED: 'Some fields are invalid — check the highlighted fields and fix the errors'
-} as const
-type Ab<V extends FunctionVisibility = 'public'> = CustomBuilder<
-  'action',
-  Record<string, never>,
-  Rec,
-  Record<string, never>,
-  unknown,
-  V,
-  Rec
->
-interface ActionCtxLike {
-  runMutation: (ref: string, args: Rec) => Promise<unknown>
-  runQuery: (ref: string, args: Rec) => Promise<unknown>
-}
-type BuiltinErrorCode = keyof typeof ERROR_MESSAGES
-interface CacheCrudResult<S extends ZodRawShape> {
-  all: RegisteredQuery<'public', Rec, DocBase<S>[]>
-  checkRL?: RegisteredMutation<'internal', Rec, void>
-  create: RegisteredMutation<'public', Rec, string>
-  get: RegisteredQuery<'public', Rec, (DocBase<S> & { cacheHit: true; stale: boolean }) | null>
-  getInternal: RegisteredQuery<'internal', Rec, DocBase<S> | null>
-  invalidate: RegisteredMutation<'public', Rec, DocBase<S> | null>
-  list: RegisteredQuery<'public', Rec, PaginatedResult<DocBase<S>>>
-  load: RegisteredAction<'public', Rec, _.output<ZodObject<S>> & { cacheHit: boolean }>
-  purge: RegisteredMutation<'public', Rec, number>
-  read: RegisteredQuery<'public', Rec, DocBase<S> | null>
-  refresh: RegisteredAction<'public', Rec, _.output<ZodObject<S>> & { cacheHit: boolean }>
-  rm: RegisteredMutation<'public', Rec, DocBase<S> | null>
-  set: RegisteredMutation<'internal', Rec, void>
-  update: RegisteredMutation<'public', Rec, DocBase<S>>
-}
-interface CanEditOpts {
-  acl: boolean
-  doc: {
-    editors?: string[]
-    userId: string
-  }
-  role: OrgRole
-  userId: string
-}
-interface ChildCrudResult<S extends ZodRawShape> {
-  create: RegisteredMutation<'public', Rec, string | string[]>
-  get: RegisteredQuery<'public', Rec, DocBase<S> | null>
-  list: RegisteredQuery<'public', Rec, DocBase<S>[]>
-  pub?: {
-    get: RegisteredQuery<'public', Rec, DocBase<S> | null>
-    list: RegisteredQuery<'public', Rec, DocBase<S>[]>
-  }
-  rm: RegisteredMutation<'public', Rec, DocBase<S> | number>
-  update: RegisteredMutation<'public', Rec, DocBase<S> | DocBase<S>[] | null>
 }
 interface CrudReadApi<S extends ZodRawShape, V extends FunctionVisibility = 'public'> {
   list: RegisteredQuery<V, { paginationOpts: PaginationOptions; where?: WhereOf<S> }, PaginatedResult<EnrichedDoc<S>>>
@@ -252,6 +173,9 @@ interface CrudResult<S extends ZodRawShape> {
     },
     DocBase<S> | DocBase<S>[]
   >
+}
+interface DbCtx {
+  db: DbLike
 }
 interface DbLike extends DbReadLike {
   delete: (id: string) => Promise<void>
@@ -289,6 +213,25 @@ interface FilterLike {
   neq: (a: unknown, b: unknown) => unknown
   or: (a: unknown, b: unknown) => unknown
 }
+interface GlobalHookCtx {
+  db: DbLike
+  storage?: StorageLike
+  table: string
+  userId?: string
+}
+interface GlobalHooks {
+  afterCreate?: (ctx: GlobalHookCtx, args: { data: Rec; id: string }) => Promise<void> | void
+  afterDelete?: (ctx: GlobalHookCtx, args: { doc: Rec; id: string }) => Promise<void> | void
+  afterUpdate?: (ctx: GlobalHookCtx, args: { id: string; patch: Rec; prev: Rec }) => Promise<void> | void
+  beforeCreate?: (ctx: GlobalHookCtx, args: { data: Rec }) => Promise<Rec> | Rec
+  beforeDelete?: (ctx: GlobalHookCtx, args: { doc: Rec; id: string }) => Promise<void> | void
+  beforeUpdate?: (ctx: GlobalHookCtx, args: { id: string; patch: Rec; prev: Rec }) => Promise<Rec> | Rec
+}
+interface HookCtx {
+  db: DbLike
+  storage: StorageLike
+  userId: string
+}
 interface IndexLike {
   eq: (field: string, value: unknown) => IndexLike
   gt: (field: string, value: unknown) => IndexLike
@@ -305,9 +248,24 @@ type Mb<V extends FunctionVisibility = 'public'> = CustomBuilder<
   V,
   Rec
 >
+interface Middleware {
+  afterCreate?: (ctx: MiddlewareCtx, args: { data: Rec; id: string }) => Promise<void> | void
+  afterDelete?: (ctx: MiddlewareCtx, args: { doc: Rec; id: string }) => Promise<void> | void
+  afterUpdate?: (ctx: MiddlewareCtx, args: { id: string; patch: Rec; prev: Rec }) => Promise<void> | void
+  beforeCreate?: (ctx: MiddlewareCtx, args: { data: Rec }) => Promise<Rec> | Rec
+  beforeDelete?: (ctx: MiddlewareCtx, args: { doc: Rec; id: string }) => Promise<void> | void
+  beforeUpdate?: (ctx: MiddlewareCtx, args: { id: string; patch: Rec; prev: Rec }) => Promise<Rec> | Rec
+  name: string
+}
+interface MiddlewareCtx extends GlobalHookCtx {
+  operation: 'create' | 'delete' | 'update'
+}
 interface MutationCtxLike {
   auth: { getUserIdentity: () => Promise<unknown> }
   db: DbLike
+  storage: StorageLike
+}
+interface MutCtx extends UserCtx {
   storage: StorageLike
 }
 type OrgCascadeTableConfig<DM extends GenericDataModel = GenericDataModel> =
@@ -393,6 +351,9 @@ type UrlVal<V> =
       ? null | string
       : (null | string)[]
     : never
+interface UserCtx extends DbCtx {
+  user: Rec
+}
 type WhereFieldValue<V> = ComparisonOp<V> | V
 type WhereGroupOf<S extends ZodRawShape> = {
   [K in keyof _.output<ZodObject<S>>]?: WhereFieldValue<_.output<ZodObject<S>>[K]>

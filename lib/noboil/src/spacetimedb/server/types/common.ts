@@ -2,6 +2,7 @@
 import type { Identity, Timestamp } from 'spacetimedb'
 import type { AlgebraicTypeType, ColumnBuilder, ReducerExport, TypeBuilder } from 'spacetimedb/server'
 import type { z as _, ZodNullable, ZodNumber, ZodObject, ZodOptional, ZodRawShape } from 'zod/v4'
+import type { BuiltinErrorCode } from '../../../shared/error-messages'
 import type {
   AuthorInfo,
   ComparisonOp,
@@ -12,6 +13,7 @@ import type {
   StorageLike
 } from '../../../shared/server/types'
 import type { OrgRole, Rec } from '../../../shared/types'
+import { ERROR_MESSAGES } from '../../../shared/error-messages'
 type Ab<V extends Visibility = 'public'> = <A = Rec, R = unknown, C = Rec>(
   ...args: unknown[]
 ) => C & RegisteredAction<V, A, R>
@@ -49,6 +51,8 @@ type EnrichedDoc<S extends ZodRawShape> = WithUrls<
     userId: string
   }
 >
+// oxlint-disable-next-line typescript/ban-types
+type ErrorCode = BuiltinErrorCode | (string & {})
 type FID = string
 type FieldBuilders = Record<string, ColumnBuilder<unknown, AlgebraicTypeType> | TypeBuilder<unknown, AlgebraicTypeType>>
 interface FilterLike {
@@ -233,47 +237,6 @@ type WhereOf<S extends ZodRawShape> = WhereGroupOf<S> & {
   or?: WhereGroupOf<S>[]
 }
 type WithUrls<D> = D & { [K in keyof D as UrlKey<K, D[K]>]: UrlVal<D[K]> }
-const ERROR_MESSAGES = {
-  ALREADY_ORG_MEMBER: 'This user is already a member — check the members list before inviting',
-  CANNOT_MODIFY_ADMIN: 'Admins cannot modify other admins — only the org owner can',
-  CANNOT_MODIFY_OWNER: 'The org owner cannot be modified — transfer ownership first',
-  CHUNK_ALREADY_UPLOADED: 'This file chunk was already uploaded — the upload may be retrying',
-  CHUNK_NOT_FOUND: 'File chunk not found — the upload session may have expired, try uploading again',
-  CONFLICT: 'This record was modified by someone else — review the changes and try again',
-  EDITOR_REQUIRED: 'You need editor access to modify this — ask the owner to add you as an editor',
-  FILE_NOT_FOUND: 'The file was deleted or moved — refresh and try again',
-  FILE_TOO_LARGE: 'File exceeds the size limit — compress or resize before uploading',
-  FORBIDDEN: "You don't have permission — you can only modify your own records",
-  INCOMPLETE_UPLOAD: 'Upload is incomplete — some chunks are still missing, wait or retry',
-  INSUFFICIENT_ORG_ROLE: 'This action requires a higher role — ask an admin to upgrade your access',
-  INVALID_FILE_TYPE: 'This file type is not allowed — check the accepted formats',
-  INVALID_INVITE: 'This invite link is invalid — ask for a new one',
-  INVALID_MESSAGE: 'Message content is invalid — check the format and try again',
-  INVALID_SESSION_STATE: 'Session is in an unexpected state — try refreshing the page',
-  INVALID_TOOL_ARGS: 'Invalid tool arguments — check the parameter types',
-  INVALID_WHERE: 'Invalid filter — check that field names and values match the schema',
-  INVITE_EXPIRED: 'This invite has expired — ask for a new one',
-  JOIN_REQUEST_EXISTS: 'You already requested to join — wait for approval',
-  LIMIT_EXCEEDED: 'Request limit exceeded — wait a moment before trying again',
-  MESSAGE_NOT_SAVED: 'Message could not be saved — check your connection and retry',
-  MUST_TRANSFER_OWNERSHIP: 'Transfer ownership to another admin before leaving the organization',
-  NOT_AUTHENTICATED: 'Please log in to continue',
-  NOT_AUTHORIZED: "You are not authorized — make sure you're logged into the right account",
-  NOT_FOUND: "This record doesn't exist — it may have been deleted",
-  NOT_ORG_MEMBER: "You're not a member of this organization — request to join or ask for an invite",
-  NO_FETCHER: 'No data fetcher configured — pass a fetcher function in the cache table options',
-  NO_PRECEDING_USER_MESSAGE: 'No preceding user message found in the conversation',
-  ORG_SLUG_TAKEN: 'This organization URL is already taken — try a different slug',
-  RATE_LIMITED: 'Too many requests — please wait before trying again',
-  SESSION_NOT_FOUND: 'Session not found — it may have expired, try logging in again',
-  TARGET_MUST_BE_ADMIN: 'You can only transfer ownership to an existing admin',
-  UNAUTHORIZED: 'Authentication required — please log in',
-  USER_NOT_FOUND: 'User not found — they may have deleted their account',
-  VALIDATION_FAILED: 'Some fields are invalid — check the highlighted fields and fix the errors'
-} as const
-type BuiltinErrorCode = keyof typeof ERROR_MESSAGES
-// oxlint-disable-next-line typescript/ban-types
-type ErrorCode = BuiltinErrorCode | (string & {})
 declare const __brand: unique symbol
 type AssertSchema<T, Expected extends keyof BrandLabelMap> =
   DetectBrand<T> extends Expected ? T : SchemaTypeError<Expected, DetectBrand<T> & keyof BrandLabelMap>
