@@ -14,6 +14,7 @@ import type {
 } from 'convex/server'
 import type { GenericId } from 'convex/values'
 import type { z as _, ZodNullable, ZodNumber, ZodObject, ZodOptional, ZodRawShape } from 'zod/v4'
+import type { RateLimitConfig, RateLimitInput, SearchLike, StorageLike } from '../../shared/server/types'
 import type { OrgRole, Rec } from '../../shared/types'
 interface BaseBuilders {
   m: Mb
@@ -127,11 +128,6 @@ interface MiddlewareCtx extends GlobalHookCtx {
 interface MutCtx extends UserCtx {
   storage: StorageLike
 }
-interface RateLimitConfig {
-  max: number
-  window: number
-}
-type RateLimitInput = number | RateLimitConfig
 interface UserCtx extends DbCtx {
   user: Rec
 }
@@ -386,9 +382,6 @@ interface ReadCtx {
     })[]
   >
 }
-interface SearchLike {
-  search: (field: string, query: string) => unknown
-}
 interface SetupConfig<DM extends GenericDataModel = GenericDataModel> {
   action: ActionBuilder<DM, 'public'>
   getAuthUserId: (ctx: never) => Promise<null | string>
@@ -401,10 +394,6 @@ interface SetupConfig<DM extends GenericDataModel = GenericDataModel> {
   orgSchema?: ZodObject
   query: QueryBuilder<DM, 'public'>
   strictFilter?: boolean
-}
-interface StorageLike {
-  delete: (id: string) => Promise<void>
-  getUrl: (id: string) => Promise<null | string>
 }
 type UrlKey<K, V> =
   NonNullable<V> extends FID | FID[] | readonly FID[] ? `${K & string}Url${NonNullable<V> extends FID ? '' : 's'}` : never

@@ -2,6 +2,7 @@
 import type { Identity, Timestamp } from 'spacetimedb'
 import type { AlgebraicTypeType, ColumnBuilder, ReducerExport, TypeBuilder } from 'spacetimedb/server'
 import type { z as _, ZodNullable, ZodNumber, ZodObject, ZodOptional, ZodRawShape } from 'zod/v4'
+import type { RateLimitConfig, RateLimitInput, SearchLike, StorageLike } from '../../../shared/server/types'
 import type { OrgRole, Rec } from '../../../shared/types'
 type Ab<V extends Visibility = 'public'> = <A = Rec, R = unknown, C = Rec>(
   ...args: unknown[]
@@ -167,11 +168,6 @@ interface QueryLike {
   withIndex: (name: string, fn?: (ib: IndexLike) => unknown) => QueryLike
   withSearchIndex: (name: string, fn: (sb: SearchLike) => unknown) => QueryLike
 }
-interface RateLimitConfig {
-  max: number
-  window: number
-}
-type RateLimitInput = number | RateLimitConfig
 interface ReadCtx {
   db: DbLike
   storage?: StorageLike
@@ -209,9 +205,6 @@ interface RegisteredQuery<V extends Visibility, A, R> {
   __return: R
   __visibility: V
 }
-interface SearchLike {
-  search: (field: string, query: string) => unknown
-}
 interface SetupConfig<DM = unknown> {
   action: Ab
   getAuthUserId: (ctx: never) => Promise<null | string>
@@ -224,10 +217,6 @@ interface SetupConfig<DM = unknown> {
   orgSchema?: ZodObject
   query: Qb
   strictFilter?: boolean
-}
-interface StorageLike {
-  delete: (id: string) => Promise<void>
-  getUrl: (id: string) => Promise<null | string>
 }
 interface TableLike<Row> {
   insert: (row: Row) => Row
