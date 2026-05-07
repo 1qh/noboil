@@ -1,7 +1,6 @@
 'use client'
 import { createContext, use, useRef, useSyncExternalStore } from 'react'
-/** The kind of mutation: create, update, or delete. */
-type MutationType = 'create' | 'delete' | 'update'
+import type { MutationType } from '../../shared/types'
 interface OptimisticStore {
   add: (entry: PendingMutation) => void
   getSnapshot: () => PendingMutation[]
