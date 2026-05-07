@@ -1,9 +1,9 @@
 import { config } from '@a/config'
 import { walkFiles } from 'noboil/walk'
 import { createHash } from 'node:crypto'
-import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { root, run } from './utils'
+import { root, run, withUnpatchedStdbSdk } from './utils'
 const args = process.argv.slice(2).join(' ')
 const isHashableFile = (name: string): boolean => name.endsWith('.ts') || name === 'package.json'
 const hashDir = (dir: string): string => {
@@ -27,20 +27,13 @@ const publishIfChanged = async () => {
     console.log('stdb-publish: module unchanged, skipping')
     return
   }
-  const sdkPath = join(root, 'node_modules', 'spacetimedb', 'dist', 'server', 'index.mjs')
-  const backupPath = `${sdkPath}.orig`
-  const patchedContent = existsSync(sdkPath) ? readFileSync(sdkPath, 'utf8') : ''
-  const wasPatched = patchedContent.includes('/* patched: stdb-sys-stub */')
-  if (wasPatched && existsSync(backupPath)) copyFileSync(backupPath, sdkPath)
-  try {
+  await withUnpatchedStdbSdk(async () => {
     await run(
       `bash -lc 'PATH="${root}/node_modules/.bin:$HOME/.local/bin:$PATH" spacetime publish ${config.module} --module-path ${config.paths.backendStdb} ${args}'`,
       { quiet: false }
     )
     mkdirSync(cacheDir, { recursive: true })
     writeFileSync(cacheFile, wantHash)
-  } finally {
-    if (wasPatched) writeFileSync(sdkPath, patchedContent)
-  }
+  })
 }
 await publishIfChanged()

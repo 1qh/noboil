@@ -5,7 +5,7 @@
 /* eslint-disable no-await-in-loop, no-control-regex */
 /* oxlint-disable no-await-in-loop, no-control-regex */
 import { $, sleep } from 'bun'
-import { existsSync, readFileSync, writeFileSync } from 'node:fs'
+import { copyFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { styleText } from 'node:util'
 const ANSI_RE = /\u001B\[\d+m/gu
@@ -121,6 +121,20 @@ const parseArgs = (argv: string[]) => {
   for (const a of argv) if (a.startsWith('--')) flags.add(a.slice(2))
   return flags
 }
+const STDB_SDK_PATH = join(root, 'node_modules', 'spacetimedb', 'dist', 'server', 'index.mjs')
+const STDB_PATCH_MARKER = '/* patched: stdb-sys-stub */'
+/** Run `fn` with the SpacetimeDB SDK temporarily reverted to its unpatched original (so `spacetime publish/generate` see the real syscall imports). Re-patches on exit. */
+const withUnpatchedStdbSdk = async <T>(fn: () => Promise<T>): Promise<T> => {
+  const backupPath = `${STDB_SDK_PATH}.orig`
+  const patchedContent = existsSync(STDB_SDK_PATH) ? readFileSync(STDB_SDK_PATH, 'utf8') : ''
+  const wasPatched = patchedContent.includes(STDB_PATCH_MARKER)
+  if (wasPatched && existsSync(backupPath)) copyFileSync(backupPath, STDB_SDK_PATH)
+  try {
+    return await fn()
+  } finally {
+    if (wasPatched) writeFileSync(STDB_SDK_PATH, patchedContent)
+  }
+}
 export {
   box,
   c,
@@ -142,5 +156,6 @@ export {
   step,
   stripAnsi,
   waitHealthy,
-  warn
+  warn,
+  withUnpatchedStdbSdk
 }
