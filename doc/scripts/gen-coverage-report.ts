@@ -1,9 +1,9 @@
 #!/usr/bin/env bun
 /* eslint-disable no-console */
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs'
-import { REPO } from './lib'
+import { DOCS_DIR, REPO } from './lib'
 const SCRIPTS_DIR = `${REPO}/doc/scripts`
-const OUT = `${REPO}/doc/content/docs/single-source-of-truth.mdx`
+const OUT = `${DOCS_DIR}/single-source-of-truth.mdx`
 const LINE_TAG_RE = /<!-- AUTO-GENERATED:(?<name>[A-Z0-9_-]+) -->/gu
 const BLOCK_TAG_RE = /\{\/\* AUTO-GENERATED:(?<name>[A-Z0-9_-]+):START \*\/\}/gu
 const findMarkers = (path: string): string[] => {
@@ -38,9 +38,9 @@ const describeScript = (s: string): string => descriptions[s] ?? '(undocumented)
 const targets = [
   `${REPO}/README.md`,
   `${REPO}/TODO.md`,
-  `${REPO}/doc/content/docs/architecture.mdx`,
-  `${REPO}/doc/content/docs/api-reference.mdx`,
-  `${REPO}/doc/content/docs/cli.mdx`
+  `${DOCS_DIR}/architecture.mdx`,
+  `${DOCS_DIR}/api-reference.mdx`,
+  `${DOCS_DIR}/cli.mdx`
 ]
 const main = () => {
   const scripts = readdirSync(SCRIPTS_DIR)

@@ -5,7 +5,7 @@
 import { readJson } from 'noboil/env-file'
 import { readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
 import { basename, relative, resolve } from 'node:path'
-import { collectBraceExports, REPO, STRIP_AUTOGEN_RE, STRIP_FENCE_RE } from './lib'
+import { collectBraceExports, DOCS_DIR, LIB_NOBOIL, PKG_JSON_PATH, REPO, STRIP_AUTOGEN_RE, STRIP_FENCE_RE } from './lib'
 const EXPORT_DECL_RE = /export\s+(?:const|function|class|interface|type)\s+(?<name>\w+)/gu
 const collectExports = (file: string): Set<string> => {
   const out = new Set<string>()
@@ -25,7 +25,7 @@ interface Entry {
   subpaths: string[]
 }
 const main = () => {
-  const pkg = readJson(`${REPO}/lib/noboil/package.json`) as {
+  const pkg = readJson(PKG_JSON_PATH) as {
     exports: Record<string, string | { default?: string; import?: string; require?: string; types?: string }>
     name: string
   }
@@ -33,7 +33,7 @@ const main = () => {
   for (const [sub, target] of Object.entries(pkg.exports)) {
     const path = typeof target === 'string' ? target : (target.types ?? target.default ?? target.import ?? '')
     if (!path) continue
-    const abs = resolve(`${REPO}/lib/noboil`, path)
+    const abs = resolve(LIB_NOBOIL, path)
     if (!statSync(abs, { throwIfNoEntry: false })) continue
     const subpath = sub === '.' ? pkg.name : `${pkg.name}/${sub.replace('./', '')}`
     for (const sym of collectExports(abs)) {
@@ -42,7 +42,7 @@ const main = () => {
       symToEntry.set(sym, e)
     }
   }
-  const docsDir = `${REPO}/doc/content/docs`
+  const docsDir = DOCS_DIR
   for (const file of readdirSync(docsDir).toSorted()) {
     if (!file.endsWith('.mdx') || file === 'glossary.mdx') continue
     const src = readFileSync(`${docsDir}/${file}`, 'utf8').replaceAll(STRIP_AUTOGEN_RE, '').replaceAll(STRIP_FENCE_RE, '')

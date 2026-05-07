@@ -4,8 +4,8 @@
 /** biome-ignore-all lint/performance/useTopLevelRegex: per-iteration extraction */
 /* oxlint-disable unicorn/prefer-string-replace-all */
 import { readFileSync } from 'node:fs'
-import { replaceBetween, REPO } from './lib'
-const STDB = `${REPO}/lib/noboil/src/spacetimedb/server`
+import { DOCS_DIR, LIB_NOBOIL, replaceBetween } from './lib'
+const STDB = `${LIB_NOBOIL}/src/spacetimedb/server`
 const FIELD_RE = /^\s*(?<name>\w+)(?<opt>\??):\s*(?<type>[^/\n]+?)\s*(?:\/\/.*)?$/u
 const extract = (file: string, name: string): { name: string; opt: string; type: string }[] => {
   const src = readFileSync(file, 'utf8')
@@ -38,7 +38,7 @@ const main = () => {
     '\n### quota\n\n_(no options — only `{ durationMs, limit }` config in schema)_'
   ]
   const body = blocks.join('\n')
-  const target = `${REPO}/doc/content/docs/api-reference.mdx`
+  const target = `${DOCS_DIR}/api-reference.mdx`
   const dirty = replaceBetween(target, 'FACTORY-OPTIONS', body)
   console.log(dirty ? `Updated factory options (log:${log.length}, kv:${kv.length})` : 'Factory options up to date')
 }

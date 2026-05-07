@@ -4,7 +4,7 @@
 /** biome-ignore-all lint/nursery/noContinue: walker */
 import { readdirSync, statSync } from 'node:fs'
 import { join } from 'node:path'
-import { replaceBetween, REPO } from './lib'
+import { DOCS_DIR, replaceBetween, REPO } from './lib'
 const DEMOS = ['blog', 'chat', 'movie', 'org', 'poll']
 const walkRoutes = (root: string, base = ''): string[] => {
   if (!statSync(root, { throwIfNoEntry: false })) return []
@@ -36,7 +36,7 @@ const main = () => {
     sections.push('')
   }
   const body = [`**${totalRoutes} Next.js \`page.tsx\` routes** across all demo apps.`, '', ...sections].join('\n')
-  const target = `${REPO}/doc/content/docs/architecture.mdx`
+  const target = `${DOCS_DIR}/architecture.mdx`
   const dirty = replaceBetween(target, 'ROUTE-MAP', body)
   console.log(dirty ? `Updated route map (${totalRoutes} routes)` : 'Route map up to date')
 }

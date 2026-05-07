@@ -5,6 +5,9 @@
 import { readFileSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 const REPO = resolve(import.meta.dir, '../..')
+const LIB_NOBOIL = `${REPO}/lib/noboil`
+const DOCS_DIR = `${REPO}/doc/content/docs`
+const PKG_JSON_PATH = `${LIB_NOBOIL}/package.json`
 const BLANK_AFTER_START_RE = /^\n\s*\n/u
 const BLANK_BEFORE_END_RE = /\n\s*\n$/u
 const TABLE_SEP_RE = /^\|[\s|:-]*-{3,}[\s|:-]*\|$/u
@@ -138,9 +141,12 @@ const replaceLineBetween = (path: string, name: string, body: string): boolean =
 }
 export {
   collectBraceExports,
+  DOCS_DIR,
   EXPORT_BRACE_RE,
   isCheck,
+  LIB_NOBOIL,
   padMarkdownTables,
+  PKG_JSON_PATH,
   replaceBetween,
   replaceLineBetween,
   REPO,

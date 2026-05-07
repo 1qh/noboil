@@ -4,7 +4,7 @@
 /** biome-ignore-all lint/nursery/noContinue: walker */
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join } from 'node:path'
-import { collectBraceExports, replaceBetween, REPO, stripStrings } from './lib'
+import { collectBraceExports, DOCS_DIR, LIB_NOBOIL, replaceBetween, REPO, stripStrings } from './lib'
 const EXPORT_DECL_RE =
   /export\s+(?:const|function|class|interface|type|default\s+(?:const|function|class)?)\s+(?<name>\w+)/gu
 const SKIP_DIRS = new Set([
@@ -339,11 +339,11 @@ const DEMO_SYMBOL_EXEMPT = new Set<string>([
 ])
 const PAIRS: Pair[] = [
   {
-    cvxRoot: `${REPO}/lib/noboil/src/convex`,
+    cvxRoot: `${LIB_NOBOIL}/src/convex`,
     exemptFiles: LIB_FILE_EXEMPT,
     exemptSymbols: LIB_SYMBOL_EXEMPT,
     name: 'lib/noboil/src',
-    stdbRoot: `${REPO}/lib/noboil/src/spacetimedb`
+    stdbRoot: `${LIB_NOBOIL}/src/spacetimedb`
   },
   {
     cvxRoot: `${REPO}/backend/convex`,
@@ -553,7 +553,7 @@ const main = () => {
     lines.push('', '### Unaccounted gaps', '')
     lines.push(...allGapDetails)
   }
-  const target = `${REPO}/doc/content/docs/architecture.mdx`
+  const target = `${DOCS_DIR}/architecture.mdx`
   const dirty = replaceBetween(target, 'MEGA-PARITY', lines.join('\n'))
   if (dirty) console.log(`Updated mega parity (${totalUnaccounted} unaccounted-for gaps across ${PAIRS.length} pairs)`)
 }

@@ -5,7 +5,7 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 import { ERROR_CODE_MEANINGS } from '../../lib/noboil/src/shared/error-codes'
-import { replaceBetween, REPO } from './lib'
+import { DOCS_DIR, LIB_NOBOIL, replaceBetween } from './lib'
 const PATTERNS = [
   /\b(?:err|cvErr|throwErr)\(\s*'(?<code>[A-Z][A-Z_0-9]+)'/gu,
   /throw\s+new\s+\w*Error\(\s*'(?<code>[A-Z][A-Z_0-9]+)'/gu,
@@ -22,9 +22,9 @@ const walk = (dir: string, out: string[] = []): string[] => {
 }
 const main = () => {
   const files = [
-    ...walk(`${REPO}/lib/noboil/src/convex/server`),
-    ...walk(`${REPO}/lib/noboil/src/spacetimedb/server`),
-    ...walk(`${REPO}/lib/noboil/src/shared`)
+    ...walk(`${LIB_NOBOIL}/src/convex/server`),
+    ...walk(`${LIB_NOBOIL}/src/spacetimedb/server`),
+    ...walk(`${LIB_NOBOIL}/src/shared`)
   ]
   const codes = new Set<string>()
   for (const file of files) {
@@ -48,7 +48,7 @@ const main = () => {
   ].join('\n')
   const undescribed = sorted.filter(c => !ERROR_CODE_MEANINGS[c])
   if (undescribed.length > 0) console.warn(`  ⚠ ${undescribed.length} codes missing meanings: ${undescribed.join(', ')}`)
-  const target = `${REPO}/doc/content/docs/api-reference.mdx`
+  const target = `${DOCS_DIR}/api-reference.mdx`
   const dirty = replaceBetween(target, 'ERROR-CODES', body)
   console.log(dirty ? `Updated error codes (${sorted.length} codes)` : `Error codes up to date (${sorted.length} codes)`)
 }

@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /* eslint-disable no-console */
 import { FACTORY_META } from '../../lib/noboil/src/shared/factory-meta'
-import { replaceBetween, REPO } from './lib'
+import { DOCS_DIR, replaceBetween } from './lib'
 const DOC_LINK: Record<string, string> = { kv: './kv', log: './log', quota: './quota' }
 const escapeMd = (s: string): string =>
   s.replaceAll('|', String.raw`\|`).replaceAll('{', String.raw`\{`).replaceAll('}', String.raw`\}`)
@@ -19,7 +19,7 @@ const main = () => {
     )
   }
   const body = rows.join('\n')
-  const target = `${REPO}/doc/content/docs/architecture.mdx`
+  const target = `${DOCS_DIR}/architecture.mdx`
   const dirty = replaceBetween(target, 'AUTO-FIELDS', body)
   console.log(
     dirty

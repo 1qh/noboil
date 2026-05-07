@@ -3,7 +3,7 @@
 /** biome-ignore-all lint/performance/useTopLevelRegex: per-block */
 /** biome-ignore-all lint/nursery/noContinue: parser */
 import { readFileSync } from 'node:fs'
-import { replaceBetween, REPO } from './lib'
+import { DOCS_DIR, replaceBetween } from './lib'
 const escapeMd = (s: string): string =>
   s
     .replaceAll('|', String.raw`\|`)
@@ -34,7 +34,7 @@ const parseHelpBlock = (text: string): Flag[] => {
   return flags
 }
 const main = () => {
-  const src = readFileSync(`${REPO}/doc/content/docs/cli.mdx`, 'utf8')
+  const src = readFileSync(`${DOCS_DIR}/cli.mdx`, 'utf8')
   const sections: string[] = []
   let total = 0
   let m = COMMAND_RE.exec(src)
@@ -57,7 +57,7 @@ const main = () => {
   const body = [`Parsed flag tables for every \`--help\` block above. **${total} flags total.**`, '', ...sections].join(
     '\n'
   )
-  const dirty = replaceBetween(`${REPO}/doc/content/docs/cli.mdx`, 'CLI-FLAGS', body)
+  const dirty = replaceBetween(`${DOCS_DIR}/cli.mdx`, 'CLI-FLAGS', body)
   console.log(dirty ? `Updated CLI flag tables (${total} flags)` : `CLI flag tables up to date (${total} flags)`)
 }
 main()

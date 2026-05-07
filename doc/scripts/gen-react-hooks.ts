@@ -1,9 +1,9 @@
 #!/usr/bin/env bun
 /* eslint-disable no-console */
 import { existsSync, readdirSync } from 'node:fs'
-import { replaceBetween, REPO } from './lib'
+import { DOCS_DIR, LIB_NOBOIL, replaceBetween } from './lib'
 const hooksFor = (kind: 'convex' | 'spacetimedb'): string[] => {
-  const dir = `${REPO}/lib/noboil/src/${kind}/react`
+  const dir = `${LIB_NOBOIL}/src/${kind}/react`
   return readdirSync(dir)
     .toSorted()
     .filter(f => f.startsWith('use-') && f.endsWith('.ts') && !f.endsWith('.test.ts'))
@@ -20,7 +20,7 @@ const main = () => {
     return `| \`${hook}\` | ${inCvx ? '✓' : '—'} | ${inStdb ? '✓' : '—'} |`
   })
   const body = ['| Hook | Convex | SpacetimeDB |', '|---|---|---|', ...rows].join('\n')
-  const target = `${REPO}/doc/content/docs/api-reference.mdx`
+  const target = `${DOCS_DIR}/api-reference.mdx`
   if (!existsSync(target)) throw new Error(`missing ${target}`)
   const dirty = replaceBetween(target, 'REACT-HOOKS', body)
   console.log(

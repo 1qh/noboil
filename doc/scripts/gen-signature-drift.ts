@@ -4,7 +4,7 @@
 /** biome-ignore-all lint/nursery/noContinue: walker */
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join, relative } from 'node:path'
-import { replaceBetween, REPO } from './lib'
+import { DOCS_DIR, LIB_NOBOIL, replaceBetween, REPO } from './lib'
 interface Hook {
   args: string
   file: string
@@ -53,10 +53,10 @@ const walkDocs = (dir: string, out: string[] = []): string[] => {
 }
 const main = () => {
   const sources = [
-    ...collectHooks(`${REPO}/lib/noboil/src/convex/react`),
-    ...collectHooks(`${REPO}/lib/noboil/src/spacetimedb/react`)
+    ...collectHooks(`${LIB_NOBOIL}/src/convex/react`),
+    ...collectHooks(`${LIB_NOBOIL}/src/spacetimedb/react`)
   ]
-  const docFiles = walkDocs(`${REPO}/doc/content/docs`)
+  const docFiles = walkDocs(DOCS_DIR)
   const allDocText = docFiles.map(f => readFileSync(f, 'utf8')).join('\n')
   const issues: string[] = []
   let mentioned = 0
@@ -92,7 +92,7 @@ const main = () => {
     '',
     ...issues.map(i => `- ${i}`)
   ].join('\n')
-  const archTarget = `${REPO}/doc/content/docs/architecture.mdx`
+  const archTarget = `${DOCS_DIR}/architecture.mdx`
   const dirty = replaceBetween(archTarget, 'SIGNATURE-DRIFT', body)
   console.log(
     dirty ? `Updated signature drift (${drift} mismatch(es) across ${mentioned} hooks)` : 'Signature drift up to date'

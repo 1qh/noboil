@@ -4,7 +4,7 @@
 /** biome-ignore-all lint/nursery/noContinue: walker */
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join, relative } from 'node:path'
-import { replaceBetween, REPO } from './lib'
+import { DOCS_DIR, LIB_NOBOIL, replaceBetween, REPO } from './lib'
 const walk = (dir: string, out: string[] = []): string[] => {
   for (const name of readdirSync(dir).toSorted()) {
     if (
@@ -64,7 +64,7 @@ const extractExamples = (src: string, file: string): Example[] => {
   return out
 }
 const main = () => {
-  const root = `${REPO}/lib/noboil/src`
+  const root = `${LIB_NOBOIL}/src`
   const files = walk(root)
   const all: Example[] = []
   for (const file of files) {
@@ -92,7 +92,7 @@ const main = () => {
       sections.push('')
     }
   const body = sections.join('\n')
-  const target = `${REPO}/doc/content/docs/recipes.mdx`
+  const target = `${DOCS_DIR}/recipes.mdx`
   const dirty = replaceBetween(target, 'JSDOC-EXAMPLES', body)
   console.log(dirty ? `Updated JSDoc examples (${all.length})` : `JSDoc examples up to date (${all.length})`)
 }

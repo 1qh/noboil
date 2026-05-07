@@ -3,7 +3,7 @@
 /** biome-ignore-all lint/performance/useTopLevelRegex: small file */
 /** biome-ignore-all lint/nursery/noContinue: parser */
 import { existsSync, readFileSync } from 'node:fs'
-import { collectBraceExports, replaceBetween, REPO } from './lib'
+import { collectBraceExports, DOCS_DIR, LIB_NOBOIL, replaceBetween } from './lib'
 const EXPORT_DECL_RE = /export\s+(?:const|function|class)\s+(?<name>\w+)/gu
 interface UtilDomain {
   cvxFiles: string[]
@@ -132,8 +132,8 @@ const collectExports = (root: string, files: string[]): Set<string> => {
   return out
 }
 const main = () => {
-  const cvxRoot = `${REPO}/lib/noboil/src/convex/server`
-  const stdbRoot = `${REPO}/lib/noboil/src/spacetimedb/server`
+  const cvxRoot = `${LIB_NOBOIL}/src/convex/server`
+  const stdbRoot = `${LIB_NOBOIL}/src/spacetimedb/server`
   const rows: string[] = []
   let perfect = 0
   const intentionalNotes: string[] = []
@@ -182,7 +182,7 @@ const main = () => {
     '',
     ...intentionalNotes
   ].join('\n')
-  const target = `${REPO}/doc/content/docs/architecture.mdx`
+  const target = `${DOCS_DIR}/architecture.mdx`
   const dirty = replaceBetween(target, 'UTILITY-PARITY', body)
   if (dirty) console.log(`Updated utility parity (${perfect}/${DOMAINS.length} full)`)
 }

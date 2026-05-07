@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /* eslint-disable no-console */
 import { readFileSync } from 'node:fs'
-import { replaceLineBetween, REPO } from './lib'
+import { LIB_NOBOIL, replaceLineBetween, REPO } from './lib'
 const ROW_RE =
   /\{\s*action:\s*'(?<action>[^']+)',\s*desc:\s*'(?<desc>[^']+)',\s*key:\s*'(?<key>[^']+)',\s*name:\s*'(?<name>[^']+)'\s*\}/gu
 const README_DETAIL: Record<string, string> = {
@@ -15,7 +15,7 @@ const README_DETAIL: Record<string, string> = {
   upgrade: '`bun add noboil@latest`'
 }
 const main = () => {
-  const src = readFileSync(`${REPO}/lib/noboil/src/dashboard-tui.tsx`, 'utf8')
+  const src = readFileSync(`${LIB_NOBOIL}/src/dashboard-tui.tsx`, 'utf8')
   const rows: string[] = []
   let m = ROW_RE.exec(src)
   while (m) {

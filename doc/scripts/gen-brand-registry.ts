@@ -2,8 +2,8 @@
 /* eslint-disable no-console, no-continue */
 /** biome-ignore-all lint/nursery/noContinue: simple parser */
 import { readFileSync } from 'node:fs'
-import { replaceBetween, REPO } from './lib'
-const TYPES_PATH = `${REPO}/lib/noboil/src/convex/server/types.ts`
+import { DOCS_DIR, LIB_NOBOIL, replaceBetween } from './lib'
+const TYPES_PATH = `${LIB_NOBOIL}/src/convex/server/types.ts`
 const ENTRY_RE = /(?<brand>\w+):\s*'(?<hint>[^']+)'/u
 const main = () => {
   const src = readFileSync(TYPES_PATH, 'utf8')
@@ -25,7 +25,7 @@ const main = () => {
   }
   rows.sort()
   const table = ['| Brand | Maker → Factory + Wrapper |', '|---|---|', ...rows].join('\n')
-  const target = `${REPO}/doc/content/docs/architecture.mdx`
+  const target = `${DOCS_DIR}/architecture.mdx`
   const dirty = replaceBetween(target, 'BRAND-REGISTRY', table)
   console.log(
     dirty ? `Updated brand registry (${rows.length} entries)` : `Brand registry up to date (${rows.length} entries)`

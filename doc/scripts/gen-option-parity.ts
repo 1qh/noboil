@@ -3,7 +3,7 @@
 /** biome-ignore-all lint/performance/useTopLevelRegex: per-file scan */
 /** biome-ignore-all lint/nursery/noContinue: parser */
 import { readFileSync, statSync } from 'node:fs'
-import { replaceBetween, REPO } from './lib'
+import { DOCS_DIR, LIB_NOBOIL, replaceBetween } from './lib'
 interface Spec {
   brand: string
   expectedOpts: string[]
@@ -92,8 +92,8 @@ const optReferenced = (root: string, file: string, opt: string): boolean => {
   return new RegExp(`\\b${opt}\\b`, 'u').test(src)
 }
 const main = () => {
-  const cvxRoot = `${REPO}/lib/noboil/src/convex/server`
-  const stdbRoot = `${REPO}/lib/noboil/src/spacetimedb/server`
+  const cvxRoot = `${LIB_NOBOIL}/src/convex/server`
+  const stdbRoot = `${LIB_NOBOIL}/src/spacetimedb/server`
   const rows: string[] = []
   let totalCvxMissing = 0
   let totalStdbMissing = 0
@@ -147,7 +147,7 @@ const main = () => {
     '',
     ...intentionalNotes
   ].join('\n')
-  const target = `${REPO}/doc/content/docs/architecture.mdx`
+  const target = `${DOCS_DIR}/architecture.mdx`
   const dirty = replaceBetween(target, 'OPTION-PARITY', body)
   if (dirty) console.log(`Updated option parity (cvx-missing: ${totalCvxMissing}, stdb-missing: ${totalStdbMissing})`)
 }

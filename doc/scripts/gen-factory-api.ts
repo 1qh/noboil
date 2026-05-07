@@ -4,8 +4,8 @@
 /** biome-ignore-all lint/nursery/noContinue: simple parser */
 /** biome-ignore-all lint/performance/useTopLevelRegex: per-iteration scan */
 import { readFileSync } from 'node:fs'
-import { replaceBetween, REPO } from './lib'
-const STDB = `${REPO}/lib/noboil/src/spacetimedb/server`
+import { DOCS_DIR, LIB_NOBOIL, replaceBetween } from './lib'
+const STDB = `${LIB_NOBOIL}/src/spacetimedb/server`
 const NAME_RE = /(?<role>\w+)Name\s*=\s*`(?<tpl>[^`]+)`/u
 const JSDOC_RE = /^\s*\/\*\*\s*(?<text>.+?)\s*\*\/\s*$/u
 const PARAMS_RE = /^\[params:\s+(?<params>.+?)\]\s+(?<desc>.+)$/u
@@ -57,7 +57,7 @@ const main = () => {
     ...factoryRows('kv', kv),
     ...factoryRows('quota', quota)
   ].join('\n')
-  const target = `${REPO}/doc/content/docs/api-reference.mdx`
+  const target = `${DOCS_DIR}/api-reference.mdx`
   const dirty = replaceBetween(target, 'STDB-FACTORY-REDUCERS', table)
   console.log(
     dirty

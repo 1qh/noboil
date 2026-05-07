@@ -4,7 +4,7 @@
 /** biome-ignore-all lint/nursery/noContinue: walker */
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join } from 'node:path'
-import { replaceBetween, REPO } from './lib'
+import { DOCS_DIR, replaceBetween, REPO } from './lib'
 const DEMOS = ['blog', 'chat', 'movie', 'org', 'poll']
 const TABLE_RE = /(?<name>\w+):\s*table\(s\.\w+(?:,\s*\{(?<opts>[^}]*)\})?/gu
 const API_RE = /\bapi\.(?<name>\w+)\b/gu
@@ -91,7 +91,7 @@ const main = () => {
     sep,
     ...rows
   ].join('\n')
-  const target = `${REPO}/doc/content/docs/architecture.mdx`
+  const target = `${DOCS_DIR}/architecture.mdx`
   const dirty = replaceBetween(target, 'DEMO-MATRIX', body)
   console.log(
     dirty ? `Updated demo matrix (${allTables.length} tables × ${DEMOS.length * 2} apps)` : 'Demo matrix up to date'

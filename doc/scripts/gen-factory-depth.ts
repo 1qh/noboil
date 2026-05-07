@@ -4,7 +4,7 @@
 /** biome-ignore-all lint/nursery/noContinue: walker */
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { join } from 'node:path'
-import { replaceBetween, REPO } from './lib'
+import { DOCS_DIR, LIB_NOBOIL, replaceBetween } from './lib'
 interface FactorySpec {
   brand: string
   cvxFn: string
@@ -134,17 +134,17 @@ const countTestsMentioning = (testRoot: string, patterns: string[]): number => {
   return n
 }
 const main = () => {
-  const docsDir = `${REPO}/doc/content/docs`
-  const cvxServer = `${REPO}/lib/noboil/src/convex/server`
-  const stdbServer = `${REPO}/lib/noboil/src/spacetimedb/server`
-  const cvxReact = `${REPO}/lib/noboil/src/convex/react`
-  const stdbReact = `${REPO}/lib/noboil/src/spacetimedb/react`
+  const docsDir = DOCS_DIR
+  const cvxServer = `${LIB_NOBOIL}/src/convex/server`
+  const stdbServer = `${LIB_NOBOIL}/src/spacetimedb/server`
+  const cvxReact = `${LIB_NOBOIL}/src/convex/react`
+  const stdbReact = `${LIB_NOBOIL}/src/spacetimedb/react`
   const rows: string[] = []
   for (const f of FACTORIES) {
     const cvxLines = lineCount(`${cvxServer}/${f.cvxSrc}`)
     const stdbLines = lineCount(`${stdbServer}/${f.stdbSrc}`)
-    const cvxTests = countTestsMentioning(`${REPO}/lib/noboil/src/convex`, f.cvxTestPatterns)
-    const stdbTests = countTestsMentioning(`${REPO}/lib/noboil/src/spacetimedb`, f.stdbTestPatterns)
+    const cvxTests = countTestsMentioning(`${LIB_NOBOIL}/src/convex`, f.cvxTestPatterns)
+    const stdbTests = countTestsMentioning(`${LIB_NOBOIL}/src/spacetimedb`, f.stdbTestPatterns)
     const cvxHook = lineCount(`${cvxReact}/${f.hookFile}`)
     const stdbHook = lineCount(`${stdbReact}/${f.hookFile}`)
     const docPagePath = `${docsDir}/${f.brand}.mdx`
@@ -163,7 +163,7 @@ const main = () => {
     '|---|---|---|---|---|---|',
     ...rows
   ].join('\n')
-  const target = `${REPO}/doc/content/docs/architecture.mdx`
+  const target = `${DOCS_DIR}/architecture.mdx`
   const dirty = replaceBetween(target, 'FACTORY-DEPTH', body)
   if (dirty) console.log(`Updated factory depth (${FACTORIES.length} factories)`)
 }

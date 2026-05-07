@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /* eslint-disable no-console */
 import { readdirSync, statSync } from 'node:fs'
-import { replaceBetween, REPO } from './lib'
+import { DOCS_DIR, replaceBetween, REPO } from './lib'
 const main = () => {
   const root = `${REPO}/readonly/ui/src/components`
   const top = readdirSync(root)
@@ -24,7 +24,7 @@ const main = () => {
   }
   const list = top.map(c => `\`${c}\``).join(', ')
   const body = [`**${top.length} top-level components:** ${list}`, '', ...subLines].join('\n')
-  const target = `${REPO}/doc/content/docs/architecture.mdx`
+  const target = `${DOCS_DIR}/architecture.mdx`
   const dirty = replaceBetween(target, 'UI-COMPONENTS', body)
   console.log(dirty ? `Updated UI components list (${top.length})` : `UI components list up to date (${top.length})`)
 }

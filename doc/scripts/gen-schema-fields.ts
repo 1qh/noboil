@@ -3,7 +3,7 @@
 /** biome-ignore-all lint/performance/useTopLevelRegex: parsed once */
 /** biome-ignore-all lint/nursery/noContinue: parser */
 import { readFileSync } from 'node:fs'
-import { replaceBetween, REPO } from './lib'
+import { DOCS_DIR, replaceBetween, REPO } from './lib'
 const SLOTS = ['base', 'children', 'kv', 'log', 'org', 'orgScoped', 'owned', 'quota', 'singleton'] as const
 const escapeMd = (s: string): string =>
   s
@@ -108,7 +108,7 @@ const main = () => {
     '',
     ...sections
   ].join('\n')
-  const target = `${REPO}/doc/content/docs/architecture.mdx`
+  const target = `${DOCS_DIR}/architecture.mdx`
   const dirty = replaceBetween(target, 'SCHEMA-FIELDS', body)
   console.log(dirty ? `Updated schema fields (${totalTables} tables, ${totalFields} fields)` : 'Schema fields up to date')
 }

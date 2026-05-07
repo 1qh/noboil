@@ -3,7 +3,7 @@
 /** biome-ignore-all lint/performance/useTopLevelRegex: per-file scan */
 /** biome-ignore-all lint/nursery/noContinue: walker */
 import { readdirSync, readFileSync, statSync } from 'node:fs'
-import { replaceBetween, REPO } from './lib'
+import { DOCS_DIR, replaceBetween, REPO } from './lib'
 const DEMOS = ['blog', 'chat', 'movie', 'org', 'poll']
 const TEST_RE = /\b(?:test|it)\(\s*['"`](?<name>[^'"`]+)['"`]/gu
 const DESCRIBE_RE = /describe\(\s*['"`](?<name>[^'"`]+)['"`]/gu
@@ -53,7 +53,7 @@ const main = () => {
     ...rows,
     `| **total** | **${totals.cvxFiles}** | — | **${totals.cvxTests}** | **${totals.stdbFiles}** | — | **${totals.stdbTests}** |`
   ].join('\n')
-  const target = `${REPO}/doc/content/docs/testing.mdx`
+  const target = `${DOCS_DIR}/testing.mdx`
   const dirty = replaceBetween(target, 'E2E-COVERAGE', body)
   console.log(dirty ? `Updated e2e coverage (${totals.cvxTests + totals.stdbTests} tests)` : 'E2E coverage up to date')
 }

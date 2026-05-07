@@ -6,7 +6,7 @@ import { walkFiles } from 'noboil/walk'
 /* oxlint-disable oxc/branches-sharing-code */
 import { readFileSync } from 'node:fs'
 import { relative } from 'node:path'
-import { replaceBetween, REPO, STRIP_AUTOGEN_RE, STRIP_FENCE_RE } from './lib'
+import { DOCS_DIR, replaceBetween, REPO, STRIP_AUTOGEN_RE, STRIP_FENCE_RE } from './lib'
 const MIN_LEN = 120
 const STRIP_HTML_AUTOGEN_RE = /<!-- AUTO-GENERATED:[\s\S]*?\/AUTO-GENERATED:[^>]+-->/gu
 const walk = (dir: string): string[] => walkFiles(dir, { accept: name => name.endsWith('.mdx') })
@@ -18,7 +18,7 @@ const splitParas = (src: string): string[] => {
     .filter(p => p.length >= MIN_LEN && !p.startsWith('---') && !p.startsWith('|'))
 }
 const main = () => {
-  const files = walk(`${REPO}/doc/content/docs`)
+  const files = walk(DOCS_DIR)
   const paraToFiles = new Map<string, Set<string>>()
   for (const file of files) {
     const rel = relative(REPO, file)
@@ -50,7 +50,7 @@ const main = () => {
     lines.push('_No duplicates above threshold — every long paragraph appears in exactly one file._')
   }
   const body = lines.join('\n')
-  const archTarget = `${REPO}/doc/content/docs/architecture.mdx`
+  const archTarget = `${DOCS_DIR}/architecture.mdx`
   const dirty = replaceBetween(archTarget, 'DOC-DEDUP', body)
   console.log(dirty ? `Updated doc dedup check (${dupes.length} dupes)` : `Doc dedup up to date (${dupes.length})`)
 }

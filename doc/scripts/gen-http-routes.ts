@@ -2,7 +2,7 @@
 /* eslint-disable no-console */
 /** biome-ignore-all lint/performance/useTopLevelRegex: parsed once */
 import { readFileSync } from 'node:fs'
-import { replaceBetween, REPO } from './lib'
+import { DOCS_DIR, replaceBetween, REPO } from './lib'
 const ROUTE_RE = /http\.route\(\{[\s\S]*?method:\s*'(?<method>[A-Z]+)',\s*path:\s*'(?<path>[^']+)'/gu
 const main = () => {
   const src = readFileSync(`${REPO}/backend/convex/convex/http.ts`, 'utf8')
@@ -22,7 +22,7 @@ const main = () => {
     '|---|---|',
     ...rows
   ].join('\n')
-  const target = `${REPO}/doc/content/docs/api-reference.mdx`
+  const target = `${DOCS_DIR}/api-reference.mdx`
   const dirty = replaceBetween(target, 'HTTP-ROUTES', body)
   console.log(dirty ? `Updated HTTP routes (${routes.length})` : 'HTTP routes up to date')
 }

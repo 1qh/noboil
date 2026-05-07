@@ -3,7 +3,7 @@
 /** biome-ignore-all lint/performance/useTopLevelRegex: per-file scan */
 /** biome-ignore-all lint/nursery/noContinue: parser */
 import { readdirSync, readFileSync } from 'node:fs'
-import { replaceBetween, REPO } from './lib'
+import { DOCS_DIR, replaceBetween, REPO } from './lib'
 const EXPORT_BLOCK_RE = /export\s*\{(?<syms>[^}]+)\}/u
 const main = () => {
   const dir = `${REPO}/backend/convex/convex`
@@ -33,7 +33,7 @@ const main = () => {
     '|---|--:|---|',
     ...rows
   ].join('\n')
-  const target = `${REPO}/doc/content/docs/api-reference.mdx`
+  const target = `${DOCS_DIR}/api-reference.mdx`
   const dirty = replaceBetween(target, 'TABLE-ENDPOINTS', body)
   console.log(dirty ? `Updated table endpoints (${totalEndpoints} across ${tableCount})` : 'Table endpoints up to date')
 }

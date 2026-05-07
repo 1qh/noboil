@@ -2,7 +2,7 @@
 /* eslint-disable no-console */
 /** biome-ignore-all lint/performance/useTopLevelRegex: small file */
 import { readFileSync } from 'node:fs'
-import { replaceBetween, REPO } from './lib'
+import { DOCS_DIR, LIB_NOBOIL, replaceBetween } from './lib'
 const MIDDLEWARE_RE = /(?:\/\*\*\s*(?<doc>[^*]+?)\s*\*\/\s*)?const (?<name>\w+) = \((?<args>[^)]*)\):\s*Middleware\b/gu
 const escapeMd = (s: string): string =>
   s
@@ -32,8 +32,8 @@ const extract = (src: string): MwInfo[] => {
   return out
 }
 const main = () => {
-  const cvx = extract(readFileSync(`${REPO}/lib/noboil/src/convex/server/middleware.ts`, 'utf8'))
-  const stdb = extract(readFileSync(`${REPO}/lib/noboil/src/spacetimedb/server/middleware.ts`, 'utf8'))
+  const cvx = extract(readFileSync(`${LIB_NOBOIL}/src/convex/server/middleware.ts`, 'utf8'))
+  const stdb = extract(readFileSync(`${LIB_NOBOIL}/src/spacetimedb/server/middleware.ts`, 'utf8'))
   const all = [...new Set([...cvx, ...stdb].map(mw => mw.name))].toSorted()
   const infoByName = new Map<string, MwInfo>()
   for (const mw of [...cvx, ...stdb]) if (!infoByName.has(mw.name) || mw.doc) infoByName.set(mw.name, mw)
@@ -52,7 +52,7 @@ const main = () => {
     '|---|---|---|---|---|',
     ...rows
   ].join('\n')
-  const target = `${REPO}/doc/content/docs/architecture.mdx`
+  const target = `${DOCS_DIR}/architecture.mdx`
   const dirty = replaceBetween(target, 'MIDDLEWARE', body)
   console.log(dirty ? `Updated middleware reference (${all.length})` : `Middleware reference up to date (${all.length})`)
 }

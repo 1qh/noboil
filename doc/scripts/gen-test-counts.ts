@@ -5,7 +5,7 @@ import { $ } from 'bun'
 import { walkFiles } from 'noboil/walk'
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join } from 'node:path'
-import { replaceLineBetween, REPO, stripComments } from './lib'
+import { LIB_NOBOIL, replaceLineBetween, REPO, stripComments } from './lib'
 const PASS_RE = /(?<pass>\d+)\s+pass/u
 const TEST_CALL_RE = /(?:^|[\s;,([])(?:test|it)(?:\.skip|\.only|\.each\(.+?\))?\s*\(/gu
 const runFullCount = async (cwd: string): Promise<number> => {
@@ -30,10 +30,7 @@ const countE2EApp = (appDir: string): number => {
 }
 const main = async () => {
   console.log('Counting tests (this takes ~30s)...')
-  const [unit, integration] = await Promise.all([
-    runFullCount(`${REPO}/lib/noboil`),
-    runFullCount(`${REPO}/backend/convex`)
-  ])
+  const [unit, integration] = await Promise.all([runFullCount(LIB_NOBOIL), runFullCount(`${REPO}/backend/convex`)])
   const e2eApps: string[] = []
   for (const kind of ['cvx', 'stdb']) {
     const root = join(REPO, 'web', kind)

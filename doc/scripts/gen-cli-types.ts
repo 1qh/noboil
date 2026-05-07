@@ -3,10 +3,10 @@
 /** biome-ignore-all lint/style/noNonNullAssertion: matchAll groups */
 /** biome-ignore-all lint/nursery/useNamedCaptureGroup: simple match */
 import { readFileSync } from 'node:fs'
-import { replaceLineBetween, REPO } from './lib'
+import { LIB_NOBOIL, replaceLineBetween, REPO } from './lib'
 const TYPE_RE = /type TableType = (?<types>(?:'\w+'(?:\s*\|\s*)?)+)/u
 const main = () => {
-  const cvxAdd = readFileSync(`${REPO}/lib/noboil/src/convex/add.ts`, 'utf8')
+  const cvxAdd = readFileSync(`${LIB_NOBOIL}/src/convex/add.ts`, 'utf8')
   const m = TYPE_RE.exec(cvxAdd)
   if (!m?.groups?.types) throw new Error('TableType union not found in convex/add.ts')
   const types = [...m.groups.types.matchAll(/'(\w+)'/gu)].map(t => t[1]!)

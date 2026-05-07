@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /* eslint-disable no-console */
 import { readFileSync } from 'node:fs'
-import { replaceBetween, REPO } from './lib'
+import { DOCS_DIR, LIB_NOBOIL, replaceBetween } from './lib'
 const extractInterface = (file: string, name: string): null | string => {
   const src = readFileSync(file, 'utf8')
   const re = new RegExp(`interface ${name}(?:<[^>]*>)?\\s*\\{([^}]+)\\}`, 'u')
@@ -17,7 +17,7 @@ const formatInterface = (body: string): string =>
     .join('\n')
 const block = (label: string, body: string) => `### ${label}\n\n\`\`\`ts\n{\n${formatInterface(body)}\n}\n\`\`\``
 const buildSection = (kind: 'convex' | 'spacetimedb'): string => {
-  const dir = `${REPO}/lib/noboil/src/${kind}/react`
+  const dir = `${LIB_NOBOIL}/src/${kind}/react`
   const log = extractInterface(`${dir}/use-log.ts`, 'LogHookResult')
   const kv = extractInterface(`${dir}/use-kv.ts`, 'KvHookResult')
   const quota = extractInterface(`${dir}/use-quota.ts`, 'QuotaHookResult')
@@ -29,7 +29,7 @@ const buildSection = (kind: 'convex' | 'spacetimedb'): string => {
 }
 const main = () => {
   const body = `${buildSection('convex')}\n\n${buildSection('spacetimedb')}`
-  const target = `${REPO}/doc/content/docs/api-reference.mdx`
+  const target = `${DOCS_DIR}/api-reference.mdx`
   const dirty = replaceBetween(target, 'HOOK-INTERFACES', body)
   console.log(dirty ? 'Updated hook interfaces' : 'Hook interfaces up to date')
 }

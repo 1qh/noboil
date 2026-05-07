@@ -5,7 +5,7 @@
 import { walkFiles } from 'noboil/walk'
 import { readFileSync } from 'node:fs'
 import { relative } from 'node:path'
-import { replaceBetween, REPO } from './lib'
+import { DOCS_DIR, LIB_NOBOIL, replaceBetween, REPO } from './lib'
 const TAGS = ['@beta', '@alpha', '@experimental', '@deprecated', '@internal'] as const
 type Tag = (typeof TAGS)[number]
 const walk = (dir: string): string[] =>
@@ -15,7 +15,7 @@ const walk = (dir: string): string[] =>
   })
 const SYM_RE = /(?:export\s+)?(?:const|function|class|interface|type)\s+(?<name>\w+)/u
 const main = () => {
-  const root = `${REPO}/lib/noboil/src`
+  const root = `${LIB_NOBOIL}/src`
   const files = walk(root)
   let symbols = 0
   const tagged: { file: string; reason: string; symbol: string; tag: Tag }[] = []
@@ -69,7 +69,7 @@ const main = () => {
     lines.push('This generator picks them up automatically.')
   }
   const body = lines.join('\n')
-  const target = `${REPO}/doc/content/docs/api-reference.mdx`
+  const target = `${DOCS_DIR}/api-reference.mdx`
   const dirty = replaceBetween(target, 'STABILITY', body)
   console.log(
     dirty ? `Updated stability table (${tagged.length} tagged of ${symbols} symbols)` : 'Stability table up to date'

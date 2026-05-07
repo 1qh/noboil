@@ -2,7 +2,7 @@
 /* eslint-disable no-console */
 /** biome-ignore-all lint/performance/useTopLevelRegex: small file */
 import { readJson } from 'noboil/env-file'
-import { replaceBetween, REPO } from './lib'
+import { DOCS_DIR, PKG_JSON_PATH, replaceBetween } from './lib'
 const escapeMd = (s: string): string =>
   s.replaceAll('|', String.raw`\|`).replaceAll('{', String.raw`\{`).replaceAll('}', String.raw`\}`)
 interface ExportTarget {
@@ -12,7 +12,7 @@ interface ExportTarget {
   types?: string
 }
 const main = () => {
-  const pkg = readJson(`${REPO}/lib/noboil/package.json`) as {
+  const pkg = readJson(PKG_JSON_PATH) as {
     exports: Record<string, ExportTarget | string>
     name: string
   }
@@ -31,7 +31,7 @@ const main = () => {
     '|---|---|---|',
     ...rows
   ].join('\n')
-  const target = `${REPO}/doc/content/docs/api-reference.mdx`
+  const target = `${DOCS_DIR}/api-reference.mdx`
   const dirty = replaceBetween(target, 'PACKAGE-EXPORTS', body)
   console.log(dirty ? `Updated package exports (${entries.length})` : `Package exports up to date (${entries.length})`)
 }

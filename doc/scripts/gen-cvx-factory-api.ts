@@ -4,8 +4,8 @@
 /** biome-ignore-all lint/performance/useTopLevelRegex: per-iteration scan */
 /** biome-ignore-all lint/nursery/useNamedCaptureGroup: simple match */
 import { readFileSync } from 'node:fs'
-import { replaceBetween, REPO } from './lib'
-const CVX = `${REPO}/lib/noboil/src/convex/server`
+import { DOCS_DIR, LIB_NOBOIL, replaceBetween } from './lib'
+const CVX = `${LIB_NOBOIL}/src/convex/server`
 const ENDPOINT_RE = /^\s*const\s+(?<name>\w+)\s*=\s*b\.(?<kind>[qm])\(/u
 const RETURN_RE = /return\s+typed\(\{\s*([^}]+)\s*\}\)/u
 const extract = (file: string): { kind: 'm' | 'q'; name: string }[] => {
@@ -42,7 +42,7 @@ const main = () => {
     formatRow('kv', kv),
     formatRow('quota', quota)
   ].join('\n')
-  const target = `${REPO}/doc/content/docs/api-reference.mdx`
+  const target = `${DOCS_DIR}/api-reference.mdx`
   const dirty = replaceBetween(target, 'CVX-FACTORY-ENDPOINTS', table)
   console.log(
     dirty

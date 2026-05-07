@@ -4,7 +4,7 @@
 /** biome-ignore-all lint/nursery/noContinue: walker */
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join } from 'node:path'
-import { replaceBetween, REPO } from './lib'
+import { DOCS_DIR, replaceBetween, REPO } from './lib'
 const DEMOS = ['blog', 'chat', 'movie', 'org', 'poll']
 const TEST_RE = /\b(?:test|it)\(\s*['"`]/gu
 const walk = (dir: string, out: string[] = []): string[] => {
@@ -110,7 +110,7 @@ const main = () => {
   ]
     .filter(Boolean)
     .join('\n')
-  const target = `${REPO}/doc/content/docs/architecture.mdx`
+  const target = `${DOCS_DIR}/architecture.mdx`
   const dirty = replaceBetween(target, 'DEMO-PARITY', body)
   if (dirty) console.log(`Updated demo parity (${perfectCount}/${DEMOS.length} full)`)
 }

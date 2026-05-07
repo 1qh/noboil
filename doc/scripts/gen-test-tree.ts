@@ -2,7 +2,7 @@
 /* eslint-disable no-console */
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join, relative } from 'node:path'
-import { replaceBetween, REPO } from './lib'
+import { DOCS_DIR, LIB_NOBOIL, replaceBetween } from './lib'
 const DESCRIBE_RE = /describe\(\s*['"`](?<name>[^'"`]+)['"`]/gu
 const TEST_RE = /\b(?:test|it)\(\s*['"`](?<name>[^'"`]+)['"`]/gu
 const walk = (dir: string, out: string[] = []): string[] => {
@@ -24,7 +24,7 @@ const countMatches = (re: RegExp, src: string): number => {
   return n
 }
 const main = () => {
-  const root = `${REPO}/lib/noboil/src`
+  const root = `${LIB_NOBOIL}/src`
   const files = walk(root).toSorted()
   const rows: string[] = []
   let totalDescribes = 0
@@ -36,7 +36,7 @@ const main = () => {
     if (tests > 0) {
       totalDescribes += describes
       totalTests += tests
-      const rel = relative(`${REPO}/lib/noboil`, file)
+      const rel = relative(LIB_NOBOIL, file)
       rows.push(`| \`${rel}\` | ${describes} | ${tests} |`)
     }
   }
@@ -47,7 +47,7 @@ const main = () => {
     '|---|--:|--:|',
     ...rows
   ].join('\n')
-  const target = `${REPO}/doc/content/docs/testing.mdx`
+  const target = `${DOCS_DIR}/testing.mdx`
   const dirty = replaceBetween(target, 'TEST-TREE', body)
   console.log(dirty ? `Updated test tree (${totalTests} tests)` : `Test tree up to date (${totalTests} tests)`)
 }

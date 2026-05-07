@@ -5,7 +5,7 @@
 import { readJson } from 'noboil/env-file'
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { collectBraceExports, replaceBetween, REPO } from './lib'
+import { collectBraceExports, DOCS_DIR, LIB_NOBOIL, PKG_JSON_PATH, replaceBetween } from './lib'
 const EXPORT_DECL_RE = /export\s+(?:const|function|class|interface|type)\s+(?<name>\w+)/gu
 const collectExports = (file: string): Set<string> => {
   const out = new Set<string>()
@@ -27,17 +27,17 @@ const collectDocsText = (root: string): string => {
   return combined.replaceAll(STRIP_RE, '')
 }
 const main = () => {
-  const pkg = readJson(`${REPO}/lib/noboil/package.json`) as {
+  const pkg = readJson(PKG_JSON_PATH) as {
     exports: Record<string, string | { default?: string; import?: string; require?: string; types?: string }>
   }
   const publicExports = new Set<string>()
   for (const [, target] of Object.entries(pkg.exports)) {
     const path = typeof target === 'string' ? target : (target.types ?? target.default ?? target.import ?? '')
     if (!path) continue
-    const abs = resolve(`${REPO}/lib/noboil`, path)
+    const abs = resolve(LIB_NOBOIL, path)
     if (statSync(abs, { throwIfNoEntry: false })) for (const sym of collectExports(abs)) publicExports.add(sym)
   }
-  const docsText = collectDocsText(`${REPO}/doc/content/docs`)
+  const docsText = collectDocsText(DOCS_DIR)
   const documented: string[] = []
   const undocumented: string[] = []
   for (const sym of [...publicExports].toSorted()) {
@@ -54,7 +54,7 @@ const main = () => {
     '',
     undocSample.length === 0 ? '_(none — full coverage)_' : undocSample.map(s => `\`${s}\``).join(', ')
   ].join('\n')
-  const target = `${REPO}/doc/content/docs/api-reference.mdx`
+  const target = `${DOCS_DIR}/api-reference.mdx`
   const dirty = replaceBetween(target, 'SYMBOL-COVERAGE', body)
   console.log(dirty ? `Updated symbol coverage (${pct}%)` : `Symbol coverage up to date (${pct}%)`)
 }

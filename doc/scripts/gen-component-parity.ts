@@ -3,7 +3,7 @@
 /** biome-ignore-all lint/performance/useTopLevelRegex: per-file scan */
 /** biome-ignore-all lint/nursery/noContinue: walker */
 import { readdirSync, readFileSync, statSync } from 'node:fs'
-import { collectBraceExports, replaceBetween, REPO } from './lib'
+import { collectBraceExports, DOCS_DIR, LIB_NOBOIL, replaceBetween } from './lib'
 const EXPORT_DECL_RE = /export\s+(?:const|function|class|default\s+(?:const|function|class)|default)\s+(?<name>\w+)/gu
 const collectExports = (path: string): Set<string> => {
   const out = new Set<string>()
@@ -28,8 +28,8 @@ const inspect = (root: string, file: string): CompFile => {
   return { exports: collectExports(path), lines: readFileSync(path, 'utf8').split('\n').length }
 }
 const main = () => {
-  const cvxRoot = `${REPO}/lib/noboil/src/convex/components`
-  const stdbRoot = `${REPO}/lib/noboil/src/spacetimedb/components`
+  const cvxRoot = `${LIB_NOBOIL}/src/convex/components`
+  const stdbRoot = `${LIB_NOBOIL}/src/spacetimedb/components`
   const cvxFiles = readdirSync(cvxRoot)
     .toSorted()
     .filter(f => f.endsWith('.tsx') || f === 'index.ts')
@@ -79,7 +79,7 @@ const main = () => {
     '|---|---|---|--:|---|---|--|',
     ...rows
   ].join('\n')
-  const target = `${REPO}/doc/content/docs/architecture.mdx`
+  const target = `${DOCS_DIR}/architecture.mdx`
   const dirty = replaceBetween(target, 'COMPONENT-PARITY', body)
   if (dirty) console.log(`Updated component parity (${perfect}/${allFiles.length} full)`)
 }

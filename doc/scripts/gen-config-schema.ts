@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /* eslint-disable no-console */
 import { readFileSync } from 'node:fs'
-import { replaceBetween, REPO } from './lib'
+import { DOCS_DIR, LIB_NOBOIL, replaceBetween } from './lib'
 const FIELD_RE = /^(?<n>\w+)(?<o>\??):\s*(?<t>[\s\S]+)$/u
 const WS_RE = /\s+/gu
 const TRAILING_SEMI_RE = /;$/u
@@ -67,7 +67,7 @@ const renderTable = (title: string, fields: Field[]): string => {
   return [`**${title}**`, '', '| Field | Type |', '|---|---|', ...rows].join('\n')
 }
 const main = () => {
-  const src = readFileSync(`${REPO}/lib/noboil/src/config.ts`, 'utf8')
+  const src = readFileSync(`${LIB_NOBOIL}/src/config.ts`, 'utf8')
   const cfg = parseInterface(src, 'NoboilConfig')
   const ctx = parseInterface(src, 'AddContext')
   const cft = parseInterface(src, 'CustomFieldType')
@@ -78,7 +78,7 @@ const main = () => {
     '',
     renderTable('CustomFieldType (entries of fieldTypes)', cft)
   ].join('\n')
-  const target = `${REPO}/doc/content/docs/cli.mdx`
+  const target = `${DOCS_DIR}/cli.mdx`
   const dirty = replaceBetween(target, 'CONFIG-SCHEMA', body)
   console.log(dirty ? 'Updated config schema tables' : 'Config schema tables up to date')
 }

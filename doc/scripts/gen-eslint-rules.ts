@@ -2,7 +2,7 @@
 /* eslint-disable no-console */
 import { rules as cvxRules } from '../../lib/noboil/src/convex/eslint'
 import { rules as stdbRules } from '../../lib/noboil/src/spacetimedb/eslint'
-import { replaceBetween, REPO } from './lib'
+import { DOCS_DIR, replaceBetween } from './lib'
 const escapeMd = (s: string): string =>
   s
     .replaceAll('<', '&lt;')
@@ -29,7 +29,7 @@ const main = () => {
     return `| \`${name}\` | ${inCvx ? '✓' : '—'} | ${inStdb ? '✓' : '—'} | ${desc} |`
   })
   const body = ['| Rule | Convex | SpacetimeDB | Message |', '|---|---|---|---|', ...rows].join('\n')
-  const target = `${REPO}/doc/content/docs/api-reference.mdx`
+  const target = `${DOCS_DIR}/api-reference.mdx`
   const dirty = replaceBetween(target, 'ESLINT-RULES', body)
   console.log(
     dirty

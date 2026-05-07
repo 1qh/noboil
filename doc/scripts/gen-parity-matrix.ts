@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /* eslint-disable no-console */
 import { existsSync, readFileSync } from 'node:fs'
-import { replaceBetween, REPO } from './lib'
+import { DOCS_DIR, LIB_NOBOIL, replaceBetween } from './lib'
 const FEATURES = [
   { file: 'crud.ts', name: 'owned CRUD' },
   { file: 'org-crud.ts', name: 'org-scoped CRUD' },
@@ -20,9 +20,9 @@ const FEATURES = [
   { file: 'middleware.ts', name: 'middleware (audit, sanitize, slow-warn)' }
 ]
 const has = (kind: 'convex' | 'spacetimedb', file: string): boolean =>
-  existsSync(`${REPO}/lib/noboil/src/${kind}/server/${file}`)
+  existsSync(`${LIB_NOBOIL}/src/${kind}/server/${file}`)
 const sloc = (kind: 'convex' | 'spacetimedb', file: string): number => {
-  const path = `${REPO}/lib/noboil/src/${kind}/server/${file}`
+  const path = `${LIB_NOBOIL}/src/${kind}/server/${file}`
   if (!existsSync(path)) return 0
   return readFileSync(path, 'utf8')
     .split('\n')
@@ -36,7 +36,7 @@ const main = () => {
     rows.push(`| ${f.name} | \`${f.file}\` | ${cvx} | ${stdb} |`)
   }
   const body = ['| Feature | Source file | Convex | SpacetimeDB |', '|---|---|---|---|', ...rows].join('\n')
-  const target = `${REPO}/doc/content/docs/differences.mdx`
+  const target = `${DOCS_DIR}/differences.mdx`
   const dirty = replaceBetween(target, 'PARITY-MATRIX', body)
   console.log(
     dirty

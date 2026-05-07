@@ -2,7 +2,7 @@
 /* eslint-disable no-console */
 /** biome-ignore-all lint/performance/useTopLevelRegex: small file */
 import { readFileSync } from 'node:fs'
-import { replaceBetween, REPO } from './lib'
+import { DOCS_DIR, LIB_NOBOIL, replaceBetween } from './lib'
 const FIELD_RE = /^\s*(?<name>\w+)(?<opt>\??):\s*(?<type>[^\n]+)$/u
 const escapeMd = (s: string): string =>
   s
@@ -32,7 +32,7 @@ const parseInterface = (src: string, name: string): { name: string; opt: boolean
   return fields
 }
 const main = () => {
-  const src = readFileSync(`${REPO}/lib/noboil/src/convex/server/types.ts`, 'utf8')
+  const src = readFileSync(`${LIB_NOBOIL}/src/convex/server/types.ts`, 'utf8')
   const fields = parseInterface(src, 'SetupConfig')
   const rows = fields
     .toSorted((a, b) => Number(a.opt) - Number(b.opt) || a.name.localeCompare(b.name))
@@ -44,7 +44,7 @@ const main = () => {
     '|---|---|---|',
     ...rows
   ].join('\n')
-  const target = `${REPO}/doc/content/docs/architecture.mdx`
+  const target = `${DOCS_DIR}/architecture.mdx`
   const dirty = replaceBetween(target, 'NOBOIL-OPTIONS', body)
   console.log(dirty ? `Updated noboil() options (${fields.length})` : `noboil() options up to date (${fields.length})`)
 }

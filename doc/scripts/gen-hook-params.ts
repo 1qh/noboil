@@ -3,7 +3,7 @@
 /** biome-ignore-all lint/performance/useTopLevelRegex: per-file scan */
 /** biome-ignore-all lint/nursery/noContinue: walker */
 import { readdirSync, readFileSync } from 'node:fs'
-import { replaceBetween, REPO } from './lib'
+import { DOCS_DIR, LIB_NOBOIL, replaceBetween } from './lib'
 const escapeMd = (s: string): string =>
   s
     .replaceAll('|', String.raw`\|`)
@@ -39,7 +39,7 @@ const extractHookSigs = (src: string): { args: string; name: string }[] => {
   return out
 }
 const collect = (kind: 'convex' | 'spacetimedb'): { args: string; name: string }[] => {
-  const dir = `${REPO}/lib/noboil/src/${kind}/react`
+  const dir = `${LIB_NOBOIL}/src/${kind}/react`
   const out: { args: string; name: string }[] = []
   for (const f of readdirSync(dir).toSorted()) {
     if (!(f.startsWith('use-') && f.endsWith('.ts') && !f.endsWith('.test.ts'))) continue
@@ -74,7 +74,7 @@ const main = () => {
     '</Tab>',
     '</Tabs>'
   ].join('\n')
-  const target = `${REPO}/doc/content/docs/api-reference.mdx`
+  const target = `${DOCS_DIR}/api-reference.mdx`
   const dirty = replaceBetween(target, 'HOOK-PARAMS', body)
   console.log(dirty ? `Updated hook params (${cvx.length} cvx + ${stdb.length} stdb)` : 'Hook params up to date')
 }

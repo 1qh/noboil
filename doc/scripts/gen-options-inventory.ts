@@ -2,7 +2,7 @@
 /* eslint-disable no-console */
 /** biome-ignore-all lint/performance/useTopLevelRegex: small file */
 import { readFileSync } from 'node:fs'
-import { replaceBetween, REPO } from './lib'
+import { DOCS_DIR, replaceBetween, REPO } from './lib'
 const TABLE_RE = /(?<name>\w+):\s*table\(s\.\w+(?:,\s*\{(?<opts>[\s\S]*?)\}\s*\))?/gu
 const KNOWN_OPTS = [
   'rateLimit',
@@ -53,7 +53,7 @@ const main = () => {
     '|---|--:|--:|---|---|',
     ...rows
   ].join('\n')
-  const target = `${REPO}/doc/content/docs/architecture.mdx`
+  const target = `${DOCS_DIR}/architecture.mdx`
   const dirty = replaceBetween(target, 'OPTIONS-INVENTORY', body)
   console.log(dirty ? `Updated options inventory (${KNOWN_OPTS.length} options)` : 'Options inventory up to date')
 }

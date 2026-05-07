@@ -4,7 +4,7 @@
 /** biome-ignore-all lint/nursery/noContinue: walker */
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join, relative } from 'node:path'
-import { replaceBetween, REPO } from './lib'
+import { DOCS_DIR, LIB_NOBOIL, replaceBetween, REPO } from './lib'
 const ENV_RE = /process\.env\.(?<name>[A-Z][A-Z0-9_]+)/gu
 const walk = (dir: string, out: string[] = []): string[] => {
   for (const name of readdirSync(dir).toSorted()) {
@@ -25,7 +25,7 @@ const walk = (dir: string, out: string[] = []): string[] => {
   return out
 }
 const main = () => {
-  const root = `${REPO}/lib/noboil/src`
+  const root = `${LIB_NOBOIL}/src`
   const files = walk(root)
   const usage = new Map<string, Set<string>>()
   for (const file of files) {
@@ -53,7 +53,7 @@ const main = () => {
     '|---|--:|---|',
     ...rows
   ].join('\n')
-  const target = `${REPO}/doc/content/docs/deployment.mdx`
+  const target = `${DOCS_DIR}/deployment.mdx`
   const dirty = replaceBetween(target, 'ENV-VARS', body)
   console.log(dirty ? `Updated env vars (${names.length})` : `Env vars up to date (${names.length})`)
 }

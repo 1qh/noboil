@@ -5,7 +5,7 @@
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 import { FACTORY_META } from '../../lib/noboil/src/shared/factory-meta'
-import { replaceBetween, REPO } from './lib'
+import { DOCS_DIR, LIB_NOBOIL, replaceBetween, REPO } from './lib'
 interface FactorySpec {
   brand: string
   cvxFactoryFn: string
@@ -173,9 +173,9 @@ const main = () => {
   const stdbSSrc = readFileSync(`${REPO}/backend/spacetimedb/s.ts`, 'utf8')
   const cvxLazy = readFileSync(`${REPO}/backend/convex/lazy.ts`, 'utf8')
   const stdbLazy = readFileSync(`${REPO}/backend/spacetimedb/src/index.ts`, 'utf8')
-  const docsDir = `${REPO}/doc/content/docs`
-  const cvxTestRoot = `${REPO}/lib/noboil/src/convex`
-  const stdbTestRoot = `${REPO}/lib/noboil/src/spacetimedb`
+  const docsDir = DOCS_DIR
+  const cvxTestRoot = `${LIB_NOBOIL}/src/convex`
+  const stdbTestRoot = `${LIB_NOBOIL}/src/spacetimedb`
   const cvxDemoRoots = DEMOS.map(d => `${REPO}/web/cvx/${d}`)
   const stdbDemoRoots = DEMOS.map(d => `${REPO}/web/stdb/${d}`)
   const rows: string[] = []
@@ -197,8 +197,8 @@ const main = () => {
       const lazyName = lazyNameForSchema(stdbLazy, t)
       return tableUsedInDemos(stdbDemoRoots, [t, lazyName].filter(isStr))
     })
-    const cvxSrc = existsSync(`${REPO}/lib/noboil/src/convex/server/${spec.cvxSourceFile}`)
-    const stdbSrc = existsSync(`${REPO}/lib/noboil/src/spacetimedb/server/${spec.stdbSourceFile}`)
+    const cvxSrc = existsSync(`${LIB_NOBOIL}/src/convex/server/${spec.cvxSourceFile}`)
+    const stdbSrc = existsSync(`${LIB_NOBOIL}/src/spacetimedb/server/${spec.stdbSourceFile}`)
     const cvxTests = factoryAppearsInTests(cvxTestRoot, spec.cvxFactoryFn)
     const stdbTests = factoryAppearsInTests(stdbTestRoot, spec.stdbFactoryFn)
     const allDocs = readdirSync(docsDir)
@@ -229,7 +229,7 @@ const main = () => {
     '|---|--:|---|---|--|--|',
     ...rows
   ].join('\n')
-  const target = `${REPO}/doc/content/docs/architecture.mdx`
+  const target = `${DOCS_DIR}/architecture.mdx`
   const dirty = replaceBetween(target, 'FACTORY-PARITY', body)
   console.log(
     dirty
