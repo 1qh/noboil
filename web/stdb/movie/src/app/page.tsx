@@ -1,96 +1,16 @@
 /* eslint-disable @next/next/no-img-element */
 /* oxlint-disable @next/next/no-img-element */
 // biome-ignore-all lint/performance/noImgElement: x
-// biome-ignore-all lint/style/noProcessEnv: intentional process.env access
 // biome-ignore-all lint/correctness/useImageSize: dynamic images
 'use client'
-import { isPlaywright } from '@a/fe/test-mode'
 import { Input } from '@a/ui/input'
 import Link from 'next/link'
 import { useErrorToast, useOnlineStatus } from 'noboil/spacetimedb/react'
 import { useState, useTransition } from 'react'
 import { toast } from 'sonner'
-interface SearchResult {
-  id: number
-  overview: string
-  poster_path: null | string
-  release_date: string
-  title: string
-  tmdb_id: number
-  vote_average: number
-}
-interface TmdbSearchResponse {
-  results: SearchResult[]
-}
+import type { SearchResult } from './_movie-types'
+import { searchMoviesAction } from './_actions'
 const TMDB_IMG = 'https://image.tmdb.org/t/p/w200'
-const PLAYWRIGHT_MOVIES: SearchResult[] = [
-  {
-    id: 27_205,
-    overview: 'A thief steals information by infiltrating dreams.',
-    poster_path: '/9gk7adHYeDvHkCSEqAvQNLV5Uge.jpg',
-    release_date: '2010-07-16',
-    title: 'Inception',
-    tmdb_id: 27_205,
-    vote_average: 8.4
-  },
-  {
-    id: 550,
-    overview: 'An insomniac office worker crosses paths with a soap maker.',
-    poster_path: '/pB8BM7pdSp6B6Ih7QZ4DrQ3PmJK.jpg',
-    release_date: '1999-10-15',
-    title: 'Fight Club',
-    tmdb_id: 550,
-    vote_average: 8.4
-  },
-  {
-    id: 268,
-    overview: 'Batman faces his fear in a city consumed by crime.',
-    poster_path: '/iA5qZ0v8Yk4wG6K0Ff5mX2lQmR9.jpg',
-    release_date: '1989-06-23',
-    title: 'Batman',
-    tmdb_id: 268,
-    vote_average: 7.2
-  },
-  {
-    id: 364,
-    overview: 'Batman Returns to Gotham to stop a new menace.',
-    poster_path: '/jKBjeXM7iBBV9UkUcOXx3m7FSHY.jpg',
-    release_date: '1992-06-19',
-    title: 'Batman Returns',
-    tmdb_id: 364,
-    vote_average: 6.9
-  }
-]
-const searchMovies = async (query: string) => {
-  const apiKey = process.env.NEXT_PUBLIC_TMDB_API_KEY
-  if (!apiKey) {
-    if (isPlaywright()) {
-      const q = query.toLowerCase()
-      const rows: SearchResult[] = []
-      for (const m of PLAYWRIGHT_MOVIES) if (m.title.toLowerCase().includes(q)) rows.push(m)
-      return rows
-    }
-    throw new Error('Missing NEXT_PUBLIC_TMDB_API_KEY')
-  }
-  const url = new URL('https://api.themoviedb.org/3/search/movie')
-  url.searchParams.set('api_key', apiKey)
-  url.searchParams.set('query', query)
-  const response = await fetch(url)
-  if (!response.ok) throw new Error('Search failed')
-  const payload = (await response.json()) as TmdbSearchResponse
-  const rows: SearchResult[] = []
-  for (const m of payload.results)
-    rows.push({
-      id: m.id,
-      overview: m.overview,
-      poster_path: m.poster_path,
-      release_date: m.release_date,
-      title: m.title,
-      tmdb_id: m.id,
-      vote_average: m.vote_average
-    })
-  return rows
-}
 const MovieCard = ({ movie }: { movie: SearchResult }) => (
   <div className='flex gap-3 rounded-lg border p-3' data-testid='movie-card'>
     {movie.poster_path ? (
@@ -144,7 +64,7 @@ const Page = () => {
           go(async () => {
             try {
               setSearchError(null)
-              setResults(await searchMovies(query.trim()))
+              setResults(await searchMoviesAction(query.trim()))
             } catch (error) {
               setResults([])
               setSearchError({ message: error instanceof Error ? error.message : 'Search failed' })

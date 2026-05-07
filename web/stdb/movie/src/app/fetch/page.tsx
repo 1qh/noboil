@@ -1,143 +1,21 @@
 /* eslint-disable @next/next/no-img-element */
 /* oxlint-disable @next/next/no-img-element */
 // biome-ignore-all lint/correctness/useImageSize: x
-// biome-ignore-all lint/style/noProcessEnv: intentional process.env access
 // biome-ignore-all lint/performance/noImgElement: external images
 'use client'
-import type { s } from '@a/be-spacetimedb/s'
-import type { InferCreate } from 'noboil/spacetimedb'
 import { reducers } from '@a/be-spacetimedb/spacetimedb'
-import { isPlaywright } from '@a/fe/test-mode'
 import { Badge } from '@a/ui/badge'
 import { Input } from '@a/ui/input'
 import { Skeleton } from '@a/ui/skeleton'
-import { TMDB } from '@lorenzopant/tmdb'
 import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import { useMut } from 'noboil/spacetimedb/react'
 import { useState, useTransition } from 'react'
+import type { MovieDetailData } from '../_movie-types'
+import { fetchMovieAction } from '../_actions'
 const TMDB_IMG = 'https://image.tmdb.org/t/p/w300'
 const TMDB_BACKDROP = 'https://image.tmdb.org/t/p/w780'
-const PLAYWRIGHT_MOVIES = new Map<number, MovieDetailData>([
-  [
-    155,
-    {
-      backdropPath: '/hqkIcbrOHL86UncnHIsHVcVmzue.jpg',
-      budget: 185_000_000,
-      genres: [
-        { id: 28, name: 'Action' },
-        { id: 80, name: 'Crime' }
-      ],
-      originalTitle: 'The Dark Knight',
-      overview: 'Batman raises the stakes in his war on crime.',
-      posterPath: '/qJ2tW6WMUDux911r6m7haRef0WH.jpg',
-      releaseDate: '2008-07-18',
-      revenue: 1_006_000_000,
-      runtime: 152,
-      tagline: 'Why so serious?',
-      title: 'The Dark Knight',
-      tmdbId: 155,
-      voteAverage: 8.5,
-      voteCount: 33_000
-    }
-  ],
-  [
-    550,
-    {
-      backdropPath: '/fCayJrkfRaCRCTh8GqN30f8oyQF.jpg',
-      budget: 63_000_000,
-      genres: [
-        { id: 18, name: 'Drama' },
-        { id: 53, name: 'Thriller' }
-      ],
-      originalTitle: 'Fight Club',
-      overview: 'An insomniac office worker crosses paths with a soap maker.',
-      posterPath: '/pB8BM7pdSp6B6Ih7QZ4DrQ3PmJK.jpg',
-      releaseDate: '1999-10-15',
-      revenue: 101_200_000,
-      runtime: 139,
-      tagline: 'Mischief. Mayhem. Soap.',
-      title: 'Fight Club',
-      tmdbId: 550,
-      voteAverage: 8.4,
-      voteCount: 28_000
-    }
-  ],
-  [
-    680,
-    {
-      backdropPath: '/d5iIlFn5s0ImszYzBPb8JPIfbXD.jpg',
-      budget: 8_000_000,
-      genres: [
-        { id: 80, name: 'Crime' },
-        { id: 53, name: 'Thriller' }
-      ],
-      originalTitle: 'Pulp Fiction',
-      overview: 'The lives of two mob hitmen intertwine in Los Angeles.',
-      posterPath: '/vQWk5YBFWF4bZaofAbv0tShwBvQ.jpg',
-      releaseDate: '1994-09-10',
-      revenue: 213_900_000,
-      runtime: 154,
-      tagline: 'Just because you are a character does not mean you have character.',
-      title: 'Pulp Fiction',
-      tmdbId: 680,
-      voteAverage: 8.5,
-      voteCount: 30_000
-    }
-  ],
-  [
-    27_205,
-    {
-      backdropPath: '/s3TBrRGB1iav7gFOCNx3H31MoES.jpg',
-      budget: 160_000_000,
-      genres: [
-        { id: 28, name: 'Action' },
-        { id: 878, name: 'Science Fiction' }
-      ],
-      originalTitle: 'Inception',
-      overview: 'A thief steals information by infiltrating dreams.',
-      posterPath: '/9gk7adHYeDvHkCSEqAvQNLV5Uge.jpg',
-      releaseDate: '2010-07-16',
-      revenue: 836_800_000,
-      runtime: 148,
-      tagline: 'Your mind is the scene of the crime.',
-      title: 'Inception',
-      tmdbId: 27_205,
-      voteAverage: 8.4,
-      voteCount: 37_000
-    }
-  ]
-])
 const formatMoney = (n: number | undefined) => (n ? `$${(n / 1_000_000).toFixed(1)}M` : 'N/A')
-type MovieDetailData = InferCreate<typeof s.movie>
-const fetchMovie = async (id: number): Promise<MovieDetailData> => {
-  const apiKey = process.env.NEXT_PUBLIC_TMDB_API_KEY
-  if (!apiKey) {
-    if (isPlaywright()) {
-      const local = PLAYWRIGHT_MOVIES.get(id)
-      if (local) return local
-    }
-    throw new Error('Missing NEXT_PUBLIC_TMDB_API_KEY')
-  }
-  const tmdb = new TMDB(apiKey)
-  const p = await tmdb.movies.details({ movie_id: id })
-  return {
-    backdropPath: p.backdrop_path ?? undefined,
-    budget: p.budget || undefined,
-    genres: p.genres,
-    originalTitle: p.original_title,
-    overview: p.overview ?? '',
-    posterPath: p.poster_path ?? undefined,
-    releaseDate: p.release_date,
-    revenue: p.revenue || undefined,
-    runtime: p.runtime ?? undefined,
-    tagline: p.tagline ?? undefined,
-    title: p.title,
-    tmdbId: p.id,
-    voteAverage: p.vote_average,
-    voteCount: p.vote_count
-  }
-}
 const Page = () => {
   const createMovie = useMut(reducers.createMovie, {
     getName: (args: { tmdbId: number }) => `movie.create:${args.tmdbId}`,
@@ -170,7 +48,7 @@ const Page = () => {
           setFetchError('')
           go(async () => {
             try {
-              const loadedMovie = await fetchMovie(n)
+              const loadedMovie = await fetchMovieAction(n)
               setMovie(loadedMovie)
               setCacheStatus(lastTmdbId === n ? 'Cache Hit' : 'Cache Miss')
               setLastTmdbId(n)
