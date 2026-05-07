@@ -3,6 +3,7 @@
 /** biome-ignore-all lint/style/noProcessEnv: test helper */
 /** biome-ignore-all lint/performance/noAwaitInLoops: sequential test operations */
 /** biome-ignore-all lint/performance/useTopLevelRegex: test helper */
+import { makeExpectError } from './_shared'
 import { STDB_HTTP_URL, STDB_MODULE } from './stdb-env'
 interface HttpCtx {
   baseHttpUrl: string
@@ -197,15 +198,7 @@ const extractErrorCode = (e: unknown): null | { code: string } => {
   }
   return null
 }
-const expectError = async <T>(fn: () => Promise<T>): Promise<T> => {
-  try {
-    return await fn()
-  } catch (error) {
-    const r = extractErrorCode(error)
-    if (r) return r as T
-    throw error
-  }
-}
+const expectError = makeExpectError(extractErrorCode)
 const delay = async (ms: number): Promise<void> => {
   await new Promise<void>(resolve => {
     setTimeout(resolve, ms)

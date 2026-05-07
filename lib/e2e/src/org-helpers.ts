@@ -6,6 +6,7 @@ import type { Id } from '@a/be-convex/model'
 import type { FunctionArgs, FunctionReference, FunctionReturnType } from 'convex/server'
 import { ConvexHttpClient } from 'convex/browser'
 import { anyApi } from 'convex/server'
+import { makeExpectError } from './_shared'
 const api = anyApi as unknown as typeof BeApi
 const getClient = () => new ConvexHttpClient(process.env.CONVEX_URL ?? process.env.NEXT_PUBLIC_CONVEX_URL ?? '')
 const ref = (mod: string, fn: string) => {
@@ -22,15 +23,7 @@ const extractErrorCode = (e: unknown): null | { code: string } => {
   }
   return null
 }
-const expectError = async <T>(fn: () => Promise<T>): Promise<T> => {
-  try {
-    return await fn()
-  } catch (error) {
-    const r = extractErrorCode(error)
-    if (r) return r as T
-    throw error
-  }
-}
+const expectError = makeExpectError(extractErrorCode)
 const splitName = (name: string): [string, string] => {
   const parts = name.split(':')
   return [parts[0] ?? '', parts[1] ?? '']
