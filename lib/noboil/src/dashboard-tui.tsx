@@ -1,10 +1,10 @@
 /* oxlint-disable no-promise-executor-return, promise/param-names, typescript/strict-void-return, promise/prefer-await-to-then, complexity */
 /* eslint-disable complexity */
 import { Box, render, Text, useApp, useInput } from 'ink'
-import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { useEffect, useState } from 'react'
 import type { RecentEntry } from './shared/recent'
+import { readJsonSafe } from './shared/env-file'
 import { readRecent } from './shared/recent'
 import { checkForUpdate } from './shared/update-check'
 import { getCliVersion } from './shared/version'
@@ -200,15 +200,7 @@ const DashboardApp = ({ cwd, manifest, onExit, version }: DashboardProps) => {
     </Box>
   )
 }
-const readManifest = (cwd: string): Manifest | null => {
-  const p = join(cwd, '.noboilrc.json')
-  if (!existsSync(p)) return null
-  try {
-    return JSON.parse(readFileSync(p, 'utf8')) as Manifest
-  } catch {
-    return null
-  }
-}
+const readManifest = (cwd: string): Manifest | null => readJsonSafe(join(cwd, '.noboilrc.json')) as Manifest | null
 const runDashboard = async (): Promise<Action> => {
   const cwd = process.cwd()
   const manifest = readManifest(cwd)

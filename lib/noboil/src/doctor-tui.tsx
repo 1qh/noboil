@@ -5,9 +5,10 @@
 import { Box, render, Text, useApp, useInput } from 'ink'
 import Spinner from 'ink-spinner'
 import { spawnSync } from 'node:child_process'
-import { existsSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { useEffect, useState } from 'react'
+import { readJson, readJsonSafe, writeJson } from './shared/env-file'
 interface CheckResult {
   detail?: string
   status: CheckStatus
@@ -22,12 +23,11 @@ const checkPackageJson = (cwd: string): CheckResult =>
   })
 const checkNoboilDep = (cwd: string): CheckResult =>
   check('noboil dep', () => {
-    const pkgPath = join(cwd, 'package.json')
-    if (!existsSync(pkgPath)) return { detail: 'no package.json', status: 'fail' }
-    const pkg = JSON.parse(readFileSync(pkgPath, 'utf8')) as {
+    const pkg = readJsonSafe(join(cwd, 'package.json')) as null | {
       dependencies?: Record<string, string>
       devDependencies?: Record<string, string>
     }
+    if (!pkg) return { detail: 'no package.json', status: 'fail' }
     const deps = { ...pkg.dependencies, ...pkg.devDependencies }
     if ('noboil' in deps) return { detail: deps.noboil ?? 'unknown', status: 'pass' }
     return { detail: 'not in dependencies', status: 'fail' }
@@ -53,11 +53,7 @@ const readRc = (cwd: string) => {
   for (let i = 0; i < 10; i += 1) {
     const rcPath = join(dir, '.noboilrc.json')
     if (existsSync(rcPath))
-      try {
-        return JSON.parse(readFileSync(rcPath, 'utf8')) as { db?: 'convex' | 'spacetimedb'; scaffoldedFrom?: string }
-      } catch {
-        return null
-      }
+      return readJsonSafe(rcPath) as null | { db?: 'convex' | 'spacetimedb'; scaffoldedFrom?: string }
     const parent = join(dir, '..')
     if (parent === dir) break
     dir = parent
@@ -93,11 +89,10 @@ const checkDocker = (cwd: string): CheckResult =>
   })
 const checkStdbConditions = (cwd: string): CheckResult =>
   check('tsconfig customConditions', () => {
-    const tsconfigPath = join(cwd, 'tsconfig.json')
-    if (!existsSync(tsconfigPath)) return { detail: 'no tsconfig.json', status: 'warn' }
-    const cfg = JSON.parse(readFileSync(tsconfigPath, 'utf8')) as {
+    const cfg = readJsonSafe(join(cwd, 'tsconfig.json')) as null | {
       compilerOptions?: { customConditions?: string[] }
     }
+    if (!cfg) return { detail: 'no tsconfig.json', status: 'warn' }
     const conds = cfg.compilerOptions?.customConditions ?? []
     if (conds.includes('noboil-spacetimedb')) return { detail: "includes 'noboil-spacetimedb'", status: 'pass' }
     return { detail: 'imports will resolve to Convex bindings', status: 'warn' }
@@ -159,13 +154,13 @@ const applyFixes = (cwd: string, results: CheckResult[]): string[] => {
     if (r.title === 'tsconfig customConditions' && r.status === 'warn')
       try {
         const p = join(cwd, 'tsconfig.json')
-        const cfg = JSON.parse(readFileSync(p, 'utf8')) as { compilerOptions?: { customConditions?: string[] } }
+        const cfg = readJson(p) as { compilerOptions?: { customConditions?: string[] } }
         cfg.compilerOptions ??= {}
         const existing = cfg.compilerOptions.customConditions ?? []
         cfg.compilerOptions.customConditions = existing.includes('noboil-spacetimedb')
           ? existing
           : [...existing, 'noboil-spacetimedb']
-        writeFileSync(p, `${JSON.stringify(cfg, null, 2)}\n`)
+        writeJson(p, cfg)
         actions.push("✔ tsconfig: added 'noboil-spacetimedb'")
       } catch {
         actions.push('✘ tsconfig patch failed')
