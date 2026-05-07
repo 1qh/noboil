@@ -2,12 +2,6 @@
 // biome-ignore-all lint/suspicious/useAwait: x
 import { createRetryUtils } from '../shared/retry'
 import { sleep } from './constants'
-interface RetryOptions {
-  base?: number
-  initialDelayMs?: number
-  maxAttempts?: number
-  maxDelayMs?: number
-}
 const { fetchWithRetry, withRetry } = createRetryUtils({ sleep })
-export type { RetryOptions }
+export type { RetryOptions } from '../shared/retry'
 export { fetchWithRetry, withRetry }

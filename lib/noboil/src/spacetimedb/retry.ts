@@ -1,13 +1,8 @@
 // biome-ignore-all lint/performance/noAwaitInLoops: x
 // biome-ignore-all lint/suspicious/useAwait: x
+import type { RetryOptions } from '../shared/retry'
 import { createRetryUtils, DEFAULT_OPTIONS } from '../shared/retry'
 import { sleep } from './constants'
-interface RetryOptions {
-  base?: number
-  initialDelayMs?: number
-  maxAttempts?: number
-  maxDelayMs?: number
-}
 const validateRetryOptions = (opts: Required<RetryOptions>) => {
   if (opts.maxAttempts < 1)
     throw new Error(
@@ -32,5 +27,5 @@ const { fetchWithRetry, withRetry } = createRetryUtils({
   wrapFinalError: (error: Error, opts: Required<RetryOptions>) =>
     new Error(`${error.message} (after ${opts.maxAttempts} attempts)`, { cause: error })
 })
-export type { RetryOptions }
+export type { RetryOptions } from '../shared/retry'
 export { fetchWithRetry, withRetry }
