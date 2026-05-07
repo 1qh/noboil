@@ -14,6 +14,7 @@ import type {
 } from 'convex/server'
 import type { GenericId } from 'convex/values'
 import type { z as _, ZodNullable, ZodNumber, ZodObject, ZodOptional, ZodRawShape } from 'zod/v4'
+import type { OrgRole } from '../../shared/types'
 interface BaseBuilders {
   m: Mb
   pq?: Qb
@@ -342,7 +343,6 @@ type OrgEnrichedDoc<S extends ZodRawShape> = WithUrls<
     userId: string
   }
 >
-type OrgRole = 'admin' | 'member' | 'owner'
 interface PaginatedResult<D> {
   continueCursor: string
   isDone: boolean

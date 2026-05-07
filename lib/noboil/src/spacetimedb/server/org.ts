@@ -1,5 +1,6 @@
 import type { Identity, Timestamp } from 'spacetimedb'
 import type { AlgebraicTypeType, ReducerExport, TypeBuilder } from 'spacetimedb/server'
+import type { OrgRole } from '../../shared/types'
 import type { OrgInviteByTokenIndexLike, OrgInvitePkLike, OrgInviteRowLike, OrgInviteTableLike } from './org-invites'
 import type {
   OrgJoinRequestByOrgStatusIndexLike,
@@ -120,7 +121,6 @@ interface OrgMemberItem {
   user: null | OrgUserLike
   userId: Identity
 }
-type OrgRole = 'admin' | 'member' | 'owner'
 /** Iterable index used to resolve org rows by slug. */
 type OrgSlugIndexLike<Row> = Iterable<Row>
 /** Minimal user profile shape used by org flows. */

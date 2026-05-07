@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import type { Identity, Timestamp } from 'spacetimedb'
 import type { z as _, ZodNullable, ZodNumber, ZodObject, ZodOptional, ZodRawShape } from 'zod/v4'
+import type { OrgRole } from '../../../shared/types'
 type Ab<V extends Visibility = 'public'> = <A = Rec, R = unknown, C = Rec>(
   ...args: unknown[]
 ) => C & RegisteredAction<V, A, R>
@@ -118,7 +119,6 @@ type OrgEnrichedDoc<S extends ZodRawShape> = WithUrls<
     userId: string
   }
 >
-type OrgRole = 'admin' | 'member' | 'owner'
 interface OrgUserLike {
   [k: string]: unknown
   _id: number
