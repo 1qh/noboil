@@ -1,5 +1,6 @@
 import type { Identity, Timestamp } from 'spacetimedb'
-import type { AlgebraicTypeType, ColumnBuilder, ReducerExport, TypeBuilder } from 'spacetimedb/server'
+import type { AlgebraicTypeType, ColumnBuilder, TypeBuilder } from 'spacetimedb/server'
+import type { ReducerExportLike } from '../reducer-utils'
 import type { RateLimitConfig } from './common'
 interface CascadeOption {
   foreignKey: string
@@ -104,7 +105,6 @@ interface HookCtx<DB = unknown> {
   sender: Identity
   timestamp: Timestamp
 }
-type ReducerExportLike = ReducerExport<never, never>
 export type {
   CascadeOption,
   CrudBuilders,

@@ -1,8 +1,8 @@
 'use client'
+import type { Rec } from '../../shared/types'
 import type { ComparisonOp } from '../server/types'
 type ListSort<T extends Rec> = SortMap<T> | SortObject<T>
 type ListWhere<T extends Rec> = WhereGroup<T> & { or?: WhereGroup<T>[] }
-type Rec = Record<string, unknown>
 type SortDirection = 'asc' | 'desc'
 type SortMap<T extends Rec> = Partial<Record<keyof T & string, SortDirection>>
 interface SortObject<T extends Rec> {

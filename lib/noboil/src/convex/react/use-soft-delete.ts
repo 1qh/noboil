@@ -1,5 +1,6 @@
 /* oxlint-disable promise/prefer-await-to-then */
 'use client'
+import type { ToastFn } from '../../shared/react/use-soft-delete'
 import { useSoftDelete as useSharedSoftDelete } from '../../shared/react/use-soft-delete'
 import { UNDO_MS } from '../constants'
 interface SoftDeleteOpts<A extends { id: string }> {
@@ -11,7 +12,6 @@ interface SoftDeleteOpts<A extends { id: string }> {
   toast: ToastFn
   undoMs?: number
 }
-type ToastFn = (message: string, opts?: { action?: { label: string; onClick: () => void }; duration?: number }) => void
 /**
  * Wrap a `remove` + `restore` pair into a single action that fires the remove and shows
  * a sonner toast with an Undo button (configurable `undoMs`). Use for delete UIs where

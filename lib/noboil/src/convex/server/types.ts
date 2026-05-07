@@ -14,7 +14,7 @@ import type {
 } from 'convex/server'
 import type { GenericId } from 'convex/values'
 import type { z as _, ZodNullable, ZodNumber, ZodObject, ZodOptional, ZodRawShape } from 'zod/v4'
-import type { OrgRole } from '../../shared/types'
+import type { OrgRole, Rec } from '../../shared/types'
 interface BaseBuilders {
   m: Mb
   pq?: Qb
@@ -132,7 +132,6 @@ interface RateLimitConfig {
   window: number
 }
 type RateLimitInput = number | RateLimitConfig
-type Rec = Record<string, unknown>
 interface UserCtx extends DbCtx {
   user: Rec
 }

@@ -1,6 +1,6 @@
 import type { Identity, Timestamp } from 'spacetimedb'
-import type { AlgebraicTypeType, ColumnBuilder, ReducerExport, TypeBuilder } from 'spacetimedb/server'
-type ReducerExportLike = ReducerExport<never, never>
+import type { AlgebraicTypeType, ColumnBuilder, TypeBuilder } from 'spacetimedb/server'
+import type { ReducerExportLike } from '../reducer-utils'
 interface SingletonBuilder {
   optional: () => TypeBuilder<unknown, AlgebraicTypeType>
 }

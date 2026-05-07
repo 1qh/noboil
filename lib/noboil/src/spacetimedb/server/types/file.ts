@@ -1,5 +1,6 @@
 import type { Identity, Timestamp } from 'spacetimedb'
-import type { AlgebraicTypeType, ColumnBuilder, ReducerExport, TypeBuilder } from 'spacetimedb/server'
+import type { AlgebraicTypeType, ColumnBuilder, TypeBuilder } from 'spacetimedb/server'
+import type { ReducerExportLike } from '../reducer-utils'
 interface FileRowShape {
   contentType: string
   data: Uint8Array
@@ -50,7 +51,6 @@ interface FileUploadPkLike<Row, Id> {
 interface FileUploadTableLike<Row> {
   insert: (row: Row) => Row
 }
-type ReducerExportLike = ReducerExport<never, never>
 export type {
   FileRowShape,
   FileUploadBuilder,

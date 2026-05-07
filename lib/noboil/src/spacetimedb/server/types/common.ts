@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import type { Identity, Timestamp } from 'spacetimedb'
 import type { z as _, ZodNullable, ZodNumber, ZodObject, ZodOptional, ZodRawShape } from 'zod/v4'
-import type { OrgRole } from '../../../shared/types'
+import type { OrgRole, Rec } from '../../../shared/types'
 type Ab<V extends Visibility = 'public'> = <A = Rec, R = unknown, C = Rec>(
   ...args: unknown[]
 ) => C & RegisteredAction<V, A, R>
@@ -171,7 +171,6 @@ interface ReadCtx {
     })[]
   >
 }
-type Rec = Record<string, unknown>
 interface ReducerCtx<DB = unknown> {
   db: DB
   sender?: IdentityLike

@@ -4,6 +4,7 @@ import type { PaginatedQueryArgs, PaginatedQueryReference } from 'convex/react'
 import type { FunctionReturnType } from 'convex/server'
 import { usePaginatedQuery } from 'convex/react'
 import { useEffect, useMemo, useRef } from 'react'
+import type { Rec } from '../../shared/types'
 import type { PendingMutation } from './optimistic-store'
 import { trackSubscription, untrackSubscription, updateSubscription, updateSubscriptionData } from './devtools'
 import { usePendingMutations } from './optimistic-store'
@@ -12,7 +13,6 @@ type ListRest<F extends PaginatedQueryReference> =
   PaginatedQueryArgs<F> extends Record<string, never>
     ? [args?: PaginatedQueryArgs<F>, options?: UseListOptions]
     : [args: PaginatedQueryArgs<F>, options?: UseListOptions]
-type Rec = Record<string, unknown>
 interface UseListOptions {
   optimistic?: boolean
   pageSize?: number

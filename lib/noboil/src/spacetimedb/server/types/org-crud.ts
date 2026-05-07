@@ -1,5 +1,6 @@
 import type { Identity, Timestamp } from 'spacetimedb'
-import type { AlgebraicTypeType, ColumnBuilder, ReducerExport, TypeBuilder } from 'spacetimedb/server'
+import type { AlgebraicTypeType, ColumnBuilder, TypeBuilder } from 'spacetimedb/server'
+import type { ReducerExportLike } from '../reducer-utils'
 import type { RateLimitConfig } from './common'
 import type { CrudHooks, HookCtx } from './crud'
 interface CanEditOpts {
@@ -106,7 +107,6 @@ type OrgCrudResult = OrgCrudExports
 interface OrgCrudTableLike<Row> {
   insert: (row: Row) => Row
 }
-type ReducerExportLike = ReducerExport<never, never>
 export type {
   CanEditOpts,
   OrgCascadeTableConfig,

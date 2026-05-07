@@ -1,5 +1,6 @@
 // biome-ignore-all lint/nursery/noFloatingPromises: event handler
 'use client'
+import type { ToastFn } from '../../shared/react/use-soft-delete'
 import { useSoftDelete as useSharedSoftDelete } from '../../shared/react/use-soft-delete'
 import { UNDO_MS } from '../constants'
 interface SoftDeleteOpts<A extends { id: string }> {
@@ -11,7 +12,6 @@ interface SoftDeleteOpts<A extends { id: string }> {
   toast: ToastFn
   undoMs?: number
 }
-type ToastFn = (message: string, opts?: { action?: { label: string; onClick: () => void }; duration?: number }) => void
 /** Wrap remove + restore reducers into a single action that fires remove and shows a sonner Undo banner. */
 const useSoftDelete = <A extends { id: string }>(options: SoftDeleteOpts<A>) =>
   useSharedSoftDelete({ ...options, undoMs: options.undoMs ?? UNDO_MS })

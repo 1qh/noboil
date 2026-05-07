@@ -1,10 +1,10 @@
 /** biome-ignore-all lint/nursery/noContinue: bulk-loop skip on missing row */
 /* eslint-disable no-continue */
 import type { Identity, Timestamp } from 'spacetimedb'
-import type { AlgebraicTypeType, ColumnBuilder, ReducerExport, TypeBuilder } from 'spacetimedb/server'
+import type { AlgebraicTypeType, ColumnBuilder, TypeBuilder } from 'spacetimedb/server'
+import type { FieldBuilders, ReducerExportLike } from './reducer-utils'
 import type { RateLimitConfig } from './types'
 import { enforceRateLimit } from './helpers'
-type FieldBuilders = Record<string, ColumnBuilder<unknown, AlgebraicTypeType> | TypeBuilder<unknown, AlgebraicTypeType>>
 interface LogConfig<DB, Tbl extends LogTableLike> {
   bulkItemsField?: ColumnBuilder<unknown, AlgebraicTypeType> | TypeBuilder<unknown, AlgebraicTypeType>
   fields: FieldBuilders
@@ -46,7 +46,6 @@ interface LogRow {
 interface LogTableLike extends Iterable<LogRow> {
   insert: (row: LogRow) => LogRow
 }
-type ReducerExportLike = ReducerExport<never, never>
 /** Creates append/purgeByParent reducers for an append-only log table.
  * Seq allocation is per-parent, computed by scanning for max(seq) within the parent.
  * Idempotency key (optional) deduplicates appends by (parent, idempotencyKey).

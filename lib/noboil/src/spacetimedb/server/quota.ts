@@ -1,7 +1,7 @@
 import type { Identity, Timestamp } from 'spacetimedb'
-import type { AlgebraicTypeType, ColumnBuilder, ReducerExport, TypeBuilder } from 'spacetimedb/server'
+import type { AlgebraicTypeType, ColumnBuilder, TypeBuilder } from 'spacetimedb/server'
+import type { FieldBuilders, ReducerExportLike } from './reducer-utils'
 import { makeError } from './reducer-utils'
-type FieldBuilders = Record<string, ColumnBuilder<unknown, AlgebraicTypeType> | TypeBuilder<unknown, AlgebraicTypeType>>
 const findByOwner = (table: QuotaTableLike, owner: string): QuotaRow | undefined => {
   for (const row of table) if (row.owner === owner) return row
 }
@@ -37,7 +37,6 @@ interface QuotaTableLike extends Iterable<QuotaRow> {
   id: { update: (row: QuotaRow) => QuotaRow }
   insert: (row: QuotaRow) => QuotaRow
 }
-type ReducerExportLike = ReducerExport<never, never>
 const timestampToMs = (ts: Timestamp): number =>
   Number((ts as unknown as { microsSinceUnixEpoch: bigint }).microsSinceUnixEpoch / 1000n)
 const prune = (timestamps: number[], cutoff: number): number[] => {

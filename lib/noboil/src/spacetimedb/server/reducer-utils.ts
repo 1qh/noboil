@@ -1,5 +1,5 @@
 import type { Identity, Timestamp } from 'spacetimedb'
-import type { AlgebraicTypeType, ColumnBuilder, TypeBuilder } from 'spacetimedb/server'
+import type { AlgebraicTypeType, ColumnBuilder, ReducerExport, TypeBuilder } from 'spacetimedb/server'
 type FieldBuilders = Record<string, ColumnBuilder<unknown, AlgebraicTypeType> | TypeBuilder<unknown, AlgebraicTypeType>>
 interface OptionalBuilder {
   optional: () => ColumnBuilder<unknown, AlgebraicTypeType> | TypeBuilder<unknown, AlgebraicTypeType>
@@ -13,6 +13,7 @@ interface PkLike<Row, Id> {
   find: (id: Id) => null | Row
   update: (row: Row) => Row
 }
+type ReducerExportLike = ReducerExport<never, never>
 interface TableLike<Row> {
   insert: (row: Row) => Row
 }
@@ -81,5 +82,5 @@ const getOwnedRow = <Row extends OwnedRow, Id, Tbl extends TableLike<Row>, Pk ex
   return { pk, row }
 }
 const idEquals = identityEquals
-export type { FieldBuilders, OwnedRow, PkLike, TableLike }
+export type { FieldBuilders, OwnedRow, PkLike, ReducerExportLike, TableLike }
 export { applyPatch, getOwnedRow, identityEquals, idEquals, makeError, makeOptionalFields, pickPatch, timestampEquals }

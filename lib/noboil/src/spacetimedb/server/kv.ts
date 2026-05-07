@@ -1,9 +1,9 @@
 import type { Identity, Timestamp } from 'spacetimedb'
-import type { AlgebraicTypeType, ColumnBuilder, ReducerExport, TypeBuilder } from 'spacetimedb/server'
+import type { AlgebraicTypeType, ColumnBuilder, TypeBuilder } from 'spacetimedb/server'
+import type { FieldBuilders, ReducerExportLike } from './reducer-utils'
 import type { RateLimitConfig } from './types'
 import { enforceRateLimit } from './helpers'
 import { applyPatch, makeError } from './reducer-utils'
-type FieldBuilders = Record<string, ColumnBuilder<unknown, AlgebraicTypeType> | TypeBuilder<unknown, AlgebraicTypeType>>
 const findByKey = (table: KvTableLike, key: string): KvRow | undefined => {
   for (const row of table) if (row.key === key) return row
 }
@@ -49,7 +49,6 @@ interface KvTableLike extends Iterable<KvRow> {
   id: { delete: (id: number) => void; update: (row: KvRow) => KvRow }
   insert: (row: KvRow) => KvRow
 }
-type ReducerExportLike = ReducerExport<never, never>
 /** Creates set/rm reducers for a string-keyed kv table. Reads via subscription. */
 const makeKv = <DB, Tbl extends KvTableLike>(
   spacetimedb: {

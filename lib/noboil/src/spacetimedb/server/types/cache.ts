@@ -1,5 +1,6 @@
 import type { Timestamp } from 'spacetimedb'
-import type { AlgebraicTypeType, ColumnBuilder, ReducerExport, TypeBuilder } from 'spacetimedb/server'
+import type { AlgebraicTypeType, ColumnBuilder, TypeBuilder } from 'spacetimedb/server'
+import type { ReducerExportLike } from '../reducer-utils'
 type CacheBuilder = ColumnBuilder<unknown, AlgebraicTypeType> | TypeBuilder<unknown, AlgebraicTypeType>
 type CacheBuilders = never
 interface CacheConfig<
@@ -61,7 +62,6 @@ interface CacheRowBase {
 interface CacheTableLike<Row> extends Iterable<Row> {
   insert: (row: Row) => Row
 }
-type ReducerExportLike = ReducerExport<never, never>
 export type {
   CacheBuilder,
   CacheBuilders,
