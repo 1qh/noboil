@@ -8682,7 +8682,7 @@ describe('Sprint 6 Tier 2.4 ERROR_MESSAGES enhancements', () => {
     }
   })
   test('ERROR_MESSAGES count matches expected codes', () => {
-    expect(Object.keys(ERROR_MESSAGES)).toHaveLength(36)
+    expect(Object.keys(ERROR_MESSAGES)).toHaveLength(38)
   })
   test('specific improved messages contain required wording', () => {
     expect(ERROR_MESSAGES.NOT_FOUND.includes('deleted')).toBe(true)
