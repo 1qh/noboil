@@ -1,27 +1,20 @@
 import { config } from '@a/config'
+import { walkFiles } from 'noboil/walk'
 import { createHash } from 'node:crypto'
-import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { root, run } from './utils'
 const args = process.argv.slice(2).join(' ')
-const isSkipDir = (name: string): boolean => name.startsWith('.') || name === 'node_modules' || name === 'module_bindings'
 const isHashableFile = (name: string): boolean => name.endsWith('.ts') || name === 'package.json'
 const hashDir = (dir: string): string => {
   const h = createHash('sha256')
-  const walk = (d: string) => {
-    for (const e of readdirSync(d, { withFileTypes: true }))
-      if (isSkipDir(e.name)) {
-        // Skip
-      } else {
-        const p = join(d, e.name)
-        if (e.isDirectory()) walk(p)
-        else if (isHashableFile(e.name)) {
-          h.update(`${p}:`)
-          h.update(readFileSync(p))
-        }
-      }
+  for (const path of walkFiles(dir, {
+    accept: isHashableFile,
+    skip: new Set(['.git', '.next', '.turbo', 'build', 'dist', 'module_bindings', 'node_modules'])
+  }).toSorted()) {
+    h.update(`${path}:`)
+    h.update(readFileSync(path))
   }
-  walk(dir)
   return h.digest('hex')
 }
 const cacheDir = join(root, '.cache', 'stdb-publish')

@@ -48,7 +48,8 @@
     "pre-commit": "bun doc/scripts/gen-all.ts && sh up.sh && git add -u"
   },
   "dependencies": {
-    "@a/config": "workspace:*"
+    "@a/config": "workspace:*",
+    "noboil": "workspace:*"
   },
   "devDependencies": {
     "@happy-dom/global-registrator": "^20.9.0",
