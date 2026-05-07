@@ -1,9 +1,7 @@
 #!/usr/bin/env bun
 /* eslint-disable no-console */
 import { existsSync, readdirSync } from 'node:fs'
-import { resolve } from 'node:path'
-import { replaceBetween } from './lib'
-const REPO = resolve(import.meta.dir, '../..')
+import { replaceBetween, REPO } from './lib'
 const hooksFor = (kind: 'convex' | 'spacetimedb'): string[] => {
   const dir = `${REPO}/lib/noboil/src/${kind}/react`
   return readdirSync(dir)

@@ -2,9 +2,7 @@
 /* eslint-disable no-console */
 /** biome-ignore-all lint/performance/useTopLevelRegex: small file */
 import { readJson } from 'noboil/env-file'
-import { resolve } from 'node:path'
-import { replaceBetween } from './lib'
-const REPO = resolve(import.meta.dir, '../..')
+import { replaceBetween, REPO } from './lib'
 const escapeMd = (s: string): string =>
   s.replaceAll('|', String.raw`\|`).replaceAll('{', String.raw`\{`).replaceAll('}', String.raw`\}`)
 interface ExportTarget {

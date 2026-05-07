@@ -1,9 +1,7 @@
 #!/usr/bin/env bun
 /* eslint-disable no-console */
 import { readFileSync } from 'node:fs'
-import { resolve } from 'node:path'
-import { replaceLineBetween } from './lib'
-const REPO = resolve(import.meta.dir, '../..')
+import { replaceLineBetween, REPO } from './lib'
 const ROW_RE =
   /\{\s*action:\s*'(?<action>[^']+)',\s*desc:\s*'(?<desc>[^']+)',\s*key:\s*'(?<key>[^']+)',\s*name:\s*'(?<name>[^']+)'\s*\}/gu
 const README_DETAIL: Record<string, string> = {

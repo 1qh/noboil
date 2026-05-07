@@ -1,9 +1,7 @@
 #!/usr/bin/env bun
 /* eslint-disable no-console */
 import { existsSync, readFileSync } from 'node:fs'
-import { resolve } from 'node:path'
-import { replaceBetween } from './lib'
-const REPO = resolve(import.meta.dir, '../..')
+import { replaceBetween, REPO } from './lib'
 const FEATURES = [
   { file: 'crud.ts', name: 'owned CRUD' },
   { file: 'org-crud.ts', name: 'org-scoped CRUD' },

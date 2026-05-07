@@ -1,9 +1,7 @@
 #!/usr/bin/env bun
 /* eslint-disable no-console */
 import { readdirSync, statSync } from 'node:fs'
-import { resolve } from 'node:path'
-import { replaceBetween } from './lib'
-const REPO = resolve(import.meta.dir, '../..')
+import { replaceBetween, REPO } from './lib'
 const main = () => {
   const root = `${REPO}/readonly/ui/src/components`
   const top = readdirSync(root)

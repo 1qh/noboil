@@ -4,9 +4,7 @@
 /** biome-ignore-all lint/nursery/noContinue: simple parser */
 /** biome-ignore-all lint/performance/useTopLevelRegex: per-iteration scan */
 import { readFileSync } from 'node:fs'
-import { resolve } from 'node:path'
-import { replaceBetween } from './lib'
-const REPO = resolve(import.meta.dir, '../..')
+import { replaceBetween, REPO } from './lib'
 const STDB = `${REPO}/lib/noboil/src/spacetimedb/server`
 const NAME_RE = /(?<role>\w+)Name\s*=\s*`(?<tpl>[^`]+)`/u
 const JSDOC_RE = /^\s*\/\*\*\s*(?<text>.+?)\s*\*\/\s*$/u

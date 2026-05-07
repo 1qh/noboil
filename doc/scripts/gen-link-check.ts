@@ -5,9 +5,8 @@
 /* eslint-disable no-console, prefer-named-capture-group */
 import { readJson } from 'noboil/env-file'
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
-import { join, resolve } from 'node:path'
-import { slugify } from './lib'
-const REPO = resolve(import.meta.dir, '../..')
+import { join } from 'node:path'
+import { REPO, slugify } from './lib'
 const DOCS_DIR = `${REPO}/doc/content/docs`
 const SLUG_RE = /\]\(\.\/([a-z][a-z0-9-]*)(?:#([a-z][a-z0-9-]*))?\)/gu
 const GITHUB_RE = /github\.com\/1qh\/noboil\/(?:blob|tree)\/main\/([^\s)]+)/gu

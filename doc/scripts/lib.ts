@@ -3,6 +3,8 @@
 /** biome-ignore-all lint/complexity/useMaxParams: internal helper */
 /** biome-ignore-all lint/nursery/noContinue: parser */
 import { readFileSync, writeFileSync } from 'node:fs'
+import { resolve } from 'node:path'
+const REPO = resolve(import.meta.dir, '../..')
 const BLANK_AFTER_START_RE = /^\n\s*\n/u
 const BLANK_BEFORE_END_RE = /\n\s*\n$/u
 const TABLE_SEP_RE = /^\|[\s|:-]*-{3,}[\s|:-]*\|$/u
@@ -141,6 +143,7 @@ export {
   padMarkdownTables,
   replaceBetween,
   replaceLineBetween,
+  REPO,
   slugify,
   STRIP_AUTOGEN_RE,
   STRIP_FENCE_RE,

@@ -3,9 +3,8 @@
 /** biome-ignore-all lint/performance/useTopLevelRegex: per-file scan */
 /** biome-ignore-all lint/nursery/noContinue: walker */
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
-import { join, resolve } from 'node:path'
-import { replaceBetween } from './lib'
-const REPO = resolve(import.meta.dir, '../..')
+import { join } from 'node:path'
+import { replaceBetween, REPO } from './lib'
 interface FactorySpec {
   brand: string
   cvxFn: string

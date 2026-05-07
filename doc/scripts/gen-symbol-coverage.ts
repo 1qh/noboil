@@ -5,8 +5,7 @@
 import { readJson } from 'noboil/env-file'
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { collectBraceExports, replaceBetween } from './lib'
-const REPO = resolve(import.meta.dir, '../..')
+import { collectBraceExports, replaceBetween, REPO } from './lib'
 const EXPORT_DECL_RE = /export\s+(?:const|function|class|interface|type)\s+(?<name>\w+)/gu
 const collectExports = (file: string): Set<string> => {
   const out = new Set<string>()

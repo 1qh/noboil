@@ -3,9 +3,8 @@
 /** biome-ignore-all lint/performance/useTopLevelRegex: walker */
 /** biome-ignore-all lint/nursery/noContinue: walker */
 import { readdirSync, readFileSync, statSync } from 'node:fs'
-import { join, resolve } from 'node:path'
-import { collectBraceExports, replaceBetween, stripStrings } from './lib'
-const REPO = resolve(import.meta.dir, '../..')
+import { join } from 'node:path'
+import { collectBraceExports, replaceBetween, REPO, stripStrings } from './lib'
 const EXPORT_DECL_RE =
   /export\s+(?:const|function|class|interface|type|default\s+(?:const|function|class)?)\s+(?<name>\w+)/gu
 const SKIP_DIRS = new Set([

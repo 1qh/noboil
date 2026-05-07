@@ -3,9 +3,7 @@
 /** biome-ignore-all lint/nursery/noContinue: simple parser */
 /** biome-ignore-all lint/performance/useTopLevelRegex: per-line scan */
 import { readFileSync } from 'node:fs'
-import { resolve } from 'node:path'
-import { replaceBetween, slugify } from './lib'
-const REPO = resolve(import.meta.dir, '../..')
+import { replaceBetween, REPO, slugify } from './lib'
 const RECIPES = `${REPO}/doc/content/docs/recipes.mdx`
 const main = () => {
   const src = readFileSync(RECIPES, 'utf8')

@@ -2,9 +2,7 @@
 /* eslint-disable no-console, no-continue */
 /** biome-ignore-all lint/nursery/noContinue: simple parser */
 import { readFileSync } from 'node:fs'
-import { resolve } from 'node:path'
-import { replaceBetween } from './lib'
-const REPO = resolve(import.meta.dir, '../..')
+import { replaceBetween, REPO } from './lib'
 const TYPES_PATH = `${REPO}/lib/noboil/src/convex/server/types.ts`
 const ENTRY_RE = /(?<brand>\w+):\s*'(?<hint>[^']+)'/u
 const main = () => {

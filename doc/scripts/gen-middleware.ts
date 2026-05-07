@@ -2,9 +2,7 @@
 /* eslint-disable no-console */
 /** biome-ignore-all lint/performance/useTopLevelRegex: small file */
 import { readFileSync } from 'node:fs'
-import { resolve } from 'node:path'
-import { replaceBetween } from './lib'
-const REPO = resolve(import.meta.dir, '../..')
+import { replaceBetween, REPO } from './lib'
 const MIDDLEWARE_RE = /(?:\/\*\*\s*(?<doc>[^*]+?)\s*\*\/\s*)?const (?<name>\w+) = \((?<args>[^)]*)\):\s*Middleware\b/gu
 const escapeMd = (s: string): string =>
   s

@@ -2,8 +2,7 @@
 /* eslint-disable no-console */
 /** biome-ignore-all lint/performance/useTopLevelRegex: simple file extension match */
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs'
-import { resolve } from 'node:path'
-const REPO = resolve(import.meta.dir, '../..')
+import { REPO } from './lib'
 const META = `${REPO}/doc/content/docs/meta.json`
 const DOCS_DIR = `${REPO}/doc/content/docs`
 const ORDER = [

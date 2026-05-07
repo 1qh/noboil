@@ -1,9 +1,7 @@
 #!/usr/bin/env bun
 /* eslint-disable no-console */
 import { readJson } from 'noboil/env-file'
-import { resolve } from 'node:path'
-import { replaceLineBetween } from './lib'
-const REPO = resolve(import.meta.dir, '../..')
+import { replaceLineBetween, REPO } from './lib'
 const PKG = `${REPO}/lib/noboil/package.json`
 interface Pkg {
   description: string

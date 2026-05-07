@@ -4,9 +4,7 @@
 /** biome-ignore-all lint/nursery/noContinue: parser */
 /** biome-ignore-all lint/correctness/noUnusedVariables: ZID_RE reserved for future use */
 import { readFileSync } from 'node:fs'
-import { resolve } from 'node:path'
-import { replaceBetween } from './lib'
-const REPO = resolve(import.meta.dir, '../..')
+import { replaceBetween, REPO } from './lib'
 const SLOTS = ['base', 'children', 'kv', 'log', 'org', 'orgScoped', 'owned', 'quota', 'singleton']
 const findSlotBody = (src: string, slot: string): string => {
   const re = new RegExp(`\\n\\s*${slot}:\\s*\\{`, 'u')

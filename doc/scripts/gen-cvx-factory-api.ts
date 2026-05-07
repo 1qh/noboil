@@ -4,9 +4,7 @@
 /** biome-ignore-all lint/performance/useTopLevelRegex: per-iteration scan */
 /** biome-ignore-all lint/nursery/useNamedCaptureGroup: simple match */
 import { readFileSync } from 'node:fs'
-import { resolve } from 'node:path'
-import { replaceBetween } from './lib'
-const REPO = resolve(import.meta.dir, '../..')
+import { replaceBetween, REPO } from './lib'
 const CVX = `${REPO}/lib/noboil/src/convex/server`
 const ENDPOINT_RE = /^\s*const\s+(?<name>\w+)\s*=\s*b\.(?<kind>[qm])\(/u
 const RETURN_RE = /return\s+typed\(\{\s*([^}]+)\s*\}\)/u

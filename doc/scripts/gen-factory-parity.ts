@@ -3,10 +3,9 @@
 /** biome-ignore-all lint/performance/useTopLevelRegex: per-file scan */
 /** biome-ignore-all lint/nursery/noContinue: walker */
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
-import { join, resolve } from 'node:path'
+import { join } from 'node:path'
 import { FACTORY_META } from '../../lib/noboil/src/shared/factory-meta'
-import { replaceBetween } from './lib'
-const REPO = resolve(import.meta.dir, '../..')
+import { replaceBetween, REPO } from './lib'
 interface FactorySpec {
   brand: string
   cvxFactoryFn: string

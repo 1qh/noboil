@@ -2,9 +2,8 @@
 /* eslint-disable no-console, no-continue */
 /** biome-ignore-all lint/nursery/noContinue: simple scanner */
 import { readdirSync, readFileSync, statSync } from 'node:fs'
-import { join, resolve } from 'node:path'
-import { replaceLineBetween } from './lib'
-const REPO = resolve(import.meta.dir, '../..')
+import { join } from 'node:path'
+import { replaceLineBetween, REPO } from './lib'
 const dbDescription: Record<string, string> = {
   cvx: 'Convex',
   stdb: 'SpacetimeDB'

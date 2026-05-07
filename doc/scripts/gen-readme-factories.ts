@@ -1,9 +1,7 @@
 #!/usr/bin/env bun
 /* eslint-disable no-console */
-import { resolve } from 'node:path'
 import { FACTORY_META } from '../../lib/noboil/src/shared/factory-meta'
-import { replaceLineBetween } from './lib'
-const REPO = resolve(import.meta.dir, '../..')
+import { replaceLineBetween, REPO } from './lib'
 const SKIP = new Set(['orgDef'])
 const ALIAS: Record<string, string> = { base: 'cache' }
 const main = () => {

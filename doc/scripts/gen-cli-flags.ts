@@ -3,9 +3,7 @@
 /** biome-ignore-all lint/performance/useTopLevelRegex: per-block */
 /** biome-ignore-all lint/nursery/noContinue: parser */
 import { readFileSync } from 'node:fs'
-import { resolve } from 'node:path'
-import { replaceBetween } from './lib'
-const REPO = resolve(import.meta.dir, '../..')
+import { replaceBetween, REPO } from './lib'
 const escapeMd = (s: string): string =>
   s
     .replaceAll('|', String.raw`\|`)

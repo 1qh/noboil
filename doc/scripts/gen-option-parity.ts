@@ -3,9 +3,7 @@
 /** biome-ignore-all lint/performance/useTopLevelRegex: per-file scan */
 /** biome-ignore-all lint/nursery/noContinue: parser */
 import { readFileSync, statSync } from 'node:fs'
-import { resolve } from 'node:path'
-import { replaceBetween } from './lib'
-const REPO = resolve(import.meta.dir, '../..')
+import { replaceBetween, REPO } from './lib'
 interface Spec {
   brand: string
   expectedOpts: string[]

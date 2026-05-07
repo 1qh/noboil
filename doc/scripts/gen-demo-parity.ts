@@ -3,9 +3,8 @@
 /** biome-ignore-all lint/performance/useTopLevelRegex: per-file scan */
 /** biome-ignore-all lint/nursery/noContinue: walker */
 import { readdirSync, readFileSync, statSync } from 'node:fs'
-import { join, resolve } from 'node:path'
-import { replaceBetween } from './lib'
-const REPO = resolve(import.meta.dir, '../..')
+import { join } from 'node:path'
+import { replaceBetween, REPO } from './lib'
 const DEMOS = ['blog', 'chat', 'movie', 'org', 'poll']
 const TEST_RE = /\b(?:test|it)\(\s*['"`]/gu
 const walk = (dir: string, out: string[] = []): string[] => {

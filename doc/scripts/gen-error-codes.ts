@@ -3,10 +3,9 @@
 /** biome-ignore-all lint/nursery/noContinue: simple parser */
 /** biome-ignore-all lint/performance/useTopLevelRegex: per-file scan */
 import { readdirSync, readFileSync, statSync } from 'node:fs'
-import { join, resolve } from 'node:path'
+import { join } from 'node:path'
 import { ERROR_CODE_MEANINGS } from '../../lib/noboil/src/shared/error-codes'
-import { replaceBetween } from './lib'
-const REPO = resolve(import.meta.dir, '../..')
+import { replaceBetween, REPO } from './lib'
 const PATTERNS = [
   /\b(?:err|cvErr|throwErr)\(\s*'(?<code>[A-Z][A-Z_0-9]+)'/gu,
   /throw\s+new\s+\w*Error\(\s*'(?<code>[A-Z][A-Z_0-9]+)'/gu,

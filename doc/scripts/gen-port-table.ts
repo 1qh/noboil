@@ -1,9 +1,7 @@
 #!/usr/bin/env bun
 /* eslint-disable no-console */
-import { resolve } from 'node:path'
 import { config } from '../../noboil.config'
-import { replaceLineBetween } from './lib'
-const REPO = resolve(import.meta.dir, '../..')
+import { replaceLineBetween, REPO } from './lib'
 const main = () => {
   const p = config.ports
   const cvxApps = Object.entries(p.apps)

@@ -3,9 +3,8 @@
 /** biome-ignore-all lint/performance/useTopLevelRegex: helpers used per-file */
 /** biome-ignore-all lint/nursery/noContinue: walker */
 import { readdirSync, readFileSync, statSync } from 'node:fs'
-import { join, resolve } from 'node:path'
-import { replaceBetween } from './lib'
-const REPO = resolve(import.meta.dir, '../..')
+import { join } from 'node:path'
+import { replaceBetween, REPO } from './lib'
 const DEMOS = ['blog', 'chat', 'movie', 'org', 'poll']
 const TABLE_RE = /(?<name>\w+):\s*table\(s\.\w+(?:,\s*\{(?<opts>[^}]*)\})?/gu
 const API_RE = /\bapi\.(?<name>\w+)\b/gu

@@ -1,8 +1,7 @@
 #!/usr/bin/env bun
 /* eslint-disable no-console */
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs'
-import { resolve } from 'node:path'
-const REPO = resolve(import.meta.dir, '../..')
+import { REPO } from './lib'
 const SCRIPTS_DIR = `${REPO}/doc/scripts`
 const OUT = `${REPO}/doc/content/docs/single-source-of-truth.mdx`
 const LINE_TAG_RE = /<!-- AUTO-GENERATED:(?<name>[A-Z0-9_-]+) -->/gu

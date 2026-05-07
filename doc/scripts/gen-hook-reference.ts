@@ -1,9 +1,7 @@
 #!/usr/bin/env bun
 /* eslint-disable no-console */
 import { readFileSync } from 'node:fs'
-import { resolve } from 'node:path'
-import { replaceBetween } from './lib'
-const REPO = resolve(import.meta.dir, '../..')
+import { replaceBetween, REPO } from './lib'
 const extractInterface = (file: string, name: string): null | string => {
   const src = readFileSync(file, 'utf8')
   const re = new RegExp(`interface ${name}(?:<[^>]*>)?\\s*\\{([^}]+)\\}`, 'u')

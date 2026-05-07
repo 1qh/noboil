@@ -5,9 +5,8 @@ import { walkFiles } from 'noboil/walk'
 /** biome-ignore-all lint/nursery/noContinue: walker */
 /* oxlint-disable oxc/branches-sharing-code */
 import { readFileSync } from 'node:fs'
-import { relative, resolve } from 'node:path'
-import { replaceBetween, STRIP_AUTOGEN_RE, STRIP_FENCE_RE } from './lib'
-const REPO = resolve(import.meta.dir, '../..')
+import { relative } from 'node:path'
+import { replaceBetween, REPO, STRIP_AUTOGEN_RE, STRIP_FENCE_RE } from './lib'
 const MIN_LEN = 120
 const STRIP_HTML_AUTOGEN_RE = /<!-- AUTO-GENERATED:[\s\S]*?\/AUTO-GENERATED:[^>]+-->/gu
 const walk = (dir: string): string[] => walkFiles(dir, { accept: name => name.endsWith('.mdx') })

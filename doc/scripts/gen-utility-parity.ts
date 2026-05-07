@@ -3,9 +3,7 @@
 /** biome-ignore-all lint/performance/useTopLevelRegex: small file */
 /** biome-ignore-all lint/nursery/noContinue: parser */
 import { existsSync, readFileSync } from 'node:fs'
-import { resolve } from 'node:path'
-import { collectBraceExports, replaceBetween } from './lib'
-const REPO = resolve(import.meta.dir, '../..')
+import { collectBraceExports, replaceBetween, REPO } from './lib'
 const EXPORT_DECL_RE = /export\s+(?:const|function|class)\s+(?<name>\w+)/gu
 interface UtilDomain {
   cvxFiles: string[]

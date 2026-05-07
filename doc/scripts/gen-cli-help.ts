@@ -7,7 +7,7 @@ import { $ } from 'bun'
 import { stripAnsi } from 'noboil/ansi'
 import { readFileSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
-const REPO = resolve(import.meta.dir, '../..')
+import { REPO } from './lib'
 const BIN = `${REPO}/lib/noboil/src/index.ts`
 const CONVEX_BIN = `${REPO}/lib/noboil/src/convex/cli.ts`
 const STDB_BIN = `${REPO}/lib/noboil/src/spacetimedb/cli.ts`

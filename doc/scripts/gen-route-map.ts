@@ -3,9 +3,8 @@
 /** biome-ignore-all lint/performance/useTopLevelRegex: walker */
 /** biome-ignore-all lint/nursery/noContinue: walker */
 import { readdirSync, statSync } from 'node:fs'
-import { join, resolve } from 'node:path'
-import { replaceBetween } from './lib'
-const REPO = resolve(import.meta.dir, '../..')
+import { join } from 'node:path'
+import { replaceBetween, REPO } from './lib'
 const DEMOS = ['blog', 'chat', 'movie', 'org', 'poll']
 const walkRoutes = (root: string, base = ''): string[] => {
   if (!statSync(root, { throwIfNoEntry: false })) return []

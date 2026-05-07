@@ -3,9 +3,8 @@
 /** biome-ignore-all lint/performance/useTopLevelRegex: per-file scan */
 /** biome-ignore-all lint/nursery/noContinue: walker */
 import { readdirSync, readFileSync, statSync } from 'node:fs'
-import { join, relative, resolve } from 'node:path'
-import { replaceBetween } from './lib'
-const REPO = resolve(import.meta.dir, '../..')
+import { join, relative } from 'node:path'
+import { replaceBetween, REPO } from './lib'
 const ENV_RE = /process\.env\.(?<name>[A-Z][A-Z0-9_]+)/gu
 const walk = (dir: string, out: string[] = []): string[] => {
   for (const name of readdirSync(dir).toSorted()) {

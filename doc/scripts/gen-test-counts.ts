@@ -4,9 +4,8 @@
 import { $ } from 'bun'
 import { walkFiles } from 'noboil/walk'
 import { readdirSync, readFileSync, statSync } from 'node:fs'
-import { join, resolve } from 'node:path'
-import { replaceLineBetween, stripComments } from './lib'
-const REPO = resolve(import.meta.dir, '../..')
+import { join } from 'node:path'
+import { replaceLineBetween, REPO, stripComments } from './lib'
 const PASS_RE = /(?<pass>\d+)\s+pass/u
 const TEST_CALL_RE = /(?:^|[\s;,([])(?:test|it)(?:\.skip|\.only|\.each\(.+?\))?\s*\(/gu
 const runFullCount = async (cwd: string): Promise<number> => {

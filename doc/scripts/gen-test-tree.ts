@@ -1,9 +1,8 @@
 #!/usr/bin/env bun
 /* eslint-disable no-console */
 import { readdirSync, readFileSync, statSync } from 'node:fs'
-import { join, relative, resolve } from 'node:path'
-import { replaceBetween } from './lib'
-const REPO = resolve(import.meta.dir, '../..')
+import { join, relative } from 'node:path'
+import { replaceBetween, REPO } from './lib'
 const DESCRIBE_RE = /describe\(\s*['"`](?<name>[^'"`]+)['"`]/gu
 const TEST_RE = /\b(?:test|it)\(\s*['"`](?<name>[^'"`]+)['"`]/gu
 const walk = (dir: string, out: string[] = []): string[] => {

@@ -3,8 +3,7 @@
 /** biome-ignore-all lint/performance/noAwaitInLoops: sequential by design */
 /** biome-ignore-all lint/nursery/noContinue: skip-on-failure */
 import { $ } from 'bun'
-import { resolve } from 'node:path'
-const REPO = resolve(import.meta.dir, '../..')
+import { REPO } from './lib'
 const SCRIPTS = [
   'gen-cli-help.ts',
   'gen-api-imports.ts',

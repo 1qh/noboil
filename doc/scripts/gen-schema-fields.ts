@@ -3,9 +3,7 @@
 /** biome-ignore-all lint/performance/useTopLevelRegex: parsed once */
 /** biome-ignore-all lint/nursery/noContinue: parser */
 import { readFileSync } from 'node:fs'
-import { resolve } from 'node:path'
-import { replaceBetween } from './lib'
-const REPO = resolve(import.meta.dir, '../..')
+import { replaceBetween, REPO } from './lib'
 const SLOTS = ['base', 'children', 'kv', 'log', 'org', 'orgScoped', 'owned', 'quota', 'singleton'] as const
 const escapeMd = (s: string): string =>
   s

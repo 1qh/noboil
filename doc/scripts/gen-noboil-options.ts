@@ -2,9 +2,7 @@
 /* eslint-disable no-console */
 /** biome-ignore-all lint/performance/useTopLevelRegex: small file */
 import { readFileSync } from 'node:fs'
-import { resolve } from 'node:path'
-import { replaceBetween } from './lib'
-const REPO = resolve(import.meta.dir, '../..')
+import { replaceBetween, REPO } from './lib'
 const FIELD_RE = /^\s*(?<name>\w+)(?<opt>\??):\s*(?<type>[^\n]+)$/u
 const escapeMd = (s: string): string =>
   s

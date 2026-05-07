@@ -3,9 +3,7 @@
 /** biome-ignore-all lint/style/noNonNullAssertion: matchAll groups */
 /** biome-ignore-all lint/nursery/useNamedCaptureGroup: simple match */
 import { readFileSync } from 'node:fs'
-import { resolve } from 'node:path'
-import { replaceLineBetween } from './lib'
-const REPO = resolve(import.meta.dir, '../..')
+import { replaceLineBetween, REPO } from './lib'
 const TYPE_RE = /type TableType = (?<types>(?:'\w+'(?:\s*\|\s*)?)+)/u
 const main = () => {
   const cvxAdd = readFileSync(`${REPO}/lib/noboil/src/convex/add.ts`, 'utf8')

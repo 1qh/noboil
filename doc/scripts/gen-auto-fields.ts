@@ -1,9 +1,7 @@
 #!/usr/bin/env bun
 /* eslint-disable no-console */
-import { resolve } from 'node:path'
 import { FACTORY_META } from '../../lib/noboil/src/shared/factory-meta'
-import { replaceBetween } from './lib'
-const REPO = resolve(import.meta.dir, '../..')
+import { replaceBetween, REPO } from './lib'
 const DOC_LINK: Record<string, string> = { kv: './kv', log: './log', quota: './quota' }
 const escapeMd = (s: string): string =>
   s.replaceAll('|', String.raw`\|`).replaceAll('{', String.raw`\{`).replaceAll('}', String.raw`\}`)
