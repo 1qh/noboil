@@ -1,7 +1,6 @@
 import type { Identity, Timestamp } from 'spacetimedb'
 import type { AlgebraicTypeType, ColumnBuilder, TypeBuilder } from 'spacetimedb/server'
-import type { ReducerExportLike } from '../reducer-utils'
-import type { RateLimitConfig } from './common'
+import type { RateLimitConfig, ReducerExportLike } from './common'
 interface CascadeOption {
   foreignKey: string
   table: string

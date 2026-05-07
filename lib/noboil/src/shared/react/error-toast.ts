@@ -1,6 +1,7 @@
 /** biome-ignore-all lint/nursery/noComponentHookFactories: factory returns hook by design */
 'use client'
 import { useCallback } from 'react'
+import type { ToastFn } from './toast'
 interface ErrorHelpers<D extends { code: string; message?: string }> {
   extractErrorData: (error: unknown) => D | undefined
   getErrorMessage: (error: unknown) => string
@@ -10,7 +11,6 @@ interface ErrorToastOptions<D extends { code: string; message?: string }> {
   handlers?: Partial<Record<D['code'], (data: D) => void>> & { default?: (error: unknown) => void }
   toast: ToastFn
 }
-type ToastFn = (message: string) => void
 const createErrorToastHooks = <D extends { code: string; message?: string }>(helpers: ErrorHelpers<D>) => {
   const useErrorToast = ({ handlers, toast }: ErrorToastOptions<D>) =>
     useCallback(
@@ -72,5 +72,5 @@ const createErrorToastHooks = <D extends { code: string; message?: string }>(hel
   }
   return { makeErrorHandler, toastFieldError, useErrorToast }
 }
-export type { ErrorHelpers, ErrorToastOptions, ToastFn }
+export type { ErrorHelpers, ErrorToastOptions }
 export { createErrorToastHooks }

@@ -1,5 +1,6 @@
 'use client'
-import type { ErrorToastOptions, ToastFn } from '../../shared/react/error-toast'
+import type { ErrorToastOptions } from '../../shared/react/error-toast'
+import type { ToastFn } from '../../shared/react/toast'
 import type { ErrorData, ErrorHandler } from '../server/helpers'
 import { createErrorToastHooks } from '../../shared/react/error-toast'
 import { extractErrorData, getErrorMessage, handleError } from '../server/helpers'

@@ -1,22 +1,5 @@
 import type { Identity, Timestamp } from 'spacetimedb'
-import type { AlgebraicTypeType, ColumnBuilder, ReducerExport, TypeBuilder } from 'spacetimedb/server'
-type FieldBuilders = Record<string, ColumnBuilder<unknown, AlgebraicTypeType> | TypeBuilder<unknown, AlgebraicTypeType>>
-interface OptionalBuilder {
-  optional: () => ColumnBuilder<unknown, AlgebraicTypeType> | TypeBuilder<unknown, AlgebraicTypeType>
-}
-interface OwnedRow extends Record<string, unknown> {
-  updatedAt: Timestamp
-  userId: Identity
-}
-interface PkLike<Row, Id> {
-  delete: (id: Id) => boolean
-  find: (id: Id) => null | Row
-  update: (row: Row) => Row
-}
-type ReducerExportLike = ReducerExport<never, never>
-interface TableLike<Row> {
-  insert: (row: Row) => Row
-}
+import type { FieldBuilders, OptionalBuilder, OwnedRow, PkLike, TableLike } from './types/common'
 /** Build a `code: message`-formatted Error so reducer rejections carry a structured prefix. */
 const makeError = (code: string, message: string): Error => new Error(`${code}: ${message}`)
 const identityEquals = (a: Identity, b: Identity): boolean => {
@@ -82,5 +65,4 @@ const getOwnedRow = <Row extends OwnedRow, Id, Tbl extends TableLike<Row>, Pk ex
   return { pk, row }
 }
 const idEquals = identityEquals
-export type { FieldBuilders, OwnedRow, PkLike, ReducerExportLike, TableLike }
 export { applyPatch, getOwnedRow, identityEquals, idEquals, makeError, makeOptionalFields, pickPatch, timestampEquals }

@@ -1,7 +1,7 @@
 import type { Identity, Timestamp } from 'spacetimedb'
 import type { AlgebraicTypeType, TypeBuilder } from 'spacetimedb/server'
 import type { ZodObject, ZodRawShape } from 'zod/v4'
-import type { OwnedRow, PkLike, TableLike } from './reducer-utils'
+import type { OwnedRow, PkLike, TableLike } from './types/common'
 import type { CrudConfig, CrudExports, CrudFieldBuilders, CrudFieldValues, CrudPkLike, CrudTableLike } from './types/crud'
 import { enforceRateLimit } from './helpers'
 import { applyPatch, getOwnedRow, makeError, makeOptionalFields, pickPatch, timestampEquals } from './reducer-utils'

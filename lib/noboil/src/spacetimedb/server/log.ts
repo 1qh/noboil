@@ -2,8 +2,8 @@
 /* eslint-disable no-continue */
 import type { Identity, Timestamp } from 'spacetimedb'
 import type { AlgebraicTypeType, ColumnBuilder, TypeBuilder } from 'spacetimedb/server'
-import type { FieldBuilders, ReducerExportLike } from './reducer-utils'
 import type { RateLimitConfig } from './types'
+import type { FieldBuilders, ReducerExportLike } from './types/common'
 import { enforceRateLimit } from './helpers'
 interface LogConfig<DB, Tbl extends LogTableLike> {
   bulkItemsField?: ColumnBuilder<unknown, AlgebraicTypeType> | TypeBuilder<unknown, AlgebraicTypeType>

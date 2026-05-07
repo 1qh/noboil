@@ -1,6 +1,5 @@
 import type { Identity, Timestamp } from 'spacetimedb'
 import type { AlgebraicTypeType, TypeBuilder } from 'spacetimedb/server'
-import type { OwnedRow, PkLike, TableLike } from './reducer-utils'
 import type {
   ChildCrudConfig,
   ChildCrudExports,
@@ -10,6 +9,7 @@ import type {
   CrudPkLike,
   CrudTableLike
 } from './types/child'
+import type { OwnedRow, PkLike, TableLike } from './types/common'
 import { enforceRateLimit } from './helpers'
 import { applyPatch, getOwnedRow, makeError, makeOptionalFields, pickPatch, timestampEquals } from './reducer-utils'
 type UpdateArgs<F extends CrudFieldBuilders, Id> = Partial<CrudFieldValues<F>> & { expectedUpdatedAt?: Timestamp; id: Id }

@@ -1,7 +1,7 @@
 import type { Identity, Timestamp } from 'spacetimedb'
 import type { AlgebraicTypeType, ColumnBuilder, TypeBuilder } from 'spacetimedb/server'
-import type { FieldBuilders, ReducerExportLike } from './reducer-utils'
 import type { RateLimitConfig } from './types'
+import type { FieldBuilders, ReducerExportLike } from './types/common'
 import { enforceRateLimit } from './helpers'
 import { applyPatch, makeError } from './reducer-utils'
 const findByKey = (table: KvTableLike, key: string): KvRow | undefined => {

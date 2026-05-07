@@ -1,6 +1,6 @@
 import type { Identity, Timestamp } from 'spacetimedb'
 import type { AlgebraicTypeType, ColumnBuilder, TypeBuilder } from 'spacetimedb/server'
-import type { ReducerExportLike } from '../reducer-utils'
+import type { ReducerExportLike } from './common'
 interface FileRowShape {
   contentType: string
   data: Uint8Array

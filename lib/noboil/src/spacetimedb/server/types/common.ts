@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import type { Identity, Timestamp } from 'spacetimedb'
+import type { AlgebraicTypeType, ColumnBuilder, ReducerExport, TypeBuilder } from 'spacetimedb/server'
 import type { z as _, ZodNullable, ZodNumber, ZodObject, ZodOptional, ZodRawShape } from 'zod/v4'
 import type { OrgRole, Rec } from '../../../shared/types'
 type Ab<V extends Visibility = 'public'> = <A = Rec, R = unknown, C = Rec>(
@@ -53,6 +54,7 @@ type EnrichedDoc<S extends ZodRawShape> = WithUrls<
   }
 >
 type FID = string
+type FieldBuilders = Record<string, ColumnBuilder<unknown, AlgebraicTypeType> | TypeBuilder<unknown, AlgebraicTypeType>>
 interface FilterLike {
   and: (a: unknown, b: unknown) => unknown
   eq: (a: unknown, b: unknown) => unknown
@@ -111,6 +113,9 @@ interface MutationCtxLike extends ReducerCtx<DbLike> {
 interface MutCtx extends UserCtx {
   storage?: StorageLike
 }
+interface OptionalBuilder {
+  optional: () => ColumnBuilder<unknown, AlgebraicTypeType> | TypeBuilder<unknown, AlgebraicTypeType>
+}
 type OrgEnrichedDoc<S extends ZodRawShape> = WithUrls<
   DocBase<S> & {
     author: AuthorInfo | null
@@ -126,6 +131,10 @@ interface OrgUserLike {
   image?: string
   name?: string
 }
+interface OwnedRow extends Record<string, unknown> {
+  updatedAt: Timestamp
+  userId: Identity
+}
 interface PaginatedResult<D> {
   continueCursor: string
   isDone: boolean
@@ -135,6 +144,11 @@ type PaginationOptsShape = Record<
   'cursor' | 'endCursor' | 'id' | 'maximumBytesRead' | 'maximumRowsRead' | 'numItems',
   ZodNullable | ZodNumber | ZodOptional
 >
+interface PkLike<Row, Id> {
+  delete: (id: Id) => boolean
+  find: (id: Id) => null | Row
+  update: (row: Row) => Row
+}
 type Qb<V extends Visibility = 'public'> = <A = Rec, R = unknown, C = Rec>(
   ...args: unknown[]
 ) => C & RegisteredQuery<V, A, R>
@@ -176,6 +190,7 @@ interface ReducerCtx<DB = unknown> {
   sender?: IdentityLike
   timestamp?: number
 }
+type ReducerExportLike = ReducerExport<never, never>
 interface RegisteredAction<V extends Visibility, A, R> {
   __args: A
   __kind: 'action'
@@ -213,6 +228,9 @@ interface SetupConfig<DM = unknown> {
 interface StorageLike {
   delete: (id: string) => Promise<void>
   getUrl: (id: string) => Promise<null | string>
+}
+interface TableLike<Row> {
+  insert: (row: Row) => Row
 }
 type UrlKey<K, V> =
   NonNullable<V> extends FID | FID[] | readonly FID[] ? `${K & string}Url${NonNullable<V> extends FID ? '' : 's'}` : never
@@ -406,6 +424,7 @@ export type {
   EnrichedDoc,
   ErrorCode,
   FID,
+  FieldBuilders,
   FilterLike,
   GlobalHookCtx,
   GlobalHooks,
@@ -427,14 +446,17 @@ export type {
   MiddlewareCtx,
   MutationCtxLike,
   MutCtx,
+  OptionalBuilder,
   OrgDefSchema,
   OrgEnrichedDoc,
   OrgRole,
   OrgSchema,
   OrgUserLike,
+  OwnedRow,
   OwnedSchema,
   PaginatedResult,
   PaginationOptsShape,
+  PkLike,
   Qb,
   QueryCtxLike,
   QueryLike,
@@ -444,6 +466,7 @@ export type {
   ReadCtx,
   Rec,
   ReducerCtx,
+  ReducerExportLike,
   Register,
   RegisteredAction,
   RegisteredDefaultError,
@@ -458,6 +481,7 @@ export type {
   SetupConfig,
   SingletonSchema,
   StorageLike,
+  TableLike,
   UserCtx,
   Visibility,
   WhereGroupOf,
