@@ -12,7 +12,7 @@ import AuthLayout from '@a/fe/spacetimedb-auth-layout'
 import { isPlaywright } from '@a/fe/test-mode'
 import { sameIdentity } from '@a/fe/utils'
 import { usePathname, useRouter } from 'next/navigation'
-import { Devtools } from 'noboil/spacetimedb/react'
+import { Devtools, useStdbHydrated } from 'noboil/spacetimedb/react'
 import { useEffect, useState } from 'react'
 import { useSpacetimeDB, useTable } from 'spacetimedb/react'
 import OrgLayoutClient from './layout-client'
@@ -46,8 +46,9 @@ const OrgLayoutInner = ({ children }: { children: ReactNode }) => {
   const pathname = usePathname()
   const router = useRouter()
   const { identity } = useSpacetimeDB()
-  const [orgs, orgsReady] = useTable(tables.org)
-  const [members, membersReady] = useTable(tables.orgMember)
+  const [orgs] = useTable(tables.org)
+  const [members] = useTable(tables.orgMember)
+  const hydrated = useStdbHydrated([tables.org, tables.orgMember])
   const activeOrgId = readActiveOrgId()
   const [playwrightWaitExpired, setPlaywrightWaitExpired] = useState(false)
   /** biome-ignore lint/correctness/useExhaustiveDependencies: retrigger on navigation */
@@ -60,7 +61,7 @@ const OrgLayoutInner = ({ children }: { children: ReactNode }) => {
   if (!pathname) return children
   if (!needsOrgLayout(pathname)) return children
   if (!(identity || isPlaywright())) return null
-  if (!((orgsReady && membersReady) || playwrightWaitExpired)) return null
+  if (!(hydrated || playwrightWaitExpired)) return null
   // oxlint-disable-next-line jsx-no-new-array-as-prop
   const ownedOrgs = identity ? orgs.filter((o: Org) => sameIdentity(o.userId, identity)) : []
   const memberOrgs = identity

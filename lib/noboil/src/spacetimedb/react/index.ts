@@ -80,6 +80,7 @@ export type { StdbCrudRefs } from './use-crud'
 export { useCrud } from './use-crud'
 export type { FileRow } from './use-file-url'
 export { FileProvider, resolveFileUrl, useFiles, useFileUrl, useResolveFileUrl } from './use-file-url'
+export { useStdbHydrated } from './use-hydrated'
 export type {
   InfiniteListOptions,
   InfiniteListResult,
