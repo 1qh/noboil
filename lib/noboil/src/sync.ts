@@ -12,7 +12,7 @@ import type { Db } from './scaffold-ops'
 import { bold, dim } from './ansi'
 import { die } from './cli-utils'
 import { patchRootPackageJson, removeDirs, rmSafe } from './scaffold-ops'
-import { readJson } from './shared/env-file'
+import { readJson, writeJson } from './shared/env-file'
 interface Manifest {
   db: Db
   ejected?: boolean
@@ -228,7 +228,7 @@ const runSync = async (opts: SyncOpts, onProgress: (p: Record<string, unknown>) 
         scaffoldedFrom: nextHash,
         version: manifest.version
       }
-      writeFileSync(join(cwd, '.noboilrc.json'), `${JSON.stringify(nextManifest, null, 2)}\n`)
+      writeJson(join(cwd, '.noboilrc.json'), nextManifest)
     }
     onProgress({ phase: 'done' })
   } finally {

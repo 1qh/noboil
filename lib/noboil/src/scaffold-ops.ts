@@ -1,6 +1,6 @@
-import { existsSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, readdirSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
-import { readJson } from './shared/env-file'
+import { readJson, writeJson } from './shared/env-file'
 type Db = 'convex' | 'spacetimedb'
 interface PackageJson {
   dependencies?: Record<string, string>
@@ -69,7 +69,7 @@ const patchRootPackageJson = ({ db, dir, includeDemos }: { db: Db; dir: string; 
   deps.noboil = 'latest'
   pkg.dependencies = deps
   pkg.devDependencies = stripAScope(pkg.devDependencies)
-  writeFileSync(pkgPath, `${JSON.stringify(pkg, null, 2)}\n`)
+  writeJson(pkgPath, pkg)
 }
 const pruneLibFe = ({ db, dir }: { db: Db; dir: string }) => {
   const feSrc = join(dir, 'lib', 'fe', 'src')
@@ -123,7 +123,7 @@ const patchWorkspacePackageJsons = ({ db, dir }: { db: Db; dir: string }) => {
       pkg.dependencies = deps
       pkg.devDependencies = devDeps
       pkg.peerDependencies = peerDeps
-      writeFileSync(pkgPath, `${JSON.stringify(pkg, null, 2)}\n`)
+      writeJson(pkgPath, pkg)
     }
   }
 }
@@ -138,7 +138,7 @@ const patchTsconfig = ({ db, dir }: { db: Db; dir: string }) => {
   const existing = tsconfig.compilerOptions.customConditions ?? []
   const condition = `noboil-${db}`
   if (!existing.includes(condition)) tsconfig.compilerOptions.customConditions = [...existing, condition]
-  writeFileSync(tsconfigPath, `${JSON.stringify(tsconfig, null, 2)}\n`)
+  writeJson(tsconfigPath, tsconfig)
 }
 export type { Db, PackageJson }
 export { patchRootPackageJson, patchTsconfig, patchWorkspacePackageJsons, pruneLibFe, REMOVE_ALWAYS, removeDirs, rmSafe }

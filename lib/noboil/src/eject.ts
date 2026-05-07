@@ -4,7 +4,7 @@ import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFi
 import { dirname, join, relative, resolve as resolvePath } from 'node:path'
 import { bold, dim, green, yellow } from './ansi'
 import { die } from './cli-utils'
-import { readJson } from './shared/env-file'
+import { readJson, writeJson } from './shared/env-file'
 interface EjectContext {
   cwd: string
   db: 'convex' | 'spacetimedb'
@@ -43,7 +43,6 @@ const isIgnoredPath = (filePath: string) => {
   for (const segment of segments) if (segment === 'node_modules' || segment === '.git') return true
   return false
 }
-const writeJson = (filePath: string, value: unknown) => writeFileSync(filePath, `${JSON.stringify(value, null, 2)}\n`)
 const collectFiles = (root: string) => {
   if (!existsSync(root)) return []
   const out: string[] = []

@@ -1,5 +1,5 @@
 /** biome-ignore-all lint/nursery/noContinue: line skip on comments/empty */
-import { existsSync, readFileSync } from 'node:fs'
+import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 /** Parse a single `KEY=VALUE` line. Returns null on comment/empty/malformed. Strips surrounding quotes. */
 const parseEnvLine = (line: string): [string, string] | null => {
@@ -42,6 +42,8 @@ const findProjectRoot = (start = process.cwd(), markers: readonly string[] = ['p
 }
 /** Read + parse JSON file. Throws on read or parse failure. Cast result at callsite. */
 const readJson = (path: string): unknown => JSON.parse(readFileSync(path, 'utf8'))
+/** Write `value` as pretty-printed JSON with trailing newline. */
+const writeJson = (path: string, value: unknown): void => writeFileSync(path, `${JSON.stringify(value, null, 2)}\n`)
 /** Read + parse JSON file, returning null on any failure. Cast result at callsite. */
 const readJsonSafe = (path: string): unknown => {
   try {
@@ -50,4 +52,4 @@ const readJsonSafe = (path: string): unknown => {
     return null
   }
 }
-export { findProjectRoot, parseEnvFile, parseEnvLine, readJson, readJsonSafe }
+export { findProjectRoot, parseEnvFile, parseEnvLine, readJson, readJsonSafe, writeJson }
