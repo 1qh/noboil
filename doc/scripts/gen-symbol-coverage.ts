@@ -1,7 +1,8 @@
 #!/usr/bin/env bun
-/* eslint-disable no-console, no-continue */
 /** biome-ignore-all lint/performance/useTopLevelRegex: per-file scan */
 /** biome-ignore-all lint/nursery/noContinue: walker */
+/* eslint-disable no-console, no-continue */
+import { readJson } from 'noboil/env-file'
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { collectBraceExports, replaceBetween } from './lib'
@@ -27,7 +28,7 @@ const collectDocsText = (root: string): string => {
   return combined.replaceAll(STRIP_RE, '')
 }
 const main = () => {
-  const pkg = JSON.parse(readFileSync(`${REPO}/lib/noboil/package.json`, 'utf8')) as {
+  const pkg = readJson(`${REPO}/lib/noboil/package.json`) as {
     exports: Record<string, string | { default?: string; import?: string; require?: string; types?: string }>
   }
   const publicExports = new Set<string>()

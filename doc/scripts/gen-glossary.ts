@@ -1,7 +1,8 @@
 #!/usr/bin/env bun
-/* eslint-disable no-console, no-continue */
 /** biome-ignore-all lint/performance/useTopLevelRegex: per-file scan */
 /** biome-ignore-all lint/nursery/noContinue: walker */
+/* eslint-disable no-console, no-continue */
+import { readJson } from 'noboil/env-file'
 import { readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
 import { basename, relative, resolve } from 'node:path'
 import { collectBraceExports, STRIP_AUTOGEN_RE, STRIP_FENCE_RE } from './lib'
@@ -25,7 +26,7 @@ interface Entry {
   subpaths: string[]
 }
 const main = () => {
-  const pkg = JSON.parse(readFileSync(`${REPO}/lib/noboil/package.json`, 'utf8')) as {
+  const pkg = readJson(`${REPO}/lib/noboil/package.json`) as {
     exports: Record<string, string | { default?: string; import?: string; require?: string; types?: string }>
     name: string
   }

@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /* eslint-disable no-console */
 /** biome-ignore-all lint/performance/useTopLevelRegex: small file */
-import { readFileSync } from 'node:fs'
+import { readJson } from 'noboil/env-file'
 import { resolve } from 'node:path'
 import { replaceBetween } from './lib'
 const REPO = resolve(import.meta.dir, '../..')
@@ -14,7 +14,7 @@ interface ExportTarget {
   types?: string
 }
 const main = () => {
-  const pkg = JSON.parse(readFileSync(`${REPO}/lib/noboil/package.json`, 'utf8')) as {
+  const pkg = readJson(`${REPO}/lib/noboil/package.json`) as {
     exports: Record<string, ExportTarget | string>
     name: string
   }

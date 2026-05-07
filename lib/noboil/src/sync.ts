@@ -12,6 +12,7 @@ import type { Db } from './scaffold-ops'
 import { bold, dim } from './ansi'
 import { die } from './cli-utils'
 import { patchRootPackageJson, removeDirs, rmSafe } from './scaffold-ops'
+import { readJson } from './shared/env-file'
 interface Manifest {
   db: Db
   ejected?: boolean
@@ -71,7 +72,7 @@ const findProjectRoot = (start: string): string => {
 const readManifest = (root: string) => {
   const manifestPath = join(root, '.noboilrc.json')
   if (!existsSync(manifestPath)) die('Not a noboil project. Run `noboil init` first.')
-  const parsed = JSON.parse(readFileSync(manifestPath, 'utf8')) as Partial<Manifest>
+  const parsed = readJson(manifestPath) as Partial<Manifest>
   if (
     typeof parsed.version !== 'number' ||
     (parsed.db !== 'convex' && parsed.db !== 'spacetimedb') ||

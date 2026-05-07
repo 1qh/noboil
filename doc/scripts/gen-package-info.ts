@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /* eslint-disable no-console */
-import { readFileSync } from 'node:fs'
+import { readJson } from 'noboil/env-file'
 import { resolve } from 'node:path'
 import { replaceLineBetween } from './lib'
 const REPO = resolve(import.meta.dir, '../..')
@@ -13,7 +13,7 @@ interface Pkg {
   version: string
 }
 const main = () => {
-  const pkg = JSON.parse(readFileSync(PKG, 'utf8')) as Pkg
+  const pkg = readJson(PKG) as Pkg
   const tagline = `**v${pkg.version}** · ${pkg.description}`
   const peers = pkg.peerDependencies
     ? `**Peer deps:** ${Object.keys(pkg.peerDependencies)

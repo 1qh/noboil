@@ -1,8 +1,8 @@
 #!/usr/bin/env bun
-/* eslint-disable no-console, max-depth */
-import { walkFiles } from 'noboil/walk'
 /** biome-ignore-all lint/performance/useTopLevelRegex: per-file scan */
 /** biome-ignore-all lint/nursery/noContinue: parser */
+/* eslint-disable no-console, max-depth */
+import { walkFiles } from 'noboil/walk'
 import { readFileSync } from 'node:fs'
 import { relative, resolve } from 'node:path'
 import { replaceBetween } from './lib'

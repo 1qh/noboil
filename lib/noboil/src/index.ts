@@ -3,10 +3,10 @@
 /** biome-ignore-all lint/nursery/noUnnecessaryConditions: dashboard loop intentionally infinite until exit */
 /* oxlint-disable promise/prefer-await-to-then, no-useless-assignment, no-constant-condition */
 /* eslint-disable no-console, no-await-in-loop, @typescript-eslint/no-unnecessary-condition */
-import { readFileSync } from 'node:fs'
 import { bold, dim, red } from './ansi'
 import { LOG_PATH, logCrash } from './shared/crash-log'
 import { didYouMean } from './shared/did-you-mean'
+import { readJson } from './shared/env-file'
 import { pushRecent } from './shared/recent'
 import { getCliVersion } from './shared/version'
 import { findAncestorFile } from './shared/walk'
@@ -44,7 +44,7 @@ const detectDb = (): 'convex' | 'spacetimedb' | null => {
   const p = findManifest(process.cwd())
   if (!p) return null
   try {
-    const rc = JSON.parse(readFileSync(p, 'utf8')) as { db?: string }
+    const rc = readJson(p) as { db?: string }
     if (rc.db === 'convex' || rc.db === 'spacetimedb') return rc.db
   } catch {
     return null

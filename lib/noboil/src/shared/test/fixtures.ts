@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs'
+import { readJson } from '../env-file'
 import { setHermeticAdapter } from './hermetic'
 type FixtureMap = Record<string, unknown>
 interface FixtureRule {
@@ -13,7 +13,7 @@ const isRuleArray = (v: unknown): v is FixtureRule[] =>
  * fixtures based on payload content. Use in test setup to record/replay external calls.
  */
 const loadHermeticFixtures = (path: string): void => {
-  const data = JSON.parse(readFileSync(path, 'utf8')) as FixtureMap
+  const data = readJson(path) as FixtureMap
   setHermeticAdapter((op, payload) => {
     const entry = data[op]
     if (entry === undefined) return

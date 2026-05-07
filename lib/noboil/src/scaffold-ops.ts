@@ -1,5 +1,6 @@
-import { existsSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { readJson } from './shared/env-file'
 type Db = 'convex' | 'spacetimedb'
 interface PackageJson {
   dependencies?: Record<string, string>
@@ -46,7 +47,7 @@ const stripAScope = (section?: Record<string, string>): Record<string, string> |
 }
 const patchRootPackageJson = ({ db, dir, includeDemos }: { db: Db; dir: string; includeDemos: boolean }) => {
   const pkgPath = join(dir, 'package.json')
-  const pkg = JSON.parse(readFileSync(pkgPath, 'utf8')) as PackageJson
+  const pkg = readJson(pkgPath) as PackageJson
   const otherDb = db === 'convex' ? 'spacetimedb' : 'convex'
   const shouldDrop = (key: string, val: string) =>
     key === 'test' ||
@@ -110,7 +111,7 @@ const patchWorkspacePackageJsons = ({ db, dir }: { db: Db; dir: string }) => {
     ...listChildPackages(join(dir, 'readonly'))
   ]
   for (const pkgPath of pkgs) {
-    const pkg = JSON.parse(readFileSync(pkgPath, 'utf8')) as {
+    const pkg = readJson(pkgPath) as {
       dependencies?: Record<string, string>
       devDependencies?: Record<string, string>
       peerDependencies?: Record<string, string>
@@ -130,7 +131,7 @@ const patchTsconfig = ({ db, dir }: { db: Db; dir: string }) => {
   if (db === 'convex') return
   const tsconfigPath = join(dir, 'tsconfig.json')
   if (!existsSync(tsconfigPath)) return
-  const tsconfig = JSON.parse(readFileSync(tsconfigPath, 'utf8')) as {
+  const tsconfig = readJson(tsconfigPath) as {
     compilerOptions?: { customConditions?: string[] }
   }
   tsconfig.compilerOptions ??= {}

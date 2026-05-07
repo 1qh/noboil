@@ -1,8 +1,9 @@
 #!/usr/bin/env bun
-/* eslint-disable no-console, prefer-named-capture-group */
 /** biome-ignore-all lint/nursery/noContinue: simple parser */
 /** biome-ignore-all lint/performance/useTopLevelRegex: per-line scan */
 /** biome-ignore-all lint/nursery/useNamedCaptureGroup: positional matches sufficient */
+/* eslint-disable no-console, prefer-named-capture-group */
+import { readJson } from 'noboil/env-file'
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 const REPO = resolve(import.meta.dir, '../..')
@@ -50,7 +51,7 @@ const main = () => {
       gm = GITHUB_RE.exec(src)
     }
   }
-  const meta = JSON.parse(readFileSync(`${DOCS_DIR}/meta.json`, 'utf8')) as { pages: string[] }
+  const meta = readJson(`${DOCS_DIR}/meta.json`) as { pages: string[] }
   const navSet = new Set(meta.pages)
   const orphans = [...slugs].filter(s => !navSet.has(s))
   if (orphans.length > 0) failures.push(`Pages not in meta.json nav: ${orphans.join(', ')}`)
