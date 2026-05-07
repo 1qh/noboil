@@ -4,6 +4,7 @@
 /* oxlint-disable eslint/complexity, max-depth */
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { basename, dirname, join } from 'node:path'
+import type { Issue } from '../shared/schema-types'
 import type { FactoryCall, SchemaField, SchemaTable } from './schema-utils'
 import { bold, dim, green, red, yellow } from '../ansi'
 import { FACTORY_INVOKE_NAMES, SCHEMA_MARKERS } from '../shared/factory-meta'
@@ -22,11 +23,6 @@ import {
 interface AccessEntry {
   endpoints: string[]
   level: string
-}
-interface Issue {
-  file?: string
-  level: 'error' | 'warn'
-  message: string
 }
 interface TableIndex {
   fields: string[]

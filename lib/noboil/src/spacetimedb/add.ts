@@ -2,6 +2,7 @@
 /* eslint-disable no-console, complexity, @typescript-eslint/max-params */
 /* oxlint-disable max-params */
 import { join } from 'node:path'
+import type { ParsedField } from '../shared/schema-types'
 import type { FieldType, TableType } from '../shared/types'
 import { bold, dim, green, red, yellow } from '../ansi'
 import { camelToTitle, hasFlag, parseEnumFieldDef, readEqFlag, writeIfNotExists } from '../shared/cli'
@@ -13,11 +14,6 @@ interface AddFlags {
   name: string
   parent: string
   type: TableType
-}
-interface ParsedField {
-  name: string
-  optional: boolean
-  type: FieldType | { enum: string[] }
 }
 const TABLE_TYPES = new Set<TableType>(['cache', 'child', 'kv', 'log', 'org', 'owned', 'quota', 'singleton'])
 const FIELD_TYPES = new Set<FieldType>(['boolean', 'number', 'string'])

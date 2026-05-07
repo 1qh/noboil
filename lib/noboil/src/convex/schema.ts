@@ -1,13 +1,10 @@
 import type { ZodObject, ZodRawShape } from 'zod/v4'
 import { zid } from 'convex-helpers/server/zod4'
 import { array, object, string } from 'zod/v4'
+import type { FileOpts, KvEntryInput, LogEntryInput, QuotaEntryInput } from '../shared/schema-types'
 import type { BaseSchema, OrgDefSchema, OrgSchema, OwnedSchema, SchemaBrand, SingletonSchema } from './server/types'
 import { validateSchemas } from '../shared/zod'
 import { typed } from './server/bridge'
-interface FileOpts {
-  accept?: string
-  maxSize?: number
-}
 /** Zod schema for a Convex storage file reference. Optionally specify constraints. */
 const file = (opts?: FileOpts) =>
   zid('_storage').meta({ accept: opts?.accept, maxSize: opts?.maxSize, nb: 'file' as const })
@@ -111,10 +108,6 @@ const makeSingleton = <T extends Record<string, ZodObject>>(schemas: T) =>
   brandSchemas('singleton', schemas) as {
     [K in keyof T]: SingletonSchema<T[K] extends ZodObject<infer S> ? S : ZodRawShape> & T[K]
   }
-interface LogEntryInput {
-  parent: string
-  schema: ZodObject
-}
 /** Creates log entries branded for use with log(). Each entry declares a parent table + payload schema. */
 const makeLog = <T extends Record<string, LogEntryInput>>(entries: T): { [K in keyof T]: SchemaBrand<'log'> & T[K] } => {
   for (const name of Object.keys(entries)) {
@@ -128,11 +121,6 @@ const makeLog = <T extends Record<string, LogEntryInput>>(entries: T): { [K in k
   }
   return typed(entries)
 }
-interface KvEntryInput {
-  keys?: readonly string[]
-  schema: ZodObject
-  writeRole?: ((ctx: unknown) => boolean | Promise<boolean>) | boolean
-}
 /** Creates kv entries branded for use with kv(). Each entry declares a string-keyed state schema. */
 const makeKv = <T extends Record<string, KvEntryInput>>(entries: T): { [K in keyof T]: SchemaBrand<'kv'> & T[K] } => {
   for (const name of Object.keys(entries)) {
@@ -145,10 +133,6 @@ const makeKv = <T extends Record<string, KvEntryInput>>(entries: T): { [K in key
       })
   }
   return typed(entries)
-}
-interface QuotaEntryInput {
-  durationMs: number
-  limit: number
 }
 /** Creates quota entries for use with quota(). */
 const makeQuota = <T extends Record<string, QuotaEntryInput>>(

@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import type { ZodObject, ZodRawShape } from 'zod/v4'
 import { array, object, string } from 'zod/v4'
+import type { FileOpts, KvEntryInput, LogEntryInput, QuotaEntryInput } from '../shared/schema-types'
 import type { BaseSchema, OrgDefSchema, OrgSchema, OwnedSchema, SchemaBrand, SingletonSchema } from './server/types'
 import { validateSchemas } from '../shared/zod'
 import { typed } from './server/bridge'
@@ -39,10 +40,6 @@ interface ChildFn {
   }
 }
 /** Creates a file-id schema annotated for noboil file inputs. */
-interface FileOpts {
-  accept?: string
-  maxSize?: number
-}
 const file = (opts?: FileOpts) =>
   string()
     .min(1)
@@ -104,10 +101,6 @@ const makeSingleton = <T extends Record<string, ZodObject>>(schemas: T) =>
   brandSchemas('singleton', schemas) as {
     [K in keyof T]: SingletonSchema<T[K] extends ZodObject<infer S, infer _Config> ? S : ZodRawShape> & T[K]
   }
-interface LogEntryInput {
-  parent: string
-  schema: ZodObject
-}
 const makeLog = <T extends Record<string, LogEntryInput>>(entries: T): { [K in keyof T]: SchemaBrand<'log'> & T[K] } => {
   for (const name of Object.keys(entries)) {
     const entry = entries[name]
@@ -120,11 +113,6 @@ const makeLog = <T extends Record<string, LogEntryInput>>(entries: T): { [K in k
   }
   return typed(entries)
 }
-interface KvEntryInput {
-  keys?: readonly string[]
-  schema: ZodObject
-  writeRole?: ((ctx: unknown) => boolean | Promise<boolean>) | boolean
-}
 const makeKv = <T extends Record<string, KvEntryInput>>(entries: T): { [K in keyof T]: SchemaBrand<'kv'> & T[K] } => {
   for (const name of Object.keys(entries)) {
     const entry = entries[name]
@@ -136,10 +124,6 @@ const makeKv = <T extends Record<string, KvEntryInput>>(entries: T): { [K in key
       })
   }
   return typed(entries)
-}
-interface QuotaEntryInput {
-  durationMs: number
-  limit: number
 }
 const makeQuota = <T extends Record<string, QuotaEntryInput>>(
   entries: T

@@ -4,6 +4,7 @@
 /* oxlint-disable eslint/complexity, max-depth */
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { basename, join } from 'node:path'
+import type { Issue } from '../shared/schema-types'
 import { bold, dim, green, red, yellow } from '../ansi'
 import { isSchemaFile } from '../shared/viz'
 import { findStdbModuleDirDeep, listTypeScriptFiles } from '../shared/walk'
@@ -16,11 +17,6 @@ interface FactoryCall {
   file: string
   options: string
   table: string
-}
-interface Issue {
-  file?: string
-  level: 'error' | 'warn'
-  message: string
 }
 interface SchemaField {
   field: string
