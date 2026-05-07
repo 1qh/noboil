@@ -4,15 +4,9 @@
 /** biome-ignore-all lint/performance/useTopLevelRegex: per-line scan */
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { replaceBetween } from './lib'
+import { replaceBetween, slugify } from './lib'
 const REPO = resolve(import.meta.dir, '../..')
 const RECIPES = `${REPO}/doc/content/docs/recipes.mdx`
-const slugify = (heading: string): string =>
-  heading
-    .toLowerCase()
-    .replace(/^#+\s+/u, '')
-    .replaceAll(/[^a-z0-9 -]/gu, '')
-    .replaceAll(/\s+/gu, '-')
 const main = () => {
   const src = readFileSync(RECIPES, 'utf8')
   const headings: { slug: string; text: string }[] = []

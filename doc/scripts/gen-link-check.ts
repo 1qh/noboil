@@ -6,16 +6,11 @@
 import { readJson } from 'noboil/env-file'
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
+import { slugify } from './lib'
 const REPO = resolve(import.meta.dir, '../..')
 const DOCS_DIR = `${REPO}/doc/content/docs`
 const SLUG_RE = /\]\(\.\/([a-z][a-z0-9-]*)(?:#([a-z][a-z0-9-]*))?\)/gu
 const GITHUB_RE = /github\.com\/1qh\/noboil\/(?:blob|tree)\/main\/([^\s)]+)/gu
-const slugify = (heading: string): string =>
-  heading
-    .toLowerCase()
-    .replace(/^#+\s+/u, '')
-    .replaceAll(/[^a-z0-9 -]/gu, '')
-    .replaceAll(/\s+/gu, '-')
 const main = () => {
   const files = readdirSync(DOCS_DIR)
     .toSorted()

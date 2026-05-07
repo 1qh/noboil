@@ -24,6 +24,11 @@ const stripStrings = (src: string): string =>
     .replaceAll(DQUOTE_RE, '""')
     .replaceAll(LINE_COMMENT_RE, '')
     .replaceAll(BLOCK_COMMENT_RE, '')
+const HEADING_PREFIX_RE = /^#+\s+/u
+const NON_SLUG_CHAR_RE = /[^a-z0-9 -]/gu
+const WHITESPACE_RE = /\s+/gu
+const slugify = (heading: string): string =>
+  heading.toLowerCase().replace(HEADING_PREFIX_RE, '').replaceAll(NON_SLUG_CHAR_RE, '').replaceAll(WHITESPACE_RE, '-')
 const collectBraceExports = (src: string, out: Set<string>) => {
   let m = EXPORT_BRACE_RE.exec(src)
   while (m) {
@@ -136,6 +141,7 @@ export {
   padMarkdownTables,
   replaceBetween,
   replaceLineBetween,
+  slugify,
   STRIP_AUTOGEN_RE,
   STRIP_FENCE_RE,
   stripComments,
