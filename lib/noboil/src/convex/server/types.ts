@@ -130,26 +130,26 @@ interface ChildConfig {
   parentSchema?: ZodObject
   schema: ZodObject
 }
-interface ChildCrudResult<S extends ZodRawShape> {
-  create: RegisteredMutation<'public', Rec & SchemaOut<S> & { items?: SchemaOut<S>[] }, string | string[]>
+interface ChildCrudResult<S extends ZodRawShape, FK extends string = string> {
+  create: RegisteredMutation<'public', ChildFkArg<FK> & SchemaOut<S> & { items?: SchemaOut<S>[] }, string | string[]>
   get: RegisteredQuery<'public', IdArg, DocBase<S> | null>
-  list: RegisteredQuery<'public', Rec, DocBase<S>[]>
+  list: RegisteredQuery<'public', ChildFkArg<FK>, DocBase<S>[]>
   pub?: {
     get: RegisteredQuery<'public', IdArg, DocBase<S> | null>
-    list: RegisteredQuery<'public', Rec, DocBase<S>[]>
+    list: RegisteredQuery<'public', ChildFkArg<FK>, DocBase<S>[]>
   }
   rm: RegisteredMutation<'public', IdsArg, DocBase<S> | number>
   update: RegisteredMutation<
     'public',
-    Partial<SchemaOut<S>> &
-      Rec & {
+    IdArg &
+      Partial<SchemaOut<S>> & {
         expectedUpdatedAt?: number
-        id?: string
         items?: (Partial<SchemaOut<S>> & { expectedUpdatedAt?: number; id: string })[]
       },
     DocBase<S> | DocBase<S>[] | null
   >
 }
+type ChildFkArg<FK extends string> = Rec & Record<FK, string>
 interface CrudBuilders extends BaseBuilders {
   cm: Mb
   cq: Qb

@@ -23,8 +23,12 @@ interface ChildCrudOptions<PS extends ZodRawShape = ZodRawShape> {
   hooks?: CrudHooks
   pub?: { parentField: keyof PS & string }
 }
-interface ChildMeta<S extends ZodRawShape = ZodRawShape, PS extends ZodRawShape = ZodRawShape> {
-  foreignKey: string
+interface ChildMeta<
+  S extends ZodRawShape = ZodRawShape,
+  PS extends ZodRawShape = ZodRawShape,
+  FK extends string = string
+> {
+  foreignKey: FK
   index: string
   parent: string
   parentSchema?: ZodObject<PS>
@@ -85,7 +89,7 @@ const mergeChildHooks = (gh: GlobalHooks | undefined, fh: CrudHooks | undefined,
  * `purge_by_parent`, `restore_by_parent`. Pair with `childTable` and supply `parent` config.
  * @returns Endpoint object suitable for spreading into a Convex module's exports.
  */
-const makeChildCrud = <S extends ZodRawShape, PS extends ZodRawShape = ZodRawShape>({
+const makeChildCrud = <S extends ZodRawShape, PS extends ZodRawShape = ZodRawShape, FK extends string = string>({
   builders,
   globalHooks: gh,
   meta,
@@ -94,10 +98,10 @@ const makeChildCrud = <S extends ZodRawShape, PS extends ZodRawShape = ZodRawSha
 }: {
   builders: BaseBuilders
   globalHooks?: GlobalHooks
-  meta: ChildMeta<S, PS>
+  meta: ChildMeta<S, PS, FK>
   options?: ChildCrudOptions<PS>
   table: string
-}): ChildCrudResult<S> => {
+}): ChildCrudResult<S, FK> => {
   const { m, pq, q } = builders
   const hooks = mergeChildHooks(gh, options?.hooks, table)
   const { foreignKey, index, parent, schema } = meta
