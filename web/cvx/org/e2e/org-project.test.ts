@@ -1,4 +1,5 @@
 // biome-ignore-all lint/performance/useTopLevelRegex: test file
+import type { Id } from '@a/be-convex/model'
 import {
   addTestOrgMember,
   api,
@@ -29,6 +30,8 @@ const expectSingle = <T>(value: T | T[]): T => {
   }
   return value
 }
+const expectProjectId = (value: string | string[]): Id<'project'> => expectSingle(value) as Id<'project'>
+const expectTaskId = (value: string | string[]): Id<'task'> => expectSingle(value) as Id<'task'>
 test.describe
   .serial('Projects Page UI', () => {
     let testOrgId: string
@@ -93,10 +96,12 @@ test.describe
       expect(projectId).toBeDefined()
     })
     test('read project - success', async () => {
-      const projectId = await tc.mutation(api.project.create, {
-        name: 'Read Test Project',
-        orgId: testOrgId
-      })
+      const projectId = expectProjectId(
+        await tc.mutation(api.project.create, {
+          name: 'Read Test Project',
+          orgId: testOrgId
+        })
+      )
       const project = await tc.query(api.project.read, {
         id: projectId,
         orgId: testOrgId
@@ -113,10 +118,12 @@ test.describe
       expect(result.page.length).toBeGreaterThan(0)
     })
     test('update project - owner can update', async () => {
-      const projectId = await tc.mutation(api.project.create, {
-        name: 'Update Test Project',
-        orgId: testOrgId
-      })
+      const projectId = expectProjectId(
+        await tc.mutation(api.project.create, {
+          name: 'Update Test Project',
+          orgId: testOrgId
+        })
+      )
       const updated = await tc.mutation(api.project.update, {
         id: projectId,
         name: 'Updated Project Name',
@@ -126,10 +133,12 @@ test.describe
       expect(updatedProject?.name).toBe('Updated Project Name')
     })
     test('rm project - owner can delete', async () => {
-      const projectId = await tc.mutation(api.project.create, {
-        name: 'Delete Test Project',
-        orgId: testOrgId
-      })
+      const projectId = expectProjectId(
+        await tc.mutation(api.project.create, {
+          name: 'Delete Test Project',
+          orgId: testOrgId
+        })
+      )
       await tc.mutation(api.project.rm, {
         id: projectId,
         orgId: testOrgId
@@ -143,14 +152,18 @@ test.describe
       expect(result).toHaveProperty('code', 'NOT_FOUND')
     })
     test('rm multiple projects via ids', async () => {
-      const id1 = await tc.mutation(api.project.create, {
-        name: 'Bulk Delete 1',
-        orgId: testOrgId
-      })
-      const id2 = await tc.mutation(api.project.create, {
-        name: 'Bulk Delete 2',
-        orgId: testOrgId
-      })
+      const id1 = expectProjectId(
+        await tc.mutation(api.project.create, {
+          name: 'Bulk Delete 1',
+          orgId: testOrgId
+        })
+      )
+      const id2 = expectProjectId(
+        await tc.mutation(api.project.create, {
+          name: 'Bulk Delete 2',
+          orgId: testOrgId
+        })
+      )
       const deleted = await tc.mutation(api.project.rm, {
         ids: [id1, id2],
         orgId: testOrgId
@@ -161,13 +174,13 @@ test.describe
 test.describe
   .serial('Task CRUD (API)', () => {
     let testOrgId: string
-    let testProjectId: string
+    let testProjectId: Id<'project'>
     test.beforeAll(async () => {
       await ensureTestUser()
       const slug = generateSlug('task-crud')
       const created = await createTestOrg(slug, 'Task CRUD Test Org')
       testOrgId = created.orgId
-      testProjectId = expectSingle(
+      testProjectId = expectProjectId(
         await tc.mutation(api.project.create, {
           name: 'Task Test Project',
           orgId: testOrgId
@@ -188,11 +201,13 @@ test.describe
       expect(taskId).toBeDefined()
     })
     test('read task - success', async () => {
-      const taskId = await tc.mutation(api.task.create, {
-        orgId: testOrgId,
-        projectId: testProjectId,
-        title: 'Read Test Task'
-      })
+      const taskId = expectTaskId(
+        await tc.mutation(api.task.create, {
+          orgId: testOrgId,
+          projectId: testProjectId,
+          title: 'Read Test Task'
+        })
+      )
       const task = await tc.query(api.task.read, {
         id: taskId,
         orgId: testOrgId
@@ -200,7 +215,7 @@ test.describe
       expect(task.title).toBe('Read Test Task')
     })
     test('toggle task - owner can toggle', async () => {
-      const taskId = expectSingle(
+      const taskId = expectTaskId(
         await tc.mutation(api.task.create, {
           completed: false,
           orgId: testOrgId,
@@ -216,7 +231,7 @@ test.describe
       expect(readCompleted(toggledTask)).toBe(true)
     })
     test('rm task - owner can delete', async () => {
-      const taskId = expectSingle(
+      const taskId = expectTaskId(
         await tc.mutation(api.task.create, {
           orgId: testOrgId,
           projectId: testProjectId,
@@ -256,10 +271,12 @@ test.describe
     test('read project - not found for wrong org', async () => {
       const otherSlug = generateSlug('other-org')
       const otherOrg = await createTestOrg(otherSlug, 'Other Org')
-      const projectId = await tc.mutation(api.project.create, {
-        name: 'Other Org Project',
-        orgId: otherOrg.orgId
-      })
+      const projectId = expectProjectId(
+        await tc.mutation(api.project.create, {
+          name: 'Other Org Project',
+          orgId: otherOrg.orgId
+        })
+      )
       const result = await expectError(async () =>
         tc.query(api.project.read, {
           id: projectId,
@@ -282,15 +299,19 @@ test.describe
       await cleanupOrgTestData()
     })
     test('delete project - cascades to tasks', async () => {
-      const projectId = await tc.mutation(api.project.create, {
-        name: 'Cascade Project',
-        orgId: testOrgId
-      })
-      const taskId = await tc.mutation(api.task.create, {
-        orgId: testOrgId,
-        projectId,
-        title: 'Cascade Task'
-      })
+      const projectId = expectProjectId(
+        await tc.mutation(api.project.create, {
+          name: 'Cascade Project',
+          orgId: testOrgId
+        })
+      )
+      const taskId = expectTaskId(
+        await tc.mutation(api.task.create, {
+          orgId: testOrgId,
+          projectId,
+          title: 'Cascade Task'
+        })
+      )
       await tc.mutation(api.project.rm, { id: projectId, orgId: testOrgId })
       const taskResult = await expectError(async () =>
         tc.query(api.task.read, {
@@ -303,10 +324,12 @@ test.describe
     test('delete org - cascades projects and tasks', async () => {
       const cascadeSlug = generateSlug('full-cascade')
       const cascadeOrg = await createTestOrg(cascadeSlug, 'Full Cascade Org')
-      const projectId = await tc.mutation(api.project.create, {
-        name: 'Full Cascade Project',
-        orgId: cascadeOrg.orgId
-      })
+      const projectId = expectProjectId(
+        await tc.mutation(api.project.create, {
+          name: 'Full Cascade Project',
+          orgId: cascadeOrg.orgId
+        })
+      )
       await tc.mutation(api.task.create, {
         orgId: cascadeOrg.orgId,
         projectId,

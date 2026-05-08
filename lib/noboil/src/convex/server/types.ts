@@ -53,21 +53,21 @@ interface CacheBuilders<DM extends GenericDataModel = GenericDataModel> {
   mutation: MutationBuilder<DM, 'public'>
   query: QueryBuilder<DM, 'public'>
 }
-interface CacheCrudResult<S extends ZodRawShape> {
-  all: RegisteredQuery<'public', Rec, DocBase<S>[]>
-  checkRL?: RegisteredMutation<'internal', Rec, void>
-  create: RegisteredMutation<'public', Rec, string>
-  get: RegisteredQuery<'public', Rec, (DocBase<S> & { cacheHit: true; stale: boolean }) | null>
-  getInternal: RegisteredQuery<'internal', Rec, DocBase<S> | null>
-  invalidate: RegisteredMutation<'public', Rec, DocBase<S> | null>
-  list: RegisteredQuery<'public', Rec, PaginatedResult<DocBase<S>>>
-  load: RegisteredAction<'public', Rec, _.output<ZodObject<S>> & { cacheHit: boolean }>
-  purge: RegisteredMutation<'public', Rec, number>
-  read: RegisteredQuery<'public', Rec, DocBase<S> | null>
-  refresh: RegisteredAction<'public', Rec, _.output<ZodObject<S>> & { cacheHit: boolean }>
-  rm: RegisteredMutation<'public', Rec, DocBase<S> | null>
-  set: RegisteredMutation<'internal', Rec, void>
-  update: RegisteredMutation<'public', Rec, DocBase<S>>
+interface CacheCrudResult<S extends ZodRawShape, K extends keyof SchemaOut<S> & string = keyof SchemaOut<S> & string> {
+  all: RegisteredQuery<'public', Rec & { includeExpired?: boolean }, DocBase<S>[]>
+  checkRL?: RegisteredMutation<'internal', EmptyArg, void>
+  create: RegisteredMutation<'public', SchemaOut<S>, string>
+  get: RegisteredQuery<'public', KeyArg<S, K>, (DocBase<S> & { cacheHit: true; stale: boolean }) | null>
+  getInternal: RegisteredQuery<'internal', KeyArg<S, K>, DocBase<S> | null>
+  invalidate: RegisteredMutation<'public', KeyArg<S, K>, DocBase<S> | null>
+  list: RegisteredQuery<'public', PageArg & { includeExpired?: boolean }, PaginatedResult<DocBase<S>>>
+  load: RegisteredAction<'public', KeyArg<S, K>, SchemaOut<S> & { cacheHit: boolean }>
+  purge: RegisteredMutation<'public', Rec & { batchSize?: number }, number>
+  read: RegisteredQuery<'public', IdArg, DocBase<S> | null>
+  refresh: RegisteredAction<'public', KeyArg<S, K>, SchemaOut<S> & { cacheHit: boolean }>
+  rm: RegisteredMutation<'public', IdArg, DocBase<S> | null>
+  set: RegisteredMutation<'internal', Rec & { data: SchemaOut<S> }, void>
+  update: RegisteredMutation<'public', IdArg & Partial<SchemaOut<S>>, DocBase<S>>
 }
 /** Reduced ctx passed to `CacheHooks` callbacks — only `db` is available (no auth in cache layer). */
 interface CacheHookCtx {
@@ -131,15 +131,24 @@ interface ChildConfig {
   schema: ZodObject
 }
 interface ChildCrudResult<S extends ZodRawShape> {
-  create: RegisteredMutation<'public', Rec, string | string[]>
-  get: RegisteredQuery<'public', Rec, DocBase<S> | null>
+  create: RegisteredMutation<'public', Rec & SchemaOut<S> & { items?: SchemaOut<S>[] }, string | string[]>
+  get: RegisteredQuery<'public', IdArg, DocBase<S> | null>
   list: RegisteredQuery<'public', Rec, DocBase<S>[]>
   pub?: {
-    get: RegisteredQuery<'public', Rec, DocBase<S> | null>
+    get: RegisteredQuery<'public', IdArg, DocBase<S> | null>
     list: RegisteredQuery<'public', Rec, DocBase<S>[]>
   }
-  rm: RegisteredMutation<'public', Rec, DocBase<S> | number>
-  update: RegisteredMutation<'public', Rec, DocBase<S> | DocBase<S>[] | null>
+  rm: RegisteredMutation<'public', IdsArg, DocBase<S> | number>
+  update: RegisteredMutation<
+    'public',
+    Partial<SchemaOut<S>> &
+      Rec & {
+        expectedUpdatedAt?: number
+        id?: string
+        items?: (Partial<SchemaOut<S>> & { expectedUpdatedAt?: number; id: string })[]
+      },
+    DocBase<S> | DocBase<S>[] | null
+  >
 }
 interface CrudBuilders extends BaseBuilders {
   cm: Mb
@@ -264,6 +273,9 @@ type DocBase<S extends ZodRawShape> = _.output<ZodObject<S>> & {
   _id: string
   updatedAt: number
 }
+type EditorArg = IdArg & { userId: string }
+type EditorsArg = IdArg & { userIds: string[] }
+type EmptyArg = Record<string, never>
 type EnrichedDoc<S extends ZodRawShape> = WithUrls<
   DocBase<S> & {
     author: AuthorInfo | null
@@ -304,6 +316,8 @@ interface HookCtx {
   storage: StorageLike
   userId: string
 }
+type IdArg = Rec & { id: string }
+type IdsArg = Rec & { id?: string; ids?: string[] }
 interface IndexLike {
   eq: (field: string, value: unknown) => IndexLike
   gt: (field: string, value: unknown) => IndexLike
@@ -311,6 +325,14 @@ interface IndexLike {
   lt: (field: string, value: unknown) => IndexLike
   lte: (field: string, value: unknown) => IndexLike
 }
+type KeyArg<S extends ZodRawShape, K extends keyof SchemaOut<S> & string> = Pick<SchemaOut<S>, K> & Rec
+type KvKeyArg = Rec & { key: string }
+interface LogPage<S extends ZodRawShape> {
+  continueCursor: string
+  isDone: boolean
+  page: LogDoc<S>[]
+}
+type LogParentArg = Rec & { parent: string }
 type Mb<V extends FunctionVisibility = 'public'> = CustomBuilder<
   'mutation',
   Record<string, never>,
@@ -343,6 +365,38 @@ interface MutCtx extends UserCtx {
 type OrgCascadeTableConfig<DM extends GenericDataModel = GenericDataModel> =
   | (keyof DM & string)
   | { fileFields?: string[]; table: keyof DM & string }
+interface OrgCrudResult<S extends ZodRawShape> {
+  addEditor: RegisteredMutation<'public', EditorArg & OrgIdArg, DocBase<S> | null>
+  create: RegisteredMutation<'public', OrgIdArg & SchemaOut<S> & { items?: SchemaOut<S>[] }, string | string[]>
+  editors: RegisteredQuery<'public', IdArg & OrgIdArg, { email: string; name: string; userId: string }[]>
+  list: RegisteredQuery<'public', OrgIdArg & PageArg, PaginatedResult<OrgEnrichedDoc<S>>>
+  read: RegisteredQuery<'public', IdArg & OrgIdArg, OrgEnrichedDoc<S>>
+  removeEditor: RegisteredMutation<'public', EditorArg & OrgIdArg, DocBase<S> | null>
+  restore?: RegisteredMutation<'public', IdArg & OrgIdArg, DocBase<S>>
+  rm: RegisteredMutation<'public', IdsArg & OrgIdArg, DocBase<S> | number>
+  setEditors: RegisteredMutation<'public', EditorsArg & OrgIdArg, DocBase<S> | null>
+  update: RegisteredMutation<
+    'public',
+    OrgIdArg &
+      Partial<SchemaOut<S>> & {
+        expectedUpdatedAt?: number
+        id?: string
+        items?: (Partial<SchemaOut<S>> & { expectedUpdatedAt?: number; id: string })[]
+      },
+    DocBase<S> | DocBase<S>[] | null
+  >
+}
+type OrgEnrichedDoc<S extends ZodRawShape> = WithUrls<
+  DocBase<S> & {
+    author: AuthorInfo | null
+    orgId: string
+    own: boolean | null
+    userId: string
+  }
+>
+type OrgIdArg = Rec & { orgId: string }
+type OwnerArg = Rec & { owner: string }
+type PageArg = Rec & { paginationOpts: PaginationOptions }
 /** Endpoint bundle returned by `makeOrgCrud`. Spread into a Convex module's exports.
  *
  * Includes per-row ACL helpers (`addEditor`, `removeEditor`, `setEditors`, `editors`) on top of standard CRUD.
@@ -359,26 +413,6 @@ type OrgCascadeTableConfig<DM extends GenericDataModel = GenericDataModel> =
  * })
  * ```
  */
-interface OrgCrudResult<S extends ZodRawShape> {
-  addEditor: RegisteredMutation<'public', Rec, DocBase<S> | null>
-  create: RegisteredMutation<'public', Rec, string | string[]>
-  editors: RegisteredQuery<'public', Rec, { email: string; name: string; userId: string }[]>
-  list: RegisteredQuery<'public', Rec, PaginatedResult<OrgEnrichedDoc<S>>>
-  read: RegisteredQuery<'public', Rec, OrgEnrichedDoc<S>>
-  removeEditor: RegisteredMutation<'public', Rec, DocBase<S> | null>
-  restore?: RegisteredMutation<'public', Rec, DocBase<S>>
-  rm: RegisteredMutation<'public', Rec, DocBase<S> | number>
-  setEditors: RegisteredMutation<'public', Rec, DocBase<S> | null>
-  update: RegisteredMutation<'public', Rec, DocBase<S> | DocBase<S>[] | null>
-}
-type OrgEnrichedDoc<S extends ZodRawShape> = WithUrls<
-  DocBase<S> & {
-    author: AuthorInfo | null
-    orgId: string
-    own: boolean | null
-    userId: string
-  }
->
 type PaginationOptsShape = Record<keyof typeof paginationOptsValidator.fields, ZodNullable | ZodNumber | ZodOptional>
 type Qb<V extends FunctionVisibility = 'public'> = CustomBuilder<
   'query',
@@ -418,6 +452,7 @@ interface ReadCtx {
     })[]
   >
 }
+type SchemaOut<S extends ZodRawShape> = _.output<ZodObject<S>>
 interface SetupConfig<DM extends GenericDataModel = GenericDataModel> {
   action: ActionBuilder<DM, 'public'>
   getAuthUserId: (ctx: never) => Promise<null | string>
@@ -477,6 +512,13 @@ interface KvEntry {
   schema: ZodObject
   writeRole?: ((ctx: unknown) => boolean | Promise<boolean>) | boolean
 }
+interface KvFactoryResult<S extends ZodRawShape> {
+  get: RegisteredQuery<'public', KvKeyArg, KvDoc<S> | null>
+  list: RegisteredQuery<'public', PageArg, KvDoc<S>[]>
+  restore?: RegisteredMutation<'public', KvKeyArg, { restored: boolean }>
+  rm: RegisteredMutation<'public', KvKeyArg, { deleted: boolean }>
+  set: RegisteredMutation<'public', KvKeyArg & { expectedUpdatedAt?: number; payload: SchemaOut<S> }, KvDoc<S>>
+}
 /** Endpoint bundle returned by `makeKv`. One row per `key` (string). Use for site config, feature flags, banner text.
  *
  * @example
@@ -490,13 +532,6 @@ interface KvEntry {
  * })
  * ```
  */
-interface KvFactoryResult<S extends ZodRawShape> {
-  get: RegisteredQuery<'public', Rec, KvDoc<S> | null>
-  list: RegisteredQuery<'public', Rec, KvDoc<S>[]>
-  restore?: RegisteredMutation<'public', Rec, { restored: boolean }>
-  rm: RegisteredMutation<'public', Rec, { deleted: boolean }>
-  set: RegisteredMutation<'public', Rec, KvDoc<S>>
-}
 /** Schema branded for use with kv(). Used for string-keyed global state. */
 type KvSchema<T extends ZodRawShape> = SchemaBrand<'kv'> & ZodObject<T>
 type LogDoc<S extends ZodRawShape> = DocBase<S> & { idempotencyKey?: string; parent: string; seq: number }
@@ -505,6 +540,39 @@ interface LogEntry {
   parent: string
   schema: ZodObject
 }
+interface LogFactoryResult<S extends ZodRawShape> {
+  append: RegisteredMutation<
+    'public',
+    LogParentArg & {
+      idempotencyKey?: string
+      items?: SchemaOut<S>[]
+      payload?: SchemaOut<S>
+    },
+    { created: boolean; seq: number }
+  >
+  auth: {
+    list: RegisteredQuery<'public', LogPageArg, LogPage<S>>
+    read: RegisteredQuery<'public', IdArg, LogDoc<S> | null>
+    search?: RegisteredQuery<'public', LogSearchArg, LogDoc<S>[]>
+  }
+  authIndexed: RegisteredQuery<'public', LogIndexedArg, LogDoc<S>[]>
+  list: RegisteredQuery<'public', LogPageArg, LogPage<S>>
+  listAfter: RegisteredQuery<'public', LogParentArg & { limit?: number; seq: number }, LogDoc<S>[]>
+  pub?: {
+    list: RegisteredQuery<'public', LogPageArg, LogPage<S>>
+    read: RegisteredQuery<'public', IdArg, LogDoc<S> | null>
+    search?: RegisteredQuery<'public', LogSearchArg, LogDoc<S>[]>
+  }
+  pubIndexed?: RegisteredQuery<'public', LogIndexedArg, LogDoc<S>[]>
+  purgeByParent: RegisteredMutation<'public', LogParentArg, { deleted: number }>
+  read: RegisteredQuery<'public', IdArg, LogDoc<S> | null>
+  restoreByParent?: RegisteredMutation<'public', LogParentArg, { restored: number }>
+  rm: RegisteredMutation<'public', IdArg, { deleted: boolean }>
+  search?: RegisteredQuery<'public', LogSearchArg, LogDoc<S>[]>
+  update: RegisteredMutation<'public', IdArg & Partial<SchemaOut<S>>, LogDoc<S>>
+}
+type LogIndexedArg = LogParentArg & { index: string; key: string; value: string }
+type LogPageArg = LogParentArg & PageArg
 /** Endpoint bundle returned by `makeLog`. Append-only log keyed by `parent` (e.g. messages per chat, votes per poll, events per session).
  *
  * Includes `append`, `listAfter` (pagination by `seq`), `purgeByParent` (mass delete), and optionally
@@ -519,31 +587,9 @@ interface LogEntry {
  * })
  * ```
  */
-interface LogFactoryResult<S extends ZodRawShape> {
-  append: RegisteredMutation<'public', Rec, { created: boolean; seq: number }>
-  auth: {
-    list: RegisteredQuery<'public', Rec, { continueCursor: string; isDone: boolean; page: LogDoc<S>[] }>
-    read: RegisteredQuery<'public', Rec, LogDoc<S> | null>
-    search?: RegisteredQuery<'public', Rec, LogDoc<S>[]>
-  }
-  authIndexed: RegisteredQuery<'public', Rec, LogDoc<S>[]>
-  list: RegisteredQuery<'public', Rec, { continueCursor: string; isDone: boolean; page: LogDoc<S>[] }>
-  listAfter: RegisteredQuery<'public', Rec, LogDoc<S>[]>
-  pub?: {
-    list: RegisteredQuery<'public', Rec, { continueCursor: string; isDone: boolean; page: LogDoc<S>[] }>
-    read: RegisteredQuery<'public', Rec, LogDoc<S> | null>
-    search?: RegisteredQuery<'public', Rec, LogDoc<S>[]>
-  }
-  pubIndexed?: RegisteredQuery<'public', Rec, LogDoc<S>[]>
-  purgeByParent: RegisteredMutation<'public', Rec, { deleted: number }>
-  read: RegisteredQuery<'public', Rec, LogDoc<S> | null>
-  restoreByParent?: RegisteredMutation<'public', Rec, { restored: number }>
-  rm: RegisteredMutation<'public', Rec, { deleted: boolean }>
-  search?: RegisteredQuery<'public', Rec, LogDoc<S>[]>
-  update: RegisteredMutation<'public', Rec, LogDoc<S>>
-}
 /** Schema branded for use with log(). Used for append-only event logs. */
 type LogSchema<T extends ZodRawShape> = SchemaBrand<'log'> & ZodObject<T>
+type LogSearchArg = LogParentArg & { query: string }
 type OrgDefSchema<T extends ZodRawShape> = SchemaBrand<'orgDef'> & ZodObject<T>
 type OrgSchema<T extends ZodRawShape> = SchemaBrand<'org'> & ZodObject<T>
 /** Minimal user shape used across org operations, containing id, name, email, and image. */
@@ -555,10 +601,6 @@ interface OrgUserLike {
   name?: string
 }
 type OwnedSchema<T extends ZodRawShape> = SchemaBrand<'owned'> & ZodObject<T>
-interface QuotaEntry {
-  durationMs: number
-  limit: number
-}
 /** Endpoint bundle returned by `makeQuota`. Sliding-window rate limit keyed by owner.
  *
  * `consume` atomically checks + records (throws when over limit). `record` always succeeds (telemetry).
@@ -573,10 +615,14 @@ interface QuotaEntry {
  * })
  * ```
  */
+interface QuotaEntry {
+  durationMs: number
+  limit: number
+}
 interface QuotaFactoryResult {
-  check: RegisteredQuery<'public', Rec, QuotaResult>
-  consume: RegisteredMutation<'public', Rec, QuotaResult>
-  record: RegisteredMutation<'public', Rec, QuotaResult>
+  check: RegisteredQuery<'public', OwnerArg, QuotaResult>
+  consume: RegisteredMutation<'public', OwnerArg, QuotaResult>
+  record: RegisteredMutation<'public', OwnerArg, QuotaResult>
 }
 /** Per-call quota outcome. `allowed=false` indicates the request was rejected; `retryAfter` is ms until next slot. */
 interface QuotaResult {
@@ -607,8 +653,8 @@ type SchemaTypeError<
   Got extends keyof BrandLabelMap
 > = `Schema mismatch: expected ${BrandLabelMap[Expected]}, got ${BrandLabelMap[Got]}. ${Expected extends keyof SchemaHintMap ? SchemaHintMap[Expected] : ''}`
 interface SingletonCrudResult<S extends ZodRawShape> {
-  get: RegisteredQuery<'public', Rec, null | SingletonDoc<S>>
-  upsert: RegisteredMutation<'public', Rec, SingletonDoc<S>>
+  get: RegisteredQuery<'public', EmptyArg, null | SingletonDoc<S>>
+  upsert: RegisteredMutation<'public', Partial<SchemaOut<S>>, SingletonDoc<S>>
 }
 type SingletonDoc<S extends ZodRawShape> = WithUrls<DocBase<S> & { userId: string }>
 interface SingletonOptions {

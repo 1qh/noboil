@@ -1,9 +1,8 @@
-/* eslint-disable @typescript-eslint/no-unnecessary-type-parameters */
 /* oxlint-disable eslint/no-await-in-loop */
 /** biome-ignore-all lint/performance/noAwaitInLoops: sequential Convex DB mutations */
 /* eslint-disable no-await-in-loop */
 import type { GenericDataModel } from 'convex/server'
-import type { ZodObject, ZodRawShape } from 'zod/v4'
+import type { z as _, ZodObject, ZodRawShape } from 'zod/v4'
 import { zodOutputToConvexFields as z2c, zid } from 'convex-helpers/server/zod4'
 import { anyApi } from 'convex/server'
 import { v } from 'convex/values'
@@ -53,7 +52,7 @@ const makeCacheCrud = <S extends ZodRawShape, K extends string, DM extends Gener
   staleWhileRevalidate?: boolean
   table: string
   ttl?: number
-}): CacheCrudResult<S> => {
+}): CacheCrudResult<S, K & keyof _.output<ZodObject<S>> & string> => {
   const rl = rlInput ? normalizeRateLimit(rlInput) : undefined
   const keys = Object.keys(schema.shape)
   const pick = (d: Rec) => pickFields(d, keys)

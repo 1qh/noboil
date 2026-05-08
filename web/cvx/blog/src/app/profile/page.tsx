@@ -2,6 +2,7 @@
 /* oxlint-disable jsx-no-new-object-as-prop */
 /** biome-ignore-all lint/nursery/noInlineStyles: dynamic percentage width */
 'use client'
+import type { Id } from '@a/be-convex/model'
 import type { ChangeEvent } from 'react'
 import { api } from '@a/be-convex'
 import { cn } from '@a/ui'
@@ -25,7 +26,7 @@ const AvatarUpload = () => {
     if (!file) return
     const result = await upload(file)
     if (result.ok) {
-      await upsert({ avatar: result.storageId })
+      await upsert({ avatar: result.storageId as Id<'_storage'> })
       toast.success('Avatar uploaded')
     } else toast.error(`Upload failed: ${result.code}`)
   }
