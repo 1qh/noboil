@@ -9,12 +9,14 @@ interface ComparisonOp<V> {
 interface ErrorData {
   code: string
   debug?: string
+  docsUrl?: string
   fieldErrors?: Record<string, string>
   fields?: string[]
   limit?: { max: number; remaining: number; window: number }
   message?: string
   op?: string
   retryAfter?: number
+  suggestion?: string
   table?: string
 }
 type ErrorHandler = Partial<Record<string, (data: ErrorData) => void>> & {
@@ -23,6 +25,7 @@ type ErrorHandler = Partial<Record<string, (data: ErrorData) => void>> & {
 interface ErrorUtilsConfig {
   errorMessages: Record<string, string>
   extractErrorData: (e: unknown) => ErrorData | undefined
+  suggestions?: Record<string, string>
   throwError: (code: string, opts?: Record<string, unknown> | string | { message: string }) => never
 }
 interface MutationFail {
@@ -139,6 +142,18 @@ const createErrorUtils = (config: ErrorUtilsConfig) => {
     if (e instanceof Error) return e.message
     return 'Unknown error'
   }
+  const getErrorSuggestion = (e: unknown): string | undefined => {
+    const d = extractErrorData(e)
+    if (!d) return
+    const explicit = (d as { suggestion?: unknown }).suggestion
+    return typeof explicit === 'string' ? explicit : config.suggestions?.[d.code]
+  }
+  const getErrorDocsUrl = (e: unknown): string | undefined => {
+    const d = extractErrorData(e)
+    if (!d) return
+    const explicit = (d as { docsUrl?: unknown }).docsUrl
+    return typeof explicit === 'string' ? explicit : undefined
+  }
   const getErrorDetail = (e: unknown): string => {
     const d = extractErrorData(e)
     if (!d) return e instanceof Error ? e.message : 'Unknown error'
@@ -185,7 +200,9 @@ const createErrorUtils = (config: ErrorUtilsConfig) => {
     fail,
     getErrorCode,
     getErrorDetail,
+    getErrorDocsUrl,
     getErrorMessage,
+    getErrorSuggestion,
     handleError,
     isErrorCode,
     isMutationError,

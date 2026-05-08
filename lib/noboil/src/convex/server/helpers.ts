@@ -25,6 +25,7 @@ import type {
   StorageLike,
   WithUrls
 } from './types'
+import { ERROR_SUGGESTIONS } from '../../shared/error-suggestions'
 import {
   createErrorUtils,
   generateToken,
@@ -90,6 +91,7 @@ const throwConvexError = (code: string, opts?: Record<string, unknown> | string 
 const errorUtils = createErrorUtils({
   errorMessages: ERROR_MESSAGES,
   extractErrorData,
+  suggestions: ERROR_SUGGESTIONS,
   throwError: throwConvexError
 })
 /** Throw a structured `ConvexError` with `code` (+ optional details). Use in mutations/queries to surface user-readable failures. */
@@ -107,6 +109,10 @@ const getErrorCode = (e: unknown): ErrorCode | undefined => extractErrorData(e)?
 const getErrorMessage = (e: unknown): string => errorUtils.getErrorMessage(e)
 /** Get the dev-debug detail string from a noboil error (table/op/internal context); empty on unknown. */
 const getErrorDetail = (e: unknown): string => errorUtils.getErrorDetail(e)
+/** One-line actionable hint for a thrown error, sourced from registered suggestions or `err(code, { suggestion })`. */
+const getErrorSuggestion = (e: unknown): string | undefined => errorUtils.getErrorSuggestion(e)
+/** Docs URL attached to a thrown error via `err(code, { docsUrl })`, if present. */
+const getErrorDocsUrl = (e: unknown): string | undefined => errorUtils.getErrorDocsUrl(e)
 /** Route a caught error through `handlers` keyed by error code; falls through to `default` or rethrows. */
 const handleError = (e: unknown, handlers: ErrorHandler): void => {
   errorUtils.handleError(e, handlers)
@@ -351,7 +357,9 @@ export {
   generateToken,
   getErrorCode,
   getErrorDetail,
+  getErrorDocsUrl,
   getErrorMessage,
+  getErrorSuggestion,
   getUser,
   groupList,
   handleConvexError,
