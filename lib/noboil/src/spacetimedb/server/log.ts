@@ -6,7 +6,7 @@ import type { RateLimitConfig } from './types'
 import type { FieldBuilders, ReducerExportLike } from './types/common'
 import { enforceRateLimit } from './helpers'
 import { hkCtx } from './reducer-utils'
-interface LogConfig<DB, Tbl extends LogTableLike> {
+interface LogConfig<DB, Tbl extends LogTableLike, T extends string = string> {
   bulkItemsField?: ColumnBuilder<unknown, AlgebraicTypeType> | TypeBuilder<unknown, AlgebraicTypeType>
   fields: FieldBuilders
   idempotencyKeyField: ColumnBuilder<string, AlgebraicTypeType> | TypeBuilder<string, AlgebraicTypeType>
@@ -15,7 +15,7 @@ interface LogConfig<DB, Tbl extends LogTableLike> {
   options?: LogOptions<DB>
   parentField: ColumnBuilder<string, AlgebraicTypeType> | TypeBuilder<string, AlgebraicTypeType>
   table: (db: DB) => Tbl
-  tableName: string
+  tableName: T
 }
 /** Reducer-export bundle returned by `makeLog` (stdb). Keys: `append_<table>`, `bulk_append_<table>`, `purge_<table>_by_parent`, optional `restore_<table>_by_parent`.
  * Spread `.exports` into your spacetimedb module's exports.
@@ -32,8 +32,11 @@ interface LogConfig<DB, Tbl extends LogTableLike> {
  * })
  * ```
  */
-interface LogExports {
-  exports: Record<string, ReducerExportLike>
+interface LogExports<T extends string = string> {
+  exports: Record<
+    `append_${T}` | `bulk_append_${T}` | `purge_${T}_by_parent` | `restore_${T}_by_parent`,
+    ReducerExportLike
+  >
 }
 interface LogHookCtx<DB> {
   db: DB
@@ -70,7 +73,7 @@ interface LogTableLike extends Iterable<LogRow> {
  * @param config Log reducer configuration
  * @returns Reducer export map
  */
-const makeLog = <DB, Tbl extends LogTableLike>(
+const makeLog = <DB, Tbl extends LogTableLike, T extends string = string>(
   spacetimedb: {
     reducer: (
       opts: { name: string },
@@ -78,8 +81,8 @@ const makeLog = <DB, Tbl extends LogTableLike>(
       fn: (ctx: { db: DB; sender: Identity; timestamp: Timestamp }, args: unknown) => void
     ) => unknown
   },
-  config: LogConfig<DB, Tbl>
-): LogExports => {
+  config: LogConfig<DB, Tbl, T>
+): LogExports<T> => {
   const {
     bulkItemsField,
     fields,

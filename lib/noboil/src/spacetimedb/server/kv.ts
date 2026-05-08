@@ -7,13 +7,13 @@ import { applyPatch, hkCtx, makeError } from './reducer-utils'
 const findByKey = (table: KvTableLike, key: string): KvRow | undefined => {
   for (const row of table) if (row.key === key) return row
 }
-interface KvConfig<DB, Tbl extends KvTableLike> {
+interface KvConfig<DB, Tbl extends KvTableLike, T extends string = string> {
   expectedUpdatedAtField?: ColumnBuilder<unknown, AlgebraicTypeType> | TypeBuilder<unknown, AlgebraicTypeType>
   fields: FieldBuilders
   keyField: ColumnBuilder<string, AlgebraicTypeType> | TypeBuilder<string, AlgebraicTypeType>
   options?: KvOptions<DB>
   table: (db: DB) => Tbl
-  tableName: string
+  tableName: T
   writeRole?: (ctx: { db: DB; sender: Identity; timestamp: Timestamp }) => boolean
 }
 /** Reducer-export bundle returned by `makeKv` (stdb). Keys are reducer names: `set_<table>`, `rm_<table>`, optional `restore_<table>`.
@@ -30,8 +30,8 @@ interface KvConfig<DB, Tbl extends KvTableLike> {
  * })
  * ```
  */
-interface KvExports {
-  exports: Record<string, ReducerExportLike>
+interface KvExports<T extends string = string> {
+  exports: Record<`restore_${T}` | `rm_${T}` | `set_${T}`, ReducerExportLike>
 }
 interface KvHookCtx<DB> {
   db: DB
@@ -65,7 +65,7 @@ interface KvTableLike extends Iterable<KvRow> {
   insert: (row: KvRow) => KvRow
 }
 /** Creates set/rm reducers for a string-keyed kv table. Reads via subscription. */
-const makeKv = <DB, Tbl extends KvTableLike>(
+const makeKv = <DB, Tbl extends KvTableLike, T extends string = string>(
   spacetimedb: {
     reducer: (
       opts: { name: string },
@@ -73,8 +73,8 @@ const makeKv = <DB, Tbl extends KvTableLike>(
       fn: (ctx: { db: DB; sender: Identity; timestamp: Timestamp }, args: unknown) => void
     ) => unknown
   },
-  config: KvConfig<DB, Tbl>
-): KvExports => {
+  config: KvConfig<DB, Tbl, T>
+): KvExports<T> => {
   const { expectedUpdatedAtField, fields, keyField, options, table: tableAccessor, tableName, writeRole } = config
   const hooks = options?.hooks
   const rateLimit = options?.rateLimit

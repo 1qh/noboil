@@ -35,7 +35,8 @@ interface CrudConfig<
   Row extends Record<string, unknown> & { updatedAt: Timestamp; userId: Identity },
   Id,
   Tbl extends CrudTableLike<Row>,
-  Pk extends CrudPkLike<Row, Id>
+  Pk extends CrudPkLike<Row, Id>,
+  T extends string = string
 > {
   expectedUpdatedAtField?: TypeBuilder<Timestamp, AlgebraicTypeType>
   fields: F
@@ -43,7 +44,7 @@ interface CrudConfig<
   options?: CrudOptions<DB, Row, CrudFieldValues<F>, Partial<CrudFieldValues<F>>>
   pk: (table: Tbl) => Pk
   table: (db: DB) => Tbl
-  tableName: string
+  tableName: T
 }
 interface CrudConfigLoose {
   expectedUpdatedAtField?: TypeBuilder<unknown, AlgebraicTypeType>
@@ -54,11 +55,11 @@ interface CrudConfigLoose {
   table: (db: unknown) => unknown
   tableName: string
 }
-/** Reducer-export bundle returned by `makeCrud` (stdb). Keys are reducer names (`create_<table>`, `update_<table>`, `rm_<table>`).
- * Spread `.exports` into your spacetimedb module's exports.
+/** Reducer-export bundle returned by `makeCrud` (stdb). Keys are literal reducer names (`create_<T>`, `update_<T>`, `rm_<T>`)
+ * derived from `tableName`. Spread `.exports` into your spacetimedb module's exports.
  */
-interface CrudExports {
-  exports: Record<string, ReducerExportLike>
+interface CrudExports<T extends string = string> {
+  exports: Record<`create_${T}` | `rm_${T}` | `update_${T}`, ReducerExportLike>
 }
 type CrudFieldBuilders = Record<string, CrudBuilder>
 type CrudFieldValues<F extends CrudFieldBuilders> = {

@@ -21,7 +21,8 @@ const makeCrud = <
   Row extends OwnedRow,
   Id,
   Tbl extends CrudTableLike<Row>,
-  Pk extends CrudPkLike<Row, Id>
+  Pk extends CrudPkLike<Row, Id>,
+  T extends string = string
 >(
   spacetimedb: {
     reducer: (
@@ -30,8 +31,8 @@ const makeCrud = <
       fn: (ctx: { db: DB; sender: Identity; timestamp: Timestamp }, args: unknown) => void
     ) => unknown
   },
-  config: CrudConfig<DB, F, Row, Id, Tbl, Pk>
-): CrudExports => {
+  config: CrudConfig<DB, F, Row, Id, Tbl, Pk, T>
+): CrudExports<T> => {
   const { expectedUpdatedAtField, fields, idField, options, pk: pkAccessor, table: tableAccessor, tableName } = config
   const hooks = options?.hooks
   const fieldNames = Object.keys(fields) as (keyof F & string)[]
@@ -125,7 +126,7 @@ const makeCrud = <
     [createName]: createReducer,
     [rmName]: rmReducer,
     [updateName]: updateReducer
-  } as unknown as CrudExports['exports']
+  } as unknown as CrudExports<T>['exports']
   return {
     exports: exportsRecord
   }
