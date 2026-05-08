@@ -1,6 +1,5 @@
 #!/usr/bin/env bun
-/* eslint-disable no-console */
-/* eslint-disable max-depth */
+/* eslint-disable no-console, max-depth, complexity */
 /* oxlint-disable eslint/complexity */
 import { spawnSync } from 'node:child_process'
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
@@ -151,19 +150,53 @@ const calcHealthScore = (results: CheckResult[]): number => {
     else if (r.status === 'warn') score -= HEALTH_WARN_PENALTY
   return Math.max(0, score)
 }
-const doctor = () => {
+/** Machine-readable doctor result. Emitted as JSON when `--json` flag is passed. */
+interface DoctorReport {
+  failed: number
+  health: number
+  passed: number
+  results: CheckResult[]
+  warned: number
+}
+const emitJson = (report: DoctorReport) => {
+  process.stdout.write(`${JSON.stringify(report)}\n`)
+}
+const doctor = (opts?: { json?: boolean }) => {
+  const json = opts?.json ?? false
   const root = process.cwd()
-  console.log(bold('\nnoboil stdb doctor\n'))
+  if (!json) console.log(bold('\nnoboil stdb doctor\n'))
   const moduleDir = findModuleDir(root)
   if (!moduleDir) {
-    console.log(red('✗ Could not find SpacetimeDB schema directory (module/ or src/)'))
-    console.log(dim('  Run from project root or a directory containing module/ or src/'))
+    if (json)
+      emitJson({
+        failed: 1,
+        health: 0,
+        passed: 0,
+        results: [{ details: ['SpacetimeDB schema directory not found'], status: 'fail', title: 'Schema Consistency' }],
+        warned: 0
+      })
+    else {
+      console.log(red('✗ Could not find SpacetimeDB schema directory (module/ or src/)'))
+      console.log(dim('  Run from project root or a directory containing module/ or src/'))
+    }
     process.exit(1)
   }
   const schemaFile = findSchemaFile(moduleDir)
   if (!schemaFile) {
-    console.log(red('✗ Could not find schema file with SpacetimeDB markers'))
-    console.log(dim('  Expected a .ts file using schema()/table().'))
+    if (json)
+      emitJson({
+        failed: 1,
+        health: 0,
+        passed: 0,
+        results: [
+          { details: ['schema file with SpacetimeDB markers not found'], status: 'fail', title: 'Schema Consistency' }
+        ],
+        warned: 0
+      })
+    else {
+      console.log(red('✗ Could not find schema file with SpacetimeDB markers'))
+      console.log(dim('  Expected a .ts file using schema()/table().'))
+    }
     process.exit(1)
   }
   const calls = extractFactoryCalls(moduleDir)
@@ -216,12 +249,6 @@ const doctor = () => {
   const pkgPath = join(root, 'package.json')
   const pkg = readJsonSafe(pkgPath) as null | Record<string, unknown>
   results.push(checkDeps(pkg))
-  for (const r of results) {
-    const icon = STATUS_ICON[r.status] ?? '?'
-    console.log(`[${icon}] ${r.title}`)
-    for (const d of r.details) console.log(`    • ${d}`)
-    console.log('')
-  }
   let passed = 0
   let warned = 0
   let failed = 0
@@ -230,16 +257,27 @@ const doctor = () => {
     else if (r.status === 'warn') warned += 1
     else failed += 1
   const score = calcHealthScore(results)
+  if (json) {
+    emitJson({ failed, health: score, passed, results, warned })
+    return
+  }
+  for (const r of results) {
+    const icon = STATUS_ICON[r.status] ?? '?'
+    console.log(`[${icon}] ${r.title}`)
+    for (const d of r.details) console.log(`    • ${d}`)
+    console.log('')
+  }
   const scoreColor = score >= 90 ? green : score >= 70 ? yellow : red
   console.log(`Summary: ${passed} passed, ${warned} warning(s), ${failed} error(s)`)
   console.log(`Health Score: ${scoreColor(`${score}/${HEALTH_MAX}`)}\n`)
 }
 const run = (argv: readonly string[] = []) => {
   if (argv.includes('--help') || argv.includes('-h')) {
-    console.log('Usage: noboil stdb doctor')
+    console.log('Usage: noboil stdb doctor [--json]')
+    console.log('  --json   Emit machine-readable report to stdout (one JSON object).')
     return
   }
-  doctor()
+  doctor({ json: argv.includes('--json') })
 }
 if (import.meta.main) run()
 export { calcHealthScore, checkDeps, checkDocker, checkEslintContent, checkSpacetimeCli, doctor, run }

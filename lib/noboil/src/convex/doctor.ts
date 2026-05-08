@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/* eslint-disable no-console */
+/* eslint-disable no-console, complexity */
 /* oxlint-disable eslint/complexity */
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
@@ -137,19 +137,53 @@ const calcHealthScore = (results: CheckResult[]): number => {
     else if (r.status === 'warn') score -= HEALTH_WARN_PENALTY
   return Math.max(0, score)
 }
-const doctor = () => {
+/** Machine-readable doctor result. Emitted as JSON when `--json` flag is passed. */
+interface DoctorReport {
+  failed: number
+  health: number
+  passed: number
+  results: CheckResult[]
+  warned: number
+}
+const emitJson = (report: DoctorReport) => {
+  process.stdout.write(`${JSON.stringify(report)}\n`)
+}
+const doctor = (opts?: { json?: boolean }) => {
+  const json = opts?.json ?? false
   const root = process.cwd()
-  console.log(bold('\nnoboil/convex doctor\n'))
+  if (!json) console.log(bold('\nnoboil/convex doctor\n'))
   const convexDir = findConvexDir(root)
   if (!convexDir) {
-    console.log(red('\u2717 Could not find convex/ directory with _generated/'))
-    console.log(dim('  Run from project root or a directory containing convex/'))
+    if (json)
+      emitJson({
+        failed: 1,
+        health: 0,
+        passed: 0,
+        results: [{ details: ['convex/_generated not found'], status: 'fail', title: 'Schema Consistency' }],
+        warned: 0
+      })
+    else {
+      console.log(red('\u2717 Could not find convex/ directory with _generated/'))
+      console.log(dim('  Run from project root or a directory containing convex/'))
+    }
     process.exit(1)
   }
   const schemaFile = findSchemaFile(convexDir)
   if (!schemaFile) {
-    console.log(red('\u2717 Could not find schema file with noboil/convex markers'))
-    console.log(dim('  Expected a .ts file importing makeOwned/makeOrgScoped/etc.'))
+    if (json)
+      emitJson({
+        failed: 1,
+        health: 0,
+        passed: 0,
+        results: [
+          { details: ['schema file with noboil/convex markers not found'], status: 'fail', title: 'Schema Consistency' }
+        ],
+        warned: 0
+      })
+    else {
+      console.log(red('\u2717 Could not find schema file with noboil/convex markers'))
+      console.log(dim('  Expected a .ts file importing makeOwned/makeOrgScoped/etc.'))
+    }
     process.exit(1)
   }
   const calls = extractFactoryCalls(convexDir)
@@ -201,12 +235,6 @@ const doctor = () => {
   const pkgPath = join(root, 'package.json')
   const pkg = readJsonSafe(pkgPath) as null | Record<string, unknown>
   results.push(checkDeps(pkg))
-  for (const r of results) {
-    const icon = STATUS_ICON[r.status] ?? '?'
-    console.log(`[${icon}] ${r.title}`)
-    for (const d of r.details) console.log(`    \u2022 ${d}`)
-    console.log('')
-  }
   let passed = 0
   let warned = 0
   let failed = 0
@@ -215,16 +243,27 @@ const doctor = () => {
     else if (r.status === 'warn') warned += 1
     else failed += 1
   const score = calcHealthScore(results)
+  if (json) {
+    emitJson({ failed, health: score, passed, results, warned })
+    return
+  }
+  for (const r of results) {
+    const icon = STATUS_ICON[r.status] ?? '?'
+    console.log(`[${icon}] ${r.title}`)
+    for (const d of r.details) console.log(`    \u2022 ${d}`)
+    console.log('')
+  }
   const scoreColor = score >= 90 ? green : score >= 70 ? yellow : red
   console.log(`Summary: ${passed} passed, ${warned} warning(s), ${failed} error(s)`)
   console.log(`Health Score: ${scoreColor(`${score}/${HEALTH_MAX}`)}\n`)
 }
 const run = (argv: readonly string[] = []) => {
   if (argv.includes('--help') || argv.includes('-h')) {
-    console.log('Usage: noboil convex doctor')
+    console.log('Usage: noboil convex doctor [--json]')
+    console.log('  --json   Emit machine-readable report to stdout (one JSON object).')
     return
   }
-  doctor()
+  doctor({ json: argv.includes('--json') })
 }
 if (import.meta.main) run()
 export { calcHealthScore, checkDeps, checkEslintContent, checkRateLimit, doctor, run }
