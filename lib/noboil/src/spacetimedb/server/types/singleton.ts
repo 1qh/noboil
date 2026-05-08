@@ -21,6 +21,18 @@ interface SingletonConfigLoose {
   table: (db: unknown) => unknown
   tableName: string
 }
+/** Reducer-export bundle returned by `makeSingletonCrud` (stdb). One row per sender (`get_<table>`, `upsert_<table>`).
+ * Spread `.exports` into your spacetimedb module's exports.
+ *
+ * @example
+ * ```ts
+ * makeSingletonCrud(spacetimedb, {
+ *   tableName: 'profile',
+ *   fields: { bio: t.string().optional(), name: t.string().optional() },
+ *   table: db => db.profile
+ * })
+ * ```
+ */
 interface SingletonExports {
   exports: Record<string, ReducerExportLike>
 }
@@ -41,6 +53,7 @@ interface SingletonHookCtx<DB = unknown> {
   sender: Identity
   timestamp: Timestamp
 }
+/** Lifecycle hooks for `makeSingletonCrud` (stdb). `beforeUpdate` may transform the patch; throwing aborts. */
 interface SingletonHooks<DB = unknown, Row = Record<string, unknown>, UpdatePatch = Record<string, unknown>> {
   afterCreate?: (ctx: SingletonHookCtx<DB>, args: { data: UpdatePatch; row: Row }) => Promise<void> | void
   afterUpdate?: (ctx: SingletonHookCtx<DB>, args: { next: Row; patch: UpdatePatch; prev: Row }) => Promise<void> | void

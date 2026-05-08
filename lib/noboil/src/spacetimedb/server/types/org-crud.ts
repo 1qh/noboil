@@ -43,6 +43,23 @@ interface OrgCrudConfigLoose {
   table: (db: unknown) => unknown
   tableName: string
 }
+/** Reducer-export bundle returned by `makeOrgCrud` (stdb). Org-scoped CRUD reducers with role gating.
+ * Members/admins/owners enforced via `requireOrgMember`/`requireOrgRole`. Spread `.exports` into your stdb module.
+ *
+ * @example
+ * ```ts
+ * makeOrgCrud(spacetimedb, {
+ *   tableName: 'project',
+ *   fields: { name: t.string() },
+ *   idField: t.u32(),
+ *   pk: tbl => tbl.id,
+ *   table: db => db.project,
+ *   orgTable: db => db.org,
+ *   memberTable: db => db.orgMember,
+ *   options: { acl: true, softDelete: true }
+ * })
+ * ```
+ */
 interface OrgCrudExports {
   exports: Record<string, ReducerExportLike>
 }

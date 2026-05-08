@@ -13,6 +13,20 @@ interface QuotaConfig<DB, Tbl extends QuotaTableLike> {
   table: (db: DB) => Tbl
   tableName: string
 }
+/** Reducer-export bundle returned by `makeQuota` (stdb). Keys: `consume_<table>` (atomic check + record, throws over limit), `record_<table>` (always succeeds, telemetry).
+ * Spread `.exports` into your spacetimedb module's exports.
+ *
+ * @example
+ * ```ts
+ * makeQuota(spacetimedb, {
+ *   tableName: 'pollVoteQuota',
+ *   ownerField: t.string(),
+ *   table: db => db.pollVoteQuota,
+ *   durationMs: 60_000,
+ *   limit: 10
+ * })
+ * ```
+ */
 interface QuotaExports {
   exports: Record<string, ReducerExportLike>
 }
@@ -21,6 +35,7 @@ interface QuotaHookCtx<DB> {
   sender: Identity
   timestamp: Timestamp
 }
+/** Lifecycle hooks for `makeQuota` (stdb). `onExceeded` fires when consume rejects; useful for telemetry. */
 interface QuotaHooks<DB = unknown> {
   afterConsume?: (ctx: QuotaHookCtx<DB>, args: { allowed: boolean; owner: string }) => void
   afterRecord?: (ctx: QuotaHookCtx<DB>, args: { owner: string }) => void

@@ -7,6 +7,28 @@ interface CascadeOption {
 }
 type CrudBuilder = ColumnBuilder<unknown, AlgebraicTypeType> | TypeBuilder<unknown, AlgebraicTypeType>
 type CrudBuilders = never
+/** Configuration for `makeCrud` (stdb).
+ *
+ * - `tableName`: prefix used to name the generated reducers (`create_<tableName>`, `update_<tableName>`, `rm_<tableName>`).
+ * - `fields`: per-column type builders (one per writable column).
+ * - `idField`: type builder for the row primary key.
+ * - `expectedUpdatedAtField`: builder for the optimistic-lock guard (optional).
+ * - `pk`: returns the row's pk-index accessor (for `find`/`update`/`delete`).
+ * - `table`: returns the iterable table from the connection's `db`.
+ * - `options`: hooks, rate limit, cascade, softDelete.
+ *
+ * @example
+ * ```ts
+ * makeCrud(spacetimedb, {
+ *   tableName: 'todo',
+ *   fields: { done: t.boolean(), title: t.string() },
+ *   idField: t.u32(),
+ *   pk: tbl => tbl.id,
+ *   table: db => db.todo,
+ *   options: { rateLimit: { max: 30, window: 60_000 }, softDelete: true }
+ * })
+ * ```
+ */
 interface CrudConfig<
   DB,
   F extends CrudFieldBuilders,
@@ -32,6 +54,9 @@ interface CrudConfigLoose {
   table: (db: unknown) => unknown
   tableName: string
 }
+/** Reducer-export bundle returned by `makeCrud` (stdb). Keys are reducer names (`create_<table>`, `update_<table>`, `rm_<table>`).
+ * Spread `.exports` into your spacetimedb module's exports.
+ */
 interface CrudExports {
   exports: Record<string, ReducerExportLike>
 }
@@ -44,6 +69,7 @@ type CrudFieldValues<F extends CrudFieldBuilders> = {
       ? T
       : never
 }
+/** Lifecycle hooks for `makeCrud` (stdb). `before*` may return a transformed payload; throwing aborts the reducer. */
 interface CrudHooks<
   DB = unknown,
   Row extends Record<string, unknown> = Record<string, unknown>,
@@ -74,6 +100,13 @@ type CrudMakeFn = <
   },
   config: CrudConfig<DB, F, Row, Id, Tbl, Pk>
 ) => CrudExports
+/** Options for `makeCrud` (stdb).
+ *
+ * - `cascade`: child tables to delete-on-parent-delete (use `ownedCascade` helper).
+ * - `hooks`: see `CrudHooks`.
+ * - `rateLimit`: per-sender cap; `{ max, window }` ms.
+ * - `softDelete`: when true, `rm` sets `deletedAt` instead of deleting; rows reappear via separate restore reducer.
+ */
 interface CrudOptions<
   DB = unknown,
   Row extends Record<string, unknown> = Record<string, unknown>,

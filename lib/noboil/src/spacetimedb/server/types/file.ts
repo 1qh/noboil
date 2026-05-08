@@ -35,6 +35,21 @@ interface FileUploadConfigLoose {
   pk: (table: unknown) => unknown
   table: (db: unknown) => unknown
 }
+/** Reducer-export bundle returned by `makeFileUpload` (stdb). Inline-storage file upload reducers.
+ * Spread `.exports` into your spacetimedb module's exports.
+ *
+ * @example
+ * ```ts
+ * makeFileUpload(spacetimedb, {
+ *   namespace: 'avatars',
+ *   fields: { contentType: t.string(), data: t.array(t.u8()), filename: t.string(), size: t.u32() },
+ *   idField: t.u32(),
+ *   pk: tbl => tbl.id,
+ *   table: db => db.file,
+ *   maxFileSize: 5 * 1024 * 1024
+ * })
+ * ```
+ */
 interface FileUploadExports {
   exports: Record<string, ReducerExportLike>
 }

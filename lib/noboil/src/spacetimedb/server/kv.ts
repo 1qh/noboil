@@ -16,6 +16,20 @@ interface KvConfig<DB, Tbl extends KvTableLike> {
   tableName: string
   writeRole?: (ctx: { db: DB; sender: Identity; timestamp: Timestamp }) => boolean
 }
+/** Reducer-export bundle returned by `makeKv` (stdb). Keys are reducer names: `set_<table>`, `rm_<table>`, optional `restore_<table>`.
+ * Spread `.exports` into your spacetimedb module's exports.
+ *
+ * @example
+ * ```ts
+ * makeKv(spacetimedb, {
+ *   tableName: 'siteConfig',
+ *   keyField: t.string(),
+ *   fields: { value: t.string() },
+ *   table: db => db.siteConfig,
+ *   options: { softDelete: true }
+ * })
+ * ```
+ */
 interface KvExports {
   exports: Record<string, ReducerExportLike>
 }
@@ -24,6 +38,7 @@ interface KvHookCtx<DB> {
   sender: Identity
   timestamp: Timestamp
 }
+/** Lifecycle hooks for `makeKv` (stdb). `beforeSet` may transform the data; throwing aborts. */
 interface KvHooks<DB = unknown> {
   afterDelete?: (ctx: KvHookCtx<DB>, args: { row: Record<string, unknown> }) => void
   afterSet?: (

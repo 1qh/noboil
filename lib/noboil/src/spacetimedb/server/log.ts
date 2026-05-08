@@ -17,6 +17,21 @@ interface LogConfig<DB, Tbl extends LogTableLike> {
   table: (db: DB) => Tbl
   tableName: string
 }
+/** Reducer-export bundle returned by `makeLog` (stdb). Keys: `append_<table>`, `bulk_append_<table>`, `purge_<table>_by_parent`, optional `restore_<table>_by_parent`.
+ * Spread `.exports` into your spacetimedb module's exports.
+ *
+ * @example
+ * ```ts
+ * makeLog(spacetimedb, {
+ *   tableName: 'message',
+ *   parentField: t.string(),
+ *   idempotencyKeyField: t.string(),
+ *   fields: { text: t.string() },
+ *   table: db => db.message,
+ *   options: { rateLimit: { max: 30, window: 60_000 } }
+ * })
+ * ```
+ */
 interface LogExports {
   exports: Record<string, ReducerExportLike>
 }
@@ -25,6 +40,7 @@ interface LogHookCtx<DB> {
   sender: Identity
   timestamp: Timestamp
 }
+/** Lifecycle hooks for `makeLog` (stdb). `beforeAppend` may transform the data; `beforePurge` runs before bulk delete. */
 interface LogHooks<DB = unknown> {
   afterAppend?: (ctx: LogHookCtx<DB>, args: { data: Record<string, unknown>; row: Record<string, unknown> }) => void
   afterPurge?: (ctx: LogHookCtx<DB>, args: { parent: string; rows: Record<string, unknown>[] }) => void
