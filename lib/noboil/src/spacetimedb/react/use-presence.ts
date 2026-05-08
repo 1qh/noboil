@@ -6,10 +6,12 @@ import { HEARTBEAT_INTERVAL_MS } from '../server/presence'
 interface PresenceHeartbeatArgs {
   data: Record<string, unknown>
 }
+/** Presence subscription handle — the rows + a heartbeat callback. Pass to `usePresence({ refs })`. */
 interface PresenceRefs {
   data: PresenceRow[]
   heartbeat: (args?: PresenceHeartbeatArgs) => Promise<void>
 }
+/** Single presence row from the presence table. `lastSeen` accepts microsecond / millisecond / Timestamp variants. */
 interface PresenceRow {
   data: unknown
   lastSeen:
@@ -18,11 +20,13 @@ interface PresenceRow {
   roomId?: string
   userId: string
 }
+/** Options for `usePresence`. `heartbeatIntervalMs` controls how often we ping (default = HEARTBEAT_INTERVAL_MS). */
 interface UsePresenceOptions {
   enabled?: boolean
   heartbeatIntervalMs?: number
   ttlMs?: number
 }
+/** Return shape of `usePresence`: live `users` list filtered by TTL + a `updatePresence(data)` callback. */
 interface UsePresenceResult {
   updatePresence: (data: Record<string, unknown>) => void
   users: PresenceRow[]

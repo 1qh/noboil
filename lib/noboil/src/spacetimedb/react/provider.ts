@@ -3,6 +3,7 @@
 import type { UploadOptions, UploadResponse } from '../components'
 import { DEFAULT_TOKEN_KEY, DEFAULT_WS_URI, TOKEN_COOKIE_KEY } from '../defaults'
 import { err } from '../server/helpers'
+/** Options for `createSpacetimeClient` — supplies generated `DbConnection` builder, module name, ws uri, and token store. */
 interface CreateSpacetimeClientOptions<
   TBuilder extends SpacetimeConnectionBuilder<TBuilder, TConnection, TIdentity>,
   TConnection = unknown,
@@ -13,15 +14,18 @@ interface CreateSpacetimeClientOptions<
   tokenStore?: TokenStore
   uri: string
 }
+/** Fluent connection builder shape from generated `DbConnection.builder()`. */
 interface SpacetimeConnectionBuilder<TBuilder, TConnection = unknown, TIdentity = unknown> {
   onConnect: (callback: (connection: TConnection, identity: TIdentity, token: string) => void) => TBuilder
   withDatabaseName: (moduleName: string) => TBuilder
   withToken: (token: string | undefined) => TBuilder
   withUri: (uri: string) => TBuilder
 }
+/** Factory wrapper exposing `.builder()` — matches what `DbConnection` from generated module bindings provides. */
 interface SpacetimeConnectionFactory<TBuilder> {
   builder: () => TBuilder
 }
+/** Pluggable persistence for the auth token (cookie / localStorage / custom). Default uses both for SSR + client. */
 interface TokenStore {
   get: () => string | undefined
   store: (token: string) => void
