@@ -35,15 +35,19 @@ type Ab<V extends FunctionVisibility = 'public'> = CustomBuilder<
   V,
   Rec
 >
+/** Minimal action ctx: can invoke other mutations/queries by reference. Passed to cache `fetcher`. */
 interface ActionCtxLike {
   runMutation: (ref: string, args: Rec) => Promise<unknown>
   runQuery: (ref: string, args: Rec) => Promise<unknown>
 }
+/** Builder bundle accepted by simpler factories (`makeKv`, `makeLog`, `makeQuota`, `makeOrg`, etc).
+ * Wire from the Convex module's generated `mutation`/`query` (and optional `pq` for paginated queries). */
 interface BaseBuilders {
   m: Mb
   pq?: Qb
   q: Qb
 }
+/** Builder bundle for `makeCacheCrud`. Adds `cm`/`cq` (custom builders), `internal*`/`mutation`/`query`, plus `action` for the fetcher path. */
 interface CacheBuilders<DM extends GenericDataModel = GenericDataModel> {
   action: ActionBuilder<DM, 'public'>
   cm: Mb
@@ -255,19 +259,23 @@ interface CrudResult<S extends ZodRawShape> {
     DocBase<S> | DocBase<S>[]
   >
 }
+/** Minimal ctx with just the db handle. Subset of MutCtx/QueryCtxLike. */
 interface DbCtx {
   db: DbLike
 }
+/** Read+write database adapter. Subset of Convex's full DatabaseWriter — the methods noboil factories actually call. */
 interface DbLike extends DbReadLike {
   delete: (id: string) => Promise<void>
   insert: (table: string, data: Rec) => Promise<string>
   patch: (id: string, data: Rec) => Promise<void>
   system: DbReadLike
 }
+/** Read-only database adapter. Subset of Convex's DatabaseReader. */
 interface DbReadLike {
   get: (id: string) => Promise<null | Rec>
   query: (table: string) => QueryLike
 }
+/** Persisted shape: Zod schema output + Convex's `_id`/`_creationTime` system fields + noboil's `updatedAt`. */
 type DocBase<S extends ZodRawShape> = _.output<ZodObject<S>> & {
   _creationTime: number
   _id: string
@@ -276,6 +284,7 @@ type DocBase<S extends ZodRawShape> = _.output<ZodObject<S>> & {
 type EditorArg = IdArg & { userId: string }
 type EditorsArg = IdArg & { userIds: string[] }
 type EmptyArg = Record<string, never>
+/** Read-side doc shape returned by `auth`/`pub` reads: DocBase + author profile + `own` flag + resolved file URLs. */
 type EnrichedDoc<S extends ZodRawShape> = WithUrls<
   DocBase<S> & {
     author: AuthorInfo | null
@@ -286,6 +295,7 @@ type EnrichedDoc<S extends ZodRawShape> = WithUrls<
 // oxlint-disable-next-line typescript/ban-types
 type ErrorCode = BuiltinErrorCode | (string & {})
 type FID = GenericId<'_storage'>
+/** Convex filter-builder adapter. Used inside `q.filter(f => ...)` callbacks to compose predicates. */
 interface FilterLike {
   and: (a: unknown, b: unknown) => unknown
   eq: (a: unknown, b: unknown) => unknown
@@ -297,12 +307,14 @@ interface FilterLike {
   neq: (a: unknown, b: unknown) => unknown
   or: (a: unknown, b: unknown) => unknown
 }
+/** Ctx passed to `setup({ hooks })` global lifecycle callbacks. Includes `table` so a single hook can dispatch by table name. */
 interface GlobalHookCtx {
   db: DbLike
   storage?: StorageLike
   table: string
   userId?: string
 }
+/** Global lifecycle hooks passed to `setup()`. Fire for every CRUD-style mutation across all tables in the project. */
 interface GlobalHooks {
   afterCreate?: (ctx: GlobalHookCtx, args: { data: Rec; id: string }) => Promise<void> | void
   afterDelete?: (ctx: GlobalHookCtx, args: { doc: Rec; id: string }) => Promise<void> | void
@@ -311,6 +323,7 @@ interface GlobalHooks {
   beforeDelete?: (ctx: GlobalHookCtx, args: { doc: Rec; id: string }) => Promise<void> | void
   beforeUpdate?: (ctx: GlobalHookCtx, args: { id: string; patch: Rec; prev: Rec }) => Promise<Rec> | Rec
 }
+/** Ctx passed to factory `before*`/`after*` lifecycle hooks. Has db, storage, and resolved userId. */
 interface HookCtx {
   db: DbLike
   storage: StorageLike
@@ -318,6 +331,7 @@ interface HookCtx {
 }
 type IdArg = Rec & { id: string }
 type IdsArg = Rec & { id?: string; ids?: string[] }
+/** Convex index-builder adapter. Used inside `q.withIndex('by_x', i => i.eq('x', value))` callbacks. */
 interface IndexLike {
   eq: (field: string, value: unknown) => IndexLike
   gt: (field: string, value: unknown) => IndexLike
@@ -342,6 +356,8 @@ type Mb<V extends FunctionVisibility = 'public'> = CustomBuilder<
   V,
   Rec
 >
+/** Middleware passed to `setup({ middleware })`. Ordered chain — each runs around the global hooks for every CRUD mutation.
+ * Use for cross-cutting concerns: logging, audit, sanitization, rate-limit checks. */
 interface Middleware {
   afterCreate?: (ctx: MiddlewareCtx, args: { data: Rec; id: string }) => Promise<void> | void
   afterDelete?: (ctx: MiddlewareCtx, args: { doc: Rec; id: string }) => Promise<void> | void
@@ -354,11 +370,13 @@ interface Middleware {
 interface MiddlewareCtx extends GlobalHookCtx {
   operation: 'create' | 'delete' | 'update'
 }
+/** Generic Convex mutation ctx. Used as the base type before noboil's `MutCtx` extends it with `user`. */
 interface MutationCtxLike {
   auth: { getUserIdentity: () => Promise<unknown> }
   db: DbLike
   storage: StorageLike
 }
+/** Mutation handler ctx with resolved `user` (auth) and `storage`. The standard ctx type for write factories. */
 interface MutCtx extends UserCtx {
   storage: StorageLike
 }
@@ -386,6 +404,7 @@ interface OrgCrudResult<S extends ZodRawShape> {
     DocBase<S> | DocBase<S>[] | null
   >
 }
+/** Read-side doc shape for `makeOrgCrud` reads: DocBase + author + `own` + `orgId` + resolved file URLs. */
 type OrgEnrichedDoc<S extends ZodRawShape> = WithUrls<
   DocBase<S> & {
     author: AuthorInfo | null
@@ -423,11 +442,13 @@ type Qb<V extends FunctionVisibility = 'public'> = CustomBuilder<
   V,
   Rec
 >
+/** Generic Convex query ctx. Used as base type before noboil wraps it with `viewerId`/`withAuthor` in `ReadCtx`. */
 interface QueryCtxLike {
   auth: { getUserIdentity: () => Promise<unknown> }
   db: DbLike
   storage: StorageLike
 }
+/** Convex query-builder adapter. Returned by `db.query(table)`. Chain `.filter()`/`.withIndex()`/`.order()`/`.collect()` etc. */
 interface QueryLike {
   collect: () => Promise<Rec[]>
   filter: (fn: (fb: FilterLike) => unknown) => QueryLike
@@ -439,6 +460,7 @@ interface QueryLike {
   withIndex: (name: string, fn?: (ib: IndexLike) => unknown) => QueryLike
   withSearchIndex: (name: string, fn: (sb: SearchLike) => unknown) => QueryLike
 }
+/** Read handler ctx: db + storage + `viewerId` (auth) + `withAuthor` enricher. The standard ctx for query factories. */
 interface ReadCtx {
   db: DbLike
   storage: StorageLike
@@ -453,6 +475,21 @@ interface ReadCtx {
   >
 }
 type SchemaOut<S extends ZodRawShape> = _.output<ZodObject<S>>
+/** Configuration for `setup()`. Wires Convex's generated mutation/query/action builders, auth resolver, and global hooks/middleware.
+ *
+ * @example
+ * ```ts
+ * // convex/_setup.ts
+ * import { setup } from 'noboil/convex/server'
+ * import { mutation, query, action, internalMutation, internalQuery } from './_generated/server'
+ * import { auth } from './auth'
+ * export const { m, q, cm, cq, action: a, ... } = setup({
+ *   action, mutation, query, internalMutation, internalQuery,
+ *   getAuthUserId: ctx => auth.getUserId(ctx),
+ *   middleware: [composeMiddleware(auditLog, slowQueryWarn)]
+ * })
+ * ```
+ */
 interface SetupConfig<DM extends GenericDataModel = GenericDataModel> {
   action: ActionBuilder<DM, 'public'>
   getAuthUserId: (ctx: never) => Promise<null | string>
@@ -474,6 +511,7 @@ type UrlVal<V> =
       ? null | string
       : (null | string)[]
     : never
+/** Ctx with resolved authenticated `user` document. Subset of MutCtx without storage. */
 interface UserCtx extends DbCtx {
   user: Rec
 }
@@ -491,6 +529,7 @@ declare const __brand: unique symbol
 /** Validates a schema has the expected brand, returning the schema type on success or an error message type on failure. */
 type AssertSchema<T, Expected extends keyof BrandLabelMap> =
   DetectBrand<T> extends Expected ? T : SchemaTypeError<Expected, DetectBrand<T> & keyof BrandLabelMap>
+/** Schema branded for use with `cacheCrud()` + `baseTable()`. Created via `makeBase({ ... })`. */
 type BaseSchema<T extends ZodRawShape> = SchemaBrand<'base'> & ZodObject<T>
 /** Readable brand name for error messages. */
 interface BrandLabelMap {
@@ -590,7 +629,9 @@ type LogPageArg = LogParentArg & PageArg
 /** Schema branded for use with log(). Used for append-only event logs. */
 type LogSchema<T extends ZodRawShape> = SchemaBrand<'log'> & ZodObject<T>
 type LogSearchArg = LogParentArg & { query: string }
+/** Schema for the org metadata table (name/slug/avatar). Pass to `setup({ orgSchema })`. Created via `makeOrg({ org: ... })`. */
 type OrgDefSchema<T extends ZodRawShape> = SchemaBrand<'orgDef'> & ZodObject<T>
+/** Schema branded for use with `orgCrud()` + `orgTable()`. Rows scoped to an org via `orgId`. Created via `makeOrgScoped({ ... })`. */
 type OrgSchema<T extends ZodRawShape> = SchemaBrand<'org'> & ZodObject<T>
 /** Minimal user shape used across org operations, containing id, name, email, and image. */
 interface OrgUserLike {
@@ -600,6 +641,7 @@ interface OrgUserLike {
   image?: string
   name?: string
 }
+/** Schema branded for use with `crud()` + `ownedTable()`. Rows scoped per-user via `userId`. Created via `makeOwned({ ... })`. */
 type OwnedSchema<T extends ZodRawShape> = SchemaBrand<'owned'> & ZodObject<T>
 /** Endpoint bundle returned by `makeQuota`. Sliding-window rate limit keyed by owner.
  *
@@ -660,6 +702,7 @@ type SingletonDoc<S extends ZodRawShape> = WithUrls<DocBase<S> & { userId: strin
 interface SingletonOptions {
   rateLimit?: RateLimitInput
 }
+/** Schema branded for use with `singletonCrud()` + `singletonTable()`. One row per user. Created via `makeSingleton({ ... })`. */
 type SingletonSchema<T extends ZodRawShape> = SchemaBrand<'singleton'> & ZodObject<T>
 export type {
   /** Action builder type for public visibility. */

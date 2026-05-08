@@ -1,4 +1,6 @@
 /* eslint-disable no-console */
+/** Comparison operator object for `where` clauses. Mix into a field value to do range queries.
+ * @example `{ createdAt: { $gte: yesterday, $lt: today } }` or `{ score: { $between: [10, 20] } }`. */
 interface ComparisonOp<V> {
   $between?: [V, V]
   $gt?: V
@@ -6,6 +8,8 @@ interface ComparisonOp<V> {
   $lt?: V
   $lte?: V
 }
+/** Structured error payload thrown by `err()` and inspected via `extractErrorData()` / `getErrorCode()`.
+ * Carries optional `suggestion` (auto-attached from ERROR_SUGGESTIONS) and `docsUrl` for self-correction. */
 interface ErrorData {
   code: string
   debug?: string
@@ -19,23 +23,28 @@ interface ErrorData {
   suggestion?: string
   table?: string
 }
+/** Map of error code → handler, with optional `default` fallback. Pass to `handleError(e, handlers)` to route errors. */
 type ErrorHandler = Partial<Record<string, (data: ErrorData) => void>> & {
   default?: (error: unknown) => void
 }
+/** Internal config consumed by `createErrorUtils()` to wire up backend-specific throw + extract behavior. */
 interface ErrorUtilsConfig {
   errorMessages: Record<string, string>
   extractErrorData: (e: unknown) => ErrorData | undefined
   suggestions?: Record<string, string>
   throwError: (code: string, opts?: Record<string, unknown> | string | { message: string }) => never
 }
+/** Discriminated-union failure variant of `MutationResult<T>`. Returned by `fail(code, detail?)`. */
 interface MutationFail {
   error: ErrorData
   ok: false
 }
+/** Discriminated-union success variant of `MutationResult<T>`. Returned by `ok(value)`. */
 interface MutationOk<T> {
   ok: true
   value: T
 }
+/** Result wrapper for non-throwing mutations: `{ ok: true, value: T } | { ok: false, error: ErrorData }`. */
 type MutationResult<T> = MutationFail | MutationOk<T>
 const TOKEN_BYTES = 24
 const TOKEN_LENGTH = 48
