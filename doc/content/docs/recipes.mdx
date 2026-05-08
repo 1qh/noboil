@@ -1916,7 +1916,154 @@ End-to-end coverage: 82 Playwright tests (`web/cvx/poll/e2e/*`) exercise this ex
 Every `@example` JSDoc block harvested from `lib/noboil/src/`. These are tested-by-living-source examples — the surrounding code must compile.
 
 {/* AUTO-GENERATED:JSDOC-EXAMPLES:START */}
-**13 `@example` blocks** harvested from JSDoc across `lib/noboil/src/`.
+**32 `@example` blocks** harvested from JSDoc across `lib/noboil/src/`.
+
+### `AuditExports` — `lib/noboil/src/convex/server/audit.ts`
+
+```ts
+// convex/audit.ts
+export const { append, recent, listByActor, listByTrace, pruneStale } = makeAudit({
+  builders, table: 'audit', options: { ttlMs: 30 * 24 * 60 * 60 * 1000 }
+})
+```
+
+### `BudgetExports` — `lib/noboil/src/convex/server/budget.ts`
+
+```ts
+// convex/llmBudget.ts
+export const { reserve, settle, check, add, pruneStale, auditInvariants } = makeBudget({
+  builders, table: 'llmBudget', cap: 10_000, inflightMax: 50, periodMs: 24 * 60 * 60 * 1000
+})
+```
+
+### `CacheOptions` — `lib/noboil/src/convex/server/types.ts`
+
+```ts
+makeCacheCrud({ builders, schema: schemas.movie, table: 'movie', options: {
+  key: 'tmdbId',
+  fetcher: async (_, id) => fetchMovieFromTmdb(Number(id)),
+  ttl: 24 * 60 * 60 * 1000,
+  staleWhileRevalidate: true
+} })
+```
+
+### `CrudConfig` — `lib/noboil/src/spacetimedb/server/types/crud.ts`
+
+```ts
+makeCrud(spacetimedb, {
+  tableName: 'todo',
+  fields: { done: t.boolean(), title: t.string() },
+  idField: t.u32(),
+  pk: tbl => tbl.id,
+  table: db => db.todo,
+  options: { rateLimit: { max: 30, window: 60_000 }, softDelete: true }
+})
+```
+
+### `CrudHooks` — `lib/noboil/src/convex/server/types.ts`
+
+```ts
+makeCrud({ schema, table: 'todo', options: { hooks: {
+  beforeCreate: (ctx, { data }) => ({ ...data, ownerId: ctx.userId }),
+  afterDelete: async (ctx, { id }) => { await ctx.db.delete(id) }
+} } })
+Typechecked usage: `lib/noboil/examples/convex/make-crud.example.ts`.
+```
+
+### `CrudOptions` — `lib/noboil/src/convex/server/types.ts`
+
+```ts
+makeCrud({ schema: schemas.todo, table: 'todo', options: {
+  pub: 'isPublished',
+  softDelete: true,
+  rateLimit: { max: 30, window: 60_000 },
+  search: 'title'
+} })
+```
+
+### `CrudResult` — `lib/noboil/src/convex/server/types.ts`
+
+```ts
+// convex/todo.ts
+import { makeCrud } from 'noboil/convex/server'
+import { schemas } from './schema'
+export const { auth, pub, authIndexed, create, update, rm } = makeCrud({
+  builders, schema: schemas.todo, table: 'todo', options: { pub: true }
+})
+```
+
+### `ErrorData` — `lib/noboil/src/shared/server/helpers.ts`
+
+```ts
+interface ComparisonOp<V> {
+  $between?: [V, V]
+  $gt?: V
+  $gte?: V
+  $lt?: V
+  $lte?: V
+}
+/** Structured error payload thrown by `err()` and inspected via `extractErrorData()` / `getErrorCode()`.
+```
+
+### `FileUploadExports` — `lib/noboil/src/spacetimedb/server/types/file.ts`
+
+```ts
+makeFileUpload(spacetimedb, {
+  namespace: 'avatars',
+  fields: { contentType: t.string(), data: t.array(t.u8()), filename: t.string(), size: t.u32() },
+  idField: t.u32(),
+  pk: tbl => tbl.id,
+  table: db => db.file,
+  maxFileSize: 5 * 1024 * 1024
+})
+```
+
+### `KvExports` — `lib/noboil/src/spacetimedb/server/kv.ts`
+
+```ts
+makeKv(spacetimedb, {
+  tableName: 'siteConfig',
+  keyField: t.string(),
+  fields: { value: t.string() },
+  table: db => db.siteConfig,
+  options: { softDelete: true }
+})
+```
+
+### `KvSchema` — `lib/noboil/src/convex/server/types.ts`
+
+```ts
+// convex/siteConfig.ts
+import { makeKv } from 'noboil/convex/server'
+import { schemas } from './schema'
+export const { get, list, set, rm, restore } = makeKv({
+  builders, schema: schemas.siteConfig.banner, table: 'siteConfig',
+  keys: ['banner', 'maintenanceMode'] as const, softDelete: true
+})
+```
+
+### `LogExports` — `lib/noboil/src/spacetimedb/server/log.ts`
+
+```ts
+makeLog(spacetimedb, {
+  tableName: 'message',
+  parentField: t.string(),
+  idempotencyKeyField: t.string(),
+  fields: { text: t.string() },
+  table: db => db.message,
+  options: { rateLimit: { max: 30, window: 60_000 } }
+})
+```
+
+### `LogSchema` — `lib/noboil/src/convex/server/types.ts`
+
+```ts
+// convex/message.ts
+export const { append, list, listAfter, purgeByParent } = makeLog({
+  builders, schema: schemas.message, table: 'message',
+  options: { rateLimit: 30, search: 'text' }
+})
+```
 
 ### `makeCrud` — `lib/noboil/src/spacetimedb/server/crud.ts`
 
@@ -1954,6 +2101,54 @@ import { api } from './lazy'
 export const { create, update, rm, pub: { list, read, search } } = api.blog
 ```
 
+### `OrgCrudExports` — `lib/noboil/src/spacetimedb/server/types/org-crud.ts`
+
+```ts
+makeOrgCrud(spacetimedb, {
+  tableName: 'project',
+  fields: { name: t.string() },
+  idField: t.u32(),
+  pk: tbl => tbl.id,
+  table: db => db.project,
+  orgTable: db => db.org,
+  memberTable: db => db.orgMember,
+  options: { acl: true, softDelete: true }
+})
+```
+
+### `PaginationOptsShape` — `lib/noboil/src/convex/server/types.ts`
+
+```ts
+// convex/project.ts
+import { makeOrgCrud } from 'noboil/convex/server'
+import { schemas } from './schema'
+export const { create, list, read, update, rm, addEditor, removeEditor, editors } = makeOrgCrud({
+  builders, schema: schemas.project, table: 'project', options: { acl: true, softDelete: true }
+})
+```
+
+### `QuotaEntry` — `lib/noboil/src/convex/server/types.ts`
+
+```ts
+// convex/pollVoteQuota.ts
+export const { check, consume, record } = makeQuota({
+  builders, schema: schemas.pollVoteQuota, table: 'pollVoteQuota',
+  options: { durationMs: 60_000, limit: 10 }
+})
+```
+
+### `QuotaExports` — `lib/noboil/src/spacetimedb/server/quota.ts`
+
+```ts
+makeQuota(spacetimedb, {
+  tableName: 'pollVoteQuota',
+  ownerField: t.string(),
+  table: db => db.pollVoteQuota,
+  durationMs: 60_000,
+  limit: 10
+})
+```
+
 ### `resolveToastError` — `lib/noboil/src/spacetimedb/react/use-mutate.ts`
 
 ```ts
@@ -1969,6 +2164,30 @@ const { crud, orgCrud, pq, q, m } = setup({
 
 // Then generate endpoints:
 export const { create, update, rm, pub: { list, read } } = crud('blog', owned.blog)
+```
+
+### `SetupConfig` — `lib/noboil/src/convex/server/types.ts`
+
+```ts
+// convex/_setup.ts
+import { setup } from 'noboil/convex/server'
+import { mutation, query, action, internalMutation, internalQuery } from './_generated/server'
+import { auth } from './auth'
+export const { m, q, cm, cq, action: a, ... } = setup({
+  action, mutation, query, internalMutation, internalQuery,
+  getAuthUserId: ctx => auth.getUserId(ctx),
+  middleware: [composeMiddleware(auditLog, slowQueryWarn)]
+})
+```
+
+### `SingletonExports` — `lib/noboil/src/spacetimedb/server/types/singleton.ts`
+
+```ts
+makeSingletonCrud(spacetimedb, {
+  tableName: 'profile',
+  fields: { bio: t.string().optional(), name: t.string().optional() },
+  table: db => db.profile
+})
 ```
 
 ### `SKIP_RESULT` — `lib/noboil/src/spacetimedb/react/use-infinite-list.ts`
