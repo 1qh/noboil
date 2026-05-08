@@ -132,7 +132,8 @@ const makeOrgCrud = <
   Tbl extends OrgCrudTableLike<Row>,
   Pk extends OrgCrudPkLike<Row, Id>,
   Member extends OrgCrudMemberLike<OrgId>,
-  OrgMemberTbl extends Iterable<Member>
+  OrgMemberTbl extends Iterable<Member>,
+  T extends string = string
 >(
   spacetimedb: {
     reducer: (
@@ -141,8 +142,8 @@ const makeOrgCrud = <
       fn: (ctx: { db: DB; sender: Identity; timestamp: Timestamp }, args: unknown) => void
     ) => unknown
   },
-  config: OrgCrudConfig<DB, F, OrgId, Row, Id, Tbl, Pk, Member, OrgMemberTbl>
-): OrgCrudExports => {
+  config: OrgCrudConfig<DB, F, OrgId, Row, Id, Tbl, Pk, Member, OrgMemberTbl, T>
+): OrgCrudExports<T> => {
   const {
     expectedUpdatedAtField,
     fields,

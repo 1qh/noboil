@@ -63,7 +63,8 @@ const makeFileUpload = <
   Id,
   Row extends FileRowBase<Id>,
   Tbl extends FileUploadTableLike<Row>,
-  Pk extends FileUploadPkLike<Row, Id>
+  Pk extends FileUploadPkLike<Row, Id>,
+  N extends string = string
 >(
   spacetimedb: {
     reducer: (
@@ -72,8 +73,8 @@ const makeFileUpload = <
       fn: (ctx: { db: DB; sender: Identity; timestamp: Timestamp }, args: unknown) => void
     ) => unknown
   },
-  config: FileUploadConfig<DB, Row, Id, Tbl, Pk>
-): FileUploadExports => {
+  config: FileUploadConfig<DB, Row, Id, Tbl, Pk, N>
+): FileUploadExports<N> => {
   const {
     allowedTypes = DEFAULT_ALLOWED_TYPES,
     fields,

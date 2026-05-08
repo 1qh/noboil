@@ -5,13 +5,13 @@ import { hkCtx, makeError } from './reducer-utils'
 const findByOwner = (table: QuotaTableLike, owner: string): QuotaRow | undefined => {
   for (const row of table) if (row.owner === owner) return row
 }
-interface QuotaConfig<DB, Tbl extends QuotaTableLike> {
+interface QuotaConfig<DB, Tbl extends QuotaTableLike, T extends string = string> {
   durationMs: number
   hooks?: QuotaHooks<DB>
   limit: number
   ownerField: ColumnBuilder<string, AlgebraicTypeType> | TypeBuilder<string, AlgebraicTypeType>
   table: (db: DB) => Tbl
-  tableName: string
+  tableName: T
 }
 /** Reducer-export bundle returned by `makeQuota` (stdb). Keys: `consume_<table>` (atomic check + record, throws over limit), `record_<table>` (always succeeds, telemetry).
  * Spread `.exports` into your spacetimedb module's exports.
@@ -27,8 +27,8 @@ interface QuotaConfig<DB, Tbl extends QuotaTableLike> {
  * })
  * ```
  */
-interface QuotaExports {
-  exports: Record<string, ReducerExportLike>
+interface QuotaExports<T extends string = string> {
+  exports: Record<`consume_${T}` | `record_${T}`, ReducerExportLike>
 }
 interface QuotaHookCtx<DB> {
   db: DB
@@ -64,7 +64,7 @@ const prune = (timestamps: number[], cutoff: number): number[] => {
  * @param config Quota reducer configuration
  * @returns Reducer export map
  */
-const makeQuota = <DB, Tbl extends QuotaTableLike>(
+const makeQuota = <DB, Tbl extends QuotaTableLike, T extends string = string>(
   spacetimedb: {
     reducer: (
       opts: { name: string },
@@ -72,8 +72,8 @@ const makeQuota = <DB, Tbl extends QuotaTableLike>(
       fn: (ctx: { db: DB; sender: Identity; timestamp: Timestamp }, args: unknown) => void
     ) => unknown
   },
-  config: QuotaConfig<DB, Tbl>
-): QuotaExports => {
+  config: QuotaConfig<DB, Tbl, T>
+): QuotaExports<T> => {
   const { durationMs, hooks, limit, ownerField, table: tableAccessor, tableName } = config
   /** [params: owner] Atomic check + record. Throws when over limit. */
   const consumeName = `consume_${tableName}`

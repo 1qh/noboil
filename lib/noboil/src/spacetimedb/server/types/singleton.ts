@@ -8,12 +8,13 @@ interface SingletonConfig<
   DB,
   F extends SingletonFieldBuilders,
   Row extends { updatedAt: Timestamp; userId: Identity },
-  Tbl extends SingletonTableLike<Row>
+  Tbl extends SingletonTableLike<Row>,
+  T extends string = string
 > {
   fields: F
   options?: SingletonOptions<DB, Row, Partial<SingletonFieldValues<F>>>
   table: (db: DB) => Tbl
-  tableName: string
+  tableName: T
 }
 interface SingletonConfigLoose {
   fields: SingletonFieldBuilders
@@ -33,8 +34,8 @@ interface SingletonConfigLoose {
  * })
  * ```
  */
-interface SingletonExports {
-  exports: Record<string, ReducerExportLike>
+interface SingletonExports<T extends string = string> {
+  exports: Record<`get_${T}` | `upsert_${T}`, ReducerExportLike>
 }
 type SingletonFieldBuilders = Record<
   string,

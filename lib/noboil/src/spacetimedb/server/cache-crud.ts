@@ -54,7 +54,8 @@ const makeCacheCrud = <
   Row,
   Key,
   Tbl extends CacheTableLike<Row>,
-  Pk extends CachePkLike<Row, Key>
+  Pk extends CachePkLike<Row, Key>,
+  T extends string = string
 >(
   spacetimedb: {
     reducer: (
@@ -63,8 +64,8 @@ const makeCacheCrud = <
       fn: (ctx: { db: DB; timestamp: Timestamp }, args: unknown) => void
     ) => unknown
   },
-  config: CacheConfig<DB, F, Row, Key, Tbl, Pk>
-): CacheExports => {
+  config: CacheConfig<DB, F, Row, Key, Tbl, Pk, T>
+): CacheExports<T> => {
   const { fields, keyField, keyName, options, pk: pkAccessor, table: tableAccessor, tableName } = config
   const ttl = options?.ttl ?? DEFAULT_TTL_MS
   const fieldNames = Object.keys(fields) as (keyof F & string)[]

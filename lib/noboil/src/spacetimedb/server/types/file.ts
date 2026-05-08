@@ -16,13 +16,14 @@ interface FileUploadConfig<
   Row extends { contentType: string; data: Uint8Array; filename: string; size: number; userId: Identity },
   Id,
   Tbl extends FileUploadTableLike<Row>,
-  Pk extends FileUploadPkLike<Row, Id>
+  Pk extends FileUploadPkLike<Row, Id>,
+  N extends string = string
 > {
   allowedTypes?: Set<string>
   fields: FileUploadFields
   idField: TypeBuilder<Id, AlgebraicTypeType>
   maxFileSize?: number
-  namespace: string
+  namespace: N
   pk: (table: Tbl) => Pk
   table: (db: DB) => Tbl
 }
@@ -50,8 +51,8 @@ interface FileUploadConfigLoose {
  * })
  * ```
  */
-interface FileUploadExports {
-  exports: Record<string, ReducerExportLike>
+interface FileUploadExports<N extends string = string> {
+  exports: Record<`delete_file_${N}` | `register_upload_${N}`, ReducerExportLike>
 }
 interface FileUploadFields {
   contentType: FileUploadBuilder

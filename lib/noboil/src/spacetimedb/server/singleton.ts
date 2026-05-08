@@ -22,7 +22,8 @@ const makeSingletonCrud = <
   DB,
   F extends SingletonFieldBuilders,
   Row extends SingletonRow,
-  Tbl extends SingletonTableLike<Row>
+  Tbl extends SingletonTableLike<Row>,
+  T extends string = string
 >(
   spacetimedb: {
     reducer: (
@@ -31,8 +32,8 @@ const makeSingletonCrud = <
       fn: (ctx: { db: DB; sender: Identity; timestamp: Timestamp }, args: unknown) => void
     ) => unknown
   },
-  config: SingletonConfig<DB, F, Row, Tbl>
-): SingletonExports => {
+  config: SingletonConfig<DB, F, Row, Tbl, T>
+): SingletonExports<T> => {
   const { fields, options, table: tableAccessor, tableName } = config
   const hooks = options?.hooks
   const fieldNames = Object.keys(fields) as (keyof F & string)[]

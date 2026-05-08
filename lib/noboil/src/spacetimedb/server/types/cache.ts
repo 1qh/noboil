@@ -9,7 +9,8 @@ interface CacheConfig<
   Row,
   Key,
   Tbl extends CacheTableLike<Row>,
-  Pk extends CachePkLike<Row, Key>
+  Pk extends CachePkLike<Row, Key>,
+  T extends string = string
 > {
   fields: F
   keyField: TypeBuilder<Key, AlgebraicTypeType>
@@ -17,7 +18,7 @@ interface CacheConfig<
   options?: CacheOptions
   pk: (table: Tbl) => Pk
   table: (db: DB) => Tbl
-  tableName: string
+  tableName: T
 }
 interface CacheConfigLoose {
   fields: CacheFieldBuilders
@@ -28,9 +29,9 @@ interface CacheConfigLoose {
   table: (db: unknown) => unknown
   tableName: string
 }
-type CacheCrudResult = CacheExports
-interface CacheExports {
-  exports: Record<string, ReducerExportLike>
+type CacheCrudResult<T extends string = string> = CacheExports<T>
+interface CacheExports<T extends string = string> {
+  exports: Record<`create_${T}` | `invalidate_${T}` | `purge_${T}` | `rm_${T}` | `update_${T}`, ReducerExportLike>
 }
 type CacheFieldBuilders = Record<string, CacheBuilder>
 type CacheFieldValues<F extends CacheFieldBuilders> = {

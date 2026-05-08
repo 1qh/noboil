@@ -18,7 +18,8 @@ interface OrgCrudConfig<
   Tbl extends OrgCrudTableLike<Row>,
   Pk extends OrgCrudPkLike<Row, Id>,
   Member extends OrgCrudMemberLike<OrgId>,
-  OrgMemberTbl extends Iterable<Member>
+  OrgMemberTbl extends Iterable<Member>,
+  T extends string = string
 > {
   expectedUpdatedAtField?: TypeBuilder<Timestamp, AlgebraicTypeType>
   fields: F
@@ -29,7 +30,7 @@ interface OrgCrudConfig<
   orgMemberTable: (db: DB) => OrgMemberTbl
   pk: (table: Tbl) => Pk
   table: (db: DB) => Tbl
-  tableName: string
+  tableName: T
 }
 interface OrgCrudConfigLoose {
   expectedUpdatedAtField?: TypeBuilder<unknown, AlgebraicTypeType>
@@ -60,8 +61,8 @@ interface OrgCrudConfigLoose {
  * })
  * ```
  */
-interface OrgCrudExports {
-  exports: Record<string, ReducerExportLike>
+interface OrgCrudExports<T extends string = string> {
+  exports: Record<`create_${T}` | `rm_${T}` | `update_${T}`, ReducerExportLike>
 }
 type OrgCrudFieldBuilders = Record<string, OrgCrudBuilder>
 type OrgCrudFieldValues<F extends OrgCrudFieldBuilders> = {
