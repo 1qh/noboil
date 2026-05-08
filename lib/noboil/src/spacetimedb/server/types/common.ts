@@ -21,6 +21,7 @@ interface ActionCtxLike extends ReducerCtx<DbLike> {
   runMutation: (ref: string, args: Rec) => Promise<unknown>
   runQuery: (ref: string, args: Rec) => Promise<unknown>
 }
+/** Builder bundle accepted by simpler stdb factories. Wire from `noboil({ ... })` setup result. */
 interface BaseBuilders {
   m: Mb
   pq?: Qb
@@ -29,6 +30,7 @@ interface BaseBuilders {
 interface DbCtx {
   db: DbLike
 }
+/** Read+write database adapter. Subset of stdb's connection.db API. */
 interface DbLike extends DbReadLike {
   delete: (id: number | string) => Promise<void>
   insert: (table: string, data: Rec) => Promise<number | string>
@@ -39,6 +41,7 @@ interface DbReadLike {
   get: (id: number | string) => Promise<null | Rec>
   query: (table: string) => QueryLike
 }
+/** Persisted shape: Zod schema output + stdb's `_id`/`_creationTime` + noboil's `updatedAt`. */
 type DocBase<S extends ZodRawShape> = _.output<ZodObject<S>> & {
   _creationTime: number
   _id: number | string
@@ -54,6 +57,7 @@ type EnrichedDoc<S extends ZodRawShape> = WithUrls<
 // oxlint-disable-next-line typescript/ban-types
 type ErrorCode = BuiltinErrorCode | (string & {})
 type FID = string
+/** Map of column name → stdb type builder. The `fields` arg in factory configs (kv/log/quota/crud). */
 type FieldBuilders = Record<string, ColumnBuilder<unknown, AlgebraicTypeType> | TypeBuilder<unknown, AlgebraicTypeType>>
 interface FilterLike {
   and: (a: unknown, b: unknown) => unknown
@@ -65,6 +69,7 @@ interface FilterLike {
   lte: (a: unknown, b: unknown) => unknown
   or: (a: unknown, b: unknown) => unknown
 }
+/** Ctx passed to global lifecycle callbacks set up via `noboil({ hooks })`. Includes `table` for dispatch by table name. */
 interface GlobalHookCtx {
   db: unknown
   sender: Identity
@@ -79,6 +84,7 @@ interface GlobalHooks {
   beforeDelete?: (ctx: GlobalHookCtx, args: { row: Rec }) => Promise<void> | void
   beforeUpdate?: (ctx: GlobalHookCtx, args: { patch: Rec; prev: Rec }) => Promise<Rec> | Rec
 }
+/** Reducer hook ctx: reducer ctx + storage + resolved userId. Standard ctx for stdb factory `before*`/`after*` hooks. */
 interface HookCtx extends ReducerCtx<DbLike> {
   storage?: StorageLike
   userId: string
@@ -88,12 +94,14 @@ interface IdentityLike {
   toHexString?: () => string
   toString: () => string
 }
+/** Stdb index-builder adapter. Used for filter expressions in subscription queries. */
 interface IndexLike {
   eq: (field: string, value: unknown) => IndexLike
 }
 type Mb<V extends Visibility = 'public'> = <A = Rec, R = unknown, C = Rec>(
   ...args: unknown[]
 ) => C & RegisteredMutation<V, A, R>
+/** Middleware passed to `noboil({ middleware })`. Composable chain wrapping global hooks for every CRUD reducer. */
 interface Middleware {
   afterCreate?: (ctx: MiddlewareCtx, args: { data: Rec; row: Rec }) => Promise<void> | void
   afterDelete?: (ctx: MiddlewareCtx, args: { row: Rec }) => Promise<void> | void
@@ -113,6 +121,7 @@ interface MutationCtxLike extends ReducerCtx<DbLike> {
 interface MutCtx extends UserCtx {
   storage?: StorageLike
 }
+/** A field builder with `.optional()` chaining. Returned by `t.string().optional()` etc. */
 interface OptionalBuilder {
   optional: () => ColumnBuilder<unknown, AlgebraicTypeType> | TypeBuilder<unknown, AlgebraicTypeType>
 }
@@ -124,6 +133,7 @@ type OrgEnrichedDoc<S extends ZodRawShape> = WithUrls<
     userId: string
   }
 >
+/** Minimal user shape exposed across stdb org flows (id + display fields). */
 interface OrgUserLike {
   [k: string]: unknown
   _id: number
@@ -223,9 +233,11 @@ type UrlVal<V> =
       ? null | string
       : (null | string)[]
     : never
+/** Ctx with resolved authenticated user info. Subset of MutCtx without storage. */
 interface UserCtx extends DbCtx {
   user: Rec
 }
+/** Reducer/query visibility marker. `'public'` = exposed to clients; `'internal'` = server-only. */
 type Visibility = 'internal' | 'public'
 type WhereFieldValue<V> = ComparisonOp<V> | V
 type WhereGroupOf<S extends ZodRawShape> = {
@@ -233,6 +245,7 @@ type WhereGroupOf<S extends ZodRawShape> = {
 } & {
   own?: boolean
 }
+/** Top-level `where` clause type. WhereGroup with optional OR-chained groups. */
 type WhereOf<S extends ZodRawShape> = WhereGroupOf<S> & {
   or?: WhereGroupOf<S>[]
 }
@@ -255,6 +268,7 @@ interface BrandLabelMap {
   unbranded: 'plain ZodObject (not branded)'
 }
 type DetectBrand<T> = T extends SchemaBrand<infer K> ? K : 'unbranded'
+/** Type-level: extract the create-input shape for a schema. Used in factory generic constraints. */
 type InferCreate<S> = S extends ZodObject<infer T> ? _.output<ZodObject<T>> : never
 type InferReducerArgs<R> = R extends { __args: infer A } ? A : never
 type InferReducerInputs<T> = {
@@ -281,16 +295,21 @@ type InferRow<S> =
 type InferRows<T extends Record<string, unknown>> = {
   [K in keyof T]: InferRow<T[K]>
 }
+/** Type-level: extract the update-patch shape (Partial of schema output). */
 type InferUpdate<S> = S extends ZodObject<infer T> ? Partial<_.output<ZodObject<T>>> : never
+/** Schema branded for use with stdb `kv()` + `kvTable()`. Created via `makeKv({ ... })` in schema. */
 type KvSchema<T extends ZodRawShape> = SchemaBrand<'kv'> &
   SchemaPhantoms<_.output<ZodObject<T>>, DocBase<T> & { key: string }, Partial<_.output<ZodObject<T>>>> &
   ZodObject<T>
+/** Schema branded for use with stdb `log()` + `logTable()`. Append-only events. Created via `makeLog({ ... })`. */
 type LogSchema<T extends ZodRawShape> = SchemaBrand<'log'> &
   SchemaPhantoms<_.output<ZodObject<T>>, DocBase<T> & { parent: string; seq: number }, Partial<_.output<ZodObject<T>>>> &
   ZodObject<T>
+/** Schema for the org metadata table in stdb. Pass to `noboil({ orgSchema })`. Created via `makeOrg({ org: ... })`. */
 type OrgDefSchema<T extends ZodRawShape> = SchemaBrand<'orgDef'> &
   SchemaPhantoms<_.output<ZodObject<T>>, DocBase<T> & { userId: string }, Partial<_.output<ZodObject<T>>>> &
   ZodObject<T>
+/** Schema branded for use with stdb `orgCrud()` + `orgTable()`. Rows scoped to an org. Created via `makeOrgScoped({ ... })`. */
 type OrgSchema<T extends ZodRawShape> = SchemaBrand<'org'> &
   SchemaPhantoms<
     _.output<ZodObject<T>>,
@@ -298,6 +317,7 @@ type OrgSchema<T extends ZodRawShape> = SchemaBrand<'org'> &
     Partial<_.output<ZodObject<T>>>
   > &
   ZodObject<T>
+/** Schema branded for use with stdb `crud()` + `ownedTable()`. Rows scoped per-user. Created via `makeOwned({ ... })`. */
 type OwnedSchema<T extends ZodRawShape> = SchemaBrand<'owned'> &
   SchemaPhantoms<_.output<ZodObject<T>>, DocBase<T> & { userId: string }, Partial<_.output<ZodObject<T>>>> &
   ZodObject<T>
