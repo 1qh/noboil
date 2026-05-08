@@ -13,6 +13,7 @@ type ListRest<F extends PaginatedQueryReference> =
   PaginatedQueryArgs<F> extends Record<string, never>
     ? [args?: PaginatedQueryArgs<F>, options?: UseListOptions]
     : [args: PaginatedQueryArgs<F>, options?: UseListOptions]
+/** Options for `useList`. `optimistic` overlays pending mutations; `pageSize` controls page increments. */
 interface UseListOptions {
   optimistic?: boolean
   pageSize?: number

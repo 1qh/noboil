@@ -23,6 +23,7 @@ interface MutateOptions<A = unknown, R = unknown> {
   toast?: MutateToast<A, R>
   type?: MutationType
 }
+/** Toast strings or message-builders surfaced by `useMutate`. `fieldErrors` enables auto-toast of `VALIDATION_FAILED.fieldErrors`. */
 interface MutateToast<A = unknown, R = unknown> {
   error?: ((error: unknown) => string) | string
   fieldErrors?: boolean
