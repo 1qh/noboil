@@ -5,5 +5,5 @@
     "rootDir": ".",
     "noUnusedLocals": true
   },
-  "include": ["src", "bin"]
+  "include": ["src", "bin", "examples"]
 }

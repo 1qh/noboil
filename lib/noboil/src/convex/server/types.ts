@@ -159,6 +159,7 @@ interface CrudBuilders extends BaseBuilders {
  *   afterDelete: async (ctx, { id }) => { await ctx.db.delete(id) }
  * } } })
  * ```
+ * Typechecked usage: `lib/noboil/examples/convex/make-crud.example.ts`.
  */
 interface CrudHooks {
   afterCreate?: (ctx: HookCtx, args: { data: Rec; id: string }) => Promise<void> | void
