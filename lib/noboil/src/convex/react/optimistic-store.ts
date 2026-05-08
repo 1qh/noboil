@@ -1,6 +1,7 @@
 'use client'
 import { createContext, use, useRef, useSyncExternalStore } from 'react'
 import type { MutationType } from '../../shared/types'
+/** Optimistic mutation tracker — useSyncExternalStore-compatible. Read pending mutations via `usePendingMutations()`. */
 interface OptimisticStore {
   add: (entry: PendingMutation) => void
   getSnapshot: () => PendingMutation[]

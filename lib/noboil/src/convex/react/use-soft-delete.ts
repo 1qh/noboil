@@ -3,6 +3,7 @@
 import type { ToastFn } from '../../shared/react/toast'
 import { useSoftDelete as useSharedSoftDelete } from '../../shared/react/use-soft-delete'
 import { UNDO_MS } from '../constants'
+/** Options for `useSoftDelete`. Wraps `rm` + `restore` with a sonner Undo toast. `undoMs` defaults to UNDO_MS. */
 interface SoftDeleteOpts<A extends { id: string }> {
   label?: string
   onError?: (error: unknown) => void
