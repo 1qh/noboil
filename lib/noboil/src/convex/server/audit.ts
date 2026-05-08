@@ -12,6 +12,7 @@ const DEFAULT_TTL_MS = 30 * 24 * 60 * 60 * 1000
 const PRUNE_BATCH = 5000
 const LIST_DEFAULT_LIMIT = 100
 const LIST_MAX_LIMIT = 1000
+/** Input row for `append` mutation. `actor` is typically `userId` or service name; `traceId` correlates events from one request. */
 interface AuditAppendInput {
   action: string
   actor: string
@@ -20,6 +21,18 @@ interface AuditAppendInput {
   ok: boolean
   traceId?: string
 }
+/** Endpoint bundle returned by `makeAudit`. Spread into a Convex module's exports.
+ *
+ * Append-only audit log with TTL-based pruning. Read APIs scope by actor or trace.
+ *
+ * @example
+ * ```ts
+ * // convex/audit.ts
+ * export const { append, recent, listByActor, listByTrace, pruneStale } = makeAudit({
+ *   builders, table: 'audit', options: { ttlMs: 30 * 24 * 60 * 60 * 1000 }
+ * })
+ * ```
+ */
 interface AuditExports {
   append: ReturnType<Mb>
   listByActor: ReturnType<Qb>
@@ -27,11 +40,13 @@ interface AuditExports {
   pruneStale: ReturnType<Mb>
   recent: ReturnType<Qb>
 }
+/** Lifecycle hooks for `makeAudit`. `afterPrune` reports how many rows expired in the last sweep. */
 interface AuditHooks {
   afterAppend?: (ctx: HookCtx, args: { row: AuditAppendInput }) => Promise<void> | void
   afterPrune?: (ctx: HookCtx, args: { deleted: number }) => Promise<void> | void
   beforeAppend?: (ctx: HookCtx, args: { row: AuditAppendInput }) => Promise<void> | void
 }
+/** Persisted audit row shape. */
 interface AuditRow {
   _creationTime: number
   _id: string

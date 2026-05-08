@@ -9,16 +9,36 @@ import { dbInsert, dbPatch, hk } from './helpers'
 const DAY_MS = 24 * 60 * 60 * 1000
 const PRUNE_BATCH = 500
 const AUDIT_SCAN_BATCH = 1000
+/** Snapshot of per-owner budget invariants after a `auditInvariants` mutation run.
+ * `overshoot*` and `stuckInflight` should both be zero in healthy state. */
 interface BudgetAuditSummary {
   overshootBalance: number
   overshootInflight: number
   rows: number
   stuckInflight: number
 }
+/** Read-only budget probe result. `ok=false` means the owner is at/over cap; consumer should defer the request. */
 interface BudgetCheckResult {
   balance: number
   ok: boolean
 }
+/** Endpoint bundle returned by `makeBudget`. Spread into a Convex module's exports.
+ *
+ * - `reserve`: atomic check + reserve (throws/returns ok:false at cap). Pair with `settle` after work completes.
+ * - `settle`: book actual cost; refunds the difference if `actualAmount < reservedAmount`, books overage on cap row otherwise.
+ * - `add`: direct ledger write (admin/seed). Negative deltas clamp at zero.
+ * - `check`: read-only "would `reserve` succeed?" — non-throwing.
+ * - `pruneStale`: GC mutation to drop rows older than retention window.
+ * - `auditInvariants`: mutation returning `BudgetAuditSummary`; useful as a cron probe.
+ *
+ * @example
+ * ```ts
+ * // convex/llmBudget.ts
+ * export const { reserve, settle, check, add, pruneStale, auditInvariants } = makeBudget({
+ *   builders, table: 'llmBudget', cap: 10_000, inflightMax: 50, periodMs: 24 * 60 * 60 * 1000
+ * })
+ * ```
+ */
 interface BudgetExports {
   add: ReturnType<Mb>
   auditInvariants: ReturnType<Mb>
@@ -27,6 +47,7 @@ interface BudgetExports {
   reserve: ReturnType<Mb>
   settle: ReturnType<Mb>
 }
+/** Lifecycle hooks for `makeBudget`. `onCapExceeded` / `onInflightExceeded` fire when a `reserve` is rejected. */
 interface BudgetHooks {
   afterReserve?: (ctx: HookCtx, args: { owner: string; result: BudgetReserveResult }) => Promise<void> | void
   afterSettle?: (
@@ -37,6 +58,7 @@ interface BudgetHooks {
   onCapExceeded?: (ctx: HookCtx, args: { owner: string; reserve: number }) => Promise<void> | void
   onInflightExceeded?: (ctx: HookCtx, args: { inflight: number; owner: string }) => Promise<void> | void
 }
+/** Outcome of a `reserve` call. `ok=false` with `reason='cap'` = period budget exhausted; `'inflight'` = too many concurrent. */
 interface BudgetReserveResult {
   balance: number
   ok: boolean
