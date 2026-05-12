@@ -91,7 +91,7 @@ const main = () => {
     '',
     issues.length === 0 ? '_No syntax issues._' : '**Failures:**',
     '',
-    ...issues.map(i => `- ${i}`)
+    ...issues.toSorted().map(i => `- ${i}`)
   ].join('\n')
   const target = `${DOCS_DIR}/architecture.mdx`
   const dirty = replaceBetween(target, 'EXAMPLE-CHECK', body)
