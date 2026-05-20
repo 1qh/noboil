@@ -122,12 +122,11 @@ type FailFn<Codes extends readonly string[]> = ((
   details?: Record<string, unknown>
 ) => never) & { codes: Codes }
 type HandlerArgs<Args extends ArgSpecs> = { [K in keyof Args]: ArgValue<Args[K]> }
-const makeFail = <const Codes extends readonly string[]>(...codes: Codes): FailFn<Codes> => {
-  const fn = (code: Codes[number], message: string, details?: Record<string, unknown>): never => {
-    throw new ToolError(message, { code, details })
-  }
-  return Object.assign(fn, { codes })
+const failFn = (code: string, message: string, details?: Record<string, unknown>): never => {
+  throw new ToolError(message, { code, details })
 }
+const makeFail = <const Codes extends readonly string[]>(...codes: Codes): FailFn<Codes> =>
+  Object.assign(failFn as (code: Codes[number], message: string, details?: Record<string, unknown>) => never, { codes })
 interface ActionCtxExtras<Args extends ArgSpecs, Codes extends readonly string[], TAuth>
   extends ReadCtxExtras<Codes, TAuth> {
   cached: CachedFn<Args>
@@ -235,6 +234,9 @@ interface DefineToolOpts<Args extends ArgSpecs, Codes extends readonly string[],
   fail?: FailFn<Codes>
   handler: (ctx: ActionCtxExtras<Args, Codes, TAuth> & TActionCtx, args: HandlerArgs<Args>) => Promise<unknown>
 }
+const defaultFail: FailArg<readonly string[]> = (code, message, details) => {
+  throw new ToolError(message, { code, details })
+}
 const createBuilder = <TAuth, TActionCtx, TQueryCtx, TMutationCtx, TAct, TQry, TMut>(
   deps: BuilderDeps<TAuth, TActionCtx, TQueryCtx, TMutationCtx, TAct, TQry, TMut>
 ) => {
@@ -247,9 +249,6 @@ const createBuilder = <TAuth, TActionCtx, TQueryCtx, TMutationCtx, TAct, TQry, T
       [PATH_KEY]: v.string(),
       [TRACE_KEY]: v.string()
     }
-  }
-  const defaultFail: FailArg<readonly string[]> = (code, message, details) => {
-    throw new ToolError(message, { code, details })
   }
   interface BaseExtrasOpts<Codes extends readonly string[]> {
     authCtx: unknown

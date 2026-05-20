@@ -228,6 +228,7 @@ const createFieldsModule = ({
                   <input
                     aria-describedby={inv ? errorId : undefined}
                     aria-invalid={inv}
+                    aria-label={deriveLabel(name)}
                     className={cn(
                       'peer ml-1 w-0 flex-1 outline-none placeholder:text-muted-foreground placeholder:capitalize',
                       tags.length > 0 ? 'placeholder:opacity-0' : 'pl-1',
@@ -372,6 +373,7 @@ const createFieldsModule = ({
                   <input
                     aria-describedby={inv ? errorId : undefined}
                     aria-invalid={inv}
+                    aria-label={deriveLabel(name)}
                     className='size-10 cursor-pointer rounded-md border border-input'
                     disabled={disabled}
                     id={fieldName(f)}

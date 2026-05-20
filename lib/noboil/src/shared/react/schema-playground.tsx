@@ -154,6 +154,7 @@ const SchemaPlayground = ({
           </span>
         </div>
         <textarea
+          aria-label='Schema Definition'
           className={cn(
             'min-h-48 w-full resize-y rounded-lg border border-border bg-background p-3 font-mono text-sm text-foreground placeholder:text-muted-foreground focus:border-border focus:outline-none',
             inputClassName

@@ -173,6 +173,7 @@ const mergeCacheHooks = (
  * // Then generate endpoints:
  * export const { create, update, rm, pub: { list, read } } = crud('blog', owned.blog)
  */
+const asDb = (c: { db: unknown }) => typed(c.db) as DbLike
 const setup = <DM extends GenericDataModel>(config: SetupConfig<DM>) => {
   type QCtx = GenericQueryCtx<DM>
   type MCtx = GenericMutationCtx<DM>
@@ -180,7 +181,6 @@ const setup = <DM extends GenericDataModel>(config: SetupConfig<DM>) => {
   const mwHooks = config.middleware && config.middleware.length > 0 ? composeMiddleware(...config.middleware) : undefined
   const gh = mergeGlobalHooks(config.hooks, mwHooks)
   const authId = async (c: unknown) => getAuthUserId(typed(c))
-  const asDb = (c: { db: unknown }) => typed(c.db) as DbLike
   const pq = zCustomQuery(
     config.query,
     customCtx(async (c: QCtx) => {

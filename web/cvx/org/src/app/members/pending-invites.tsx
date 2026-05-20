@@ -11,18 +11,18 @@ import { RoleBadge } from 'noboil/convex/components'
 import { useOrgQuery } from 'noboil/convex/react'
 import { toast } from 'sonner'
 
+const handleCopy = (token: string) => {
+  const url = `${globalThis.location.origin}/invite/${token}`
+  navigator.clipboard
+    .writeText(url)
+    .then(() => toast.success('Invite link copied'))
+    .catch(() => toast.error('Failed to copy'))
+}
 const PendingInvites = () => {
   const invites = useOrgQuery(api.org.pendingInvites)
   const revokeInvite = useMutation(api.org.revokeInvite)
   if (invites === undefined) return <Skeleton className='h-20 w-full' />
   if (invites.length === 0) return null
-  const handleCopy = (token: string) => {
-    const url = `${globalThis.location.origin}/invite/${token}`
-    navigator.clipboard
-      .writeText(url)
-      .then(() => toast.success('Invite link copied'))
-      .catch(() => toast.error('Failed to copy'))
-  }
   const handleRevoke = (inviteId: (typeof invites)[number]['_id']) => {
     revokeInvite({ inviteId })
       .then(() => toast.success('Invite revoked'))

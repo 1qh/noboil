@@ -328,6 +328,7 @@ const cleanFiles = async (opts: {
     for (const r of results) if (r.status === 'rejected') log('error', 'file:cleanup_failed', { reason: String(r.reason) })
   }
 }
+const asWithUrls = <X>(x: Record<string, unknown>): WithUrls<X> => x as WithUrls<X>
 const addUrls = async <D extends Record<string, unknown>>({
   doc,
   fileFields,
@@ -337,7 +338,6 @@ const addUrls = async <D extends Record<string, unknown>>({
   fileFields: string[]
   storage: StorageLike
 }): Promise<WithUrls<D>> => {
-  const asWithUrls = <X>(x: Record<string, unknown>): WithUrls<X> => x as WithUrls<X>
   if (fileFields.length === 0) return asWithUrls<D>(doc)
   const o = { ...doc } as Record<string, unknown>
   const getUrl = async (x: unknown) => {

@@ -43,6 +43,38 @@ import {
   warnLargeFilterSet
 } from './helpers'
 
+type W = WG & { or?: WG[] }
+type WG = Rec & { own?: boolean }
+const buildExpr = (fb: FilterLike, w: WG, vid: null | string) => {
+  let e: unknown = null
+  const and = (x: unknown) => {
+    e = e ? fb.and(e, x) : x
+  }
+  for (const k of Object.keys(w))
+    if (k !== 'own') {
+      const fv = w[k]
+      if (fv !== undefined) {
+        const field = fb.field(k)
+        if (isComparisonOp(fv)) {
+          if (fv.$gt !== undefined) and(fb.gt(field, fv.$gt))
+          if (fv.$gte !== undefined) and(fb.gte(field, fv.$gte))
+          if (fv.$lt !== undefined) and(fb.lt(field, fv.$lt))
+          if (fv.$lte !== undefined) and(fb.lte(field, fv.$lte))
+          if (fv.$between !== undefined) {
+            and(fb.gte(field, fv.$between[0]))
+            and(fb.lte(field, fv.$between[1]))
+          }
+        } else and(fb.eq(field, fv))
+      }
+    }
+  if (w.own) and(vid ? fb.eq(fb.field('userId'), vid) : fb.eq(true, false))
+  return e
+}
+const canUseOwnIndex = (w: undefined | W): boolean => {
+  if (!w || (w.or?.length ?? 0) > 0) return false
+  const gs = groupList(w)
+  return gs.length === 1 && gs[0]?.own === true
+}
 interface CrudMCtx extends MutCtx {
   create: (t: string, d: Rec) => Promise<string>
   delete: (id: string) => Promise<unknown>
@@ -74,8 +106,6 @@ const makeCrud = <S extends ZodRawShape>({
   strictFilter?: boolean
   table: string
 }) => {
-  type WG = Rec & { own?: boolean }
-  type W = WG & { or?: WG[] }
   const { m, pq, q } = builders
   const rl = opt?.rateLimit ? normalizeRateLimit(opt.rateLimit) : undefined
   const hooks = opt?.hooks
@@ -109,36 +139,6 @@ const makeCrud = <S extends ZodRawShape>({
     return Promise.all(
       withAuthorDocs.map(async d => addUrls({ doc: d, fileFields: fileFs, storage: c.storage }))
     ) as Promise<EnrichedDoc<S>[]>
-  }
-  const buildExpr = (fb: FilterLike, w: WG, vid: null | string) => {
-    let e: unknown = null
-    const and = (x: unknown) => {
-      e = e ? fb.and(e, x) : x
-    }
-    for (const k of Object.keys(w))
-      if (k !== 'own') {
-        const fv = w[k]
-        if (fv !== undefined) {
-          const field = fb.field(k)
-          if (isComparisonOp(fv)) {
-            if (fv.$gt !== undefined) and(fb.gt(field, fv.$gt))
-            if (fv.$gte !== undefined) and(fb.gte(field, fv.$gte))
-            if (fv.$lt !== undefined) and(fb.lt(field, fv.$lt))
-            if (fv.$lte !== undefined) and(fb.lte(field, fv.$lte))
-            if (fv.$between !== undefined) {
-              and(fb.gte(field, fv.$between[0]))
-              and(fb.lte(field, fv.$between[1]))
-            }
-          } else and(fb.eq(field, fv))
-        }
-      }
-    if (w.own) and(vid ? fb.eq(fb.field('userId'), vid) : fb.eq(true, false))
-    return e
-  }
-  const canUseOwnIndex = (w: undefined | W): boolean => {
-    if (!w || (w.or?.length ?? 0) > 0) return false
-    const gs = groupList(w)
-    return gs.length === 1 && gs[0]?.own === true
   }
   const startQ = (c: ReadCtx, w: undefined | W) =>
     canUseOwnIndex(w) && c.viewerId

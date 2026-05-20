@@ -1,6 +1,6 @@
 /** biome-ignore-all lint/nursery/noComponentHookFactories: factory returns hook by design */
 /* oxlint-disable jsx-no-new-object-as-prop, react/jsx-handler-names, react-hooks/refs */
-/* eslint-disable complexity */
+/* eslint-disable complexity, react-hooks/refs */
 // biome-ignore-all lint/correctness/useHookAtTopLevel: hooks called in component render context
 // biome-ignore-all lint/nursery/noFloatingPromises: event handler
 // biome-ignore-all lint/nursery/noLeakedRender: conditional rendering
@@ -98,6 +98,61 @@ interface UseStepperOpts<Defs extends readonly StepDef[]> {
   onSuccess?: () => void
   values?: Partial<{ [D in Defs[number] as D['id']]?: output<D['schema']> }>
 }
+const StepIndicator = ({
+  classNames,
+  currentIndex,
+  inner,
+  steps
+}: {
+  classNames?: StepIndicatorClassNames
+  currentIndex: number
+  inner: CoreStepper<InternalStep[]>
+  steps: InternalStep[]
+}) => (
+  <nav aria-label='Step progress' className={cn('flex items-center gap-2', classNames?.nav)}>
+    {steps.map((step, i) => {
+      const isActive = i === currentIndex
+      const isCompleted = i < currentIndex
+      const status = isActive ? 'active' : isCompleted ? 'completed' : 'inactive'
+      return (
+        <div
+          className={cn('flex flex-1 items-center gap-2', classNames?.step)}
+          data-status={status}
+          data-step={step.id}
+          key={step.id}>
+          <button
+            aria-current={isActive ? 'step' : undefined}
+            className={cn(
+              'flex size-8 shrink-0 items-center justify-center rounded-full text-sm font-medium transition-colors',
+              isActive && 'bg-primary text-primary-foreground',
+              isCompleted && 'cursor-pointer bg-primary/20 text-primary',
+              !(isActive || isCompleted) && 'bg-muted text-muted-foreground',
+              classNames?.button
+            )}
+            data-testid={`step-indicator-${step.id}`}
+            disabled={!isCompleted}
+            onClick={() => {
+              if (isCompleted) inner.navigation.goTo(step.id)
+            }}
+            type='button'>
+            {isCompleted ? <Check className='size-4' /> : i + 1}
+          </button>
+          <span
+            className={cn(
+              'hidden text-sm sm:inline',
+              isActive && 'font-medium text-foreground',
+              isCompleted && 'text-foreground',
+              !(isActive || isCompleted) && 'text-muted-foreground',
+              classNames?.label
+            )}>
+            {step.label}
+          </span>
+          {i < steps.length - 1 ? <div className={cn('mx-2 h-px flex-1 bg-border', classNames?.separator)} /> : null}
+        </div>
+      )
+    })}
+  </nav>
+)
 const createDefineSteps = <TFields,>(adapters: DefineStepsAdapters<TFields>) => {
   const defineSteps = <const Defs extends readonly [StepDef, ...StepDef[]]>(...defs: Defs) => {
     const internalSteps = defs.map(d => ({ id: d.id, label: d.label, schema: d.schema })) as unknown as InternalStep[]
@@ -182,61 +237,6 @@ const createDefineSteps = <TFields,>(adapters: DefineStepsAdapters<TFields>) => 
         value: { form: instance, meta, schema, serverErrors: {} }
       })
     }
-    const StepIndicator = ({
-      classNames,
-      currentIndex,
-      inner,
-      steps
-    }: {
-      classNames?: StepIndicatorClassNames
-      currentIndex: number
-      inner: CoreStepper<InternalStep[]>
-      steps: InternalStep[]
-    }) => (
-      <nav aria-label='Step progress' className={cn('flex items-center gap-2', classNames?.nav)}>
-        {steps.map((step, i) => {
-          const isActive = i === currentIndex
-          const isCompleted = i < currentIndex
-          const status = isActive ? 'active' : isCompleted ? 'completed' : 'inactive'
-          return (
-            <div
-              className={cn('flex flex-1 items-center gap-2', classNames?.step)}
-              data-status={status}
-              data-step={step.id}
-              key={step.id}>
-              <button
-                aria-current={isActive ? 'step' : undefined}
-                className={cn(
-                  'flex size-8 shrink-0 items-center justify-center rounded-full text-sm font-medium transition-colors',
-                  isActive && 'bg-primary text-primary-foreground',
-                  isCompleted && 'cursor-pointer bg-primary/20 text-primary',
-                  !(isActive || isCompleted) && 'bg-muted text-muted-foreground',
-                  classNames?.button
-                )}
-                data-testid={`step-indicator-${step.id}`}
-                disabled={!isCompleted}
-                onClick={() => {
-                  if (isCompleted) inner.navigation.goTo(step.id)
-                }}
-                type='button'>
-                {isCompleted ? <Check className='size-4' /> : i + 1}
-              </button>
-              <span
-                className={cn(
-                  'hidden text-sm sm:inline',
-                  isActive && 'font-medium text-foreground',
-                  isCompleted && 'text-foreground',
-                  !(isActive || isCompleted) && 'text-muted-foreground',
-                  classNames?.label
-                )}>
-                {step.label}
-              </span>
-              {i < steps.length - 1 ? <div className={cn('mx-2 h-px flex-1 bg-border', classNames?.separator)} /> : null}
-            </div>
-          )
-        })}
-      </nav>
-    )
     const StepFormComponent = <D extends Defs>({
       children,
       className,

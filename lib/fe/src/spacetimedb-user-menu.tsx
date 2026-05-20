@@ -34,6 +34,12 @@ const readUserProfile = async (token: string): Promise<UserInfo> => {
   })
   return rows[0] ?? {}
 }
+const onLogout = async () => {
+  'use server'
+  const store = await cookies()
+  store.delete(TOKEN_COOKIE_KEY)
+  redirect('/login')
+}
 const UserMenu = async ({ shellProps, ...triggerProps }: UserMenuProps) => {
   const cookieStore = await cookies()
   const token = cookieStore.get(TOKEN_COOKIE_KEY)?.value
@@ -41,12 +47,6 @@ const UserMenu = async ({ shellProps, ...triggerProps }: UserMenuProps) => {
   const email = profile?.email
   const image = profile?.image
   const name = profile?.name
-  const onLogout = async () => {
-    'use server'
-    const store = await cookies()
-    store.delete(TOKEN_COOKIE_KEY)
-    redirect('/login')
-  }
   return (
     <UserMenuShell
       {...shellProps}

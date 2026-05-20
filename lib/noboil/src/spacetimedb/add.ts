@@ -368,21 +368,21 @@ const STDB_TYPE_DESCRIPTIONS = {
   quota: 'sliding-window rate limit',
   singleton: 'one-per-user state'
 } as const
+const toParsedFields = (fs: { enumValues?: string[]; name: string; optional: boolean; type: string }[]): ParsedField[] =>
+  fs.map(f => ({
+    name: f.name,
+    optional: f.optional,
+    type: f.type === 'enum' ? { enum: f.enumValues ?? [] } : (f.type as FieldType)
+  }))
 const promptInteractive = async (): Promise<AddFlags | null> => {
   const { runAddWizard } = await import('../shared/components/add-wizard')
   const { readState, writeState } = await import('../shared/state')
   const prevState = await readState()
-  const toParsed = (fs: { enumValues?: string[]; name: string; optional: boolean; type: string }[]): ParsedField[] =>
-    fs.map(f => ({
-      name: f.name,
-      optional: f.optional,
-      type: f.type === 'enum' ? { enum: f.enumValues ?? [] } : (f.type as FieldType)
-    }))
   const result = await runAddWizard({
     initialType: prevState.lastTableType as TableType | undefined,
     kind: 'spacetimedb',
     preview: r => {
-      const pf = toParsed(r.fields).length > 0 ? toParsed(r.fields) : defaultFields(r.type)
+      const pf = toParsedFields(r.fields).length > 0 ? toParsedFields(r.fields) : defaultFields(r.type)
       return [
         { content: genTableContent(r.name, r.type, pf), path: `module/tables/${r.name}.ts` },
         {

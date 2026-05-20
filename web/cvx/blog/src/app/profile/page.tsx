@@ -35,7 +35,14 @@ const AvatarUpload = () => {
     <div className='space-y-2' data-testid='custom-avatar-upload'>
       <p className='text-sm font-medium'>Custom Avatar Upload (useUpload)</p>
       <div className='flex items-center gap-3'>
-        <input accept='image/*' className='hidden' onChange={handleChange} ref={inputRef} type='file' />
+        <input
+          accept='image/*'
+          aria-label='Upload avatar'
+          className='hidden'
+          onChange={handleChange}
+          ref={inputRef}
+          type='file'
+        />
         <Button
           data-testid='custom-upload-btn'
           disabled={isUploading}
