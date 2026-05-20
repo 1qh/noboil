@@ -1,6 +1,7 @@
 'use client'
 import type { ComponentProps, ComponentType } from 'react'
 import { cn } from '@a/ui'
+
 interface MembersPageShellProps<TOrgId extends string> {
   canManageMembers: boolean
   className?: string

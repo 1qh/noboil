@@ -1,6 +1,7 @@
 import { test as baseTest, expect } from '@a/e2e/base-test'
 import PollPage from './pages/poll'
 import ProfilePage from './pages/profile'
+
 interface Fixtures {
   pollPage: PollPage
   profilePage: ProfilePage

@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 import { constantTimeEqual, generateSecret, hashSecret } from '../security'
+
 describe('constantTimeEqual', () => {
   test('equal strings return true', () => {
     expect(constantTimeEqual('hello', 'hello')).toBe(true)

@@ -13,6 +13,7 @@ import {
   parseObjectFields,
   SINGLETON_BASE
 } from '../shared/schema-utils'
+
 const tableCallPat = /(?<pname>\w+)\s*:\s*t\.table\(\{/gu
 const wrapperFactories = ['makeOwned', 'makeOrgScoped', 'makeSingleton', 'makeBase', 'defineTables']
 const extractSpacetimeTables = (content: string): SchemaTable[] => {

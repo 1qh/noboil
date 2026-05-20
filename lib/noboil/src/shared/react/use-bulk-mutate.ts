@@ -2,6 +2,7 @@
 'use client'
 import { useCallback, useId, useState } from 'react'
 import { toast } from 'sonner'
+
 interface BulkMutateToast {
   error?: ((error: unknown) => string) | string
   loading?: ((progress: BulkProgress) => string) | string

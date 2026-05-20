@@ -4,6 +4,7 @@ import type { ToastFn } from '../../shared/react/toast'
 import type { ErrorData, ErrorHandler } from '../server/helpers'
 import { createErrorToastHooks } from '../../shared/react/error-toast'
 import { extractErrorData, getErrorMessage, handleError } from '../server/helpers'
+
 const { makeErrorHandler, toastFieldError, useErrorToast } = createErrorToastHooks<ErrorData>({
   extractErrorData,
   getErrorMessage,

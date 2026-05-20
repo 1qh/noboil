@@ -1,5 +1,6 @@
 import { expect, test } from './fixtures'
 import { login } from './helpers'
+
 test.describe('Poll list pagination', () => {
   test.beforeEach(async ({ pollPage }) => {
     await login()

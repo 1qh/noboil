@@ -8,6 +8,7 @@ import { usePathname } from 'next/navigation'
 import { OrgProvider } from 'noboil/spacetimedb/react'
 import { useOrg } from '~/hook/use-org'
 import OrgSwitcher from './org-switcher'
+
 const OrgNav = () => {
   const { isAdmin } = useOrg()
   const pathname = usePathname()

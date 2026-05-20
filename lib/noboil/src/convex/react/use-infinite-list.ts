@@ -4,6 +4,7 @@ import type { PaginatedQueryArgs, PaginatedQueryReference } from 'convex/react'
 import type { FunctionReturnType } from 'convex/server'
 import { useCallback, useEffect, useRef } from 'react'
 import { DEFAULT_PAGE_SIZE, useList } from './use-list'
+
 interface InfiniteListOptions {
   pageSize?: number
   rootMargin?: string

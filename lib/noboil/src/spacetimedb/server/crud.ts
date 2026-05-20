@@ -5,6 +5,7 @@ import type { OwnedRow, PkLike, TableLike } from './types/common'
 import type { CrudConfig, CrudExports, CrudFieldBuilders, CrudFieldValues, CrudPkLike, CrudTableLike } from './types/crud'
 import { enforceRateLimit } from './helpers'
 import { applyPatch, getOwnedRow, hkCtx, makeError, makeOptionalFields, pickPatch, timestampEquals } from './reducer-utils'
+
 type UpdateArgs<F extends CrudFieldBuilders, Id> = Partial<CrudFieldValues<F>> & { expectedUpdatedAt?: Timestamp; id: Id }
 /** Creates create/update/remove reducers for owned tables.
  * @param spacetimedb - SpacetimeDB reducer factory

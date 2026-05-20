@@ -6,6 +6,7 @@ import { join } from 'node:path'
 import { bold, dim, green, yellow } from '../ansi'
 import { hasFlag, readEqFlag, writeFilesToDir } from '../shared/cli'
 import { DEFAULT_HTTP_URI } from './defaults'
+
 const TABLES_TS = `import { t } from 'spacetimedb'
 const blogTable = {
   id: t.u32(),

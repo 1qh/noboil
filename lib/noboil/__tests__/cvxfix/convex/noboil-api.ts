@@ -3,6 +3,7 @@ import { object, string } from 'zod/v4'
 import { schema as nbSchema } from '../../../src/convex/schema'
 import { noboil } from '../../../src/convex/server/noboil'
 import { action, internalMutation, internalQuery, mutation, query } from './_generated/server'
+
 const getAuthUserId = async (ctx: GenericMutationCtx<never> | GenericQueryCtx<never>): Promise<null | string> => {
   const id = await ctx.auth.getUserIdentity()
   return id ? id.subject : null

@@ -9,6 +9,7 @@ import { connection } from 'next/server'
 import { getToken, isAuthenticated } from 'noboil/convex/next'
 import { Suspense } from 'react'
 import TypingIndicator from './typing-indicator'
+
 const tryFetch = async <T,>(fn: () => Promise<T>): Promise<null | T> => {
   try {
     return await fn()

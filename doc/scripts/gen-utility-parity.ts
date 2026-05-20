@@ -4,6 +4,7 @@
 /** biome-ignore-all lint/nursery/noContinue: parser */
 import { existsSync, readFileSync } from 'node:fs'
 import { collectBraceExports, DOCS_DIR, LIB_NOBOIL, replaceBetween } from './lib'
+
 const EXPORT_DECL_RE = /export\s+(?:const|function|class)\s+(?<name>\w+)/gu
 interface UtilDomain {
   cvxFiles: string[]

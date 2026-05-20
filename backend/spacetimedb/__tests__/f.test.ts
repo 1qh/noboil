@@ -13,6 +13,7 @@ import {
   some,
   withCtx
 } from './test-helpers'
+
 describe('spacetimedb reducers', () => {
   test('generated bindings expose expected reducer groups', () => {
     expect(typeof reducers.createBlog).toBe('object')

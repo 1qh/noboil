@@ -2,6 +2,7 @@
 /* eslint-disable no-console */
 import { readFileSync } from 'node:fs'
 import { DOCS_DIR, LIB_NOBOIL, replaceBetween } from './lib'
+
 const FIELD_RE = /^(?<n>\w+)(?<o>\??):\s*(?<t>[\s\S]+)$/u
 const WS_RE = /\s+/gu
 const TRAILING_SEMI_RE = /;$/u

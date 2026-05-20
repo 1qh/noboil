@@ -2,6 +2,7 @@ import { describe, expect, test } from 'bun:test'
 import type { IdentityFake, Ts } from './_helpers'
 import { makeJoinReducers } from '../org-join'
 import { captureReducers, ident, tsAtMs } from './_helpers'
+
 interface JoinRow {
   createdAt: Ts
   id: number

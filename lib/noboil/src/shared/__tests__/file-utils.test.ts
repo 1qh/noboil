@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 import { compress, fileLabel, fmt, isImgType, isImgUrl, parseAccept } from '../components/file-utils'
+
 describe('fmt', () => {
   test('bytes < 1KB show as B', () => {
     expect(fmt(0)).toBe('0 B')

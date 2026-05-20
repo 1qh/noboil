@@ -3,6 +3,7 @@ import type { UIMessage } from 'ai'
 import { isStdbTestMode } from '@a/fe/test-mode'
 import { createUIMessageStream, createUIMessageStreamResponse } from 'ai'
 import { sleep } from 'noboil/spacetimedb'
+
 interface ApprovalResponse {
   approved: boolean
   id: string

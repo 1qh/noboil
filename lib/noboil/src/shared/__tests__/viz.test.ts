@@ -1,6 +1,7 @@
 /* eslint-disable no-console */
 import { describe, expect, mock, test } from 'bun:test'
 import { findBracketEnd, isSchemaFile, printSummary } from '../viz'
+
 describe('findBracketEnd', () => {
   test('returns index of matching close brace', () => {
     expect(findBracketEnd('{ a }', 1)).toBe(4)

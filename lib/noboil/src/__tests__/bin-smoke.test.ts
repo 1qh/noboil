@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'bun:test'
 import { spawnSync } from 'node:child_process'
 import { join } from 'node:path'
+
 const REPO = join(import.meta.dir, '..', '..')
 const BIN = join(REPO, 'src', 'index.ts')
 const CONVEX_BIN = join(REPO, 'src', 'convex', 'cli.ts')

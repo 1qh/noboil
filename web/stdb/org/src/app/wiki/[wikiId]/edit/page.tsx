@@ -19,6 +19,7 @@ import { toast } from 'sonner'
 import { useReducer, useSpacetimeDB, useTable } from 'spacetimedb/react'
 import { useOrg } from '~/hook/use-org'
 import { wiki as wikiSchema } from '~/schema'
+
 const EditWikiForm = ({ wiki, wikis }: { wiki: Wiki; wikis: readonly Wiki[] }) => {
   const router = useRouter()
   const updateWikiReducer = useReducer(reducers.updateWiki)

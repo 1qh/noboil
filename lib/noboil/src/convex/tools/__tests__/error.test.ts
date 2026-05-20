@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'bun:test'
 import { makeError, toDispatchError, ToolError } from '../error'
+
 describe(makeError, () => {
   it('input category for INVALID_ARG (not retryable)', () => {
     const e = makeError({ code: 'INVALID_ARG', message: 'bad' })

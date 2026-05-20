@@ -3,6 +3,7 @@
 /** biome-ignore-all lint/performance/useTopLevelRegex: small file */
 import { readFileSync } from 'node:fs'
 import { DOCS_DIR, replaceBetween, REPO } from './lib'
+
 const TABLE_RE = /(?<name>\w+):\s*table\(s\.\w+(?:,\s*\{(?<opts>[\s\S]*?)\}\s*\))?/gu
 const KNOWN_OPTS = [
   'rateLimit',

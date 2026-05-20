@@ -1,5 +1,6 @@
 import { makeBudget } from '../../src/convex/server'
 import { stubBuilders } from '../_stub'
+
 const llmBudget = makeBudget({
   builders: stubBuilders,
   cap: 10_000,

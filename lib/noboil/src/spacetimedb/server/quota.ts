@@ -2,6 +2,7 @@ import type { Identity, Timestamp } from 'spacetimedb'
 import type { AlgebraicTypeType, ColumnBuilder, TypeBuilder } from 'spacetimedb/server'
 import type { FieldBuilders, ReducerExportLike } from './types/common'
 import { hkCtx, makeError } from './reducer-utils'
+
 const findByOwner = (table: QuotaTableLike, owner: string): QuotaRow | undefined => {
   for (const row of table) if (row.owner === owner) return row
 }

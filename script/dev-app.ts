@@ -2,6 +2,7 @@
 import { appPort } from '@a/config'
 import { spawn } from 'bun'
 import { basename, dirname } from 'node:path'
+
 const cwd = process.cwd()
 const name = basename(cwd)
 const parent = basename(dirname(cwd))

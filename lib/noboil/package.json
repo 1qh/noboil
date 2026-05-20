@@ -119,7 +119,7 @@
   "scripts": {
     "prepublish": "cp ../../README.md README.md",
     "publish": "bun run prepublish && bunx tsdown && bun publish --cwd dist",
-    "postpublish": "bunx pm4ai@latest cleanup",
+    "postpublish": "bun ../../tools/prune-versions.ts",
     "publish:dry": "bun run prepublish && bunx tsdown && bun publish --dry-run --cwd dist",
     "test": "bun test",
     "typecheck": "tsc --noEmit"

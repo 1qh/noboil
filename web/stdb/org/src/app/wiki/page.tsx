@@ -17,6 +17,7 @@ import { toast } from 'sonner'
 import { useReducer } from 'spacetimedb/react'
 import { useOrg } from '~/hook/use-org'
 import { useOrgTable } from '~/hook/use-org-table'
+
 const WikiPage = () => {
   const { isAdmin, org } = useOrg()
   const [showDeleted, setShowDeleted] = useState(false)

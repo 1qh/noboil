@@ -13,6 +13,7 @@ import { useRouter } from 'next/navigation'
 import { OrgAvatar, RoleBadge } from 'noboil/convex/components'
 import { setActiveOrgCookieClient } from 'noboil/convex/react'
 import { useActiveOrg, useMyOrgs } from '~/hook/use-org'
+
 const OrgSwitcher = () => {
   const router = useRouter()
   const { activeOrg, isLoading: activeLoading } = useActiveOrg()

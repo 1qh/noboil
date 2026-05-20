@@ -5,6 +5,7 @@
 import { Glob } from 'bun'
 import { readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
+
 const TIER_ADMIN_PREFIX = '_admin'
 const SKIP_DIRS = new Set(['_app', '_lib', 'generated'])
 const CAMEL_RE = /[A-Z]/gu

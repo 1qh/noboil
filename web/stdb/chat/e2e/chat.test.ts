@@ -2,6 +2,7 @@
 // biome-ignore-all lint/style/noProcessEnv: intentional process.env access
 import { expect, test } from './fixtures'
 import { login } from './helpers'
+
 const CHAT_URL_PATTERN = /\/[a-z0-9]+/u
 test.describe('New Chat Page', () => {
   test.beforeEach(async ({ chatPage, page }) => {

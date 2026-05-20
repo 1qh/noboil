@@ -18,6 +18,7 @@ import { useMut } from 'noboil/spacetimedb/react'
 import { useId, useTransition } from 'react'
 import { useReducer, useSpacetimeDB } from 'spacetimedb/react'
 import { editBlog } from '~/schema'
+
 const Publish = ({
   className,
   id,

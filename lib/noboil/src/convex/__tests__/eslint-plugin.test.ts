@@ -3,6 +3,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { plugin, recommended, rules } from '../eslint'
+
 describe('convex eslint plugin export', () => {
   test('exposes a plugin object with rules', () => {
     expect(plugin).toBeDefined()

@@ -8,6 +8,7 @@ import { $, sleep } from 'bun'
 import { copyFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { styleText } from 'node:util'
+
 const ANSI_RE = /\u001B\[\d+m/gu
 const root = join(import.meta.dirname, '..')
 const envPath = join(root, '.env')

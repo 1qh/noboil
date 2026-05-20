@@ -18,6 +18,7 @@ import { useRef } from 'react'
 import { toast } from 'sonner'
 import { useReducer, useSpacetimeDB, useTable } from 'spacetimedb/react'
 import { profileSchema } from '~/schema'
+
 const AvatarUpload = () => {
   const registerUpload = useReducer(reducers.registerUploadFile)
   const { isUploading, progress, upload } = useUpload({

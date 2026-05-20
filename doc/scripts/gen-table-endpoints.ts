@@ -4,6 +4,7 @@
 /** biome-ignore-all lint/nursery/noContinue: parser */
 import { readdirSync, readFileSync } from 'node:fs'
 import { DOCS_DIR, replaceBetween, REPO } from './lib'
+
 const EXPORT_BLOCK_RE = /export\s*\{(?<syms>[^}]+)\}/u
 const main = () => {
   const dir = `${REPO}/backend/convex/convex`

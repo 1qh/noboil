@@ -1,6 +1,7 @@
 /** biome-ignore-all lint/style/noProcessEnv: env detection */
 import type { LanguageModel } from 'ai'
 import { chatModel } from './models.mock'
+
 const isEnabled = (value: string | undefined) => value === 'true'
 const runtimeEnv = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env
 const isTestEnvironment =

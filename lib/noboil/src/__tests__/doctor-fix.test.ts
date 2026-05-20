@@ -3,6 +3,7 @@ import { spawnSync } from 'node:child_process'
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+
 const BIN = join(import.meta.dir, '..', 'index.ts')
 describe('noboil doctor --fix', () => {
   const dir = join(tmpdir(), `noboil-doctor-fix-${Date.now()}`)

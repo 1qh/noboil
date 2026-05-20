@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'bun:test'
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join, resolve } from 'node:path'
+
 const LIB = resolve(import.meta.dirname, '..')
 const walk = (dir: string, out: string[] = []): string[] => {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {

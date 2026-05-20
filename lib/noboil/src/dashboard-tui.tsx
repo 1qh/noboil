@@ -8,6 +8,7 @@ import { readJsonSafe } from './shared/env-file'
 import { readRecent } from './shared/recent'
 import { checkForUpdate } from './shared/update-check'
 import { getCliVersion } from './shared/version'
+
 type Action = 'add' | 'completions' | 'doctor' | 'eject' | 'exit' | 'init' | 'status' | 'sync' | 'upgrade'
 interface DashboardProps {
   cwd: string

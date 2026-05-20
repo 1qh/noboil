@@ -1,6 +1,7 @@
 'use client'
 import type { Rec } from '../../shared/types'
 import type { ComparisonOp } from '../server/types'
+
 type ListSort<T extends Rec> = SortMap<T> | SortObject<T>
 type ListWhere<T extends Rec> = WhereGroup<T> & { or?: WhereGroup<T>[] }
 type SortDirection = 'asc' | 'desc'

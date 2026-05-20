@@ -12,6 +12,7 @@ import { sleep } from '../shared/constants'
 import { findAncestorFile } from '../shared/walk'
 import { DEFAULT_HTTP_URI } from './defaults'
 import { findEnvFile } from './use'
+
 interface DevFlags {
   docker: boolean
   help: boolean

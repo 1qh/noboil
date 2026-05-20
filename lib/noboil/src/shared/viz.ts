@@ -1,5 +1,6 @@
 /* eslint-disable no-console */
 import { bold, dim, red } from '../ansi'
+
 interface ChildInfo extends TableInfo {
   foreignKey: string
   parent: string

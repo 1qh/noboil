@@ -4,6 +4,7 @@
 /** biome-ignore-all lint/nursery/useNamedCaptureGroup: simple match */
 import { readFileSync } from 'node:fs'
 import { LIB_NOBOIL, replaceLineBetween, REPO } from './lib'
+
 const TYPE_RE = /type TableType = (?<types>(?:'\w+'(?:\s*\|\s*)?)+)/u
 const main = () => {
   const cvxAdd = readFileSync(`${LIB_NOBOIL}/src/shared/types.ts`, 'utf8')

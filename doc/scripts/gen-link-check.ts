@@ -7,6 +7,7 @@ import { readJson } from 'noboil/env-file'
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { DOCS_DIR, REPO, slugify } from './lib'
+
 const SLUG_RE = /\]\(\.\/([a-z][a-z0-9-]*)(?:#([a-z][a-z0-9-]*))?\)/gu
 const GITHUB_RE = /github\.com\/1qh\/noboil\/(?:blob|tree)\/main\/([^\s)]+)/gu
 const main = () => {

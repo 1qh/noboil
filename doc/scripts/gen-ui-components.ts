@@ -2,6 +2,7 @@
 /* eslint-disable no-console */
 import { readdirSync, statSync } from 'node:fs'
 import { DOCS_DIR, replaceBetween, REPO } from './lib'
+
 const main = () => {
   const root = `${REPO}/readonly/ui/src/components`
   const top = readdirSync(root)

@@ -2,6 +2,7 @@
 import { describe, expect, test } from 'bun:test'
 import { makeQuota } from '../quota'
 import { tsAtMs } from './_helpers'
+
 interface QuotaRow {
   id: number
   owner: string

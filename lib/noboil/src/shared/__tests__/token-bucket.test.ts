@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 import { consume, refill } from '../token-bucket'
+
 const cfg = { limit: 10, windowMs: 1000 }
 describe('refill', () => {
   test('null state initializes to limit', () => {

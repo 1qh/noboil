@@ -1,5 +1,6 @@
 import { file } from 'bun'
 import { join } from 'node:path'
+
 const readPackageVersion = async (packageJsonPath: string): Promise<string> => {
   const pkg = (await file(packageJsonPath).json()) as { version?: string }
   return pkg.version ?? '0.0.0'

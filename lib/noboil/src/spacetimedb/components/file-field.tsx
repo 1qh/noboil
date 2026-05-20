@@ -12,6 +12,7 @@ import { useDropzone } from 'react-dropzone'
 import { toast } from 'sonner'
 import { compress, fileLabel, fmt, isImgUrl, parseAccept } from '../../shared/components/file-utils'
 import { noop } from '../react/list-utils'
+
 interface DropSlotProps {
   accept?: string
   compact?: boolean

@@ -2,6 +2,7 @@ import type { GenericMutationCtx, GenericQueryCtx } from 'convex/server'
 import { makeOrg } from '../../../src/convex/server/org'
 import { mutation, query } from './_generated/server'
 import { orgZodSchema } from './s'
+
 const getAuthUserId = async (ctx: GenericMutationCtx<never> | GenericQueryCtx<never>): Promise<null | string> => {
   const id = await ctx.auth.getUserIdentity()
   return id ? id.subject : null

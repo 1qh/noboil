@@ -12,6 +12,7 @@ import { setActiveOrgCookieClient } from 'noboil/convex/react'
 import { use } from 'react'
 import { toast } from 'sonner'
 import { joinRequest } from '~/schema'
+
 const JoinPage = ({ params }: { params: Promise<{ slug: string }> }) => {
   const { slug } = use(params)
   const router = useRouter()

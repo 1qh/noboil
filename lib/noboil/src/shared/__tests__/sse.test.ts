@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 import { createSseFrameParser } from '../sse'
+
 describe('createSseFrameParser', () => {
   test('parses single data frame', () => {
     const p = createSseFrameParser()

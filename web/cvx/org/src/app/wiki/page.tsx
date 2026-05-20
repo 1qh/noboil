@@ -17,6 +17,7 @@ import { useBulkSelection, useOrgMutation, useOrgQuery } from 'noboil/convex/rea
 import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { useOrg } from '~/hook/use-org'
+
 const filterByQuery = <T extends Record<string, unknown>>(items: T[], fields: (keyof T & string)[], q: string): T[] => {
   const normalized = q.trim().toLowerCase()
   if (!normalized) return items

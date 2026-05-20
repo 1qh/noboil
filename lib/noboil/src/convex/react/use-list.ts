@@ -8,6 +8,7 @@ import type { Rec } from '../../shared/types'
 import type { PendingMutation } from './optimistic-store'
 import { trackSubscription, untrackSubscription, updateSubscription, updateSubscriptionData } from './devtools'
 import { usePendingMutations } from './optimistic-store'
+
 type ListItems<F extends PaginatedQueryReference> = FunctionReturnType<F>['page']
 type ListRest<F extends PaginatedQueryReference> =
   PaginatedQueryArgs<F> extends Record<string, never>

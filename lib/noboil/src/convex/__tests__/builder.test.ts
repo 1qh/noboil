@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 import { arg, createBuilder, createStepSink, makeFail } from '../tools/builder'
+
 describe('arg helpers', () => {
   test('arg.string with all fields', () => {
     const s = arg.string({

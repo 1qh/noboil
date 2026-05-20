@@ -3,6 +3,7 @@
 import { config } from '@a/config'
 import { $ } from 'bun'
 import { join, resolve } from 'node:path'
+
 const BACKEND_CWD = join(resolve(import.meta.dirname, '../../..'), config.paths.backendConvex)
 const globalTeardown = async () => {
   if (process.env.SKIP_CONVEX_ENV_TOGGLE) return

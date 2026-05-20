@@ -14,6 +14,7 @@ import type {
 } from '../../../shared/server/types'
 import type { OrgRole, Rec } from '../../../shared/types'
 import { ERROR_MESSAGES } from '../../../shared/error-messages'
+
 type Ab<V extends Visibility = 'public'> = <A = Rec, R = unknown, C = Rec>(
   ...args: unknown[]
 ) => C & RegisteredAction<V, A, R>

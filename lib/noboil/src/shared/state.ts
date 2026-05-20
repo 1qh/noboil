@@ -1,6 +1,7 @@
 import { file, write } from 'bun'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
+
 interface NoboilState {
   lastAppDir?: string
   lastConvexDir?: string

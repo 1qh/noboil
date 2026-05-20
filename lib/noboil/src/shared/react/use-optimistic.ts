@@ -1,5 +1,6 @@
 'use client'
 import { useCallback, useRef, useState } from 'react'
+
 interface OptimisticOptions<A, R = void> {
   mutate: (args: A) => Promise<R>
   onOptimistic?: (args: A) => void

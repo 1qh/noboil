@@ -1,6 +1,7 @@
 // biome-ignore-all lint/performance/useTopLevelRegex: x
 import { expect, test } from './fixtures'
 import { cleanupTestData, login } from './helpers'
+
 const BLOG_DETAIL_URL = /\/[a-z0-9]+$/u
 const BLOG_EDIT_URL = /\/[a-z0-9]+\/edit$/u
 test.describe

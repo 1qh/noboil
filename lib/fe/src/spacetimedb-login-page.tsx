@@ -4,6 +4,7 @@ import type { ComponentProps } from 'react'
 import { useAuth } from 'react-oidc-context'
 import { toast } from 'sonner'
 import OAuthLoginShell from './oauth-login-shell'
+
 interface LoginPageProps {
   emailLoginPath?: string
   emailLoginText?: string

@@ -3,6 +3,7 @@
 /** biome-ignore-all lint/nursery/noContinue: filter loop */
 import { readFileSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
+
 const exportPat = /export\s+(?:type\s+)?\{(?<syms>[^}]+)\}/gu
 const exportConstPat = /export\s+(?:const|function|class|default)\s+(?<name>\w+)/gu
 const asPat = /(?<orig>\w+)\s+as\s+(?<alias>\w+)/u

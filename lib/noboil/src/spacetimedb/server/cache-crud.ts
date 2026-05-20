@@ -8,6 +8,7 @@ import type {
   CacheTableLike
 } from './types/cache'
 import { applyPatch, makeError, makeOptionalFields, pickPatch } from './reducer-utils'
+
 type UpdateArgs<F extends CacheFieldBuilders> = Partial<CacheFieldValues<F>>
 const DAYS_PER_WEEK = 7
 const HOURS_PER_DAY = 24

@@ -3,6 +3,7 @@
 import { rules as cvxRules } from '../../lib/noboil/src/convex/eslint'
 import { rules as stdbRules } from '../../lib/noboil/src/spacetimedb/eslint'
 import { DOCS_DIR, replaceBetween } from './lib'
+
 const escapeMd = (s: string): string =>
   s
     .replaceAll('<', '&lt;')

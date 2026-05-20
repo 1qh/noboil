@@ -2,6 +2,7 @@
 import type { FunctionReference, FunctionReturnType, OptionalRestArgs } from 'convex/server'
 import { useMutation } from 'convex/react'
 import { useOptimisticMutation as useOptimisticMutationBase } from '../../shared/react/use-optimistic'
+
 type Args<T extends MutationFn> = OptionalRestArgs<T>[0]
 type MutationFn = FunctionReference<'mutation'>
 interface OptimisticOptions<T extends MutationFn, R = FunctionReturnType<T>> {

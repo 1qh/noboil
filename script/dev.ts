@@ -9,6 +9,7 @@ import { sleep, spawn } from 'bun'
 import { existsSync, mkdirSync, openSync } from 'node:fs'
 import { join } from 'node:path'
 import { box, c, log, ok, portFree, root, warn } from './utils'
+
 interface App {
   dir: string
   name: string

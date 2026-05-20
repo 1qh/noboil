@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 import { auditLog, slowQueryWarn } from '../middleware'
+
 describe('stdb middleware', () => {
   test('auditLog returns object with hooks and name', () => {
     const m = auditLog()

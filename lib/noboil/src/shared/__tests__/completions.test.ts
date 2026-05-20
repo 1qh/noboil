@@ -1,6 +1,7 @@
 /* eslint-disable no-console */
 import { describe, expect, test } from 'bun:test'
 import { printCompletions } from '../../completions'
+
 describe('printCompletions', () => {
   test('bash produces bash completion script', async () => {
     const originalLog = console.log

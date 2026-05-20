@@ -1,6 +1,7 @@
 import { boolean, object, string } from 'zod/v4'
 import { makeCrud } from '../../src/convex/server'
 import { stubBuilders } from '../_stub'
+
 const todoSchema = object({ done: boolean(), title: string() })
 const todoCrud = makeCrud({
   builders: stubBuilders,

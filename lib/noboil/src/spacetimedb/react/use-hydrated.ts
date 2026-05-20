@@ -6,6 +6,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { toSql } from 'spacetimedb'
 import { useSpacetimeDB } from 'spacetimedb/react'
+
 type AnyQuery = Parameters<typeof toSql>[0]
 type QueryInput = AnyQuery | string
 /**

@@ -3,6 +3,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { generateFullReference, generateMarkdown, run } from '../docs-gen'
+
 describe('generateMarkdown', () => {
   test('emits API Reference with table list and per-table sections', () => {
     const calls = [

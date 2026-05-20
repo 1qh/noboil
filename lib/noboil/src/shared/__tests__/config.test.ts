@@ -4,6 +4,7 @@ import { mkdirSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { defineConfig, loadConfig } from '../../config'
+
 describe('defineConfig', () => {
   test('passes config through unchanged', () => {
     const c = defineConfig({ hooks: { afterAdd: () => undefined } })

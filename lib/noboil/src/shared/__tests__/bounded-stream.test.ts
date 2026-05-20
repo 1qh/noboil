@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 import { boundedBody, withCancelHook } from '../bounded-stream'
+
 const makeStream = (chunks: Uint8Array[]): ReadableStream<Uint8Array> =>
   new ReadableStream({
     start: c => {

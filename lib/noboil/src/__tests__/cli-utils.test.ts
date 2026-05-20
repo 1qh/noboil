@@ -1,6 +1,7 @@
 /* eslint-disable no-console */
 import { describe, expect, test } from 'bun:test'
 import { die } from '../cli-utils'
+
 describe('die', () => {
   test('logs to console.error then exits non-zero', () => {
     const origErr = console.error

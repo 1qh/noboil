@@ -3,6 +3,7 @@
 /** biome-ignore-all lint/performance/useTopLevelRegex: simple file extension match */
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { DOCS_DIR } from './lib'
+
 const META = `${DOCS_DIR}/meta.json`
 const ORDER = [
   'index',

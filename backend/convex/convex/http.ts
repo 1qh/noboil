@@ -4,6 +4,7 @@ import env from '../env'
 import { api } from './_generated/api'
 import { httpAction } from './_generated/server'
 import { auth } from './auth'
+
 const http = httpRouter()
 auth.addHttpRoutes(http)
 const getAllowedOrigin = (request?: Request) => {

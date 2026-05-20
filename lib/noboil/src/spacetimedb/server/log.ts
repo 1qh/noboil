@@ -6,6 +6,7 @@ import type { RateLimitConfig } from './types'
 import type { FieldBuilders, ReducerExportLike } from './types/common'
 import { enforceRateLimit } from './helpers'
 import { hkCtx } from './reducer-utils'
+
 interface LogConfig<DB, Tbl extends LogTableLike, T extends string = string> {
   bulkItemsField?: ColumnBuilder<unknown, AlgebraicTypeType> | TypeBuilder<unknown, AlgebraicTypeType>
   fields: FieldBuilders

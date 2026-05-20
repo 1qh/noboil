@@ -1,5 +1,6 @@
 import { convexAuthNextjsMiddleware } from '@convex-dev/auth/nextjs/server'
 import { NextResponse } from 'next/server'
+
 const createProxy = () =>
   convexAuthNextjsMiddleware(request => {
     const response = NextResponse.next()

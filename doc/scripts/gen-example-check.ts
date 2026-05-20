@@ -7,6 +7,7 @@ import { walkFiles } from 'noboil/walk'
 import { readFileSync } from 'node:fs'
 import { relative } from 'node:path'
 import { DOCS_DIR, replaceBetween, REPO } from './lib'
+
 const FENCE_RE = /```(?:ts|tsx|typescript)\n(?<code>[\s\S]*?)```/gu
 const walk = (dir: string): string[] => walkFiles(dir, { accept: name => name.endsWith('.mdx') })
 interface Block {

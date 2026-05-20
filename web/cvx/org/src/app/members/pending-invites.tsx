@@ -10,6 +10,7 @@ import { Copy, Trash } from 'lucide-react'
 import { RoleBadge } from 'noboil/convex/components'
 import { useOrgQuery } from 'noboil/convex/react'
 import { toast } from 'sonner'
+
 const PendingInvites = () => {
   const invites = useOrgQuery(api.org.pendingInvites)
   const revokeInvite = useMutation(api.org.revokeInvite)

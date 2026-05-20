@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs'
 import type { ChildInfo, TableInfo } from '../shared/viz'
 import { bold, dim, isSchemaFile, red } from '../shared/viz'
 import { findStdbModuleDirDeep, listTypeScriptFiles } from '../shared/walk'
+
 const tablePat = /(?<tname>\w+)\s*:\s*table\([^,]+,\s*\{/gu
 const fieldLinePat = /^\s*(?<fname>\w+)\s*:\s*(?<ftype>.+?)\s*,?$/u
 const findModuleDir = findStdbModuleDirDeep

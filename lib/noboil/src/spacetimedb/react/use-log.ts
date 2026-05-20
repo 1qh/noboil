@@ -2,6 +2,7 @@
 import { useMemo } from 'react'
 import { useTable } from 'spacetimedb/react'
 import { useMut } from './use-mutate'
+
 interface LogHookResult<T> {
   append: (args: { idempotencyKey?: string; payload: Partial<T> }) => Promise<void>
   appendBulk: (items: (Partial<T> & { idempotencyKey?: null | string })[]) => Promise<void>

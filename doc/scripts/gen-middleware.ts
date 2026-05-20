@@ -3,6 +3,7 @@
 /** biome-ignore-all lint/performance/useTopLevelRegex: small file */
 import { readFileSync } from 'node:fs'
 import { DOCS_DIR, LIB_NOBOIL, replaceBetween } from './lib'
+
 const MIDDLEWARE_RE = /(?:\/\*\*\s*(?<doc>[^*]+?)\s*\*\/\s*)?const (?<name>\w+) = \((?<args>[^)]*)\):\s*Middleware\b/gu
 const escapeMd = (s: string): string =>
   s

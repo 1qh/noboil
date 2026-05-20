@@ -5,6 +5,7 @@ import { dirname, join, relative, resolve as resolvePath } from 'node:path'
 import { bold, dim, green, yellow } from './ansi'
 import { die } from './cli-utils'
 import { readJson, writeJson } from './shared/env-file'
+
 interface EjectContext {
   cwd: string
   db: 'convex' | 'spacetimedb'

@@ -8,6 +8,7 @@ import { useMutation } from 'convex/react'
 import { SparklesIcon } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { createElement, useId, useState, useTransition } from 'react'
+
 const Page = () => {
   const router = useRouter()
   const createChat = useMutation(api.chat.create)

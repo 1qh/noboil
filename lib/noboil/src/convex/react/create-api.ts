@@ -1,6 +1,7 @@
 'use client'
 import type { FunctionReference } from 'convex/server'
 import type { ConvexCrudRefs } from './use-crud'
+
 interface CrudEndpoints {
   auth?: { list: FunctionReference<'query'>; read: FunctionReference<'query'> }
   create: FunctionReference<'mutation'>

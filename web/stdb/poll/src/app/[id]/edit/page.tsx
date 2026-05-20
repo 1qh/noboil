@@ -8,6 +8,7 @@ import { useMut } from 'noboil/spacetimedb/react'
 import { toast } from 'sonner'
 import { useTable } from 'spacetimedb/react'
 import { createPoll } from '~/schema'
+
 interface Poll {
   id: number
   options: string[]

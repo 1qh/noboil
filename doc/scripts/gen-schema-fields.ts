@@ -4,6 +4,7 @@
 /** biome-ignore-all lint/nursery/noContinue: parser */
 import { readFileSync } from 'node:fs'
 import { DOCS_DIR, replaceBetween, REPO } from './lib'
+
 const SLOTS = ['base', 'children', 'kv', 'log', 'org', 'orgScoped', 'owned', 'quota', 'singleton'] as const
 const escapeMd = (s: string): string =>
   s

@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'bun:test'
 import { array, boolean, date, number, object, string } from 'zod/v4'
 import { buildMeta, getMax, getMeta, hasShapeKey, readRegistryMeta, resolveFormToast } from '../react/form'
+
 const file = () => string().meta({ nb: 'file' as const })
 const files = () => array(file()).meta({ nb: 'files' as const })
 describe('getMeta', () => {

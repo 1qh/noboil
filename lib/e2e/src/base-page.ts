@@ -1,5 +1,6 @@
 // biome-ignore-all lint/style/useConsistentMemberAccessibility: x
 import type { Locator, Page } from '@playwright/test'
+
 class BasePage {
   protected readonly page: Page
   public constructor(page: Page) {

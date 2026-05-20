@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'bun:test'
 import { z } from 'zod/v4'
 import { checkSchema, orgChildTable, rateLimitTable, uploadTables } from '../schema-helpers'
+
 const orgSchema = <T extends z.ZodRawShape>(shape: T) => Object.assign(z.object(shape), { __org: true })
 describe('convex schema-helpers', () => {
   test('rateLimitTable returns one table with by_table_key index', () => {

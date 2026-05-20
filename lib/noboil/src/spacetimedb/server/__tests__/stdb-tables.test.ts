@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'bun:test'
 import { z } from 'zod/v4'
 import { makeSchema, zodToStdbFields } from '../stdb-tables'
+
 const sc = makeSchema()
 describe('stdb stdb-tables', () => {
   test('makeSchema returns table builders', () => {

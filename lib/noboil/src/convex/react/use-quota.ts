@@ -1,6 +1,7 @@
 'use client'
 import type { FunctionReference } from 'convex/server'
 import { useMutation, useQuery } from 'convex/react'
+
 interface ConvexQuotaRefs {
   check: FunctionReference<'query'>
   consume: FunctionReference<'mutation'>

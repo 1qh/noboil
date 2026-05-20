@@ -17,6 +17,7 @@ import { useReducer, useSpacetimeDB } from 'spacetimedb/react'
 import { useOrg } from '~/hook/use-org'
 import { useOrgTable } from '~/hook/use-org-table'
 import { project as projectSchema } from '~/schema'
+
 const EditProjectForm = ({ projectId, taskCount }: { projectId: number; taskCount: number }) => {
   const router = useRouter()
   const [projects] = useOrgTable<Project>(tables.project)

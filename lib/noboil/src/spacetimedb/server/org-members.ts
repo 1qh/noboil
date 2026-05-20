@@ -2,6 +2,7 @@ import type { Identity, Timestamp } from 'spacetimedb'
 import type { AlgebraicTypeType, ReducerExport, TypeBuilder } from 'spacetimedb/server'
 import type { OrgRole } from '../../shared/types'
 import { identityEquals, makeError } from './reducer-utils'
+
 interface OrgMemberPkLike<Row, Id> {
   delete: (id: Id) => boolean
   find: (id: Id) => null | Row

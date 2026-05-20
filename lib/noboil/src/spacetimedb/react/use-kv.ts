@@ -2,6 +2,7 @@
 import { useMemo } from 'react'
 import { useTable } from 'spacetimedb/react'
 import { useMut } from './use-mutate'
+
 interface KvHookResult<T> {
   data: null | T
   isLoading: boolean

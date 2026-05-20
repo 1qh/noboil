@@ -2,6 +2,7 @@
 import { appPort } from '@a/config'
 import { defineConfig, devices } from '@playwright/test'
 import { basename, dirname } from 'node:path'
+
 interface PlaywrightOptions {
   port?: number
   webServerUrl?: string

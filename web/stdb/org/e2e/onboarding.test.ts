@@ -3,6 +3,7 @@
 import path from 'node:path'
 import { expect, test } from './fixtures'
 import { api, createTestOrg, ensureTestUser, login, makeOrgTestUtils, tc } from './helpers'
+
 const testPrefix = `e2e-onboard-${Date.now()}`
 const { cleanupOrgTestData, generateSlug } = makeOrgTestUtils(testPrefix)
 test.describe

@@ -13,6 +13,7 @@ import { useMut } from 'noboil/spacetimedb/react'
 import { useState, useTransition } from 'react'
 import type { MovieDetailData } from '../_movie-types'
 import { fetchMovieAction } from '../_actions'
+
 const TMDB_IMG = 'https://image.tmdb.org/t/p/w300'
 const TMDB_BACKDROP = 'https://image.tmdb.org/t/p/w780'
 const formatMoney = (n: number | undefined) => (n ? `$${(n / 1_000_000).toFixed(1)}M` : 'N/A')

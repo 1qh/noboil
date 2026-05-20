@@ -6,6 +6,7 @@ import { useList, useOwnRows } from 'noboil/spacetimedb/react'
 import { useCallback, useEffect, useMemo, useReducer, useState } from 'react'
 import { useSpacetimeDB, useTable } from 'spacetimedb/react'
 import { Create, List } from './common'
+
 const Page = () => {
   const [allBlogs, isReady] = useTable(tables.blog)
   const { identity } = useSpacetimeDB()

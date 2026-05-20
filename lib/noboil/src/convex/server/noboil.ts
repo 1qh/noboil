@@ -16,6 +16,7 @@ import type {
   SingletonOptions
 } from './types'
 import { setup } from './setup'
+
 type AnyShape = ZodRawShape
 type Brand = 'base' | 'kv' | 'log' | 'org' | 'orgDef' | 'owned' | 'quota' | 'singleton'
 const readBrand = (schema: unknown): Brand | undefined => {

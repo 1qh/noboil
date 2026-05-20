@@ -1,4 +1,5 @@
 import type { GlobalHookCtx, Rec } from './common'
+
 interface Middleware {
   afterCreate?: (ctx: MiddlewareCtx, args: { data: Rec; row: Rec }) => Promise<void> | void
   afterDelete?: (ctx: MiddlewareCtx, args: { row: Rec }) => Promise<void> | void

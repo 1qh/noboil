@@ -9,6 +9,7 @@ import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { useEffect, useState } from 'react'
 import { readJson, readJsonSafe, writeJson } from './shared/env-file'
+
 interface CheckResult {
   detail?: string
   status: CheckStatus

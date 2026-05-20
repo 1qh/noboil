@@ -5,6 +5,7 @@ import { string } from 'zod/v4'
 import type { DbCtx, DbLike, HookCtx, Mb, MutCtx, Qb, QuotaFactoryResult, QuotaResult } from './types'
 import { idx, typed } from './bridge'
 import { dbInsert, dbPatch, hk } from './helpers'
+
 interface QuotaHooks {
   afterConsume?: (ctx: HookCtx, args: { owner: string; result: QuotaResult }) => Promise<void> | void
   afterRecord?: (ctx: HookCtx, args: { owner: string; result: QuotaResult }) => Promise<void> | void

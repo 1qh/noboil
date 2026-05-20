@@ -1,4 +1,5 @@
 import { DEFAULT_HTTP_URI } from '../defaults'
+
 interface DiscoverModulesOptions {
   httpUrl?: string
   moduleName?: string

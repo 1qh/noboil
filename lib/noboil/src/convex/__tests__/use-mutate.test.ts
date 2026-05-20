@@ -1,5 +1,6 @@
 import { describe, expect, mock, test } from 'bun:test'
 import { defaultOnError } from '../react/use-mutate'
+
 describe('convex defaultOnError', () => {
   test('handles NOT_AUTHENTICATED ConvexError', () => {
     const fn = mock(() => {

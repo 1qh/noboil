@@ -4,6 +4,7 @@ import type { RateLimitConfig } from './types'
 import type { FieldBuilders, ReducerExportLike } from './types/common'
 import { enforceRateLimit } from './helpers'
 import { applyPatch, hkCtx, makeError } from './reducer-utils'
+
 const findByKey = (table: KvTableLike, key: string): KvRow | undefined => {
   for (const row of table) if (row.key === key) return row
 }

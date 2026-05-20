@@ -6,6 +6,7 @@ import orgJoinRequestTable from '../module_bindings/org_join_request_table'
 import orgMemberTable from '../module_bindings/org_member_table'
 import orgTable from '../module_bindings/org_table'
 import { none, withCtx } from './test-helpers'
+
 describe('org api port', () => {
   test('org data tables remain available in bindings', () => {
     expect(tables.org).toBeDefined()

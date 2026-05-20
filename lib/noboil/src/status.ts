@@ -5,6 +5,7 @@ import { existsSync, statSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { bold, dim, green, red, yellow } from './ansi'
 import { readManifestFrom } from './shared/manifest'
+
 const HELP = `
 ${bold('noboil status')} — snapshot of the current project
 Usage:

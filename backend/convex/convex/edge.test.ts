@@ -7,6 +7,7 @@ import { describe, expect, test } from 'bun:test'
 import { convexTest } from 'convex-test'
 import { api } from './_generated/api'
 import schema from './schema'
+
 const modules = discoverModules(import.meta.dir, {
     './_generated/api.js': async () => import('./_generated/api'),
     './_generated/server.js': async () => import('./_generated/server')

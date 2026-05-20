@@ -1,4 +1,5 @@
 import { defineConfig, eslintImport } from 'lintmax'
+
 const backendLintIgnoreFiles = [
   'backend/agent/convex/f.test.ts',
   'backend/convex/convex/edge.test.ts',

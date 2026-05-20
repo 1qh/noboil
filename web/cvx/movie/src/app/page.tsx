@@ -10,6 +10,7 @@ import Link from 'next/link'
 import { useOnlineStatus } from 'noboil/convex/react'
 import { useState, useTransition } from 'react'
 import { toast } from 'sonner'
+
 type SearchError = null | { message: string }
 type SearchResult = FunctionReturnType<typeof api.movie.search>[number]
 const TMDB_IMG = 'https://image.tmdb.org/t/p/w200'

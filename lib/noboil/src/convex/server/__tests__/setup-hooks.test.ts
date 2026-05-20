@@ -2,6 +2,7 @@
 import { describe, expect, test } from 'bun:test'
 import { z } from 'zod/v4'
 import { setup } from '../setup'
+
 const stubBuilder = ((args: unknown) => args) as never
 const cfg = {
   action: stubBuilder,

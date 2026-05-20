@@ -7,6 +7,7 @@ import { headers } from 'next/headers'
 import Link from 'next/link'
 import { Devtools } from 'noboil/spacetimedb/react'
 import { SpacetimeWrapper } from './providers'
+
 const metadata: Metadata = { description: 'spacetimedb blog demo', title: 'Blog' }
 const Layout = async ({ children }: { children: ReactNode }) => {
   const pathname = (await headers()).get('x-pathname') ?? '/'

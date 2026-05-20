@@ -7,6 +7,7 @@ import { Form, useFormMutation } from 'noboil/spacetimedb/components'
 import { useReducer } from 'spacetimedb/react'
 import { useOrg } from '~/hook/use-org'
 import { project } from '~/schema'
+
 const NewProjectPage = () => {
   const router = useRouter()
   const { org } = useOrg()

@@ -4,6 +4,7 @@
 /** biome-ignore-all lint/nursery/noContinue: parser */
 import { readFileSync, statSync } from 'node:fs'
 import { DOCS_DIR, LIB_NOBOIL, replaceBetween } from './lib'
+
 interface Spec {
   brand: string
   expectedOpts: string[]

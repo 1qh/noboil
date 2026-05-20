@@ -12,6 +12,7 @@ import {
   parseObjectFields,
   SINGLETON_BASE
 } from '../shared/schema-utils'
+
 const wrapperFactories = ['makeOwned', 'makeOrgScoped', 'makeSingleton', 'makeBase']
 const { endpointsForFactory, extractSchemaFields } = createSchemaUtils({ wrapperFactories })
 export {

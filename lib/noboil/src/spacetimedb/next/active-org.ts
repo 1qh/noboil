@@ -6,6 +6,7 @@ import { isStdbTestMode } from '../../shared/test-mode'
 import { ACTIVE_ORG_COOKIE, ACTIVE_ORG_SLUG_COOKIE, ONE_YEAR_SECONDS } from '../constants'
 import { TOKEN_COOKIE_KEY, wsToHttp } from '../defaults'
 import { queryTable } from './query'
+
 const isTestMode = () => isStdbTestMode() || process.env.TEST_MODE === '1' || process.env.TEST_MODE === 'true'
 const toHttpUri = wsToHttp
 /** Reads the SpacetimeDB auth token from cookies, with test fallback. */

@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { useResolveFileUrl } from 'noboil/spacetimedb/react'
 import { useSpacetimeDB } from 'spacetimedb/react'
 import { Author } from '../common'
+
 const Client = ({ blog }: { blog: Blog | null }) => {
   const { identity } = useSpacetimeDB()
   const resolvedCover = useResolveFileUrl(blog?.coverImage)

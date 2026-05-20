@@ -14,6 +14,7 @@ import {
 import { run as doctorRun } from '../doctor'
 import { run as migrateRun } from '../migrate'
 import { run as vizRun } from '../viz'
+
 const silenced = (fn: () => unknown) => {
   const orig = console.log
   console.log = () => undefined

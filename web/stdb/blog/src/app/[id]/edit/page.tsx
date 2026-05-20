@@ -5,6 +5,7 @@ import { Spinner } from '@a/ui/spinner'
 import { useParams } from 'next/navigation'
 import { useTable } from 'spacetimedb/react'
 import { Client } from './client'
+
 const Page = () => {
   const { id: raw } = useParams<{ id: string }>()
   const id = parseId(raw)

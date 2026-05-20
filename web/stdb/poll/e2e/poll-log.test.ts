@@ -1,5 +1,6 @@
 import { expect, test } from './fixtures'
 import { login } from './helpers'
+
 test.describe('Log factory behaviors', () => {
   test.beforeEach(async ({ page, pollPage }) => {
     await login(page)

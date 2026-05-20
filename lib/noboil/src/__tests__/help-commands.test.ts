@@ -5,6 +5,7 @@ import { eject } from '../eject'
 import { status } from '../status'
 import { sync } from '../sync'
 import { upgrade } from '../upgrade'
+
 const silenced = (fn: () => unknown) => {
   const orig = console.log
   console.log = () => undefined

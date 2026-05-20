@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 import { diffSnapshots, isOptionalField, parseFieldsFromBlock, parseSchemaContent } from '../migrate'
+
 describe('stdb migrate', () => {
   test('isOptionalField recognizes t.option', () => {
     expect(isOptionalField('t.option(t.string())')).toBe(true)

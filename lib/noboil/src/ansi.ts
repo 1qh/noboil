@@ -2,6 +2,7 @@
 /* oxlint-disable no-control-regex */
 /** biome-ignore-all lint/suspicious/noControlCharactersInRegex: ANSI escape */
 import { styleText } from 'node:util'
+
 const bold = (s: string) => styleText('bold', s)
 const cyan = (s: string) => styleText('cyan', s)
 const dim = (s: string) => styleText('dim', s)

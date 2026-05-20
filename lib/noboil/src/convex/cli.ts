@@ -2,6 +2,7 @@
 /* eslint-disable no-console */
 import { bold, dim, red } from '../ansi'
 import { didYouMean } from '../shared/did-you-mean'
+
 const COMMANDS: Record<string, { description: string; run: (argv: string[]) => Promise<unknown> }> = {
   add: {
     description: 'Add a new table/endpoint to your project',

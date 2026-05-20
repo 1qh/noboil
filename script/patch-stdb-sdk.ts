@@ -3,6 +3,7 @@
 /** biome-ignore-all lint/performance/useTopLevelRegex: install-time patch */
 import { copyFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
+
 const target = join(import.meta.dir, '..', 'node_modules', 'spacetimedb', 'dist', 'server', 'index.mjs')
 const backup = `${target}.orig`
 const marker = '/* patched: stdb-sys-stub */'

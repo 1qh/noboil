@@ -7,6 +7,7 @@ import { ConvexProvider as BaseProvider, ConvexReactClient as Client } from 'con
 import { NavigationGuardProvider } from 'next-navigation-guard'
 import { FileApiProvider } from 'noboil/convex/components'
 import env from './env'
+
 interface ConvexProviderProps {
   children: ReactNode
   convexUrl?: string

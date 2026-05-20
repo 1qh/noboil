@@ -2,6 +2,7 @@
 /* oxlint-disable no-script-url */
 import { describe, expect, test } from 'bun:test'
 import { extractDomain, extractSources, isSafeUrl, normalizeOrigin, parseSiteUrls, validateRedirectTo } from '../url'
+
 describe('normalizeOrigin', () => {
   test('extracts origin lowercased', () => {
     expect(normalizeOrigin('HTTPS://Example.COM/path?q=1')).toBe('https://example.com')

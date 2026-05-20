@@ -1,6 +1,7 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { isSchemaFile } from './viz'
+
 const findAncestorFile = (start: string, name: string, maxDepth = 10): null | string => {
   let dir = resolve(start)
   for (let i = 0; i < maxDepth; i += 1) {

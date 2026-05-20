@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 import { addUrls, checkRateLimit, makeUnique, normalizeRateLimit } from '../helpers'
+
 describe('convex helpers normalizeRateLimit', () => {
   test('number → { max, window: 60s }', () => {
     expect(normalizeRateLimit(10)).toEqual({ max: 10, window: 60_000 })

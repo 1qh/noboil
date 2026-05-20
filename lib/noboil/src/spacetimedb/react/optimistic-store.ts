@@ -2,6 +2,7 @@
 import { createContext, createElement, use, useMemo, useRef, useSyncExternalStore } from 'react'
 import type { MutationType } from '../../shared/types'
 import { noop } from './list-utils'
+
 interface OptimisticStore {
   add: (entry: PendingMutation) => void
   getSnapshot: () => PendingMutation[]

@@ -5,6 +5,7 @@ import { Button } from '@a/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@a/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@a/ui/select'
 import { UserPlus, X } from 'lucide-react'
+
 interface EditorInfo {
   email: string
   name: string

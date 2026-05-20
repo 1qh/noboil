@@ -1,4 +1,5 @@
 import { canonicalizeEmail } from './sanitize'
+
 interface ProfileLike {
   email?: unknown
   email_verified?: unknown

@@ -2,6 +2,7 @@
 /* eslint-disable no-console */
 import { existsSync, readFileSync } from 'node:fs'
 import { DOCS_DIR, LIB_NOBOIL, replaceBetween } from './lib'
+
 const FEATURES = [
   { file: 'crud.ts', name: 'owned CRUD' },
   { file: 'org-crud.ts', name: 'org-scoped CRUD' },

@@ -11,6 +11,7 @@ import {
   removeDirs,
   rmSafe
 } from '../scaffold-ops'
+
 describe('scaffold-ops', () => {
   test('REMOVE_ALWAYS includes expected entries', () => {
     expect(REMOVE_ALWAYS).toContain('AGENTS.md')

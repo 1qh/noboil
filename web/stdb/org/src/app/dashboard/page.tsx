@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { RoleBadge } from 'noboil/spacetimedb/components'
 import { useOrg } from '~/hook/use-org'
 import { useOrgTable } from '~/hook/use-org-table'
+
 const OrgDashboard = () => {
   const { org, role } = useOrg()
   const [members] = useOrgTable(tables.orgMember)

@@ -5,6 +5,7 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 import { DOCS_DIR, replaceBetween, REPO } from './lib'
+
 const DEMOS = ['blog', 'chat', 'movie', 'org', 'poll']
 const TEST_RE = /\b(?:test|it)\(\s*['"`]/gu
 const walk = (dir: string, out: string[] = []): string[] => {

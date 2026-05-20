@@ -4,6 +4,7 @@
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
+
 interface AddContext {
   db: 'convex' | 'spacetimedb'
   fields: { name: string; optional: boolean; type: string }[]

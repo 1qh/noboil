@@ -2,6 +2,7 @@
 import { useMemo } from 'react'
 import { useTable } from 'spacetimedb/react'
 import { useOrg } from '~/hook/use-org'
+
 interface OrgRow {
   orgId: number
 }

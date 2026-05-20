@@ -3,6 +3,7 @@ import { config, urls } from '@a/config'
 import { createEnv } from '@t3-oss/env-nextjs'
 import { vercel } from '@t3-oss/env-nextjs/presets-zod'
 import { literal, string, url, enum as zenum } from 'zod/v4'
+
 const u = urls()
 export default createEnv({
   client: {

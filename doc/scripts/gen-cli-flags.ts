@@ -4,6 +4,7 @@
 /** biome-ignore-all lint/nursery/noContinue: parser */
 import { readFileSync } from 'node:fs'
 import { DOCS_DIR, replaceBetween } from './lib'
+
 const escapeMd = (s: string): string =>
   s
     .replaceAll('|', String.raw`\|`)

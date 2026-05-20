@@ -1,5 +1,6 @@
 'use client'
 import type { StdbCrudRefs } from './use-crud'
+
 type ReducerMap = Record<string, unknown>
 type TableMap = Record<string, { tableName: string }>
 const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)

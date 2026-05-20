@@ -11,6 +11,7 @@ import { Copy, Trash } from 'lucide-react'
 import { RoleBadge } from 'noboil/spacetimedb/components'
 import { useMut, useMutate } from 'noboil/spacetimedb/react'
 import { useOrgTable } from '~/hook/use-org-table'
+
 const PendingInvites = () => {
   const [invites] = useOrgTable<OrgInvite>(tables.orgInvite)
   const revokeInvite = useMut(reducers.orgRevokeInvite, { toast: { success: 'Invite revoked' } })

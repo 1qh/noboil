@@ -5,6 +5,7 @@
 import { readdirSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 import { DOCS_DIR, replaceBetween, REPO } from './lib'
+
 const DEMOS = ['blog', 'chat', 'movie', 'org', 'poll']
 const walkRoutes = (root: string, base = ''): string[] => {
   if (!statSync(root, { throwIfNoEntry: false })) return []

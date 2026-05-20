@@ -14,6 +14,7 @@ import type {
 } from './types/org-crud'
 import { enforceRateLimit } from './helpers'
 import { applyPatch, identityEquals, makeError, makeOptionalFields, pickPatch, timestampEquals } from './reducer-utils'
+
 type UpdateArgs<F extends OrgCrudFieldBuilders, Id> = Partial<OrgCrudFieldValues<F>> & {
   expectedUpdatedAt?: Timestamp
   id: Id

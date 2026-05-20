@@ -3,6 +3,7 @@
 // biome-ignore-all lint/style/useConsistentMemberAccessibility: x
 import type { Locator } from '@playwright/test'
 import BasePage from '@a/e2e/base-page'
+
 const openVoteAdmin = async (item: Locator): Promise<void> => {
   const purge = item.getByTestId('vote-purge')
   if (await purge.isVisible().catch(() => false)) return

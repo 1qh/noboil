@@ -1,4 +1,5 @@
 import { createRequire } from 'node:module'
+
 const version = '0.0.1'
 const EXPORT_PREFIX = /^\.\//u
 type NoboilCondition = 'noboil-convex' | 'noboil-spacetimedb'

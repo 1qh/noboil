@@ -3,6 +3,7 @@ import { callReducer, extractErrorData, getErrorCode } from 'noboil/spacetimedb/
 import type { ErrorContext, EventContext, ReducerEventContext, SubscriptionEventContext } from '../module_bindings'
 import { reducers, tables } from '../module_bindings'
 import { findMine, getNumber, getString, listTable, none, some, withCtx } from './test-helpers'
+
 describe('binding edges', () => {
   test('binding context types are exported', () => {
     const eventContextType: EventContext | null = null

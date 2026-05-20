@@ -6,6 +6,7 @@ import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 import { ERROR_CODE_MEANINGS } from '../../lib/noboil/src/shared/error-codes'
 import { DOCS_DIR, LIB_NOBOIL, replaceBetween } from './lib'
+
 const PATTERNS = [
   /\b(?:err|cvErr|throwErr)\(\s*'(?<code>[A-Z][A-Z_0-9]+)'/gu,
   /throw\s+new\s+\w*Error\(\s*'(?<code>[A-Z][A-Z_0-9]+)'/gu,

@@ -5,6 +5,7 @@ import OrgListGrid from '@a/fe/org-list-grid'
 import { useRouter } from 'next/navigation'
 import { OrgAvatar, RoleBadge } from 'noboil/convex/components'
 import { setActiveOrgCookieClient } from 'noboil/convex/react'
+
 type OrgItem = OrgListGridItem<OrgRole>
 const OrgList = ({ orgs }: { orgs: OrgItem[] }) => {
   const router = useRouter()

@@ -7,6 +7,7 @@ import type {
   SingletonTableLike
 } from './types/singleton'
 import { applyPatch, identityEquals, makeError, makeOptionalFields, pickPatch } from './reducer-utils'
+
 interface SingletonRow {
   createdAt: Timestamp
   id: number

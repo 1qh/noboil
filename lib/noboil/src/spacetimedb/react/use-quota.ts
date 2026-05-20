@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { useTable } from 'spacetimedb/react'
 import { useMut } from './use-mutate'
+
 interface QuotaHookResult {
   consume: () => Promise<void>
   record: () => Promise<void>

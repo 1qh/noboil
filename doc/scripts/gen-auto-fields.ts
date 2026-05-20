@@ -2,6 +2,7 @@
 /* eslint-disable no-console */
 import { FACTORY_META } from '../../lib/noboil/src/shared/factory-meta'
 import { DOCS_DIR, replaceBetween } from './lib'
+
 const DOC_LINK: Record<string, string> = { kv: './kv', log: './log', quota: './quota' }
 const escapeMd = (s: string): string =>
   s.replaceAll('|', String.raw`\|`).replaceAll('{', String.raw`\{`).replaceAll('}', String.raw`\}`)

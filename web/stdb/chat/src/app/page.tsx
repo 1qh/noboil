@@ -10,6 +10,7 @@ import { useRouter } from 'next/navigation'
 import { useMut } from 'noboil/spacetimedb/react'
 import { useEffect, useId, useRef, useState, useTransition } from 'react'
 import { useSpacetimeDB, useTable } from 'spacetimedb/react'
+
 const Page = () => {
   const router = useRouter()
   const publicToggleId = useId()

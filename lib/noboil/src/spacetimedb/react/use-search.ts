@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useMemo, useState } from 'react'
 import type { Rec } from '../../shared/types'
+
 interface UseSearchOptions<T extends Rec = Rec> {
   debounceMs?: number
   fields: (keyof T & string)[]

@@ -1,6 +1,7 @@
 import path from 'node:path'
 import { expect, test } from './fixtures'
 import { cleanupTestData, login } from './helpers'
+
 test.describe
   .serial('Profile - Create', () => {
     test.beforeEach(async ({ page }) => {

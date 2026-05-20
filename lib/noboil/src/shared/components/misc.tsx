@@ -4,6 +4,7 @@ import type { ComponentProps } from 'react'
 import { cn } from '@a/ui'
 import { Avatar, AvatarFallback, AvatarImage } from '@a/ui/avatar'
 import { Badge } from '@a/ui/badge'
+
 const OrgAvatar = ({ name, src, ...props }: ComponentProps<typeof Avatar> & { name: string; src?: string }) => (
   <Avatar {...props}>
     {src ? <AvatarImage src={src} /> : null}

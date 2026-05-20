@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useList } from 'noboil/spacetimedb/react'
 import { useState } from 'react'
 import { useTable } from 'spacetimedb/react'
+
 const Page = () => {
   const [allChats, isReady] = useTable(tables.chat)
   const [query, setQuery] = useState('')

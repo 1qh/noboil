@@ -1,6 +1,7 @@
 /** biome-ignore-all lint/performance/noAwaitInLoops: sequential middleware chain */
 /* eslint-disable no-await-in-loop */
 import type { Rec } from '../types'
+
 interface GlobalHooksLike<
   Ctx,
   CreateAfterArgs,

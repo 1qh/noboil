@@ -2,6 +2,7 @@ import { describe, expect, test } from 'bun:test'
 import type { IdentityFake, Ts } from './_helpers'
 import { makeInviteReducers, makeInviteToken } from '../org-invites'
 import { captureReducers, ident, tsAtMs } from './_helpers'
+
 interface InviteRow {
   createdAt: Ts
   email: string

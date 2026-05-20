@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'bun:test'
 import { rmSync } from 'node:fs'
 import { LOG_PATH, logCrash } from '../crash-log'
+
 describe('crash-log', () => {
   test('LOG_PATH points under ~/.noboil', () => {
     expect(LOG_PATH()).toContain('.noboil')

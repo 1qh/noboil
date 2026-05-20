@@ -2,6 +2,7 @@
 import { config } from '@a/config'
 import { sleep } from 'noboil/spacetimedb'
 import { callReducer, cleanup, createTestContext, queryTable } from 'noboil/spacetimedb/server'
+
 interface BlogRow {
   content: string
   id: number

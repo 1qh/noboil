@@ -2,6 +2,7 @@ import type { Identity, Timestamp } from 'spacetimedb'
 import type { AlgebraicTypeType, TypeBuilder } from 'spacetimedb/server'
 import { HEARTBEAT_INTERVAL_MS, PRESENCE_TTL_MS } from '../../shared/server/presence'
 import { identityEquals, makeError } from './reducer-utils'
+
 interface PresenceConfig<
   DB,
   Id,

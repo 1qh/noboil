@@ -2,6 +2,7 @@
 /* eslint-disable no-console */
 import { readFileSync } from 'node:fs'
 import { DOCS_DIR, LIB_NOBOIL, replaceBetween } from './lib'
+
 const extractInterface = (file: string, name: string): null | string => {
   const src = readFileSync(file, 'utf8')
   const re = new RegExp(`interface ${name}(?:<[^>]*>)?\\s*\\{([^}]+)\\}`, 'u')

@@ -9,6 +9,7 @@ import { dirname, resolve } from 'node:path'
 import { emitRegistry, emitToolCallers, emitToolTypes } from '../src/convex/tools/codegen/emit'
 import { collect } from '../src/convex/tools/codegen/scan'
 import { extractSchemas } from '../src/convex/tools/codegen/schema'
+
 const hashSchema = (s: unknown): string => createHash('sha256').update(JSON.stringify(s)).digest('hex').slice(0, 12)
 const diffHashes = async (
   path: string,

@@ -2,6 +2,7 @@
 // biome-ignore-all lint/performance/useTopLevelRegex: x
 import type { Locator } from '@playwright/test'
 import BasePage from './base-page'
+
 abstract class BaseChatPage extends BasePage {
   protected abstract readonly basePath: string
   protected abstract readonly urlPattern: RegExp

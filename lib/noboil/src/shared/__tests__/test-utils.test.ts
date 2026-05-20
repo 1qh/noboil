@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'bun:test'
 import type { Lcg } from '../test/index'
 import { advanceNow, createLcg, hermeticTry, restoreNow, setHermeticAdapter, setNow, withFakeNow } from '../test/index'
+
 describe('hermetic adapter', () => {
   test('returns undefined when no adapter set', () => {
     setHermeticAdapter(null)

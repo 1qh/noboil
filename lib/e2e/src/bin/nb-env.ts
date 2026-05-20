@@ -5,6 +5,7 @@
 import { spawn } from 'bun'
 import { existsSync, readFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
+
 const findRepoRoot = (start: string): string => {
   let cur = start
   while (cur !== '/') {

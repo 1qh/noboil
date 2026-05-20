@@ -3,6 +3,7 @@
 /** biome-ignore-all lint/performance/useTopLevelRegex: parsed once */
 import { readFileSync } from 'node:fs'
 import { DOCS_DIR, replaceBetween, REPO } from './lib'
+
 const ROUTE_RE = /http\.route\(\{[\s\S]*?method:\s*'(?<method>[A-Z]+)',\s*path:\s*'(?<path>[^']+)'/gu
 const main = () => {
   const src = readFileSync(`${REPO}/backend/convex/convex/http.ts`, 'utf8')

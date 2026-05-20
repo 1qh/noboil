@@ -1,5 +1,6 @@
 import type { s } from '@a/be-spacetimedb/s'
 import type { InferCreate } from 'noboil/spacetimedb'
+
 type MovieDetailData = InferCreate<typeof s.movie>
 interface SearchResult {
   id: number

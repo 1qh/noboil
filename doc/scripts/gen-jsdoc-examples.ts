@@ -5,6 +5,7 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join, relative } from 'node:path'
 import { DOCS_DIR, LIB_NOBOIL, replaceBetween, REPO } from './lib'
+
 const walk = (dir: string, out: string[] = []): string[] => {
   for (const name of readdirSync(dir).toSorted()) {
     if (

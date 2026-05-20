@@ -4,6 +4,7 @@
 import { afterEach, describe, expect, test } from 'bun:test'
 import { object, string } from 'zod/v4'
 import { createEnv, createOptionalEnv } from '../env-zod'
+
 describe('createEnv', () => {
   afterEach(() => {
     delete process.env.X_TEST_REQUIRED

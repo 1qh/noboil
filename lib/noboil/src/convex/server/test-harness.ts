@@ -9,6 +9,7 @@ import { afterEach } from 'bun:test'
 import { convexTest } from 'convex-test'
 import { join } from 'node:path'
 import { setHermeticAdapter } from '../../shared/test/hermetic'
+
 interface TestHarness<S extends SchemaDefinition<GenericSchema, boolean>> {
   makeTest: () => TestConvex<S>
 }

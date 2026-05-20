@@ -3,6 +3,7 @@
 import { spawnSync } from 'node:child_process'
 import { bold, dim, green, red, yellow } from './ansi'
 import { findManifestPath } from './shared/manifest'
+
 const HELP = `
 ${bold('noboil upgrade')} — install latest noboil
 Usage:

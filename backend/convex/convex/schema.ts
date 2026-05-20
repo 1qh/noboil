@@ -17,6 +17,7 @@ import {
   uploadTables
 } from 'noboil/convex/server'
 import { base, children, kv, log, orgScoped, owned, singleton } from '../s'
+
 export default defineSchema({
   ...authTables,
   ...orgTables(),

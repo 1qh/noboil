@@ -9,6 +9,7 @@ import { isAuthenticated } from 'noboil/convex/next'
 import { Devtools } from 'noboil/convex/react'
 import { ConvexWrapper } from './providers'
 import Sidebar from './sidebar'
+
 const metadata: Metadata = { description: 'noboil chat demo', title: 'Chat' }
 const Layout = async ({ children }: { children: ReactNode }) => {
   const requestHeaders = await headers()

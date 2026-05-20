@@ -4,6 +4,7 @@ import { createHash } from 'node:crypto'
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { root, run, withUnpatchedStdbSdk } from './utils'
+
 const args = process.argv.slice(2).join(' ')
 const isHashableFile = (name: string): boolean => name.endsWith('.ts') || name === 'package.json'
 const hashDir = (dir: string): string => {

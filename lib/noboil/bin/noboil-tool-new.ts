@@ -5,6 +5,7 @@
 import { $ } from 'bun'
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
+
 const run = async (argv: string[] = process.argv.slice(2)): Promise<void> => {
   const pathArg = argv.find(a => !a.startsWith('--'))
   const kindFlag = argv.find(a => a.startsWith('--kind='))?.slice(7) ?? 'action'

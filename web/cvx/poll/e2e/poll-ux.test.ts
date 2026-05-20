@@ -1,6 +1,7 @@
 // biome-ignore-all lint/performance/useTopLevelRegex: x
 import { expect, test } from './fixtures'
 import { login } from './helpers'
+
 test.describe('Poll UX polish', () => {
   test.beforeEach(async ({ pollPage }) => {
     await login()

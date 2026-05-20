@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 import { defaultOnError } from '../use-mutate'
+
 describe('stdb defaultOnError', () => {
   test('handles NOT_AUTHENTICATED', () => {
     expect(() => defaultOnError(new Error('NOT_AUTHENTICATED: missing'))).not.toThrow()

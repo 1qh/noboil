@@ -2,6 +2,7 @@
 import type { GlobalHookCtx, GlobalHooks, Middleware, MiddlewareCtx, Rec } from './types'
 import { createComposeMiddleware, createInputSanitize, sanitizeRec, sanitizeString } from '../../shared/server/middleware'
 import { log } from './helpers'
+
 const withOp = (ctx: GlobalHookCtx, op: MiddlewareCtx['operation']): MiddlewareCtx => ({ ...ctx, operation: op })
 /** Combine multiple Middleware factories into a single GlobalHooks bundle for `noboil({ hooks })`. */
 const composeMiddleware = (...middlewares: Middleware[]): GlobalHooks =>

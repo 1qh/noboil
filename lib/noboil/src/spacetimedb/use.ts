@@ -6,6 +6,7 @@ import { readFileSync, writeFileSync } from 'node:fs'
 import { bold, dim, green, red } from '../ansi'
 import { findAncestorFile } from '../shared/walk'
 import { DEFAULT_WS_URI } from './defaults'
+
 type Target = 'cloud' | 'local'
 const TARGETS: Record<Target, { label: string; server: string; uri: string }> = {
   cloud: { label: '☁️  MainCloud', server: 'maincloud', uri: 'https://maincloud.spacetimedb.com' },

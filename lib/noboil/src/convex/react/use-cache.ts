@@ -5,6 +5,7 @@ import type { FunctionReference, OptionalRestArgs } from 'convex/server'
 import { useAction, useQuery } from 'convex/react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { trackCacheAccess } from './devtools'
+
 type ActionRef = FunctionReference<'action'>
 interface FireLoadCtx {
   args: Record<string, unknown>

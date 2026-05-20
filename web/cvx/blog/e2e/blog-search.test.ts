@@ -1,5 +1,6 @@
 import { expect, test } from './fixtures'
 import { login } from './helpers'
+
 test.describe
   .serial('Blog Search', () => {
     test.beforeEach(async ({ blogPage, page }) => {

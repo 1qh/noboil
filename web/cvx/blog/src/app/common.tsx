@@ -33,6 +33,7 @@ import { createElement, useState } from 'react'
 import { toast } from 'sonner'
 import { createBlog } from '~/schema'
 import { Publish } from './[id]/edit/client'
+
 type Blog = FunctionReturnType<typeof api.blog.list>['page'][number]
 const Delete = ({ id, onOptimisticRemove }: { id: Blog['_id']; onOptimisticRemove?: () => void }) => {
   const { execute, isPending } = useOptimisticMutation({

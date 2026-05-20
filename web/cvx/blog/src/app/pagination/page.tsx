@@ -4,6 +4,7 @@ import { Spinner } from '@a/ui/spinner'
 import { Check } from 'lucide-react'
 import { useInfiniteList } from 'noboil/convex/react'
 import { Create, List } from '../common'
+
 const Page = () => {
   const { data, hasMore, isLoadingMore, sentinelRef, status } = useInfiniteList(api.blog.list, {
     where: { or: [{ published: true }, { own: true }] }

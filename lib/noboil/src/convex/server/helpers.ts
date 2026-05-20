@@ -42,6 +42,7 @@ import {
 import { fileKindOf } from '../zod'
 import { flt, idx, typed } from './bridge'
 import { ERROR_MESSAGES } from './types'
+
 type ConvexErrorData = ErrorData
 interface ErrorData extends SharedErrorData {
   code: ErrorCode

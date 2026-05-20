@@ -20,6 +20,7 @@ import {
   SINGLETON_BASE,
   wrapperFactories
 } from './schema-utils'
+
 interface AccessEntry {
   endpoints: string[]
   level: string

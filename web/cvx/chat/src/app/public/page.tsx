@@ -4,6 +4,7 @@ import { Input } from '@a/ui/input'
 import Link from 'next/link'
 import { useList } from 'noboil/convex/react'
 import { useMemo, useState } from 'react'
+
 interface ChatItem {
   _id: string
   title: string

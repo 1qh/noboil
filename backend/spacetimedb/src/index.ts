@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import { noboil } from 'noboil/spacetimedb/server'
 import { s } from '../s'
+
 const spacetimedb = noboil({
   tables: ({ t, table }) => ({
     blog: table(s.blog, { pub: 'published', rateLimit: 10 }),

@@ -41,6 +41,7 @@ import { identityEquals } from './reducer-utils'
 import { rlsChildSql, rlsSql } from './rls'
 import { makeSingletonCrud } from './singleton'
 import { makeSchema, zodToStdbFields } from './stdb-tables'
+
 interface CrudDefaults {
   expectedUpdatedAtField?: TypeBuilder<unknown, AlgebraicTypeType>
   foreignKeyField?: TypeBuilder<unknown, AlgebraicTypeType>

@@ -17,6 +17,7 @@ import { useUpload } from 'noboil/convex/react'
 import { useRef } from 'react'
 import { toast } from 'sonner'
 import { profileSchema } from '~/schema'
+
 const AvatarUpload = () => {
   const { cancel, isUploading, progress, upload } = useUpload(api.file.upload)
   const upsert = useMutation(api.blogProfile.upsert)

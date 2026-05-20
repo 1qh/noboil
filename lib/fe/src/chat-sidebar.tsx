@@ -17,6 +17,7 @@ import {
 import { GlobeIcon, MessageSquareIcon, MessageSquarePlusIcon, Trash2Icon } from 'lucide-react'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
+
 interface ChatSidebarProps<TThread extends ThreadBase, TId extends number | string> {
   basePath: string
   conversationsLabel?: string

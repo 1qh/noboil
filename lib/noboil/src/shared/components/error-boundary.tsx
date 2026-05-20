@@ -8,6 +8,7 @@
 import type { ErrorInfo, ReactNode } from 'react'
 import { cn } from '@a/ui'
 import { Component } from 'react'
+
 interface CreateErrorBoundaryOptions {
   readErrorCode: (error: Error) => string | undefined
   readErrorMessage: (error: Error) => string

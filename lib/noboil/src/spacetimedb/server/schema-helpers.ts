@@ -2,6 +2,7 @@ import type { ZodObject, ZodRawShape, ZodType } from 'zod/v4'
 import type { BaseSchema, OrgSchema, OwnedSchema, SingletonSchema } from './types'
 import { elementOf, isArrayType, unwrapZod } from '../zod'
 import { isRecord } from './helpers'
+
 interface IndexDef {
   fields: string[]
   name: string

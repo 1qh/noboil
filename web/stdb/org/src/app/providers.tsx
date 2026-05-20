@@ -4,6 +4,7 @@ import { tables } from '@a/be-spacetimedb/spacetimedb'
 import SpacetimeProvider from '@a/fe/spacetimedb-provider'
 import { FileProvider } from 'noboil/spacetimedb/react'
 import { useTable } from 'spacetimedb/react'
+
 const FileSubscription = ({ children }: { children: ReactNode }) => {
   const [files] = useTable(tables.file)
   return <FileProvider files={files}>{children}</FileProvider>

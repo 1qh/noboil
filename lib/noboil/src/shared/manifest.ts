@@ -1,6 +1,7 @@
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { readJsonSafe } from './env-file'
+
 interface Manifest {
   db?: 'convex' | 'spacetimedb'
   ejected?: boolean

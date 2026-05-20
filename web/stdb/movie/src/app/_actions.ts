@@ -3,6 +3,7 @@
 import { TMDB } from '@lorenzopant/tmdb'
 import { isStdbTestMode } from 'noboil/spacetimedb'
 import type { MovieDetailData, SearchResult } from './_movie-types'
+
 interface TmdbSearchResponse {
   results: SearchResult[]
 }

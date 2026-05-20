@@ -3,6 +3,7 @@
 import type { ComponentProps } from 'react'
 import SharedSchemaPlayground from '../../shared/react/schema-playground'
 import { endpointsForFactory, extractSchemaFields } from '../schema-utils'
+
 type PlaygroundProps = Omit<
   ComponentProps<typeof SharedSchemaPlayground>,
   'endpointsForFactory' | 'extractSchemaFields' | 'labels'

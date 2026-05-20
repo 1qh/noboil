@@ -3,6 +3,7 @@ import { dirname, join } from 'node:path'
 import type { BaseNode, DbConfig } from '../shared/eslint-factory'
 import { createEslintPluginBundle } from '../shared/eslint'
 import { buildRules, readSchemaContentFrom } from '../shared/eslint-factory'
+
 const cache: { modules?: string[]; schemaDir?: string } = {}
 const hasGenerated = (dir: string): boolean => existsSync(join(dir, '_generated'))
 const searchSubdirs = (root: string): string | undefined => {

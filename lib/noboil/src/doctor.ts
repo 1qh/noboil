@@ -2,6 +2,7 @@
 /* eslint-disable no-console */
 import { existsSync, readFileSync } from 'node:fs'
 import { LOG_PATH } from './shared/crash-log'
+
 const HELP = `
 noboil doctor — check project health
 Usage:

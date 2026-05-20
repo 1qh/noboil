@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'bun:test'
 import { createLcg } from '../test/prop'
 import { validateRedirectTo } from '../url'
+
 const allowedOrigins = new Set(['http://localhost:3000', 'https://example.com'])
 const primarySite = 'https://example.com'
 const POISON = ['%0d', '%0a', '%2f%2f', '%5c', '%09']

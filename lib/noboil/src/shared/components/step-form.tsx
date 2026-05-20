@@ -19,6 +19,7 @@ import { useSelector } from '@tanstack/react-store'
 import { Check } from 'lucide-react'
 import { useNavigationGuard } from 'next-navigation-guard'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+
 interface DefineStepsAdapters<TFields> {
   buildMeta: (schema: ZodObject) => unknown
   coerceOptionals: (schema: ZodObject, values: Record<string, unknown>) => Record<string, unknown>

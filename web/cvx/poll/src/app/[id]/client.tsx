@@ -7,6 +7,7 @@ import { usePreloadedQuery } from 'convex/react'
 import { format, formatDistance } from 'date-fns'
 import { Pencil } from 'lucide-react'
 import Link from 'next/link'
+
 const Client = ({ preloaded }: { preloaded: Preloaded<typeof api.poll.read> }) => {
   const p = usePreloadedQuery(preloaded)
   if (!p)

@@ -7,6 +7,7 @@ import { Check } from 'lucide-react'
 import { useList } from 'noboil/convex/react'
 import { useEffect } from 'react'
 import { useInView } from 'react-intersection-observer'
+
 const Sb = () => {
   const { inView, ref } = useInView()
   const { data, loadMore, status } = useList(api.chat.list, { where: { own: true } })

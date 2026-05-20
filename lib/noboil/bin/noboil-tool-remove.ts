@@ -5,6 +5,7 @@
 import { $ } from 'bun'
 import { existsSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
+
 const run = async (argv: string[] = process.argv.slice(2)): Promise<void> => {
   const pathArg = argv[0]
   if (!pathArg) {

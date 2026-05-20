@@ -5,6 +5,7 @@ import { Toaster } from '@a/ui/sonner'
 import { ThemeProvider } from 'next-themes'
 import { ErrorBoundary, OfflineIndicator } from 'noboil/convex/components'
 import { Suspense } from 'react'
+
 const Providers = ({ children }: { children: ReactNode }) => (
   <Suspense>
     <ErrorBoundary>

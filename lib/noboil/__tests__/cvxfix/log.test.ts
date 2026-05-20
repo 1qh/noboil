@@ -3,6 +3,7 @@ import { describe, expect, test } from 'bun:test'
 import { convexTest } from 'convex-test'
 import { resolve } from 'node:path'
 import schema from './convex/schema'
+
 const cvxDir = resolve(import.meta.dir, 'convex')
 const loadModules = () => {
   const out: Record<string, () => Promise<Record<string, unknown>>> = {}

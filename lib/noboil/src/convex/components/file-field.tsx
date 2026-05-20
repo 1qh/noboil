@@ -20,6 +20,7 @@ import { useDropzone } from 'react-dropzone'
 import { toast } from 'sonner'
 import { compress, fmt, isImgType, parseAccept } from '../../shared/components/file-utils'
 import useUpload from '../react/use-upload'
+
 interface FileApi {
   info: FunctionReference<'query'>
   upload: FunctionReference<'mutation'>

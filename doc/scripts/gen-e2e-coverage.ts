@@ -4,6 +4,7 @@
 /** biome-ignore-all lint/nursery/noContinue: walker */
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { DOCS_DIR, replaceBetween, REPO } from './lib'
+
 const DEMOS = ['blog', 'chat', 'movie', 'org', 'poll']
 const TEST_RE = /\b(?:test|it)\(\s*['"`](?<name>[^'"`]+)['"`]/gu
 const DESCRIBE_RE = /describe\(\s*['"`](?<name>[^'"`]+)['"`]/gu

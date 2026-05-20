@@ -6,6 +6,7 @@ import { number, optional, string } from 'zod/v4'
 import type { DbCtx, DbLike, HookCtx, Mb, MutCtx, Qb } from './types'
 import { idx, typed } from './bridge'
 import { dbInsert, dbPatch, hk } from './helpers'
+
 const DAY_MS = 24 * 60 * 60 * 1000
 const PRUNE_BATCH = 500
 const AUDIT_SCAN_BATCH = 1000

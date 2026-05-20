@@ -1,5 +1,6 @@
 import { readJson } from '../env-file'
 import { setHermeticAdapter } from './hermetic'
+
 type FixtureMap = Record<string, unknown>
 interface FixtureRule {
   match?: string

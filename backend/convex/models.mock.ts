@@ -9,6 +9,7 @@ import type {
 import { simulateReadableStream } from 'ai'
 /* eslint-disable @typescript-eslint/require-await */
 import { MockLanguageModelV3 } from 'ai/test'
+
 const CITY_PATTERN_1 = /weather (?:in|for) (?<city>[a-z]+)/iu
 const CITY_PATTERN_2 = /(?<city>[a-z]+)(?:'s)? weather/iu
 const finishReasonStop: LanguageModelV3FinishReason = { raw: 'stop', unified: 'stop' }

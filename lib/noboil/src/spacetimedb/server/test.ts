@@ -3,6 +3,7 @@
 import { DbConnectionBuilder, DbConnectionImpl } from 'spacetimedb/sdk'
 import { isStdbTestMode } from '../../shared/test-mode'
 import { DEFAULT_HTTP_URI, DEFAULT_WS_URI, wsToHttp } from '../defaults'
+
 interface CreateTestContextOptions {
   httpUrl?: string
   moduleName?: string

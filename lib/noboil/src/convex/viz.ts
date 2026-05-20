@@ -5,6 +5,7 @@ import { dirname, join } from 'node:path'
 import type { ChildInfo, TableInfo } from '../shared/viz'
 import { bold, dim, findBracketEnd, isSchemaFile, printSummary, red } from '../shared/viz'
 import { wrapperFactories } from './schema-utils'
+
 const schemaMarkers = ['makeOwned(', 'makeOrgScoped(', 'makeSingleton(', 'makeBase(', 'child(']
 const TYPE_LABELS: Record<string, string> = {
   makeBase: 'cache',

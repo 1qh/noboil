@@ -13,6 +13,7 @@ import {
   uploadTables
 } from '../../../src/convex/server'
 import { chatSchema, kvSchema, messageSchema, profileSchema, todoSchema, voteSchema } from './s'
+
 export default defineSchema({
   audit: defineTable({
     action: v.string(),

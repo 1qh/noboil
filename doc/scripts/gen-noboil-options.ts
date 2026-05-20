@@ -3,6 +3,7 @@
 /** biome-ignore-all lint/performance/useTopLevelRegex: small file */
 import { readFileSync } from 'node:fs'
 import { DOCS_DIR, LIB_NOBOIL, replaceBetween } from './lib'
+
 const FIELD_RE = /^\s*(?<name>\w+)(?<opt>\??):\s*(?<type>[^\n]+)$/u
 const escapeMd = (s: string): string =>
   s

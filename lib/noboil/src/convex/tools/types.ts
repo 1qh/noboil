@@ -1,4 +1,5 @@
 import type { GenericValidator, Validator } from 'convex/values'
+
 interface ArgConstraints {
   /** Reject non-integer numbers. */
   integer?: boolean

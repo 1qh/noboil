@@ -1,6 +1,7 @@
 import type { ZodObject, ZodType } from 'zod/v4'
 import { array, boolean, number, object, string, unknown, uuid, enum as zenum } from 'zod/v4'
 import { isRecord } from '../shared/server/helpers'
+
 interface RuntimeBuilder {
   algebraicType?: unknown
   columnMetadata?: unknown

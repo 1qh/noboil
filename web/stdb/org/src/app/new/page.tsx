@@ -9,6 +9,7 @@ import { Form, useFormMutation } from 'noboil/spacetimedb/components'
 import { useEffect, useRef } from 'react'
 import { useReducer } from 'spacetimedb/react'
 import { orgTeam } from '~/schema'
+
 type OrgFormValues = output<typeof orgTeam>
 const orgKeys = {
   name: 'name',

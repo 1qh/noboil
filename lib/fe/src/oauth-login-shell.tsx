@@ -3,6 +3,7 @@ import type { ComponentProps } from 'react'
 import { cn } from '@a/ui'
 import { Button } from '@a/ui/button'
 import Link from 'next/link'
+
 interface OAuthLoginShellProps {
   buttonLabel?: string
   buttonProps?: Omit<ComponentProps<typeof Button>, 'children' | 'onClick'>

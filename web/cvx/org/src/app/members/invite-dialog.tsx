@@ -9,6 +9,7 @@ import { Form, useForm } from 'noboil/convex/components'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { invite } from '~/schema'
+
 interface InviteDialogProps {
   orgId: Id<'org'>
 }

@@ -5,6 +5,7 @@ import { createRelativeLink } from 'fumadocs-ui/mdx'
 import { notFound } from 'next/navigation'
 import { source } from '@/lib/source'
 import { getMDXComponents } from '@/mdx-components'
+
 interface PageData {
   body: ComponentType<{ components?: Record<string, unknown> }>
   description?: string

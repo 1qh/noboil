@@ -1,4 +1,5 @@
 import { GlobalRegistrator } from '@happy-dom/global-registrator'
+
 if (typeof document === 'undefined') GlobalRegistrator.register()
 const { describe, expect, test } = await import('bun:test')
 const { arrayBufferToBase64, base64ToBytes, downloadBlob } = await import('../binary')

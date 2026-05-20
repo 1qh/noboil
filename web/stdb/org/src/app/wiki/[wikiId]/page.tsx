@@ -17,6 +17,7 @@ import { useSpacetimeDB, useTable } from 'spacetimedb/react'
 import { useOrg } from '~/hook/use-org'
 import { useOrgTable } from '~/hook/use-org-table'
 import { useProfileMap } from '~/hook/use-profile-map'
+
 const WikiDetailPage = ({ params }: { params: Promise<{ wikiId: string }> }) => {
   const { wikiId } = use(params)
   const id = Number(wikiId)

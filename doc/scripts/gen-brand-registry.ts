@@ -3,6 +3,7 @@
 /** biome-ignore-all lint/nursery/noContinue: simple parser */
 import { readFileSync } from 'node:fs'
 import { DOCS_DIR, LIB_NOBOIL, replaceBetween } from './lib'
+
 const TYPES_PATH = `${LIB_NOBOIL}/src/convex/server/types.ts`
 const ENTRY_RE = /(?<brand>\w+):\s*'(?<hint>[^']+)'/u
 const main = () => {

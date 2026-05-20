@@ -1,6 +1,7 @@
 /** biome-ignore-all lint/nursery/noComponentHookFactories: factory returns hook by design */
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
+
 interface BaseNode {
   argument?: BaseNode
   async?: boolean

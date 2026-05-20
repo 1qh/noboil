@@ -11,6 +11,7 @@ import { TOKEN_COOKIE_KEY } from 'noboil/spacetimedb'
 import { Devtools } from 'noboil/spacetimedb/react'
 import { SpacetimeWrapper } from './providers'
 import Sidebar from './sidebar'
+
 const metadata: Metadata = { description: 'spacetimedb chat demo', title: 'Chat' }
 const Layout = async ({ children }: { children: ReactNode }) => {
   const pathname = (await headers()).get('x-pathname') ?? '/'

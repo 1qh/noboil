@@ -8,6 +8,7 @@ import { stripAnsi } from 'noboil/ansi'
 import { readFileSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { LIB_NOBOIL } from './lib'
+
 const BIN = `${LIB_NOBOIL}/src/index.ts`
 const CONVEX_BIN = `${LIB_NOBOIL}/src/convex/cli.ts`
 const STDB_BIN = `${LIB_NOBOIL}/src/spacetimedb/cli.ts`

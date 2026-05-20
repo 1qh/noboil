@@ -1,4 +1,5 @@
 import { c, log, parseArgs, run } from './utils'
+
 const flags = parseArgs(process.argv.slice(2))
 const doConvex = flags.has('convex') || !(flags.has('convex') || flags.has('stdb'))
 const doStdb = flags.has('stdb') || !(flags.has('convex') || flags.has('stdb'))

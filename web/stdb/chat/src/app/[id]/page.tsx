@@ -10,6 +10,7 @@ import { toIdentityKey } from '@a/fe/utils'
 import { useParams, useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 import { useSpacetimeDB, useTable } from 'spacetimedb/react'
+
 const toUIMessages = (messages: Message[]): UIMessage[] =>
   messages.map(m => toUIMessage({ id: String(m.id), parts: m.parts, role: m.role }))
 const Page = () => {

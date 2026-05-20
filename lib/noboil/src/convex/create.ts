@@ -4,6 +4,7 @@ import { existsSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { bold, dim, green, yellow } from '../ansi'
 import { hasFlag, readEqFlag, writeFilesToDir } from '../shared/cli'
+
 const SCHEMA_TS = `import { authTables } from '@convex-dev/auth/server'
 import { defineSchema } from 'convex/server'
 import { ownedTable, rateLimitTable, uploadTables } from './server'

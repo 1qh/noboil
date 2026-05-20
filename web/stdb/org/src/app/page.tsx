@@ -8,6 +8,7 @@ import { useEffect } from 'react'
 import { useSpacetimeDB, useTable } from 'spacetimedb/react'
 import { OrgRedirect } from './layout'
 import OrgList from './org-list'
+
 interface MyOrgsItem {
   org: { _id: string; avatarId?: string; name: string; slug: string }
   role: OrgRole

@@ -7,6 +7,7 @@ import { createFileUploader, createSpacetimeClient, createTokenStore } from 'nob
 import { AuthProvider as OidcProvider } from 'react-oidc-context'
 import { SpacetimeDBProvider as BaseProvider } from 'spacetimedb/react'
 import env from './env'
+
 interface SpacetimeDBProviderProps {
   children: ReactNode
   fileApi?: boolean

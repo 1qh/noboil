@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 import { createErrorUtils } from '../server/helpers'
+
 const throwError = (code: string, opts?: Record<string, unknown> | string): never => {
   const message = typeof opts === 'string' ? opts : JSON.stringify({ code, ...(opts as object) })
   const err = new Error(`${code}: ${message}`)

@@ -9,6 +9,7 @@ import { anyApi } from 'convex/server'
 import { parseEnvLine } from 'noboil/env-file'
 import { existsSync } from 'node:fs'
 import { join, resolve } from 'node:path'
+
 const REPO_ROOT = resolve(import.meta.dirname, '../../..')
 const BACKEND_CWD = join(REPO_ROOT, config.paths.backendConvex)
 const loadRootEnv = async () => {

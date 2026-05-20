@@ -12,6 +12,7 @@ import type { DevConnection, DevError, DevMutation, DevSubscription } from './de
 import { CacheRow, formatTime, MAX_BADGE, POSITION_CLASSES, TabBtn, WaterfallBar } from '../../shared/react/devtools-panel'
 import { ERROR_MESSAGES } from '../server/types'
 import { injectError, SLOW_THRESHOLD_MS, STALE_THRESHOLD_MS, useDevErrors } from './devtools'
+
 interface DevtoolsProps {
   buttonClassName?: string
   className?: string

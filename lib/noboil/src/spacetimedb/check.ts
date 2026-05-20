@@ -8,6 +8,7 @@ import type { Issue } from '../shared/schema-types'
 import { bold, dim, green, red, yellow } from '../ansi'
 import { isSchemaFile } from '../shared/viz'
 import { findStdbModuleDirDeep, listTypeScriptFiles } from '../shared/walk'
+
 interface AccessEntry {
   endpoints: string[]
   level: string

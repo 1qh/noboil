@@ -7,6 +7,7 @@ import { join } from 'node:path'
 import type { FieldInfo } from '../shared/schema-types'
 import { bold, cyan, dim, green, red, yellow } from '../ansi'
 import { hasFlag, readArgOrEqFlag } from '../shared/cli'
+
 type MigrationAction =
   | { field: string; from: string; table: string; to: string; type: 'field_type_changed' }
   | { field: string; table: string; type: 'field_added_optional' }

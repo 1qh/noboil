@@ -11,6 +11,7 @@ import {
   writeFilesToDir,
   writeIfNotExists
 } from '../cli'
+
 describe('camelToTitle', () => {
   test('lowercase first letter is upcased', () => {
     expect(camelToTitle('hello')).toBe('Hello')

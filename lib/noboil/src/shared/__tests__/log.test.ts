@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'bun:test'
 import type { LogLevel } from '../log'
 import { log, setLogSink } from '../log'
+
 describe('log', () => {
   test('emits JSON line through custom sink', () => {
     const lines: { level: LogLevel; raw: string }[] = []

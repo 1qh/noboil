@@ -9,6 +9,7 @@ import { createDefineSteps } from '../../shared/components/step-form'
 import { buildMeta } from '../react/form'
 import { coerceOptionals, defaultValues as dv } from '../zod'
 import { fields, FormContext } from './fields'
+
 type ExtractSchema<Defs extends readonly StepDef[], Id extends string> = Extract<Defs[number], { id: Id }>['schema']
 type InternalStep<Id extends string = string> = Step<Id, { label: string; schema: ZodObject }>
 type StepDataMap<Defs extends readonly StepDef[]> = {

@@ -4,6 +4,7 @@
 /** biome-ignore-all lint/performance/useTopLevelRegex: per-line scan */
 import { readFileSync } from 'node:fs'
 import { DOCS_DIR, replaceBetween, slugify } from './lib'
+
 const RECIPES = `${DOCS_DIR}/recipes.mdx`
 const main = () => {
   const src = readFileSync(RECIPES, 'utf8')

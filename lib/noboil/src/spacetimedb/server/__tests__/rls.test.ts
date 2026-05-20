@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 import { rlsChildSql, rlsJoinWhereSender, rlsSql, rlsWherePub, rlsWhereSender } from '../rls'
+
 describe('stdb rls SQL builders', () => {
   test('rlsWhereSender produces SELECT WHERE :sender clause', () => {
     expect(rlsWhereSender('blog', 'userId')).toContain(':sender')

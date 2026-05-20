@@ -13,6 +13,7 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 import { useOrg } from '~/hook/use-org'
 import OrgSettingsForm from './org-settings-form'
+
 const OrgSettingsPage = () => {
   const router = useRouter()
   const { canDeleteOrg, isAdmin, isOwner, org } = useOrg()

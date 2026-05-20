@@ -11,6 +11,7 @@ import { useMut } from 'noboil/spacetimedb/react'
 import { useState } from 'react'
 import { useOrgTable } from '~/hook/use-org-table'
 import { useProfileMap } from '~/hook/use-profile-map'
+
 const JoinRequests = () => {
   const [orgRequests] = useOrgTable<OrgJoinRequest>(tables.orgJoinRequest)
   const requests = orgRequests.filter(r => r.status === 'pending').map(r => ({ request: r }))

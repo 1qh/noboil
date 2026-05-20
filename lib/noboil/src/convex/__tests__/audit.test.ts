@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 import { makeAudit } from '../server/audit'
+
 describe('makeAudit shape', () => {
   interface Spec {
     args: unknown

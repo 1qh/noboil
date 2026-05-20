@@ -6,6 +6,7 @@ import { notFound } from 'next/navigation'
 import { connection } from 'next/server'
 import { getToken } from 'noboil/convex/next'
 import Client from './client'
+
 const Page = async ({ params }: { params: Promise<{ id: Id<'poll'> }> }) => {
   await connection()
   const { id: raw } = await params

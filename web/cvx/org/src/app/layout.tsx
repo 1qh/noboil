@@ -15,6 +15,7 @@ import { Devtools } from 'noboil/convex/react'
 import { getTestClient } from '~/utils'
 import OrgLayoutClient from './layout-client'
 import { ConvexWrapper } from './providers'
+
 const ORG_PATHS = ['/dashboard', '/members', '/projects', '/wiki', '/settings']
 const needsOrgLayout = (pathname: string) => {
   for (const p of ORG_PATHS) if (pathname === p || pathname.startsWith(`${p}/`)) return true

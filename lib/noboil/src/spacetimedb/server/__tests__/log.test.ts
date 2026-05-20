@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'bun:test'
 import { makeLog } from '../log'
 import { captureReducers, tsAtMs } from './_helpers'
+
 interface LogRow {
   createdAt: { microsSinceUnixEpoch: bigint }
   deletedAt?: null | { microsSinceUnixEpoch: bigint }

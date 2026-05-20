@@ -1,4 +1,5 @@
 import { Box, Text } from 'ink'
+
 interface Shortcut {
   desc: string
   keys: string

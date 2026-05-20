@@ -2,6 +2,7 @@
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { dim, green, yellow } from '../ansi'
+
 interface ParseEnumFieldResult<T extends string> {
   name: string
   optional: boolean

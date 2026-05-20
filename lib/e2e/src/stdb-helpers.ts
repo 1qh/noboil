@@ -4,6 +4,7 @@ import { DEFAULT_TOKEN_KEY, TOKEN_COOKIE_KEY } from 'noboil/spacetimedb'
 import { writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { STDB_HTTP_URL, STDB_MODULE } from './stdb-env'
+
 let cachedToken: null | { identity: string; token: string } = null
 const ensureToken = async (tokenFile: string): Promise<{ identity: string; token: string }> => {
   if (cachedToken) return cachedToken

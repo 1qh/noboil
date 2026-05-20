@@ -8,6 +8,7 @@ import { ThemeProvider } from 'next-themes'
 import { OfflineIndicator } from 'noboil/convex/components'
 import { Suspense } from 'react'
 import ErrorBoundary from './convex-error-boundary'
+
 interface AuthLayoutProps {
   bodyClassName?: string
   bodyProps?: Omit<ComponentProps<'body'>, 'children' | 'className'>

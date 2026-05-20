@@ -5,6 +5,7 @@
 import type { ReactNode } from 'react'
 import { Box, render, Text, useApp, useInput } from 'ink'
 import { useCallback, useRef, useState } from 'react'
+
 interface Field {
   enumValues?: string[]
   name: string

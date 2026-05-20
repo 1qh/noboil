@@ -4,6 +4,7 @@ import { config } from '@a/config'
 /* oxlint-disable no-await-in-loop */
 import { $ } from 'bun'
 import { readEnv, root } from './utils'
+
 const setEnv = async (k: string, v: string) => {
   const proc = await $`cd ${config.paths.backendConvex} && bunx --bun nb-env npx convex env set ${k} -- ${v}`
     .cwd(root)

@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 import { jsonErr, parseHttpBody } from '../http-body'
+
 describe('jsonErr', () => {
   test('returns Response with JSON body and status', async () => {
     const r = jsonErr('boom', 400)

@@ -3,6 +3,7 @@ import type { Identity } from 'spacetimedb'
 import { useMemo } from 'react'
 import { useTable } from 'spacetimedb/react'
 import { useMut } from './use-mutate'
+
 interface SingletonHookResult<T> {
   data: null | T
   isLoading: boolean

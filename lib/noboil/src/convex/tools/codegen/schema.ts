@@ -5,6 +5,7 @@
 /* oxlint-disable complexity, no-bitwise */
 import { resolve } from 'node:path'
 import ts from 'typescript'
+
 interface Extracted {
   args: null | SchemaNode
   jsdoc: null | string

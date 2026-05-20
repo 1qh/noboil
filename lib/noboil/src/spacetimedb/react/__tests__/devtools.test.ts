@@ -16,6 +16,7 @@ import {
   updateSubscription,
   updateSubscriptionData
 } from '../devtools'
+
 describe('stdb react devtools', () => {
   test('threshold constants are numbers', () => {
     expect(typeof SLOW_THRESHOLD_MS).toBe('number')

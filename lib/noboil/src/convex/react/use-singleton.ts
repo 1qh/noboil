@@ -1,6 +1,7 @@
 'use client'
 import type { FunctionReference, FunctionReturnType } from 'convex/server'
 import { useMutation, useQuery } from 'convex/react'
+
 interface ConvexSingletonRefs {
   get: FunctionReference<'query'>
   upsert: FunctionReference<'mutation'>

@@ -4,6 +4,7 @@ import type { Page } from '@playwright/test'
 import { ACTIVE_ORG_COOKIE, DEFAULT_TOKEN_KEY, TOKEN_COOKIE_KEY } from 'noboil/spacetimedb'
 import { readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
+
 interface InviteResponse {
   _id?: string
   inviteId: string

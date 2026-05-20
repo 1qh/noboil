@@ -4,6 +4,7 @@ import { zCustomMutation, zCustomQuery } from 'convex-helpers/server/zod4'
 import type { Mb, Qb } from '../../../src/convex/server/types'
 import { setup } from '../../../src/convex/server/setup'
 import { action, internalMutation, internalQuery, mutation, query } from './_generated/server'
+
 const getAuthUserId = async (ctx: GenericMutationCtx<never> | GenericQueryCtx<never>): Promise<null | string> => {
   const id = await ctx.auth.getUserIdentity()
   return id ? id.subject : null

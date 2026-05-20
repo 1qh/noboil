@@ -6,6 +6,7 @@ import { run as runCodegen } from './noboil-tool-codegen'
 import { run as runDocgen } from './noboil-tool-docgen'
 import { run as runNew } from './noboil-tool-new'
 import { run as runRemove } from './noboil-tool-remove'
+
 const SUBCOMMANDS: Record<string, { description: string; run: (argv: string[]) => Promise<void> }> = {
   codegen: {
     description: 'Generate registry/types/callers/schema-hashes from authored tools',

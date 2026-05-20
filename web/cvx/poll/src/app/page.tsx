@@ -6,6 +6,7 @@ import { useList } from 'noboil/convex/react'
 import { useCallback, useDeferredValue, useMemo, useState } from 'react'
 import type { Poll } from './common'
 import { BannerAdmin, BannerDisplay, Create, PollList } from './common'
+
 const Page = () => {
   const { data, hasMore, loadMore } = useList(api.poll.list, {})
   const polls = data as Poll[]

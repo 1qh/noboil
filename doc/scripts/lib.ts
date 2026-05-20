@@ -4,6 +4,7 @@
 /** biome-ignore-all lint/nursery/noContinue: parser */
 import { readFileSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
+
 const REPO = resolve(import.meta.dir, '../..')
 const LIB_NOBOIL = `${REPO}/lib/noboil`
 const DOCS_DIR = `${REPO}/doc/content/docs`

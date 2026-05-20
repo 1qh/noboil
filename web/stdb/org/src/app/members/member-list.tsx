@@ -17,6 +17,7 @@ import { useSpacetimeDB } from 'spacetimedb/react'
 import { useOrg } from '~/hook/use-org'
 import { useOrgTable } from '~/hook/use-org-table'
 import { useProfileMap } from '~/hook/use-profile-map'
+
 const MemberList = () => {
   const { canManageAdmins, canManageMembers, org, role: myRole } = useOrg()
   const { identity } = useSpacetimeDB()

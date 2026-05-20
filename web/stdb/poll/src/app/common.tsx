@@ -31,6 +31,7 @@ import { useKv, useLog, useMut, useOptimisticMutation, useQuota } from 'noboil/s
 import { createElement, useState } from 'react'
 import { toast } from 'sonner'
 import { createPoll } from '~/schema'
+
 interface Poll {
   id: number
   options: string[]

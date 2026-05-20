@@ -2,6 +2,7 @@ import { describe, expect, test } from 'bun:test'
 import type { Ts } from './_helpers'
 import { makeSingletonCrud } from '../singleton'
 import { captureReducers, ident, tsAtMs } from './_helpers'
+
 interface SingletonRow {
   bio?: string
   id: number

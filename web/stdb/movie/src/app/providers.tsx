@@ -6,6 +6,7 @@ import { ThemeProvider } from 'next-themes'
 import { ErrorBoundary, OfflineIndicator } from 'noboil/spacetimedb/components'
 import { Devtools } from 'noboil/spacetimedb/react'
 import { Suspense } from 'react'
+
 const Providers = ({ children }: { children: ReactNode }) => (
   <Suspense>
     <ErrorBoundary className='mx-auto max-w-4xl'>

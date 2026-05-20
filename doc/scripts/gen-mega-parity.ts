@@ -5,6 +5,7 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 import { collectBraceExports, DOCS_DIR, LIB_NOBOIL, replaceBetween, REPO, stripStrings } from './lib'
+
 const EXPORT_DECL_RE =
   /export\s+(?:const|function|class|interface|type|default\s+(?:const|function|class)?)\s+(?<name>\w+)/gu
 const SKIP_DIRS = new Set([

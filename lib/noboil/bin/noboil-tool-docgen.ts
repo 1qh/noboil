@@ -9,6 +9,7 @@ import { dirname, resolve } from 'node:path'
 import type { ExtractedMeta } from '../src/convex/tools/codegen/extract-meta'
 import { extractMeta } from '../src/convex/tools/codegen/extract-meta'
 import { collect } from '../src/convex/tools/codegen/scan'
+
 const PROVIDER_PREFIX_RE = /^_/u
 const mdRow = (cells: string[]): string => `| ${cells.join(' | ')} |`
 const escapeMd = (s: string): string => s.replaceAll('|', String.raw`\|`).replaceAll('\n', ' ')

@@ -16,6 +16,7 @@ import { pickValues } from 'noboil/convex/zod'
 import { use } from 'react'
 import { toast } from 'sonner'
 import { useOrg } from '~/hook/use-org'
+
 const wikiRestore = (api.wiki as typeof api.wiki & { restore: typeof api.wiki.rm }).restore
 const EditWikiForm = ({ wikiId }: { wikiId: Id<'wiki'> }) => {
   const router = useRouter()

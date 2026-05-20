@@ -1,6 +1,7 @@
 /* oxlint-disable promise/prefer-await-to-callbacks */
 /* eslint-disable react-hooks/globals */
 import { useSyncExternalStore } from 'react'
+
 const DEFAULT_TICK_MS = 300_000
 const subscribers = new Set<() => void>()
 let timer: null | ReturnType<typeof setInterval> = null

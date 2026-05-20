@@ -2,6 +2,7 @@
 'use client'
 import { useCallback } from 'react'
 import type { ToastFn } from './toast'
+
 interface ErrorHelpers<D extends { code: string; message?: string }> {
   extractErrorData: (error: unknown) => D | undefined
   getErrorMessage: (error: unknown) => string

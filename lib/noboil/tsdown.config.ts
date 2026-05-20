@@ -1,6 +1,7 @@
 import { writeFile } from 'node:fs/promises'
 import { defineConfig } from 'tsdown'
 import pkg from './package.json' with { type: 'json' }
+
 const SRC_RE = /^\.\/src\//u
 const TS_EXT_RE = /\.tsx?$/u
 const collect = (target: unknown, into: Set<string>): void => {

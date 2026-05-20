@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 import { canonicalizeEmail, sanitizeExternal, sanitizeForDisplay, sanitizeTitle } from '../sanitize'
+
 describe('canonicalizeEmail', () => {
   test('lowercases and trims', () => {
     expect(canonicalizeEmail('  HELLO@example.com  ')).toBe('hello@example.com')

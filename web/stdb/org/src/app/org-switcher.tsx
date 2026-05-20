@@ -13,6 +13,7 @@ import { useRouter } from 'next/navigation'
 import { OrgAvatar, RoleBadge } from 'noboil/spacetimedb/components'
 import { resolveFileUrl, setActiveOrgCookieClient, useFiles } from 'noboil/spacetimedb/react'
 import { useActiveOrg, useMyOrgs } from '~/hook/use-org'
+
 const OrgSwitcher = () => {
   const router = useRouter()
   const { activeOrg, isLoading: activeLoading } = useActiveOrg()

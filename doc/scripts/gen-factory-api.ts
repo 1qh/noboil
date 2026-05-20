@@ -5,6 +5,7 @@
 /** biome-ignore-all lint/performance/useTopLevelRegex: per-iteration scan */
 import { readFileSync } from 'node:fs'
 import { DOCS_DIR, LIB_NOBOIL, replaceBetween } from './lib'
+
 const STDB = `${LIB_NOBOIL}/src/spacetimedb/server`
 const NAME_RE = /(?<role>\w+)Name\s*=\s*`(?<tpl>[^`]+)`/u
 const JSDOC_RE = /^\s*\/\*\*\s*(?<text>.+?)\s*\*\/\s*$/u

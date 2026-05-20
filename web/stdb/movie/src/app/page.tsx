@@ -10,6 +10,7 @@ import { useState, useTransition } from 'react'
 import { toast } from 'sonner'
 import type { SearchResult } from './_movie-types'
 import { searchMoviesAction } from './_actions'
+
 const TMDB_IMG = 'https://image.tmdb.org/t/p/w200'
 const MovieCard = ({ movie }: { movie: SearchResult }) => (
   <div className='flex gap-3 rounded-lg border p-3' data-testid='movie-card'>

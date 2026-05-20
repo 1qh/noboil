@@ -7,6 +7,7 @@ import { headers } from 'next/headers'
 import Link from 'next/link'
 import { Devtools } from 'noboil/convex/react'
 import { ConvexWrapper } from './providers'
+
 const metadata: Metadata = { description: 'noboil blog demo', title: 'Blog' }
 const Layout = async ({ children }: { children: ReactNode }) => {
   const requestHeaders = await headers()

@@ -2,6 +2,7 @@
 import type { ComponentProps, ReactNode } from 'react'
 import { cn } from '@a/ui'
 import { Button } from '@a/ui/button'
+
 interface OrgListGridItem<TRole extends string> {
   avatarId?: null | string
   id: string

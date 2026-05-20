@@ -4,6 +4,7 @@
 /** biome-ignore-all lint/nursery/noContinue: skip-on-failure */
 import { $ } from 'bun'
 import { REPO } from './lib'
+
 const SCRIPTS = [
   'gen-cli-help.ts',
   'gen-api-imports.ts',

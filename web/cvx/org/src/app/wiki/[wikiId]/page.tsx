@@ -15,6 +15,7 @@ import { canEditResource, useOrgMutation, useOrgQuery } from 'noboil/convex/reac
 import { use } from 'react'
 import { toast } from 'sonner'
 import { useOrg } from '~/hook/use-org'
+
 const wikiRestore = (api.wiki as typeof api.wiki & { restore: typeof api.wiki.rm }).restore
 const WikiDetailPage = ({ params }: { params: Promise<{ wikiId: Id<'wiki'> }> }) => {
   const { wikiId } = use(params)

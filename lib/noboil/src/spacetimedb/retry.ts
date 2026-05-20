@@ -3,6 +3,7 @@
 import type { RetryOptions } from '../shared/retry'
 import { createRetryUtils, DEFAULT_OPTIONS } from '../shared/retry'
 import { sleep } from './constants'
+
 const validateRetryOptions = (opts: Required<RetryOptions>) => {
   if (opts.maxAttempts < 1)
     throw new Error(

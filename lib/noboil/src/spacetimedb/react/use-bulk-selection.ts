@@ -2,6 +2,7 @@
 import type { ToastFn } from './use-soft-delete'
 import { useBulkSelection as useSharedBulkSelection } from '../../shared/react/use-bulk-selection'
 import { UNDO_MS } from '../constants'
+
 interface UseBulkSelectionOpts {
   items: { _id: string }[]
   onError?: (error: unknown) => void

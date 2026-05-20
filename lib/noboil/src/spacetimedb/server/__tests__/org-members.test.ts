@@ -2,6 +2,7 @@ import { describe, expect, test } from 'bun:test'
 import type { IdentityFake, Ts } from './_helpers'
 import { makeMemberReducers } from '../org-members'
 import { captureReducers, ident, tsAtMs } from './_helpers'
+
 interface MemberRow {
   createdAt: Ts
   id: number

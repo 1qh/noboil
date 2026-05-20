@@ -2,6 +2,7 @@
 'use client'
 import { useCallback } from 'react'
 import type { ToastFn } from './toast'
+
 interface SoftDeleteOpts<A extends { id: string }> {
   label?: string
   onError?: (error: unknown) => void

@@ -8,6 +8,7 @@ import { useEffect, useReducer } from 'react'
 import { useInView } from 'react-intersection-observer'
 import { useSpacetimeDB, useTable } from 'spacetimedb/react'
 import { Create, List } from '../common'
+
 const Page = () => {
   const { inView, ref } = useInView()
   const [allBlogs, isReady] = useTable(tables.blog)

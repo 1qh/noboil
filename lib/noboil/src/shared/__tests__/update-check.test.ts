@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
 import { checkForUpdate, isNewer } from '../update-check'
+
 describe('isNewer', () => {
   test('patch bump', () => {
     expect(isNewer('0.0.2', '0.0.1')).toBe(true)

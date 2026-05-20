@@ -15,6 +15,7 @@ import {
   singletonTable,
   uploadTables
 } from '../schema-helpers'
+
 interface Td {
   fields: Record<string, string>
   indexes: { fields: string[]; name: string }[]

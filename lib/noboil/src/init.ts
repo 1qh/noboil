@@ -2,6 +2,7 @@
 /* eslint-disable no-console */
 import type { Db } from './scaffold-ops'
 import { bold, dim } from './ansi'
+
 const init = async (args: string[]) => {
   if (args.includes('--help') || args.includes('-h')) {
     console.log(`\n${bold('noboil init')} — create a new noboil project\n`)

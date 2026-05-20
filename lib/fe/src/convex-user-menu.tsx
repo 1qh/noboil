@@ -6,6 +6,7 @@ import { fetchQuery } from 'convex/nextjs'
 import { connection } from 'next/server'
 import { logoutAction } from './convex-logout-action'
 import UserMenuShell from './user-menu-shell'
+
 interface UserMenuProps extends ComponentProps<typeof PopoverTrigger> {
   shellProps?: Omit<
     ComponentProps<typeof UserMenuShell>,

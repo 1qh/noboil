@@ -10,6 +10,7 @@ import {
   readSchemaContentFrom,
   schemaMarkers
 } from '../eslint-factory'
+
 describe('schemaMarkers', () => {
   test('includes the expected wrapper invocations', () => {
     expect(schemaMarkers).toContain('makeOwned(')

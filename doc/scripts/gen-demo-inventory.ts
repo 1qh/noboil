@@ -4,6 +4,7 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 import { replaceLineBetween, REPO } from './lib'
+
 const dbDescription: Record<string, string> = {
   cvx: 'Convex',
   stdb: 'SpacetimeDB'

@@ -7,6 +7,7 @@ import { extractJSDoc, green, processEntryPoint, resolveReExports } from '../sha
 import { bold, dim, isSchemaFile, red } from '../shared/viz'
 import { findStdbModuleDirDeep, listTypeScriptFiles } from '../shared/walk'
 import { endpointsForFactory, extractSchemaFields } from './check'
+
 const reducerPat = /reducer\(\s*['"](?<table>\w+)\.(?<endpoint>[\w.]+)['"]/gu
 const findModuleDir = findStdbModuleDirDeep
 const findSchemaFile = (moduleDir: string): undefined | { content: string; path: string } => {

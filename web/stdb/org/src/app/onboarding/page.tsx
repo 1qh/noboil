@@ -8,6 +8,7 @@ import { useMut } from 'noboil/spacetimedb/react'
 import { toast } from 'sonner'
 import { useSpacetimeDB, useTable } from 'spacetimedb/react'
 import { appearanceStep, orgStep, preferencesStep, profileStep } from '~/schema'
+
 const { StepForm, useStepper } = defineSteps(
   { id: 'profile', label: 'Profile', schema: profileStep },
   { id: 'org', label: 'Organization', schema: orgStep },

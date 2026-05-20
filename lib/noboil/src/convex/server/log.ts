@@ -38,6 +38,7 @@ import {
   matchW,
   pgOpts
 } from './helpers'
+
 const DEFAULT_LIMIT = 500
 const BULK_MAX = 100
 interface LogRow {

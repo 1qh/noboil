@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 import { redactSecrets } from '../redact'
+
 describe('redactSecrets', () => {
   test('redacts Anthropic API key', () => {
     const r = redactSecrets('use sk-ant-api03-abc123def456ghi789jkl012mno345')

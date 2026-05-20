@@ -1,6 +1,7 @@
 /* eslint-disable no-console */
 import { afterEach, beforeEach, describe, expect, mock, test } from 'bun:test'
 import { auditLog, composeMiddleware, inputSanitize, slowQueryWarn } from '../middleware'
+
 const lines: { fn: string; raw: string }[] = []
 const realConsole = { debug: console.debug, info: console.info, warn: console.warn }
 beforeEach(() => {

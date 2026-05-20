@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, test } from 'bun:test'
 import { calculateDelay, createRetryUtils, DEFAULT_OPTIONS } from '../retry'
+
 const noSleep = async () => {
   /* Empty */
 }

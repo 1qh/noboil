@@ -18,6 +18,7 @@ import {
   waitHealthy,
   warn
 } from './utils'
+
 const flags = parseArgs(process.argv.slice(2))
 const fresh = flags.has('fresh')
 const pull = flags.has('pull')

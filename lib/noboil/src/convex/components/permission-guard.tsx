@@ -2,6 +2,7 @@
 import type { ComponentProps, ReactNode } from 'react'
 import type { OrgRole } from '../server/types'
 import SharedPermissionGuard from '../../shared/components/permission-guard'
+
 const PermissionGuard = ({
   allowedRoles,
   canAccess,

@@ -8,6 +8,7 @@ import { OfflineIndicator } from 'noboil/spacetimedb/components'
 import { Suspense } from 'react'
 import LoginLayout from './login-layout'
 import ErrorBoundary from './spacetimedb-error-boundary'
+
 interface AuthLayoutProps {
   bodyClassName?: string
   bodyProps?: Omit<ComponentProps<'body'>, 'children' | 'className'>

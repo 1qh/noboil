@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 import { parseAllowed, validateProfileEmail } from '../auth-helpers'
+
 describe('parseAllowed', () => {
   test('CSV split + canonicalize + dedupe via Set', () => {
     const r = parseAllowed('User+tag@gmail.com, ALICE@example.com, alice@example.com')

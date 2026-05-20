@@ -4,6 +4,7 @@ import { existsSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { bold, dim, green, red, yellow } from '../ansi'
 import { DEFAULT_PORT } from './defaults'
+
 type GenerateTarget = 'docker'
 const DOCKER_COMPOSE = `services:
   spacetimedb:

@@ -16,6 +16,7 @@ import { useOrg, useOrgMutation } from '~/hook/use-org'
 import { useOrgTable } from '~/hook/use-org-table'
 import { useProfileMap } from '~/hook/use-profile-map'
 import OrgSettingsForm from './org-settings-form'
+
 const OrgSettingsPage = () => {
   const router = useRouter()
   const clearAndGoHome = async () => {

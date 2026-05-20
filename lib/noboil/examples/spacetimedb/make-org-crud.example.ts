@@ -1,5 +1,6 @@
 import { makeOrgCrud } from '../../src/spacetimedb/server'
 import { stubField, stubPk, stubSpacetime, stubTable } from '../_stub'
+
 const projectCrud = makeOrgCrud(stubSpacetime, {
   fields: { name: stubField },
   idField: stubField,

@@ -1,6 +1,7 @@
 /** biome-ignore-all lint/nursery/noContinue: loop skip */
 import type { ManifestArg, RegistryEntry } from './types'
 import { buildArgs } from './manifest'
+
 interface ToolListOpts {
   includeExamples?: boolean
   includeExclusive?: boolean

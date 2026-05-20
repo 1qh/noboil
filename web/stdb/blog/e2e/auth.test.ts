@@ -1,6 +1,7 @@
 // biome-ignore-all lint/performance/useTopLevelRegex: x
 import { expect, test } from './fixtures'
 import { login } from './helpers'
+
 test.describe('Authentication', () => {
   test('session persists across page navigation', async ({ page }) => {
     await login(page)

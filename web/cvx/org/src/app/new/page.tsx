@@ -10,6 +10,7 @@ import { Form, useForm } from 'noboil/convex/components'
 import { useEffect, useRef } from 'react'
 import { toast } from 'sonner'
 import { orgTeam } from '~/schema'
+
 type OrgFormValues = output<typeof orgTeam>
 const orgKeys = {
   name: 'name',

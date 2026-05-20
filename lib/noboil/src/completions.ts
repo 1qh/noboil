@@ -1,6 +1,7 @@
 /* oxlint-disable unicorn/no-process-exit */
 /* eslint-disable no-console */
 import { homedir } from 'node:os'
+
 const TOP = 'add completions convex doctor eject init status stdb sync tool upgrade --help --version'
 const CONVEX_SUB = 'add check docs doctor migrate viz'
 const STDB_SUB = 'add check dev docs doctor generate migrate use validate viz'

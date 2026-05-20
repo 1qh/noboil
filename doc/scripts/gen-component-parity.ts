@@ -4,6 +4,7 @@
 /** biome-ignore-all lint/nursery/noContinue: walker */
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { collectBraceExports, DOCS_DIR, LIB_NOBOIL, replaceBetween } from './lib'
+
 const EXPORT_DECL_RE = /export\s+(?:const|function|class|default\s+(?:const|function|class)|default)\s+(?<name>\w+)/gu
 const collectExports = (path: string): Set<string> => {
   const out = new Set<string>()

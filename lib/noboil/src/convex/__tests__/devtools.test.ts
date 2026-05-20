@@ -13,6 +13,7 @@ import {
   updateSubscription,
   updateSubscriptionData
 } from '../react/devtools'
+
 describe('convex devtools', () => {
   test('exports threshold constants and tracker fns', () => {
     expect(typeof SLOW_THRESHOLD_MS).toBe('number')

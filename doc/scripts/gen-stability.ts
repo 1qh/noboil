@@ -6,6 +6,7 @@ import { walkFiles } from 'noboil/walk'
 import { readFileSync } from 'node:fs'
 import { relative } from 'node:path'
 import { DOCS_DIR, LIB_NOBOIL, replaceBetween, REPO } from './lib'
+
 const TAGS = ['@beta', '@alpha', '@experimental', '@deprecated', '@internal'] as const
 type Tag = (typeof TAGS)[number]
 const walk = (dir: string): string[] =>

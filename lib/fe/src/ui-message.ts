@@ -1,4 +1,5 @@
 import type { UIMessage } from 'ai'
+
 const isObject = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null
 const toUIRole = (role: unknown): UIMessage['role'] => {
   if (role === 'assistant' || role === 'system' || role === 'user') return role

@@ -33,6 +33,7 @@ import { toast } from 'sonner'
 import { useReducer, useSpacetimeDB, useTable } from 'spacetimedb/react'
 import { createBlog } from '~/schema'
 import { Publish } from './[id]/edit/client'
+
 const Delete = ({ id, onOptimisticRemove }: { id: number; onOptimisticRemove?: () => void }) => {
   const rmBlog = useMut(reducers.rmBlog, {
     toast: { error: 'Delete failed', success: 'Deleted' }

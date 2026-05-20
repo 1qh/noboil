@@ -7,6 +7,7 @@ import { Pencil } from 'lucide-react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { useTable } from 'spacetimedb/react'
+
 const Page = () => {
   const params = useParams<{ id: string }>()
   const id = Number(params.id)

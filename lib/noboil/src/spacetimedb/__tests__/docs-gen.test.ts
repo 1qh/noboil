@@ -3,6 +3,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { generateFullReference, generateMarkdown, run } from '../docs-gen'
+
 describe('stdb docs-gen', () => {
   test('generateMarkdown with empty calls produces header', () => {
     const md = generateMarkdown([], new Map())

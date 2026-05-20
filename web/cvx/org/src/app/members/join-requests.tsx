@@ -12,6 +12,7 @@ import { Check, X } from 'lucide-react'
 import { useOrgQuery } from 'noboil/convex/react'
 import { useState } from 'react'
 import { toast } from 'sonner'
+
 const JoinRequests = () => {
   const requests = useOrgQuery(api.org.pendingJoinRequests)
   const approveRequest = useMutation(api.org.approveJoinRequest)

@@ -8,6 +8,7 @@ import { boolean, optional, string } from 'zod/v4'
 import type { DbCtx, DbLike, HookCtx, Mb, MutCtx, Qb } from './types'
 import { idx, typed } from './bridge'
 import { dbInsert, hk } from './helpers'
+
 const DEFAULT_TTL_MS = 30 * 24 * 60 * 60 * 1000
 const PRUNE_BATCH = 5000
 const LIST_DEFAULT_LIMIT = 100

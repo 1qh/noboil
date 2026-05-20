@@ -9,6 +9,7 @@ import { run as doctorRun } from '../doctor'
 import { run as migrateRun } from '../migrate'
 import { buildArgs, buildTree, findCommand, findValidPath } from '../tools/manifest'
 import { run as vizRun } from '../viz'
+
 const mkEntry = (path: string[], extra: Record<string, unknown> = {}) =>
   ({
     argSpecs: {},

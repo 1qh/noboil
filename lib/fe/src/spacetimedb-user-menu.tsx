@@ -6,6 +6,7 @@ import { TOKEN_COOKIE_KEY } from 'noboil/spacetimedb'
 import { queryTable } from 'noboil/spacetimedb/next'
 import env from './env'
 import UserMenuShell from './user-menu-shell'
+
 interface UserInfo {
   email?: string
   image?: string

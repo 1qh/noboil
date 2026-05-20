@@ -7,6 +7,7 @@ import { Spinner } from '@a/ui/spinner'
 import { Check } from 'lucide-react'
 import { useMut } from 'noboil/spacetimedb/react'
 import { useSpacetimeDB, useTable } from 'spacetimedb/react'
+
 const Sb = () => {
   const { identity } = useSpacetimeDB()
   const [allChats, isReady] = useTable(tables.chat)

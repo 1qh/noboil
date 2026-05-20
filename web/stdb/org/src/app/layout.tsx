@@ -17,6 +17,7 @@ import { useEffect, useState } from 'react'
 import { useSpacetimeDB, useTable } from 'spacetimedb/react'
 import OrgLayoutClient from './layout-client'
 import { SpacetimeWrapper } from './providers'
+
 const ORG_PATHS = ['/dashboard', '/members', '/projects', '/wiki', '/settings']
 const needsOrgLayout = (pathname: string) => {
   for (const p of ORG_PATHS) if (pathname === p || pathname.startsWith(`${p}/`)) return true

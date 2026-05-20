@@ -6,6 +6,7 @@ import { NextResponse } from 'next/server'
 import sharp from 'sharp'
 import type { ProcessOptions } from '../../shared/next/image'
 import { applyTransforms, formatToMime, isImageType } from '../../shared/next/image'
+
 interface ImageRouteConfig {
   fileInfoEndpoint?: string
   storageBaseUrl?: string

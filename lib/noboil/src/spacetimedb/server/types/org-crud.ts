@@ -2,6 +2,7 @@ import type { Identity, Timestamp } from 'spacetimedb'
 import type { AlgebraicTypeType, ColumnBuilder, TypeBuilder } from 'spacetimedb/server'
 import type { RateLimitConfig, ReducerExportLike } from './common'
 import type { CrudHooks, HookCtx } from './crud'
+
 interface CanEditOpts {
   isAdmin: boolean
   ownerId: Identity

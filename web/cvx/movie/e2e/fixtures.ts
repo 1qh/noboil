@@ -1,5 +1,6 @@
 import { test as baseTest } from '@a/e2e/base-test'
 import MoviePage from './pages/movie'
+
 interface Fixtures {
   moviePage: MoviePage
 }

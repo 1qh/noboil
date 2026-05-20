@@ -5,6 +5,7 @@ import { useList, useOwnRows } from 'noboil/spacetimedb/react'
 import { useCallback, useDeferredValue, useMemo, useState } from 'react'
 import { useSpacetimeDB, useTable } from 'spacetimedb/react'
 import { BannerAdmin, BannerDisplay, Create, PollList } from './common'
+
 const Page = () => {
   const [allPolls, isReady] = useTable(tables.poll)
   const { identity } = useSpacetimeDB()

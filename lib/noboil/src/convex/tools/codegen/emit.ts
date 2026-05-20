@@ -3,6 +3,7 @@
 /* eslint-disable no-continue */
 import type { ToolFile } from './scan'
 import type { Extracted, SchemaNode } from './schema'
+
 const pascalCase = (s: string): string =>
   s
     .split(/[_\-/]/u)

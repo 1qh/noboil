@@ -7,6 +7,7 @@ import { extractJSDoc, green, processEntryPoint, resolveReExports } from '../sha
 import { bold, dim, isSchemaFile, red } from '../shared/viz'
 import { endpointsForFactory } from './check'
 import { extractChildren, extractWrapperTables } from './viz'
+
 const schemaMarkers = ['makeOwned(', 'makeOrgScoped(', 'makeSingleton(', 'makeBase(', 'child(']
 const factoryPat = /(?<factory>crud|orgCrud|childCrud|cacheCrud|singletonCrud)\(\s*['"](?<table>\w+)['"]/gu
 const hasGenerated = (dir: string): boolean => existsSync(join(dir, '_generated'))

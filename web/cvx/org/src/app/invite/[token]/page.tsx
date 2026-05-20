@@ -8,6 +8,7 @@ import { CheckCircle, XCircle } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { use, useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
+
 const AcceptInvitePage = ({ params }: { params: Promise<{ token: string }> }) => {
   const { token } = use(params)
   const router = useRouter()

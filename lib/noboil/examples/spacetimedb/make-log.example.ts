@@ -1,5 +1,6 @@
 import { makeLog } from '../../src/spacetimedb/server'
 import { stubField, stubSpacetime, stubTable } from '../_stub'
+
 const messageLog = makeLog(stubSpacetime, {
   fields: { text: stubField },
   idempotencyKeyField: stubField,

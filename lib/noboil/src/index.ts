@@ -10,6 +10,7 @@ import { readJson } from './shared/env-file'
 import { pushRecent } from './shared/recent'
 import { getCliVersion } from './shared/version'
 import { findAncestorFile } from './shared/walk'
+
 const handleFatal = (label: string, err: unknown) => {
   logCrash(err).catch(() => null)
   console.error(`${red(label)} ${err instanceof Error ? err.message : String(err)}`)

@@ -7,6 +7,7 @@ import { walkFiles } from 'noboil/walk'
 import { readFileSync } from 'node:fs'
 import { relative } from 'node:path'
 import { DOCS_DIR, replaceBetween, REPO, STRIP_AUTOGEN_RE, STRIP_FENCE_RE } from './lib'
+
 const MIN_LEN = 120
 const STRIP_HTML_AUTOGEN_RE = /<!-- AUTO-GENERATED:[\s\S]*?\/AUTO-GENERATED:[^>]+-->/gu
 const walk = (dir: string): string[] => walkFiles(dir, { accept: name => name.endsWith('.mdx') })

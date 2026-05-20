@@ -1,5 +1,6 @@
 import { createGuardApi } from '../shared/guard'
 import { err } from './server/helpers'
+
 const guardApi = createGuardApi({
   label: 'module',
   notFoundLabel: 'reducer/table module',

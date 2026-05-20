@@ -3,6 +3,7 @@ import { cn } from '@a/ui'
 import { Badge } from '@a/ui/badge'
 import { Button } from '@a/ui/button'
 import Link from 'next/link'
+
 interface PermissionGuardProps extends ComponentProps<'div'> {
   backHref: string
   backLabel: string

@@ -3,6 +3,7 @@
 import { Box, render, Text, useApp, useInput } from 'ink'
 import Spinner from 'ink-spinner'
 import { useEffect, useState } from 'react'
+
 type EjectRunner = () => void
 type Phase = 'confirm' | 'done' | 'running'
 const Confirm = ({ onAnswer }: { onAnswer: (v: boolean) => void }) => {

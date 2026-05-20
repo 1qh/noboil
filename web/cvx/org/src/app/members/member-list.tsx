@@ -15,6 +15,7 @@ import { useOrgQuery } from 'noboil/convex/react'
 import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { useOrg } from '~/hook/use-org'
+
 const MemberList = () => {
   const { canManageAdmins, canManageMembers, role: myRole } = useOrg()
   const members = useOrgQuery(api.org.members)

@@ -10,6 +10,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { didYouMean, parseFlags } from '../src/convex/tools/parser'
 import { parseEnvFile } from '../src/shared/env-file'
+
 const STRIP_RE = /[\u0000-\u001F\u007F-\u009F\u200B-\u200F\u202A-\u202E\u2060-\u2069\uFEFF]/gu
 const KEBAB_RE = /^[a-z][a-z0-9-]*$/u
 const strip = (s: string): string => s.replaceAll(STRIP_RE, '')

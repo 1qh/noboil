@@ -1,6 +1,7 @@
 import type { NextConfig } from 'next'
 import { resolveAliasFor } from 'noboil'
 import { env as nodeEnv } from 'node:process'
+
 interface CreateNextConfigOptions {
   experimental?: NextConfig['experimental']
   imageDomains?: string[]

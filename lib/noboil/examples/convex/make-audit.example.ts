@@ -1,5 +1,6 @@
 import { makeAudit } from '../../src/convex/server'
 import { stubBuilders } from '../_stub'
+
 const audit = makeAudit({
   builders: stubBuilders,
   table: 'audit',

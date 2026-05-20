@@ -1,5 +1,6 @@
 import { test as baseTest } from '@a/e2e/base-test'
 import ChatPage from './pages/chat'
+
 interface Fixtures {
   chatPage: ChatPage
 }

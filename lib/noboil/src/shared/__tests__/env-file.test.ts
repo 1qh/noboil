@@ -3,6 +3,7 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { findProjectRoot, parseEnvFile } from '../env-file'
+
 describe('parseEnvFile', () => {
   const dir = mkdtempSync(join(tmpdir(), 'env-test-'))
   const path = join(dir, '.env')

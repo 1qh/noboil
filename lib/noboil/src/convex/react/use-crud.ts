@@ -3,6 +3,7 @@ import type { FunctionReference, FunctionReturnType } from 'convex/server'
 import { useMutation } from 'convex/react'
 import type { CrudOptions, CrudResult } from '../../shared/react/use-crud'
 import { useList } from './use-list'
+
 interface ConvexCrudRefs {
   create: FunctionReference<'mutation'>
   list: FunctionReference<'query'>

@@ -6,6 +6,7 @@ import type { ParsedField } from '../shared/schema-types'
 import type { FieldType, TableType } from '../shared/types'
 import { bold, dim, green, red, yellow } from '../ansi'
 import { camelToTitle, hasFlag, parseEnumFieldDef, readEqFlag, writeIfNotExists } from '../shared/cli'
+
 interface AddFlags {
   appDir: string
   fields: ParsedField[]

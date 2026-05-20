@@ -10,6 +10,7 @@ import {
   isSchemaFile,
   readSchemaContentFrom
 } from '../shared/eslint-factory'
+
 const cache: { modules?: string[]; schemaDir?: string } = {}
 const hasSchemaMarkers = (dir: string): boolean => {
   if (!existsSync(dir)) return false

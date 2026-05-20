@@ -5,6 +5,7 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 import { DOCS_DIR, replaceBetween, REPO } from './lib'
+
 const DEMOS = ['blog', 'chat', 'movie', 'org', 'poll']
 const TABLE_RE = /(?<name>\w+):\s*table\(s\.\w+(?:,\s*\{(?<opts>[^}]*)\})?/gu
 const API_RE = /\bapi\.(?<name>\w+)\b/gu

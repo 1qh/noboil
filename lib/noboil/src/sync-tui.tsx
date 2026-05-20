@@ -4,6 +4,7 @@
 import { Box, render, Text, useApp, useInput } from 'ink'
 import Spinner from 'ink-spinner'
 import { useEffect, useMemo, useState } from 'react'
+
 interface SyncAction {
   kind: 'added' | 'review' | 'skipped' | 'updated'
   relPath: string

@@ -5,6 +5,7 @@
 /* oxlint-disable unicorn/prefer-string-replace-all */
 import { readFileSync } from 'node:fs'
 import { DOCS_DIR, LIB_NOBOIL, replaceBetween } from './lib'
+
 const STDB = `${LIB_NOBOIL}/src/spacetimedb/server`
 const FIELD_RE = /^\s*(?<name>\w+)(?<opt>\??):\s*(?<type>[^/\n]+?)\s*(?:\/\/.*)?$/u
 const extract = (file: string, name: string): { name: string; opt: string; type: string }[] => {

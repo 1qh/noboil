@@ -11,6 +11,7 @@ import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import { useState, useTransition } from 'react'
 import type { Movie } from '../types'
+
 const TMDB_IMG = 'https://image.tmdb.org/t/p/w300'
 const TMDB_BACKDROP = 'https://image.tmdb.org/t/p/w780'
 const formatMoney = (n: null | number) => (n ? `$${(n / 1_000_000).toFixed(1)}M` : 'N/A')

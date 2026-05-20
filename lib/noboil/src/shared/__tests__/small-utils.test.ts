@@ -3,6 +3,7 @@ import { arrayBufferToBase64, base64ToBytes } from '../binary'
 import { errorMessage } from '../errors'
 import { flagEmoji } from '../flag-emoji'
 import { bucket, BUCKET_ORDER, groupByTime } from '../time-bucket'
+
 const HOUR_MS = 60 * 60 * 1000
 const DAY_MS = 24 * HOUR_MS
 describe('errorMessage', () => {

@@ -5,6 +5,7 @@
 /** biome-ignore-all lint/correctness/noUnusedVariables: ZID_RE reserved for future use */
 import { readFileSync } from 'node:fs'
 import { DOCS_DIR, replaceBetween, REPO } from './lib'
+
 const SLOTS = ['base', 'children', 'kv', 'log', 'org', 'orgScoped', 'owned', 'quota', 'singleton']
 const findSlotBody = (src: string, slot: string): string => {
   const re = new RegExp(`\\n\\s*${slot}:\\s*\\{`, 'u')

@@ -18,6 +18,7 @@ import {
   HEALTH_MAX,
   HEALTH_WARN_PENALTY
 } from './check'
+
 interface CheckResult {
   details: string[]
   status: 'fail' | 'pass' | 'warn'

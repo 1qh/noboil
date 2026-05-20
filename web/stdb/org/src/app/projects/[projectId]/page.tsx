@@ -27,6 +27,7 @@ import { useSpacetimeDB } from 'spacetimedb/react'
 import { useOrg } from '~/hook/use-org'
 import { useOrgTable } from '~/hook/use-org-table'
 import { useProfileMap } from '~/hook/use-profile-map'
+
 type Priority = NonNullable<output<typeof s.task>['priority']>
 const priorityOptions = enumToOptions(s.task.shape.priority.unwrap())
 const asPriority = (value: null | string | undefined): Priority =>

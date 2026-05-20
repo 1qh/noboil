@@ -10,6 +10,7 @@ import type { ErrorData } from '../server/helpers'
 import type { ErrorCode } from '../server/types'
 import { createDevtoolsCore, SLOW_THRESHOLD_MS, STALE_THRESHOLD_MS } from '../../shared/react/devtools'
 import { extractErrorData, getErrorDetail, getErrorMessage } from '../server/helpers'
+
 type DevCacheEntry = SharedDevCacheEntry
 interface DevConnection {
   connectionError: string

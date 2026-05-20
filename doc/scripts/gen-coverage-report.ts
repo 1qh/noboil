@@ -2,6 +2,7 @@
 /* eslint-disable no-console */
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { DOCS_DIR, REPO } from './lib'
+
 const SCRIPTS_DIR = `${REPO}/doc/scripts`
 const OUT = `${DOCS_DIR}/single-source-of-truth.mdx`
 const LINE_TAG_RE = /<!-- AUTO-GENERATED:(?<name>[A-Z0-9_-]+) -->/gu

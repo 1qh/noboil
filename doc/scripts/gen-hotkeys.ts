@@ -2,6 +2,7 @@
 /* eslint-disable no-console */
 import { readFileSync } from 'node:fs'
 import { LIB_NOBOIL, replaceLineBetween, REPO } from './lib'
+
 const ROW_RE =
   /\{\s*action:\s*'(?<action>[^']+)',\s*desc:\s*'(?<desc>[^']+)',\s*key:\s*'(?<key>[^']+)',\s*name:\s*'(?<name>[^']+)'\s*\}/gu
 const README_DETAIL: Record<string, string> = {

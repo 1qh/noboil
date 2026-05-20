@@ -8,6 +8,7 @@ import { useMutation, useQuery } from 'convex/react'
 import { defineSteps } from 'noboil/convex/components'
 import { toast } from 'sonner'
 import { appearanceStep, orgStep, preferencesStep, profileStep } from '~/schema'
+
 const { StepForm, useStepper } = defineSteps(
   { id: 'profile', label: 'Profile', schema: profileStep },
   { id: 'org', label: 'Organization', schema: orgStep },

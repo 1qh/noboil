@@ -4,6 +4,7 @@
 /** biome-ignore-all lint/nursery/noContinue: walker */
 import { readdirSync, readFileSync } from 'node:fs'
 import { DOCS_DIR, LIB_NOBOIL, replaceBetween } from './lib'
+
 const escapeMd = (s: string): string =>
   s
     .replaceAll('|', String.raw`\|`)

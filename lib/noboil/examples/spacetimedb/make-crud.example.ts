@@ -1,5 +1,6 @@
 import { makeCrud } from '../../src/spacetimedb/server'
 import { stubField, stubPk, stubSpacetime, stubTable } from '../_stub'
+
 const todoCrud = makeCrud(stubSpacetime, {
   fields: { done: stubField, title: stubField },
   idField: stubField,

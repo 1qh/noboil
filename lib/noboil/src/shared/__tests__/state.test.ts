@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 import { readState, writeState } from '../state'
+
 describe('state (smoke)', () => {
   test('readState returns object', async () => {
     const s = await readState()

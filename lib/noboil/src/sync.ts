@@ -13,6 +13,7 @@ import { bold, dim } from './ansi'
 import { die } from './cli-utils'
 import { patchRootPackageJson, removeDirs, rmSafe } from './scaffold-ops'
 import { readJson, writeJson } from './shared/env-file'
+
 interface Manifest {
   db: Db
   ejected?: boolean

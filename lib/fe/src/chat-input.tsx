@@ -3,6 +3,7 @@ import type { ComponentProps } from 'react'
 import { cn } from '@a/ui'
 import { PromptInput, PromptInputFooter, PromptInputSubmit, PromptInputTextarea } from '@a/ui/ai-elements/prompt-input'
 import { useState } from 'react'
+
 interface ChatInputProps {
   containerClassName?: string
   disabled?: boolean

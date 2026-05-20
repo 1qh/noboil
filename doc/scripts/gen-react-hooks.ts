@@ -2,6 +2,7 @@
 /* eslint-disable no-console */
 import { existsSync, readdirSync } from 'node:fs'
 import { DOCS_DIR, LIB_NOBOIL, replaceBetween } from './lib'
+
 const hooksFor = (kind: 'convex' | 'spacetimedb'): string[] => {
   const dir = `${LIB_NOBOIL}/src/${kind}/react`
   return readdirSync(dir)

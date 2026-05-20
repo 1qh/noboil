@@ -9,6 +9,7 @@ import type {
   CrudPkLike,
   CrudTableLike
 } from './crud'
+
 type ChildConfig<
   DB,
   F extends CrudFieldBuilders,

@@ -1,6 +1,7 @@
 import { existsSync, readdirSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
 import { readJson, writeJson } from './shared/env-file'
+
 type Db = 'convex' | 'spacetimedb'
 interface PackageJson {
   dependencies?: Record<string, string>

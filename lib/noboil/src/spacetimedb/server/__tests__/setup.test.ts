@@ -3,6 +3,7 @@ import { describe, expect, test } from 'bun:test'
 import { z } from 'zod/v4'
 import { noboil, setup, setupCrud } from '../setup'
 import { captureReducers } from './_helpers'
+
 const mkPkTable = () => {
   const rows: { id: number }[] = []
   let nextId = 1

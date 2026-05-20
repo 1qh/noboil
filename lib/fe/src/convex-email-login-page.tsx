@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import EmailAuthShell from './email-auth-shell'
+
 interface EmailLoginPageProps {
   emailInputProps?: Omit<ComponentProps<typeof Input>, 'name' | 'type'>
   passwordInputProps?: Omit<ComponentProps<typeof Input>, 'name' | 'type'>

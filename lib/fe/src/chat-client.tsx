@@ -17,6 +17,7 @@ import { useSearchParams } from 'next/navigation'
 import { createElement, useEffect, useMemo, useRef } from 'react'
 import { Streamdown } from 'streamdown'
 import ChatInput from './chat-input'
+
 interface ClientProps {
   chatId: string
   conversationClassName?: string

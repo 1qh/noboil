@@ -3,6 +3,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { extractJSDoc, extractSignature, processEntryPoint, resolveReExports } from '../docs-gen'
+
 describe('resolveReExports', () => {
   test('parses named, type, default re-exports', () => {
     const src = [

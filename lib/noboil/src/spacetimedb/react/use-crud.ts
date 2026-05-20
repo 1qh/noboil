@@ -3,6 +3,7 @@ import { useTable } from 'spacetimedb/react'
 import type { CrudOptions, CrudResult } from '../../shared/react/use-crud'
 import { useList } from './use-list'
 import { useMut } from './use-mutate'
+
 interface StdbCrudRefs {
   create: unknown
   rm: unknown

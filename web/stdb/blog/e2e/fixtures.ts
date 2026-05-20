@@ -1,6 +1,7 @@
 import { test as baseTest, expect } from '@a/e2e/base-test'
 import BlogPage from './pages/blog'
 import ProfilePage from './pages/profile'
+
 interface Fixtures {
   blogPage: BlogPage
   profilePage: ProfilePage

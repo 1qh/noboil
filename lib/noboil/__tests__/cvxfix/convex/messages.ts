@@ -1,6 +1,7 @@
 import { makeChildCrud } from '../../../src/convex/server/child'
 import { m, pq, q } from './auth-builders'
 import { chatSchema, messageSchema } from './s'
+
 const endpoints = makeChildCrud({
   builders: { m, pq, q },
   meta: {
