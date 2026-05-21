@@ -1918,6 +1918,17 @@ Every `@example` JSDoc block harvested from `lib/noboil/src/`. These are tested-
 {/* AUTO-GENERATED:JSDOC-EXAMPLES:START */}
 **32 `@example` blocks** harvested from JSDoc across `lib/noboil/src/`.
 
+### `asDb` — `lib/noboil/src/convex/server/setup.ts`
+
+```ts
+const { crud, orgCrud, pq, q, m } = setup({
+  query, mutation, action, internalQuery, internalMutation, getAuthUserId
+})
+
+// Then generate endpoints:
+export const { create, update, rm, pub: { list, read } } = crud('blog', owned.blog)
+```
+
 ### `AuditExports` — `lib/noboil/src/convex/server/audit.ts`
 
 ```ts
@@ -2153,17 +2164,6 @@ makeQuota(spacetimedb, {
 
 ```ts
 const save = useMutate(api.posts.update, { optimistic: true })
-```
-
-### `setup` — `lib/noboil/src/convex/server/setup.ts`
-
-```ts
-const { crud, orgCrud, pq, q, m } = setup({
-  query, mutation, action, internalQuery, internalMutation, getAuthUserId
-})
-
-// Then generate endpoints:
-export const { create, update, rm, pub: { list, read } } = crud('blog', owned.blog)
 ```
 
 ### `SetupConfig` — `lib/noboil/src/convex/server/types.ts`
