@@ -16,7 +16,7 @@
 /** biome-ignore-all lint/complexity/noExcessiveCognitiveComplexity: crawler */
 /** biome-ignore-all lint/correctness/noUnusedVariables: crawler */
 /* oxlint-disable unicorn/consistent-function-scoping */
-/* oxlint-disable max-params, no-await-in-loop, no-control-regex, no-promise-executor-return, no-shadow, no-useless-assignment, promise/always-return, promise/param-names, promise/prefer-await-to-then, unicorn/no-process-exit, typescript/no-non-null-assertion */
+/* oxlint-disable max-params, no-await-in-loop, no-control-regex, no-promise-executor-return, no-shadow, no-useless-assignment, promise/always-return, promise/param-names, promise/prefer-await-to-then, unicorn/no-process-exit */
 import type { Browser, BrowserContext, Page } from 'playwright'
 import { appPort, urls } from '@a/config'
 import { ACTIVE_ORG_COOKIE, ACTIVE_ORG_SLUG_COOKIE } from 'noboil/convex'

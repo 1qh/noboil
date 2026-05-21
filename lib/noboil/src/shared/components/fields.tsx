@@ -5,7 +5,6 @@
 // oxlint-disable promise/prefer-await-to-then
 // biome-ignore-all lint/performance/noImgElement: x
 // biome-ignore-all lint/performance/noAwaitInLoops: x
-// biome-ignore-all lint/suspicious/noExplicitAny: x
 'use client'
 import type { AnyFieldApi, FormValidateOrFn, ReactFormExtendedApi } from '@tanstack/react-form'
 import type { LucideIcon } from 'lucide-react'

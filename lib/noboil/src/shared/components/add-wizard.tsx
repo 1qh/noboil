@@ -1,7 +1,6 @@
 /** biome-ignore-all lint/suspicious/noArrayIndexKey: stable per-field */
-/** biome-ignore-all lint/style/noNonNullAssertion: bounded pick-list */
-/* oxlint-disable react/no-array-index-key, no-promise-executor-return, promise/param-names, typescript/strict-void-return, typescript/no-unnecessary-condition, typescript/no-non-null-assertion */
-/* eslint-disable react/no-array-index-key, @eslint-react/no-array-index-key, @typescript-eslint/no-non-null-assertion */
+/* oxlint-disable react/no-array-index-key, no-promise-executor-return, promise/param-names, typescript/strict-void-return, typescript/no-unnecessary-condition */
+/* eslint-disable react/no-array-index-key, @eslint-react/no-array-index-key */
 import type { ReactNode } from 'react'
 import { Box, render, Text, useApp, useInput } from 'ink'
 import { useCallback, useRef, useState } from 'react'
@@ -89,7 +88,10 @@ const PickList = <T extends string>({
   useInput((input, key) => {
     if (key.upArrow || input === 'k') setIdx(i => (i === 0 ? items.length - 1 : i - 1))
     else if (key.downArrow || input === 'j') setIdx(i => (i === items.length - 1 ? 0 : i + 1))
-    else if (key.return) onPick(items[idx]!)
+    else if (key.return) {
+      const item = items[idx]
+      if (item !== undefined) onPick(item)
+    }
   })
   return (
     <Box flexDirection='column'>
