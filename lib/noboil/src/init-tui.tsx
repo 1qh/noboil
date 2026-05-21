@@ -1,6 +1,5 @@
-/** biome-ignore-all lint/style/noNonNullAssertion: bounded array access */
 /* oxlint-disable promise/param-names, promise/prefer-await-to-then */
-/* eslint-disable @eslint-react/no-unnecessary-use-memo, @eslint-react/web-api/no-leaked-timeout, @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-unnecessary-type-conversion, @typescript-eslint/strict-void-return, no-promise-executor-return */
+/* eslint-disable @eslint-react/no-unnecessary-use-memo, @eslint-react/web-api/no-leaked-timeout, @typescript-eslint/no-unnecessary-type-conversion, @typescript-eslint/strict-void-return, no-promise-executor-return */
 import { env } from 'bun'
 import { Box, render, Text, useApp, useInput } from 'ink'
 import Spinner from 'ink-spinner'
@@ -24,10 +23,10 @@ interface InitFlags {
   skipGit?: boolean
   skipInstall: boolean
 }
-const DBS: DbChoice[] = [
+const DBS = [
   { desc: 'hosted, reactive queries, server functions', label: 'Convex', value: 'convex' },
   { desc: 'self-hosted, subscriptions, Rust module', label: 'SpacetimeDB', value: 'spacetimedb' }
-]
+] as const satisfies readonly DbChoice[]
 const DEFAULT_REPO_URL = 'https://github.com/1qh/noboil'
 const REPO_SPEC = env.NOBOIL_REPO ?? DEFAULT_REPO_URL
 const REPO_GIT_URL =
@@ -68,9 +67,11 @@ const PickDb = ({ onPick, selected }: { onPick: (db: Db) => void; selected: numb
   useInput((input, key) => {
     if (key.upArrow || input === 'k') setIdx(i => (i === 0 ? DBS.length - 1 : i - 1))
     else if (key.downArrow || input === 'j') setIdx(i => (i === DBS.length - 1 ? 0 : i + 1))
-    else if (key.return) onPick(DBS[idx]!.value)
-    else if (input === '1') onPick(DBS[0]!.value)
-    else if (input === '2') onPick(DBS[1]!.value)
+    else if (key.return) {
+      const item = DBS[idx]
+      if (item) onPick(item.value)
+    } else if (input === '1') onPick(DBS[0].value)
+    else if (input === '2') onPick(DBS[1].value)
   })
   return (
     <Box flexDirection='column'>

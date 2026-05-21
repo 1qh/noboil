@@ -5,7 +5,6 @@
 /* eslint-disable complexity, no-await-in-loop, @next/next/no-img-element */
 // biome-ignore-all lint/performance/noImgElement: x
 // biome-ignore-all lint/performance/noAwaitInLoops: x
-// biome-ignore-all lint/suspicious/noExplicitAny: x
 'use client'
 import type { AnyFieldApi } from '@tanstack/react-form'
 import type { FunctionReference } from 'convex/server'

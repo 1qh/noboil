@@ -1,7 +1,6 @@
 // oxlint-disable promise/prefer-await-to-then
 // biome-ignore-all lint/performance/noImgElement: x
 // biome-ignore-all lint/performance/noAwaitInLoops: x
-// biome-ignore-all lint/suspicious/noExplicitAny: x
 'use client'
 import type { Api } from '../react/form'
 import { createFieldsModule } from '../../shared/components/fields'
