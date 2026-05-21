@@ -1,4 +1,3 @@
-// biome-ignore-all lint/correctness/useHookAtTopLevel: hooks called in component render context
 'use client'
 import type { Stepper as CoreStepper, Step } from '@stepperize/core'
 import type { ComponentProps, ReactNode } from 'react'

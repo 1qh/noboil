@@ -1,6 +1,5 @@
 /* eslint-disable no-await-in-loop */
 /** biome-ignore-all lint/performance/noAwaitInLoops: sequential Playwright actions */
-// biome-ignore-all lint/style/useConsistentMemberAccessibility: x
 import type { Locator } from '@playwright/test'
 import BasePage from '@a/e2e/base-page'
 

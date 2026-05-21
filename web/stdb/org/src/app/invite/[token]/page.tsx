@@ -1,4 +1,3 @@
-// biome-ignore-all lint/nursery/noFloatingPromises: event handler
 'use client'
 import { reducers } from '@a/be-spacetimedb/spacetimedb'
 import { Button } from '@a/ui/button'

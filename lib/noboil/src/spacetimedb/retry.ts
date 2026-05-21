@@ -1,5 +1,3 @@
-// biome-ignore-all lint/performance/noAwaitInLoops: x
-// biome-ignore-all lint/suspicious/useAwait: x
 import type { RetryOptions } from '../shared/retry'
 import { createRetryUtils, DEFAULT_OPTIONS } from '../shared/retry'
 import { sleep } from './constants'

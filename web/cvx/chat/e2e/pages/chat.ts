@@ -1,4 +1,3 @@
-// biome-ignore-all lint/style/useConsistentMemberAccessibility: x
 // biome-ignore-all lint/performance/useTopLevelRegex: x
 import type { Locator } from '@playwright/test'
 import BaseChatPage from '@a/e2e/base-chat'

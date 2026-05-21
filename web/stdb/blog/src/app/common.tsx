@@ -1,7 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 /* oxlint-disable jsx-no-jsx-as-prop */
 // biome-ignore-all lint/performance/noImgElement: x
-// biome-ignore-all lint/style/noProcessEnv: intentional process.env access
 'use client'
 import type { Blog } from '@a/be-spacetimedb/spacetimedb/types'
 import { reducers, tables } from '@a/be-spacetimedb/spacetimedb'

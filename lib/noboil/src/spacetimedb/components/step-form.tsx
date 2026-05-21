@@ -1,7 +1,4 @@
 /* eslint-disable no-console */
-// biome-ignore-all lint/nursery/noLeakedRender: conditional rendering
-// biome-ignore-all lint/correctness/useHookAtTopLevel: hooks called in component render context
-// biome-ignore-all lint/nursery/noFloatingPromises: event handler
 'use client'
 import type { Stepper as CoreStepper, Step } from '@stepperize/core'
 import type { ComponentProps, ReactNode } from 'react'

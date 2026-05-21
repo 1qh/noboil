@@ -1,4 +1,3 @@
-// biome-ignore-all lint/performance/useTopLevelRegex: x
 import { expect, test } from './fixtures'
 import { cleanupTestData, login } from './helpers'
 

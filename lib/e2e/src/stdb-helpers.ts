@@ -1,4 +1,3 @@
-// biome-ignore-all lint/nursery/useGlobalThis: test helper
 import type { Page } from '@playwright/test'
 import { DEFAULT_TOKEN_KEY, TOKEN_COOKIE_KEY } from 'noboil/spacetimedb'
 import { writeFileSync } from 'node:fs'

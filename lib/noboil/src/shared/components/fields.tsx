@@ -1,10 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unnecessary-condition */
 /** biome-ignore-all lint/nursery/noComponentHookFactories: factory returns hook by design */
 /* oxlint-disable jsx-no-jsx-as-prop */
-// biome-ignore-all lint/nursery/noLeakedRender: conditional rendering
 // oxlint-disable promise/prefer-await-to-then
-// biome-ignore-all lint/performance/noImgElement: x
-// biome-ignore-all lint/performance/noAwaitInLoops: x
 'use client'
 import type { AnyFieldApi, FormValidateOrFn, ReactFormExtendedApi } from '@tanstack/react-form'
 import type { LucideIcon } from 'lucide-react'

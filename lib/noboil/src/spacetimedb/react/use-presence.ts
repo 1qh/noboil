@@ -1,5 +1,4 @@
 /* eslint-disable no-console */
-// biome-ignore-all lint/nursery/noFloatingPromises: event handler
 'use client'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { HEARTBEAT_INTERVAL_MS } from '../server/presence'

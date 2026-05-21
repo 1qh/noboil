@@ -1,4 +1,3 @@
-// biome-ignore-all lint/performance/useTopLevelRegex: test file
 import { expect, test } from '@playwright/test'
 import type { PaginatedResponse, ProjectResponse, TaskResponse } from './helpers'
 import {

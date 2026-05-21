@@ -1,4 +1,3 @@
-// biome-ignore-all lint/style/noProcessEnv: intentional process.env access
 import type { UIMessage } from 'ai'
 import { isStdbTestMode } from '@a/fe/test-mode'
 import { createUIMessageStream, createUIMessageStreamResponse } from 'ai'

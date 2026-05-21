@@ -2,7 +2,6 @@
 /* oxlint-disable jsx-no-new-array-as-prop */
 // biome-ignore-all lint/security/noDangerouslySetInnerHtml: controlled redirect
 // biome-ignore-all lint/nursery/useGlobalThis: browser API
-// biome-ignore-all lint/style/noProcessEnv: intentional process.env access
 'use client'
 import type { Org, OrgMember } from '@a/be-spacetimedb/spacetimedb/types'
 import type { OrgRole } from 'noboil/spacetimedb'

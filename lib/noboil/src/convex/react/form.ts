@@ -1,4 +1,3 @@
-// biome-ignore-all lint/correctness/useHookAtTopLevel: watch hook is called inside component render context
 'use client'
 import type { FunctionReference } from 'convex/server'
 import type { output, ZodObject } from 'zod/v4'

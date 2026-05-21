@@ -1,4 +1,3 @@
-// biome-ignore-all lint/performance/useTopLevelRegex: test file
 import type { Id } from '@a/be-convex/model'
 import {
   addTestOrgMember,

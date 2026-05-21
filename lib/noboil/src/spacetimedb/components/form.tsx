@@ -1,6 +1,4 @@
 /* oxlint-disable react/jsx-handler-names */
-// biome-ignore-all lint/correctness/useHookAtTopLevel: watch hook is called inside component render context
-// biome-ignore-all lint/style/noProcessEnv: intentional process.env access
 'use client'
 import type { useNavigationGuard } from 'next-navigation-guard'
 import type { ComponentProps, ReactNode } from 'react'

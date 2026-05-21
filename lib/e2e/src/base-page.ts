@@ -1,4 +1,3 @@
-// biome-ignore-all lint/style/useConsistentMemberAccessibility: x
 import type { Locator, Page } from '@playwright/test'
 
 class BasePage {

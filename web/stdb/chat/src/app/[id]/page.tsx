@@ -1,4 +1,3 @@
-// biome-ignore-all lint/style/noProcessEnv: intentional process.env access
 'use client'
 import type { Chat, Message } from '@a/be-spacetimedb/spacetimedb/types'
 import type { UIMessage } from 'ai'

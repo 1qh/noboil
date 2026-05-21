@@ -1,9 +1,6 @@
 /** biome-ignore-all lint/nursery/noComponentHookFactories: factory returns hook by design */
 /* oxlint-disable jsx-no-new-object-as-prop, react/jsx-handler-names */
 /* eslint-disable complexity, react-hooks/refs */
-// biome-ignore-all lint/correctness/useHookAtTopLevel: hooks called in component render context
-// biome-ignore-all lint/nursery/noFloatingPromises: event handler
-// biome-ignore-all lint/nursery/noLeakedRender: conditional rendering
 'use client'
 import type { Stepper as CoreStepper, Step } from '@stepperize/core'
 import type { StandardSchemaV1 } from '@tanstack/form-core'

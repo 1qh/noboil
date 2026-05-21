@@ -1,7 +1,6 @@
 /* eslint-disable @eslint-react/hooks-extra/no-direct-set-state-in-use-effect */
 /* eslint-disable no-console */
 // biome-ignore-all lint/style/noProcessEnv: intentional process.env access
-// biome-ignore-all lint/nursery/noFloatingPromises: event handler
 'use client'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { trackCacheAccess } from './devtools'

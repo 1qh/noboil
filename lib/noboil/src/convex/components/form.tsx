@@ -1,5 +1,4 @@
 /* oxlint-disable react/jsx-handler-names */
-// biome-ignore-all lint/correctness/useHookAtTopLevel: watch hook is called inside component render context
 'use client'
 import type { FunctionReference } from 'convex/server'
 import type { useNavigationGuard } from 'next-navigation-guard'

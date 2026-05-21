@@ -1,5 +1,4 @@
 /* eslint-disable @eslint-react/hooks-extra/no-direct-set-state-in-use-effect, react-hooks/refs */
-// biome-ignore-all lint/nursery/noLeakedRender: conditional rendering
 /** biome-ignore-all lint/nursery/noRedundantDefaultExport: backward-compat alias */
 /* eslint-disable complexity */
 // biome-ignore-all lint/style/noProcessEnv: intentional process.env access

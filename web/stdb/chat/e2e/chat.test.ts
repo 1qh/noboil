@@ -1,5 +1,3 @@
-// biome-ignore-all lint/performance/useTopLevelRegex: x
-// biome-ignore-all lint/style/noProcessEnv: intentional process.env access
 import { expect, test } from './fixtures'
 import { login } from './helpers'
 

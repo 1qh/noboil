@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/strict-void-return */
 /* oxlint-disable jsx-no-new-object-as-prop */
-// biome-ignore-all lint/style/noProcessEnv: intentional process.env access
 'use client'
 import type { ChangeEvent } from 'react'
 import { reducers, tables } from '@a/be-spacetimedb/spacetimedb'

@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-unnecessary-condition */
-// biome-ignore-all lint/nursery/noFloatingPromises: event handler
 'use client'
 import { reducers, tables } from '@a/be-spacetimedb/spacetimedb'
 import { Button } from '@a/ui/button'

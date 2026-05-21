@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/strict-void-return */
-// biome-ignore-all lint/nursery/noFloatingPromises: event handler
 'use client'
 import type { OrgMember } from '@a/be-spacetimedb/spacetimedb/types'
 import { reducers, tables } from '@a/be-spacetimedb/spacetimedb'

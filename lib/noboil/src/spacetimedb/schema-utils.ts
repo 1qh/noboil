@@ -1,4 +1,3 @@
-// biome-ignore-all lint/nursery/noUnnecessaryConditions: type narrowing
 import type { FactoryCall, SchemaField, SchemaTable } from '../shared/schema-utils'
 import {
   CACHE_BASE,

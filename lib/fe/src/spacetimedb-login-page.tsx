@@ -1,4 +1,3 @@
-// biome-ignore-all lint/nursery/noFloatingPromises: event handler
 'use client'
 import type { ComponentProps } from 'react'
 import { useAuth } from 'react-oidc-context'

@@ -1,4 +1,3 @@
-// biome-ignore-all lint/performance/useTopLevelRegex: test file
 import { expect, test } from '@playwright/test'
 import { addTestOrgMember, createTestOrg, createTestUser, ensureTestUser, login, makeOrgTestUtils } from './helpers'
 

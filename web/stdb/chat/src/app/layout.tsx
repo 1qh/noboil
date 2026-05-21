@@ -1,4 +1,3 @@
-// biome-ignore-all lint/style/noProcessEnv: intentional process.env access
 import type { Metadata } from 'next'
 import type { ReactNode } from 'react'
 import { isPublicPath } from '@a/fe/public-paths'
