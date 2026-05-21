@@ -1,5 +1,4 @@
 /* eslint-disable no-await-in-loop */
-/** biome-ignore-all lint/performance/noAwaitInLoops: test fixtures */
 import { createTestContext } from 'noboil/convex/test'
 import { discoverModules } from 'noboil/convex/test/discover'
 import { describe, expect, test } from 'bun:test'
