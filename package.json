@@ -22,7 +22,7 @@
     "docs": "bun doc/scripts/gen-all.ts",
     "docs:check": "bun doc/scripts/gen-all.ts --check",
     "doctor": "bun script/doctor.ts",
-    "fix": "lintmax fix && turbo typecheck build --output-logs=errors-only",
+    "fix": "lintmax fix && bun doc/scripts/gen-all.ts && turbo typecheck build --output-logs=errors-only",
     "gha:run-ci-full": "bash -lc 'b=$(git branch --show-current); gh workflow run CI --ref \"$b\" -f force_full=true && gh run list --workflow CI --branch \"$b\" --limit 3'",
     "postinstall": "sherif && bun script/patch-stdb-sdk.ts",
     "prepare": "bunx simple-git-hooks",
