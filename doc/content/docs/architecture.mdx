@@ -735,12 +735,12 @@ Quantitative depth per factory: source LOC, hook file LOC, test count (cases tha
 
 | Factory     | src LOC (cvx/stdb) | hook LOC (cvx/stdb) | tests (cvx/stdb) | doc page | tabs (cvx/stdb) |
 | ----------- | ------------------ | ------------------- | ---------------- | -------- | --------------- |
-| `base`      | 252 / 175          | 91 / 87             | 18 / 25          | 236L     | 4 / 4 ✓         |
-| `child`     | 276 / 165          | 43 / 41             | 13 / 27          | 240L     | 4 / 4 ✓         |
-| `kv`        | 170 / 163          | 43 / 49             | 10 / 23          | 270L     | 4 / 4 ✓         |
-| `log`       | 398 / 276          | 77 / 78             | 12 / 17          | 357L     | 5 / 5 ✓         |
-| `orgScoped` | 493 / 402          | 43 / 41             | 38 / 47          | 255L     | 4 / 4 ✓         |
-| `owned`     | 441 / 141          | 43 / 41             | 54 / 57          | 266L     | 5 / 5 ✓         |
+| `base`      | 251 / 175          | 91 / 87             | 18 / 25          | 236L     | 4 / 4 ✓         |
+| `child`     | 275 / 165          | 43 / 41             | 13 / 27          | 240L     | 4 / 4 ✓         |
+| `kv`        | 168 / 163          | 43 / 49             | 10 / 23          | 270L     | 4 / 4 ✓         |
+| `log`       | 395 / 276          | 77 / 78             | 12 / 17          | 357L     | 5 / 5 ✓         |
+| `orgScoped` | 492 / 402          | 43 / 41             | 38 / 47          | 255L     | 4 / 4 ✓         |
+| `owned`     | 440 / 141          | 43 / 41             | 54 / 57          | 266L     | 5 / 5 ✓         |
 | `quota`     | 117 / 125          | 36 / 80             | 14 / 15          | 257L     | 4 / 4 ✓         |
 | `singleton` | 76 / 115           | 30 / 41             | 23 / 30          | 227L     | 4 / 4 ✓         |
 {/* AUTO-GENERATED:FACTORY-DEPTH:END */}
@@ -799,11 +799,11 @@ Per-demo parity audit. Each of the 5 demos compared across both backends: route 
 **5/5 demos at full parity.** Backend-specific routes (intentional asymmetries) listed below.
 | Demo    | Routes (cvx/stdb) | E2E tests (cvx/stdb) | Source LOC (cvx/stdb) | Status |
 | ------- | ----------------- | -------------------- | --------------------- | ------ |
-| `blog`  | 8/8 ✓             | 52 / 52 ✓            | 882 / 951 ✓           | 🟢     |
-| `chat`  | 5/5 ✓             | 26 / 26 ✓            | 489 / 414 ✓           | 🟢     |
-| `movie` | 2/2 ✓             | 14 / 14 ✓            | 303 / 526 ✓           | 🟢     |
-| `org`   | 18/18 ✓           | 128 / 128 ✓          | 2368 / 2628 ✓         | 🟢     |
-| `poll`  | 6/7 ✓             | 82 / 82 ✓            | 853 / 891 ✓           | 🟢     |
+| `blog`  | 8/8 ✓             | 52 / 52 ✓            | 881 / 948 ✓           | 🟢     |
+| `chat`  | 5/5 ✓             | 26 / 26 ✓            | 489 / 413 ✓           | 🟢     |
+| `movie` | 2/2 ✓             | 14 / 14 ✓            | 303 / 524 ✓           | 🟢     |
+| `org`   | 18/18 ✓           | 128 / 128 ✓          | 2366 / 2627 ✓         | 🟢     |
+| `poll`  | 6/7 ✓             | 82 / 82 ✓            | 852 / 889 ✓           | 🟢     |
 ### Backend-specific routes (intentional)
 
 - **`stdb/dev`** — SpacetimeDB SchemaPlayground dev tool (cvx has no equivalent component)
@@ -901,14 +901,14 @@ Per-file React component parity. Each `*.tsx` in `lib/noboil/src/{convex,spaceti
 | File                   | cvx    | stdb   | shared exports | cvx-only | stdb-only                                    | status |
 | ---------------------- | ------ | ------ | -------------: | -------- | -------------------------------------------- | ------ |
 | `editors-section.tsx`  | ✓ 2L   | ✓ 2L   | 1              | —        | —                                            | 🟢     |
-| `error-boundary.tsx`   | ✓ 12L  | ✓ 12L  | 1              | —        | —                                            | 🟢     |
-| `fields.tsx`           | ✓ 24L  | ✓ 31L  | 5              | —        | —                                            | 🟢     |
-| `file-field.tsx`       | ✓ 244L | ✓ 390L | 3              | —        | `FileApi`, `UploadOptions`, `UploadResponse` | 🟡     |
+| `error-boundary.tsx`   | ✓ 10L  | ✓ 11L  | 1              | —        | —                                            | 🟢     |
+| `fields.tsx`           | ✓ 23L  | ✓ 30L  | 5              | —        | —                                            | 🟢     |
+| `file-field.tsx`       | ✓ 243L | ✓ 389L | 3              | —        | `FileApi`, `UploadOptions`, `UploadResponse` | 🟡     |
 | `form.tsx`             | ✓ 169L | ✓ 196L | 7              | —        | —                                            | 🟢     |
 | `index.ts`             | ✓ 11L  | ✓ 12L  | 21             | —        | `UploadOptions`, `UploadResponse`            | 🟡     |
 | `misc.tsx`             | ✓ 12L  | ✓ 16L  | 3              | —        | —                                            | 🟢     |
 | `permission-guard.tsx` | ✓ 25L  | ✓ 25L  | 1              | —        | —                                            | 🟢     |
-| `step-form.tsx`        | ✓ 77L  | ✓ 83L  | 1              | —        | —                                            | 🟢     |
+| `step-form.tsx`        | ✓ 76L  | ✓ 82L  | 1              | —        | —                                            | 🟢     |
 {/* AUTO-GENERATED:COMPONENT-PARITY:END */}
 
 ## Mega parity (every file, every symbol)
