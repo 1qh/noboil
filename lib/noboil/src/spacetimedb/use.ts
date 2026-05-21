@@ -1,6 +1,5 @@
 #!/usr/bin/env bun
 /* eslint-disable no-console */
-/** biome-ignore-all lint/style/noProcessEnv: cli */
 import { spawnSync } from 'node:child_process'
 import { readFileSync, writeFileSync } from 'node:fs'
 import { bold, dim, green, red } from '../ansi'

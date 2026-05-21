@@ -1,5 +1,5 @@
 /** biome-ignore-all lint/nursery/noComponentHookFactories: factory returns hook by design */
-/* oxlint-disable jsx-no-new-object-as-prop, react/jsx-handler-names, react-hooks/refs */
+/* oxlint-disable jsx-no-new-object-as-prop, react/jsx-handler-names */
 /* eslint-disable complexity, react-hooks/refs */
 // biome-ignore-all lint/correctness/useHookAtTopLevel: hooks called in component render context
 // biome-ignore-all lint/nursery/noFloatingPromises: event handler

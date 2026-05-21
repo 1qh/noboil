@@ -1,5 +1,4 @@
 /* eslint-disable no-control-regex */
-/* oxlint-disable no-control-regex */
 /** biome-ignore-all lint/suspicious/noControlCharactersInRegex: ANSI escape */
 import { styleText } from 'node:util'
 

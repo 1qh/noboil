@@ -1,4 +1,3 @@
-/* oxlint-disable eslint/no-await-in-loop */
 /** biome-ignore-all lint/performance/noAwaitInLoops: sequential Convex DB mutations */
 /** biome-ignore-all lint/suspicious/useAwait: promise-function-async conflict */
 /** biome-ignore-all lint/complexity/useMaxParams: test helpers */

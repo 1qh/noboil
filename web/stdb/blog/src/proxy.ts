@@ -1,5 +1,4 @@
 /* oxlint-disable unicorn/no-anonymous-default-export */
-/** biome-ignore-all lint/style/noDefaultExport: next.js middleware */
 import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 

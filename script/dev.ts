@@ -4,7 +4,7 @@
 /** biome-ignore-all lint/suspicious/noEmptyBlockStatements: keep process alive */
 /* eslint-disable no-await-in-loop, no-empty */
 import { allAppPorts, config } from '@a/config'
-/* oxlint-disable no-await-in-loop, no-process-exit */
+/* oxlint-disable no-process-exit */
 import { sleep, spawn } from 'bun'
 import { existsSync, mkdirSync, openSync } from 'node:fs'
 import { join } from 'node:path'

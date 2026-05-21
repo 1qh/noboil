@@ -1,4 +1,3 @@
-/** biome-ignore-all lint/nursery/useConsistentMethodSignatures: bivariant method syntax needed for SDK compat */
 /* eslint-disable @typescript-eslint/max-params */
 import type { Identity, Timestamp } from 'spacetimedb'
 import type { AlgebraicTypeType, ReducerExport, TypeBuilder } from 'spacetimedb/server'

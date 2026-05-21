@@ -1,5 +1,4 @@
 /* eslint-disable @next/next/no-img-element */
-/* oxlint-disable @next/next/no-img-element */
 // biome-ignore-all lint/performance/noImgElement: x
 'use client'
 import type { Blog } from '@a/be-spacetimedb/spacetimedb/types'

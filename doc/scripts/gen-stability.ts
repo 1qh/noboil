@@ -1,6 +1,4 @@
 #!/usr/bin/env bun
-/** biome-ignore-all lint/performance/useTopLevelRegex: per-file scan */
-/** biome-ignore-all lint/nursery/noContinue: parser */
 /* eslint-disable no-console, max-depth */
 import { walkFiles } from 'noboil/walk'
 import { readFileSync } from 'node:fs'

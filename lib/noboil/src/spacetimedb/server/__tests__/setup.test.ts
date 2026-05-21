@@ -1,4 +1,3 @@
-/* oxlint-disable promise/prefer-await-to-callbacks */
 import { describe, expect, test } from 'bun:test'
 import { z } from 'zod/v4'
 import { noboil, setup, setupCrud } from '../setup'

@@ -1,5 +1,4 @@
 #!/usr/bin/env bun
-/** biome-ignore-all lint/nursery/noContinue: simple parser */
 /** biome-ignore-all lint/performance/useTopLevelRegex: per-line scan */
 /** biome-ignore-all lint/nursery/useNamedCaptureGroup: positional matches sufficient */
 /* eslint-disable no-console, prefer-named-capture-group */

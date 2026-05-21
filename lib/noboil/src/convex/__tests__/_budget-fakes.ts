@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-/** biome-ignore-all lint/correctness/noUnusedFunctionParameters: mock signatures */
 /** In-memory db fake for budget tests. Mirrors the subset of the Convex db api used by budget factories. */
 interface BudgetDB {
   _next: number

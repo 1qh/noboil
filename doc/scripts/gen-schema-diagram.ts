@@ -1,8 +1,6 @@
 #!/usr/bin/env bun
 /* eslint-disable no-console, no-continue, complexity */
-/** biome-ignore-all lint/performance/useTopLevelRegex: parsed once */
 /** biome-ignore-all lint/nursery/noContinue: parser */
-/** biome-ignore-all lint/correctness/noUnusedVariables: ZID_RE reserved for future use */
 import { readFileSync } from 'node:fs'
 import { DOCS_DIR, replaceBetween, REPO } from './lib'
 

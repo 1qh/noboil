@@ -1,5 +1,4 @@
 /* oxlint-disable jsx-no-new-object-as-prop */
-/** biome-ignore-all lint/nursery/noInlineStyles: dynamic waterfall positioning */
 'use client'
 import { cn } from '@a/ui'
 import { useEffect, useState } from 'react'

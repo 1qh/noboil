@@ -1,5 +1,4 @@
 /** biome-ignore-all lint/suspicious/noEmptyBlockStatements: best-effort logger, swallow IO errors */
-/* oxlint-disable no-empty */
 /* eslint-disable no-empty */
 import { write } from 'bun'
 import { homedir } from 'node:os'

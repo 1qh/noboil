@@ -1,4 +1,3 @@
-/** biome-ignore-all lint/nursery/noUndeclaredEnvVars: test env */
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
 import { isTestMode } from '../test'
 

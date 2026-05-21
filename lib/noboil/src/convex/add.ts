@@ -1,5 +1,4 @@
 #!/usr/bin/env bun
-/* oxlint-disable complexity */
 /* eslint-disable no-console, complexity */
 import { join } from 'node:path'
 import type { ParsedField } from '../shared/schema-types'

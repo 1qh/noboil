@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-misused-promises, @typescript-eslint/no-unnecessary-condition */
-/** biome-ignore-all lint/performance/noAwaitInLoops: sequential deletes */
 import { getAuthUserId } from '@convex-dev/auth/server'
 import { v } from 'convex/values'
 import { getOrgMembership, makeOrgTestCrud, makeTestAuth } from 'noboil/convex/test'

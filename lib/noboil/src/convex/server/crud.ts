@@ -1,4 +1,3 @@
-/* oxlint-disable eslint/no-await-in-loop */
 /** biome-ignore-all lint/performance/noAwaitInLoops: sequential Convex DB mutations */
 // oxlint-disable promise/prefer-await-to-then
 /* eslint-disable no-await-in-loop */

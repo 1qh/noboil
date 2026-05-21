@@ -1,6 +1,5 @@
 #!/usr/bin/env bun
 /* eslint-disable no-console, complexity, @typescript-eslint/max-params */
-/* oxlint-disable max-params */
 import { join } from 'node:path'
 import type { ParsedField } from '../shared/schema-types'
 import type { FieldType, TableType } from '../shared/types'

@@ -1,7 +1,5 @@
-/** biome-ignore-all lint/style/useNamingConvention: SDK exposes snake_case in places */
 /** biome-ignore-all lint/correctness/useExhaustiveDependencies: queryKey is the stable hash of queries */
 /* eslint-disable @eslint-react/hooks-extra/no-direct-set-state-in-use-effect, react-hooks/exhaustive-deps */
-/* oxlint-disable react-hooks/exhaustive-deps */
 'use client'
 import { useEffect, useRef, useState } from 'react'
 import { toSql } from 'spacetimedb'

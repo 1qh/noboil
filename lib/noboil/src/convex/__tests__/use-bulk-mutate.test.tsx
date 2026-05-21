@@ -1,4 +1,3 @@
-/** biome-ignore-all lint/nursery/noComponentHookFactories: factory by design */
 import { GlobalRegistrator } from '@happy-dom/global-registrator'
 
 if (typeof document === 'undefined') GlobalRegistrator.register()

@@ -1,7 +1,6 @@
 /** biome-ignore-all lint/performance/noAwaitInLoops: sequential dup-row consolidation */
-/** biome-ignore-all lint/complexity/useMaxParams: destructured builder options pattern matches singleton/cache-crud */
 /* eslint-disable no-await-in-loop, @typescript-eslint/max-params */
-/* oxlint-disable no-await-in-loop, max-params, unicorn/prefer-ternary */
+/* oxlint-disable unicorn/prefer-ternary */
 import { number, optional, string } from 'zod/v4'
 import type { DbCtx, DbLike, HookCtx, Mb, MutCtx, Qb } from './types'
 import { idx, typed } from './bridge'

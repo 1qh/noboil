@@ -1,6 +1,4 @@
-/* oxlint-disable no-await-in-loop, complexity, max-depth, unicorn/prefer-ternary */
 /* eslint-disable no-continue */
-/** biome-ignore-all lint/performance/noAwaitInLoops: sequential mutations in property test */
 /** biome-ignore-all lint/nursery/noContinue: skip iter on missing reservation */
 import { describe, expect, test } from 'bun:test'
 import type { Lcg } from '../../shared/test/index'

@@ -1,8 +1,6 @@
 #!/usr/bin/env bun
 /* eslint-disable no-console */
 import { walkFiles } from 'noboil/walk'
-/** biome-ignore-all lint/performance/useTopLevelRegex: per-file scan */
-/** biome-ignore-all lint/nursery/noContinue: walker */
 /* oxlint-disable oxc/branches-sharing-code */
 import { readFileSync } from 'node:fs'
 import { relative } from 'node:path'

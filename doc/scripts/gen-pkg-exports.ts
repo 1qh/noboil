@@ -1,6 +1,5 @@
 #!/usr/bin/env bun
 /* eslint-disable no-console */
-/** biome-ignore-all lint/performance/useTopLevelRegex: small file */
 import { readJson } from 'noboil/env-file'
 import { DOCS_DIR, PKG_JSON_PATH, replaceBetween } from './lib'
 

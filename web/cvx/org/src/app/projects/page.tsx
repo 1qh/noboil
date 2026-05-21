@@ -1,4 +1,3 @@
-/* oxlint-disable promise/prefer-await-to-then */
 'use client'
 import { api } from '@a/be-convex'
 import { fail } from '@a/fe/utils'

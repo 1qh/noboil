@@ -1,6 +1,3 @@
-/* oxlint-disable no-await-in-loop, no-unused-vars */
-/** biome-ignore-all lint/performance/noAwaitInLoops: sequential synthetic ops */
-/** biome-ignore-all lint/correctness/noUnusedFunctionParameters: mock signatures */
 import { describe, expect, test } from 'bun:test'
 import { advanceNow, restoreNow, setNow } from '../../shared/test/index'
 import { makeBudget, periodKeyFor } from '../server/budget'

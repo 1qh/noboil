@@ -1,8 +1,6 @@
 /* eslint-disable no-await-in-loop, complexity */
 /** biome-ignore-all lint/suspicious/useAwait: test helper */
-/** biome-ignore-all lint/style/noProcessEnv: test helper */
 /** biome-ignore-all lint/performance/noAwaitInLoops: sequential test operations */
-/** biome-ignore-all lint/performance/useTopLevelRegex: test helper */
 import { makeExpectError } from './_shared'
 import { STDB_HTTP_URL, STDB_MODULE } from './stdb-env'
 

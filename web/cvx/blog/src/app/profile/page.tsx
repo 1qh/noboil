@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/strict-void-return */
 /* oxlint-disable jsx-no-new-object-as-prop */
-/** biome-ignore-all lint/nursery/noInlineStyles: dynamic percentage width */
 'use client'
 import type { Id } from '@a/be-convex/model'
 import type { ChangeEvent } from 'react'

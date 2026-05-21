@@ -1,5 +1,5 @@
 /** biome-ignore-all lint/style/noNonNullAssertion: bounded array access */
-/* oxlint-disable typescript/no-non-null-assertion, no-promise-executor-return, promise/param-names, react/no-unnecessary-use-memo, promise/prefer-await-to-then, react-web-api(no-leaked-timeout), typescript/strict-void-return, typescript/no-unnecessary-type-conversion */
+/* oxlint-disable promise/param-names, promise/prefer-await-to-then */
 /* eslint-disable @eslint-react/no-unnecessary-use-memo, @eslint-react/web-api/no-leaked-timeout, @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-unnecessary-type-conversion, @typescript-eslint/strict-void-return, no-promise-executor-return */
 import { env } from 'bun'
 import { Box, render, Text, useApp, useInput } from 'ink'

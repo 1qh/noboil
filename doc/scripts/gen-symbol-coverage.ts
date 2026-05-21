@@ -1,5 +1,4 @@
 #!/usr/bin/env bun
-/** biome-ignore-all lint/performance/useTopLevelRegex: per-file scan */
 /** biome-ignore-all lint/nursery/noContinue: walker */
 /* eslint-disable no-console, no-continue */
 import { readJson } from 'noboil/env-file'

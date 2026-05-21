@@ -1,5 +1,4 @@
 /* eslint-disable no-script-url */
-/* oxlint-disable no-script-url */
 import { describe, expect, test } from 'bun:test'
 import { extractDomain, extractSources, isSafeUrl, normalizeOrigin, parseSiteUrls, validateRedirectTo } from '../url'
 

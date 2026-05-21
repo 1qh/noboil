@@ -1,7 +1,6 @@
 #!/usr/bin/env bun
 /* eslint-disable no-console, no-continue */
 /** biome-ignore-all lint/nursery/noContinue: simple parser */
-/** biome-ignore-all lint/performance/useTopLevelRegex: per-line scan */
 import { readFileSync } from 'node:fs'
 import { DOCS_DIR, replaceBetween, slugify } from './lib'
 

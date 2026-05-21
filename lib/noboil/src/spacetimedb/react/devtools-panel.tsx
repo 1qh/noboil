@@ -2,7 +2,6 @@
 // biome-ignore-all lint/nursery/noLeakedRender: conditional rendering
 /** biome-ignore-all lint/nursery/noRedundantDefaultExport: backward-compat alias */
 /* eslint-disable complexity */
-/* oxlint-disable eslint/complexity, react-hooks/refs */
 // biome-ignore-all lint/style/noProcessEnv: intentional process.env access
 'use client'
 import { cn } from '@a/ui'

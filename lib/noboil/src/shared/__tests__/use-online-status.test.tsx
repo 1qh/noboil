@@ -1,5 +1,3 @@
-/** biome-ignore-all lint/nursery/useGlobalThis: dispatchEvent + navigator.onLine require window/navigator */
-/** biome-ignore-all lint/nursery/noComponentHookFactories: test-only inline component */
 import { GlobalRegistrator } from '@happy-dom/global-registrator'
 
 if (typeof document === 'undefined') GlobalRegistrator.register()

@@ -1,4 +1,3 @@
-/** biome-ignore-all lint/performance/noAwaitInLoops: sequential middleware chain */
 import type { GlobalHookCtx, GlobalHooks, Middleware, MiddlewareCtx, Rec } from './types'
 import { createComposeMiddleware, createInputSanitize, sanitizeRec, sanitizeString } from '../../shared/server/middleware'
 import { log } from './helpers'

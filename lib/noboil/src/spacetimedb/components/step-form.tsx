@@ -1,5 +1,4 @@
 /* eslint-disable no-console */
-/* oxlint-disable react/jsx-handler-names */
 // biome-ignore-all lint/nursery/noLeakedRender: conditional rendering
 // biome-ignore-all lint/correctness/useHookAtTopLevel: hooks called in component render context
 // biome-ignore-all lint/nursery/noFloatingPromises: event handler

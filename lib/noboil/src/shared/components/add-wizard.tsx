@@ -1,5 +1,4 @@
 /** biome-ignore-all lint/suspicious/noArrayIndexKey: stable per-field */
-/* oxlint-disable react/no-array-index-key, no-promise-executor-return, promise/param-names, typescript/strict-void-return, typescript/no-unnecessary-condition */
 /* eslint-disable react/no-array-index-key, @eslint-react/no-array-index-key */
 import type { ReactNode } from 'react'
 import { Box, render, Text, useApp, useInput } from 'ink'

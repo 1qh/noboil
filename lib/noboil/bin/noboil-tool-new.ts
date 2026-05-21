@@ -1,7 +1,5 @@
 #!/usr/bin/env bun
 /* eslint-disable no-console */
-/* oxlint-disable unicorn/no-process-exit */
-/** biome-ignore-all lint/style/useFilenamingConvention: script */
 import { $ } from 'bun'
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'

@@ -1,6 +1,5 @@
 #!/usr/bin/env bun
 /* eslint-disable no-console, no-continue */
-/** biome-ignore-all lint/performance/useTopLevelRegex: small file */
 /** biome-ignore-all lint/nursery/noContinue: parser */
 import { existsSync, readFileSync } from 'node:fs'
 import { collectBraceExports, DOCS_DIR, LIB_NOBOIL, replaceBetween } from './lib'

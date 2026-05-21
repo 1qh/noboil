@@ -1,6 +1,5 @@
 #!/usr/bin/env bun
 /* eslint-disable no-console, prefer-named-capture-group */
-/** biome-ignore-all lint/nursery/noContinue: simple parser */
 /** biome-ignore-all lint/performance/useTopLevelRegex: per-iteration scan */
 /** biome-ignore-all lint/nursery/useNamedCaptureGroup: simple match */
 import { readFileSync } from 'node:fs'

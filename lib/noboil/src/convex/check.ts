@@ -1,7 +1,6 @@
 #!/usr/bin/env bun
 /* eslint-disable no-console */
 /* eslint-disable complexity */
-/* oxlint-disable eslint/complexity, max-depth */
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { basename, dirname, join } from 'node:path'
 import type { Issue } from '../shared/schema-types'

@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-unnecessary-type-parameters */
-/** biome-ignore-all lint/nursery/noComponentHookFactories: factory returns hook by design */
 import { toast } from 'sonner'
 
 const getErrorMessage = (error: unknown): string => {

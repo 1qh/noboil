@@ -1,4 +1,3 @@
-/** biome-ignore-all lint/suspicious/useAwait: promise-function-async conflict */
 'use server'
 import type { FunctionReference } from 'convex/server'
 import type { NextRequest } from 'next/server'

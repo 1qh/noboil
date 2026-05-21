@@ -1,4 +1,3 @@
-/** biome-ignore-all lint/suspicious/useAwait: Sharp returns thenable, not Promise */
 import type { Sharp } from 'sharp'
 
 type Format = 'jpeg' | 'png' | 'webp'

@@ -3,7 +3,6 @@
 /** biome-ignore-all lint/performance/noAwaitInLoops: sequential by design */
 /** biome-ignore-all lint/suspicious/noControlCharactersInRegex: ANSI color codes */
 /* eslint-disable no-await-in-loop, no-control-regex */
-/* oxlint-disable no-await-in-loop, no-control-regex */
 import { $, sleep } from 'bun'
 import { copyFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'

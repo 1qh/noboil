@@ -1,4 +1,3 @@
-/** biome-ignore-all lint/style/noProcessEnv: env detection */
 import type { LanguageModel } from 'ai'
 import { chatModel } from './models.mock'
 

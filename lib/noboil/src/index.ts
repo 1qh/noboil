@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /** biome-ignore-all lint/performance/noAwaitInLoops: dashboard session loop */
 /** biome-ignore-all lint/nursery/noUnnecessaryConditions: dashboard loop intentionally infinite until exit */
-/* oxlint-disable promise/prefer-await-to-then, no-useless-assignment, no-constant-condition */
+/* oxlint-disable promise/prefer-await-to-then */
 /* eslint-disable no-console, no-await-in-loop, @typescript-eslint/no-unnecessary-condition */
 import { bold, dim, red } from './ansi'
 import { LOG_PATH, logCrash } from './shared/crash-log'

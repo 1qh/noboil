@@ -1,7 +1,5 @@
 #!/usr/bin/env bun
 /* eslint-disable no-console */
-/* oxlint-disable unicorn/no-process-exit */
-/** biome-ignore-all lint/style/useFilenamingConvention: script */
 import { $ } from 'bun'
 import { existsSync, rmSync } from 'node:fs'
 import { join } from 'node:path'

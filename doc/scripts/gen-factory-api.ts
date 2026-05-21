@@ -2,7 +2,6 @@
 /* eslint-disable no-console, no-template-curly-in-string, no-continue */
 /** biome-ignore-all lint/suspicious/noTemplateCurlyInString: literal placeholder */
 /** biome-ignore-all lint/nursery/noContinue: simple parser */
-/** biome-ignore-all lint/performance/useTopLevelRegex: per-iteration scan */
 import { readFileSync } from 'node:fs'
 import { DOCS_DIR, LIB_NOBOIL, replaceBetween } from './lib'
 

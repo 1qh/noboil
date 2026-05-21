@@ -1,4 +1,3 @@
-/* oxlint-disable jsx-no-jsx-as-prop, jsx-no-new-object-as-prop, jsx-no-new-array-as-prop */
 // oxlint-disable promise/prefer-await-to-then
 // biome-ignore-all lint/performance/noImgElement: x
 // biome-ignore-all lint/performance/noAwaitInLoops: x

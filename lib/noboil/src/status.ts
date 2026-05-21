@@ -1,4 +1,3 @@
-/* oxlint-disable complexity */
 /* eslint-disable no-console, complexity */
 import { spawnSync } from 'node:child_process'
 import { existsSync, statSync } from 'node:fs'

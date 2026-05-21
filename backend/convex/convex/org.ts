@@ -1,4 +1,3 @@
-/* oxlint-disable eslint/no-await-in-loop */
 /** biome-ignore-all lint/performance/noAwaitInLoops: sequential slug checks */
 /* eslint-disable no-await-in-loop */
 import { ConvexError } from 'convex/values'

@@ -1,6 +1,5 @@
 #!/usr/bin/env bun
 /* eslint-disable no-console, no-continue */
-/** biome-ignore-all lint/performance/useTopLevelRegex: walker */
 /** biome-ignore-all lint/nursery/noContinue: walker */
 import { readdirSync, statSync } from 'node:fs'
 import { join } from 'node:path'

@@ -1,4 +1,3 @@
-/** biome-ignore-all lint/nursery/noContinue: line skip on comments/empty */
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 /** Parse a single `KEY=VALUE` line. Returns null on comment/empty/malformed. Strips surrounding quotes. */

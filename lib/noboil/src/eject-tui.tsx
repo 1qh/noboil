@@ -1,4 +1,3 @@
-/* oxlint-disable no-promise-executor-return, promise/param-names, typescript/strict-void-return, no-shadow */
 /* eslint-disable @eslint-react/hooks-extra/no-direct-set-state-in-use-effect */
 import { Box, render, Text, useApp, useInput } from 'ink'
 import Spinner from 'ink-spinner'

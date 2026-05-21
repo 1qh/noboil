@@ -1,4 +1,3 @@
-/* oxlint-disable typescript/no-unsafe-call, typescript/no-unsafe-member-access */
 import { describe, expect, test } from 'bun:test'
 import { makeQuota } from '../quota'
 import { tsAtMs } from './_helpers'

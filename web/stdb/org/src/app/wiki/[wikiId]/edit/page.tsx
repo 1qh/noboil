@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/strict-void-return */
-/* oxlint-disable unicorn/no-useless-promise-resolve-reject, promise/prefer-await-to-then, promise/always-return, promise/catch-or-return */
+/* oxlint-disable unicorn/no-useless-promise-resolve-reject, promise/prefer-await-to-then, promise/catch-or-return */
 /** biome-ignore-all lint/suspicious/useAwait: sync reducers wrapped as promises */
 // biome-ignore-all lint/nursery/noFloatingPromises: event handler
 'use client'

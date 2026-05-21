@@ -1,4 +1,3 @@
-/* oxlint-disable eslint/complexity */
 'use client'
 import type { ComponentProps } from 'react'
 import SharedSchemaPlayground from '../../shared/react/schema-playground'

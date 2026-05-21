@@ -1,4 +1,3 @@
-/* oxlint-disable jsx-no-jsx-as-prop */
 // biome-ignore-all lint/nursery/noLeakedRender: conditional rendering
 // oxlint-disable promise/prefer-await-to-then
 // biome-ignore-all lint/performance/noImgElement: x

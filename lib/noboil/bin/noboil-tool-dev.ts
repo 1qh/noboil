@@ -1,6 +1,5 @@
 #!/usr/bin/env bun
 /* eslint-disable no-console */
-/* oxlint-disable unicorn/no-process-exit */
 import { didYouMean } from '../src/shared/did-you-mean'
 import { run as runCodegen } from './noboil-tool-codegen'
 import { run as runDocgen } from './noboil-tool-docgen'

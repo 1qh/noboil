@@ -1,4 +1,3 @@
-/* oxlint-disable promise/prefer-await-to-then */
 'use client'
 import type { ToastFn } from '../../shared/react/toast'
 import { useSoftDelete as useSharedSoftDelete } from '../../shared/react/use-soft-delete'

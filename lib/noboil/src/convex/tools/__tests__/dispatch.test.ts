@@ -1,4 +1,3 @@
-/* oxlint-disable eslint-plugin-jest(no-conditional-expect) */
 import type { GenericValidator } from 'convex/values'
 import { describe, expect, it } from 'bun:test'
 import { v } from 'convex/values'

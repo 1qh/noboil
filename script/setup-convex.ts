@@ -1,6 +1,5 @@
-/** biome-ignore-all lint/performance/noAwaitInLoops: sequential by design */
 import { config, urls } from '@a/config'
-/* oxlint-disable no-await-in-loop, no-process-exit, no-immediate-mutation */
+/* oxlint-disable no-process-exit */
 import { emit } from './emit-env'
 import { syncConvexEnv } from './sync-convex'
 import {

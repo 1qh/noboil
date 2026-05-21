@@ -1,4 +1,3 @@
-/** biome-ignore-all lint/style/useReactFunctionComponents: ErrorBoundary requires class component */
 // biome-ignore-all lint/suspicious/useAwait: async without await
 'use client'
 import { createErrorBoundary } from '../../shared/components/error-boundary'

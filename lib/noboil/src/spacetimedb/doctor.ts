@@ -1,6 +1,5 @@
 #!/usr/bin/env bun
 /* eslint-disable no-console, max-depth, complexity */
-/* oxlint-disable eslint/complexity */
 import { spawnSync } from 'node:child_process'
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'

@@ -1,8 +1,6 @@
 /* eslint-disable react/require-optimization, react/sort-comp */
 /** biome-ignore-all lint/nursery/noComponentHookFactories: factory returns hook by design */
 /** biome-ignore-all lint/suspicious/useAwait: render-only class method */
-/** biome-ignore-all lint/style/useConsistentMemberAccessibility: class methods */
-/** biome-ignore-all lint/style/useReactFunctionComponents: ErrorBoundary requires class component */
 /* eslint-disable react/no-set-state */
 'use client'
 import type { ErrorInfo, ReactNode } from 'react'

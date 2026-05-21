@@ -1,6 +1,5 @@
 #!/usr/bin/env bun
 /* eslint-disable no-console */
-/** biome-ignore-all lint/performance/useTopLevelRegex: small file */
 import { readFileSync } from 'node:fs'
 import { DOCS_DIR, replaceBetween, REPO } from './lib'
 

@@ -1,7 +1,5 @@
 #!/usr/bin/env bun
 /* eslint-disable no-console */
-/** biome-ignore-all lint/nursery/noContinue: simple parser */
-/** biome-ignore-all lint/performance/useTopLevelRegex: per-file scan */
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 import { ERROR_CODE_MEANINGS } from '../../lib/noboil/src/shared/error-codes'

@@ -1,6 +1,5 @@
 // biome-ignore-all lint/nursery/noUnnecessaryConditions: type narrowing
 import type { FactoryCall, SchemaField, SchemaTable } from '../shared/schema-utils'
-/* oxlint-disable eslint/complexity */
 import {
   CACHE_BASE,
   CHILD_BASE,

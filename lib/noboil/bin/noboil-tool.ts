@@ -2,10 +2,7 @@
 /** biome-ignore-all lint/style/noProcessEnv: CLI binary reads env directly */
 /** biome-ignore-all lint/nursery/noUndeclaredEnvVars: consumer-facing env vars (CLI_SESSION_*, CONVEX_*) */
 /** biome-ignore-all lint/suspicious/noControlCharactersInRegex: sanitize strips control chars */
-/** biome-ignore-all lint/nursery/noContinue: parser skip-lines */
-/** biome-ignore-all lint/nursery/useImportsFirst: grouped by concern */
 /* eslint-disable no-console, no-control-regex, @typescript-eslint/no-unnecessary-condition, complexity */
-/* oxlint-disable no-control-regex, complexity, promise/prefer-await-to-callbacks, promise/prefer-await-to-then, unicorn/prefer-top-level-await, import/first */
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { didYouMean, parseFlags } from '../src/convex/tools/parser'

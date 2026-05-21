@@ -1,4 +1,3 @@
-/* oxlint-disable eslint/complexity */
 'use client'
 import { cn } from '@a/ui'
 import { useCallback, useMemo, useState } from 'react'

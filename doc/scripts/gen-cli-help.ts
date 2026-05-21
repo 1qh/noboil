@@ -1,7 +1,4 @@
 #!/usr/bin/env bun
-/** biome-ignore-all lint/performance/noAwaitInLoops: sequential CLI spawns */
-/** biome-ignore-all lint/suspicious/noControlCharactersInRegex: ANSI escape stripping */
-/* oxlint-disable eslint(no-await-in-loop), eslint(no-control-regex), eslint-plugin-unicorn(no-hex-escape), eslint-plugin-unicorn(no-immediate-mutation) */
 /* eslint-disable no-console */
 import { $ } from 'bun'
 import { stripAnsi } from 'noboil/ansi'

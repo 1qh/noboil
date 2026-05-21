@@ -1,5 +1,4 @@
 /* eslint-disable no-console, @typescript-eslint/max-params, no-continue, @typescript-eslint/no-unnecessary-condition */
-/* oxlint-disable max-params */
 /** biome-ignore-all lint/complexity/useMaxParams: internal helper */
 /** biome-ignore-all lint/nursery/noContinue: parser */
 import { readFileSync, writeFileSync } from 'node:fs'

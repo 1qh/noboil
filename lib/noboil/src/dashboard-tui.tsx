@@ -1,4 +1,4 @@
-/* oxlint-disable no-promise-executor-return, promise/param-names, typescript/strict-void-return, promise/prefer-await-to-then, complexity */
+/* oxlint-disable promise/prefer-await-to-then */
 /* eslint-disable complexity */
 import { Box, render, Text, useApp, useInput } from 'ink'
 import { join } from 'node:path'

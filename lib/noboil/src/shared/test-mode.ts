@@ -1,4 +1,3 @@
-/** biome-ignore-all lint/style/noProcessEnv: env detection */
 const env = (k: string): string | undefined => {
   const r = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process
   return r?.env?.[k]

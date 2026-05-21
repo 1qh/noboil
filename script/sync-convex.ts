@@ -1,7 +1,6 @@
 /** biome-ignore-all lint/performance/noAwaitInLoops: sequential by design */
 /* eslint-disable no-await-in-loop */
 import { config } from '@a/config'
-/* oxlint-disable no-await-in-loop */
 import { $ } from 'bun'
 import { readEnv, root } from './utils'
 

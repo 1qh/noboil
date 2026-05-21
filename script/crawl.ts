@@ -7,16 +7,13 @@
 /** biome-ignore-all lint/nursery/useGlobalThis: crawler */
 /** biome-ignore-all lint/performance/noAwaitInLoops: crawler */
 /** biome-ignore-all lint/performance/useTopLevelRegex: crawler */
-/** biome-ignore-all lint/style/noNonNullAssertion: crawler */
 /** biome-ignore-all lint/style/useExplicitLengthCheck: crawler */
 /** biome-ignore-all lint/suspicious/noControlCharactersInRegex: crawler */
 /** biome-ignore-all lint/suspicious/noEmptyBlockStatements: crawler */
-/* oxlint-disable no-empty, unicorn/no-process-exit */
+/* oxlint-disable unicorn/no-process-exit */
 /* eslint-disable @typescript-eslint/max-params, @typescript-eslint/no-shadow, complexity, no-await-in-loop, no-control-regex, no-empty, no-promise-executor-return, no-useless-assignment */
-/** biome-ignore-all lint/complexity/noExcessiveCognitiveComplexity: crawler */
-/** biome-ignore-all lint/correctness/noUnusedVariables: crawler */
 /* oxlint-disable unicorn/consistent-function-scoping */
-/* oxlint-disable max-params, no-await-in-loop, no-control-regex, no-promise-executor-return, no-shadow, no-useless-assignment, promise/always-return, promise/param-names, promise/prefer-await-to-then, unicorn/no-process-exit */
+/* oxlint-disable promise/always-return, promise/param-names, promise/prefer-await-to-then, unicorn/no-process-exit */
 import type { Browser, BrowserContext, Page } from 'playwright'
 import { appPort, urls } from '@a/config'
 import { ACTIVE_ORG_COOKIE, ACTIVE_ORG_SLUG_COOKIE } from 'noboil/convex'
