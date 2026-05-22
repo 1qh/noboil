@@ -52,11 +52,11 @@
     "noboil": "workspace:*"
   },
   "devDependencies": {
-    "@happy-dom/global-registrator": "^20.9.0",
+    "@happy-dom/global-registrator": "latest",
     "@playwright/test": "latest",
     "@tailwindcss/postcss": "latest",
     "@tailwindcss/typography": "latest",
-    "@testing-library/react": "^16.3.2",
+    "@testing-library/react": "latest",
     "@turbo/gen": "latest",
     "@types/mdx": "latest",
     "axe-core": "latest",
