@@ -3,6 +3,7 @@
 import type { GenericTableInfo, RegisteredQuery } from 'convex/server'
 import { describe, expect, test } from 'bun:test'
 import { ConvexError } from 'convex/values'
+import { join } from 'node:path'
 import { array, boolean, date, number, object, optional, string, enum as zenum } from 'zod/v4'
 import type { AccessEntry, FactoryCall } from '../check'
 import type { CheckResult } from '../doctor'
@@ -3324,7 +3325,6 @@ describe('bundle verification', () => {
   })
   test('noboil/convex/schema has no React imports', async () => {
     const { readFileSync } = await import('node:fs')
-    const { join } = await import('node:path')
     const content = readFileSync(join(import.meta.dir, '..', 'schema.ts'), 'utf8')
     expect(content.includes("from 'react'")).toBe(false)
     expect(content.includes('useState')).toBe(false)
@@ -3332,20 +3332,17 @@ describe('bundle verification', () => {
   })
   test('noboil/convex/schema has no node:fs imports', async () => {
     const { readFileSync } = await import('node:fs')
-    const { join } = await import('node:path')
     const content = readFileSync(join(import.meta.dir, '..', 'schema.ts'), 'utf8')
     expect(content.includes("from 'node:fs'")).toBe(false)
   })
   test('noboil/convex/retry has no React or server imports', async () => {
     const { readFileSync } = await import('node:fs')
-    const { join } = await import('node:path')
     const content = readFileSync(join(import.meta.dir, '..', 'retry.ts'), 'utf8')
     expect(content.includes("from 'react'")).toBe(false)
     expect(content.includes("from 'node:fs'")).toBe(false)
   })
   test('entry point count matches package.json exports', async () => {
     const { readFileSync } = await import('node:fs')
-    const { join } = await import('node:path')
     const content = readFileSync(join(import.meta.dir, '..', '..', '..', 'package.json'), 'utf8')
     const pkg = JSON.parse(content) as { exports: Record<string, string> }
     const exportKeys = Object.keys(pkg.exports)

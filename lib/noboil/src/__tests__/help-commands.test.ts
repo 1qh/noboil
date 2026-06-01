@@ -1,5 +1,6 @@
 /* eslint-disable no-console */
 import { describe, expect, test } from 'bun:test'
+import { join } from 'node:path'
 import { doctor } from '../doctor'
 import { eject } from '../eject'
 import { status } from '../status'
@@ -29,7 +30,6 @@ describe('root --help commands', () => {
   test('status with .noboilrc.json reports scaffold age + node_modules presence', async () => {
     const { mkdtempSync, rmSync, writeFileSync, mkdirSync } = await import('node:fs')
     const { tmpdir } = await import('node:os')
-    const { join } = await import('node:path')
     const dir = mkdtempSync(join(tmpdir(), 'noboil-status-full-'))
     const orig = process.cwd()
     try {
@@ -62,7 +62,6 @@ describe('root --help commands', () => {
   test('humanizeAge edge cases via status with various dates', async () => {
     const { mkdtempSync, rmSync, writeFileSync } = await import('node:fs')
     const { tmpdir } = await import('node:os')
-    const { join } = await import('node:path')
     const cases = [
       new Date().toISOString(),
       new Date(Date.now() - 86_400_000).toISOString(),
@@ -89,7 +88,6 @@ describe('root --help commands', () => {
   test('doctor --last-error reads crash log when exists, else falls back', async () => {
     const { mkdtempSync, rmSync, writeFileSync } = await import('node:fs')
     const { tmpdir } = await import('node:os')
-    const { join } = await import('node:path')
     const { homedir } = await import('node:os')
     const fakeHome = mkdtempSync(join(tmpdir(), 'noboil-fake-home-'))
     const origHome = process.env.HOME
@@ -116,7 +114,6 @@ describe('root --help commands', () => {
   test('status outside a noboil project prints message', async () => {
     const { mkdtempSync, rmSync } = await import('node:fs')
     const { tmpdir } = await import('node:os')
-    const { join } = await import('node:path')
     const dir = mkdtempSync(join(tmpdir(), 'noboil-status-'))
     const orig = process.cwd()
     try {

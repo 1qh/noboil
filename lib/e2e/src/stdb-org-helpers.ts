@@ -1,6 +1,7 @@
 /* eslint-disable no-await-in-loop, complexity */
 /** biome-ignore-all lint/suspicious/useAwait: test helper */
 /** biome-ignore-all lint/performance/noAwaitInLoops: sequential test operations */
+import { join } from 'node:path'
 import { makeExpectError } from './_shared'
 import { STDB_HTTP_URL, STDB_MODULE } from './stdb-env'
 
@@ -212,7 +213,6 @@ const ensureTestUser = async (): Promise<void> => {
   setToken(data.token)
   try {
     const { writeFileSync } = await import('node:fs')
-    const { join } = await import('node:path')
     writeFileSync(join(process.cwd(), 'e2e', '.stdb-test-token.json'), JSON.stringify(data))
   } catch {
     /* */
@@ -238,7 +238,6 @@ const createTestOrg = async (slug: string, name: string): Promise<OrgCreateResul
   const orgId = String(org.id)
   try {
     const { readFileSync, writeFileSync } = await import('node:fs')
-    const { join } = await import('node:path')
     const tokenFile = join(process.cwd(), 'e2e', '.stdb-test-token.json')
     const existing = JSON.parse(readFileSync(tokenFile, 'utf8')) as Record<string, unknown>
     writeFileSync(tokenFile, JSON.stringify({ ...existing, orgId }))

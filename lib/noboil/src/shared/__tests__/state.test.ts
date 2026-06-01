@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'bun:test'
+import { join } from 'node:path'
 import { readState, writeState } from '../state'
 
 describe('state (smoke)', () => {
@@ -9,7 +10,6 @@ describe('state (smoke)', () => {
   test('readState catches malformed state.json', async () => {
     const { mkdtempSync, mkdirSync, rmSync, writeFileSync } = await import('node:fs')
     const { tmpdir } = await import('node:os')
-    const { join } = await import('node:path')
     const fakeHome = mkdtempSync(join(tmpdir(), 'noboil-state-bad-'))
     const origHome = process.env.HOME
     try {

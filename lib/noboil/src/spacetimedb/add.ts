@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /* eslint-disable no-console, complexity, @typescript-eslint/max-params */
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
 import type { ParsedField } from '../shared/schema-types'
 import type { FieldType, TableType } from '../shared/types'
 import { bold, dim, green, red, yellow } from '../ansi'
@@ -412,7 +412,6 @@ const promptInteractive = async (): Promise<AddFlags | null> => {
 const addSync = async (flags: AddFlags) => {
   const fields = flags.fields.length > 0 ? flags.fields : defaultFields(flags.type)
   const { findManifestPath } = await import('../shared/manifest')
-  const { dirname } = await import('node:path')
   const manifestPath = findManifestPath(process.cwd())
   const projectRoot = manifestPath ? dirname(manifestPath) : process.cwd()
   const { loadConfig } = await import('../config')

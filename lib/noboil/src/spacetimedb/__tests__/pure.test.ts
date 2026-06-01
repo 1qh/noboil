@@ -5,6 +5,7 @@ import type { ComponentProps } from 'react'
 import type { Identity } from 'spacetimedb'
 import type { z } from 'zod/v4'
 import { describe, expect, test } from 'bun:test'
+import { join } from 'node:path'
 import { array, boolean, date, globalRegistry, number, object, optional, string, enum as zenum } from 'zod/v4'
 import type { AccessEntry, FactoryCall } from '../check'
 import type ErrorBoundary from '../components/error-boundary'
@@ -903,7 +904,6 @@ describe('universal table()', () => {
   })
   test('noboil define helpers include table helper', async () => {
     const { readFileSync } = await import('node:fs')
-    const { join } = await import('node:path')
     const content = readFileSync(join(import.meta.dir, '..', 'server', 'setup.ts'), 'utf8')
     expect(content.includes('table: TableFn')).toBe(true)
   })
@@ -2234,7 +2234,6 @@ describe('Fix #1: getOrgMember compound index', () => {
   })
   test('getOrgMember is not re-exported from server/index', async () => {
     const { readFileSync } = await import('node:fs')
-    const { join } = await import('node:path')
     const content = readFileSync(join(import.meta.dir, '..', 'server', 'index.ts'), 'utf8')
     expect(content.includes('getOrgMember')).toBe(false)
   })
@@ -2322,13 +2321,11 @@ describe('Fix #2: singleton first-upsert validates full schema', () => {
 describe('Fix #3: factory table names typed as keyof DM & string', () => {
   test('setup is exported from server/setup', async () => {
     const { readFileSync } = await import('node:fs')
-    const { join } = await import('node:path')
     const content = readFileSync(join(import.meta.dir, '..', 'server', 'setup.ts'), 'utf8')
     expect(content.includes('export') && content.includes('setup')).toBe(true)
   })
   test('setup is re-exported from server/index', async () => {
     const { readFileSync } = await import('node:fs')
-    const { join } = await import('node:path')
     const content = readFileSync(join(import.meta.dir, '..', 'server', 'index.ts'), 'utf8')
     expect(content.includes('setup')).toBe(true)
   })
@@ -2389,7 +2386,6 @@ describe('Fix #4: ownedCascade helper', () => {
   })
   test('ownedCascade is re-exported from server/index', async () => {
     const { readFileSync } = await import('node:fs')
-    const { join } = await import('node:path')
     const content = readFileSync(join(import.meta.dir, '..', 'server', 'index.ts'), 'utf8')
     expect(content.includes('ownedCascade')).toBe(true)
   })
@@ -3402,13 +3398,11 @@ describe('noboil-stdb-check --endpoints', () => {
 describe('bundle verification', () => {
   test('noboil/spacetimedb/server does not export React hooks', async () => {
     const { readFileSync } = await import('node:fs')
-    const { join } = await import('node:path')
     const content = readFileSync(join(import.meta.dir, '..', 'server', 'index.ts'), 'utf8')
     expect(EXPORT_HOOK_PATTERN.test(content)).toBe(false)
   })
   test('noboil/spacetimedb/schema has no React imports', async () => {
     const { readFileSync } = await import('node:fs')
-    const { join } = await import('node:path')
     const content = readFileSync(join(import.meta.dir, '..', 'schema.ts'), 'utf8')
     expect(content.includes("from 'react'")).toBe(false)
     expect(content.includes('useState')).toBe(false)
@@ -3416,20 +3410,17 @@ describe('bundle verification', () => {
   })
   test('noboil/spacetimedb/schema has no node:fs imports', async () => {
     const { readFileSync } = await import('node:fs')
-    const { join } = await import('node:path')
     const content = readFileSync(join(import.meta.dir, '..', 'schema.ts'), 'utf8')
     expect(content.includes("from 'node:fs'")).toBe(false)
   })
   test('noboil/spacetimedb/retry has no React or server imports', async () => {
     const { readFileSync } = await import('node:fs')
-    const { join } = await import('node:path')
     const content = readFileSync(join(import.meta.dir, '..', 'retry.ts'), 'utf8')
     expect(content.includes("from 'react'")).toBe(false)
     expect(content.includes("from 'node:fs'")).toBe(false)
   })
   test('entry point count matches package.json exports', async () => {
     const { readFileSync } = await import('node:fs')
-    const { join } = await import('node:path')
     const content = readFileSync(join(import.meta.dir, '..', '..', '..', 'package.json'), 'utf8')
     const pkg = JSON.parse(content) as { exports: Record<string, string> }
     const exportKeys = Object.keys(pkg.exports)
@@ -8356,7 +8347,6 @@ describe('Sprint 5 useMutation exports', () => {
   })
   test('useMut signature in source matches generic reducer-first contract', async () => {
     const { readFileSync } = await import('node:fs')
-    const { join } = await import('node:path')
     const content = readFileSync(join(import.meta.dir, '..', 'react', 'use-mutate.ts'), 'utf8')
     expect(content.includes('useMut = <A extends Record<string, unknown>, R = void>(')).toBe(true)
   })
@@ -9055,7 +9045,6 @@ describe('unified schema()', () => {
 describe('softDelete auto-adds deletedAt column', () => {
   const readSetupSource = async (): Promise<string> => {
     const { readFileSync } = await import('node:fs')
-    const { join } = await import('node:path')
     return readFileSync(join(import.meta.dir, '..', 'server', 'setup.ts'), 'utf8')
   }
   test('setup source includes softDelete auto-injection code', async () => {
@@ -9084,7 +9073,6 @@ describe('softDelete auto-adds deletedAt column', () => {
 describe('compoundIndex shorthand', () => {
   const readSetupSource = async (): Promise<string> => {
     const { readFileSync } = await import('node:fs')
-    const { join } = await import('node:path')
     return readFileSync(join(import.meta.dir, '..', 'server', 'setup.ts'), 'utf8')
   }
   test('compoundIndexToEntry function exists', async () => {
@@ -9270,7 +9258,6 @@ describe('type-safe column references in table options', () => {
   })
   test('setup source constrains pub option to typed schema keys', async () => {
     const { readFileSync } = await import('node:fs')
-    const { join } = await import('node:path')
     const content = readFileSync(join(import.meta.dir, '..', 'server', 'setup.ts'), 'utf8')
     expect(content.includes('pub?: boolean | ZodKeys<F>')).toBe(true)
     expect(content.includes('pub?: string')).toBe(false)
