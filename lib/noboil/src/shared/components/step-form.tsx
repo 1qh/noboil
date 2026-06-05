@@ -129,7 +129,7 @@ const StepIndicator = ({
             data-testid={`step-indicator-${step.id}`}
             disabled={!isCompleted}
             onClick={() => {
-              if (isCompleted) inner.navigation.goTo(step.id)
+              if (isCompleted) inner.goTo(step.id)
             }}
             type='button'>
             {isCompleted ? <Check className='size-4' /> : i + 1}
@@ -153,7 +153,7 @@ const StepIndicator = ({
 const createDefineSteps = <TFields,>(adapters: DefineStepsAdapters<TFields>) => {
   const defineSteps = <const Defs extends readonly [StepDef, ...StepDef[]]>(...defs: Defs) => {
     const internalSteps = defs.map(d => ({ id: d.id, label: d.label, schema: d.schema })) as unknown as InternalStep[]
-    const stepperFactory = defineStepper(...internalSteps)
+    const stepperFactory = defineStepper(internalSteps)
     const schemaMap: Record<string, ZodObject> = {}
     for (const d of defs) schemaMap[d.id] = d.schema
     const useStepperHook = (opts: UseStepperOpts<Defs>): StepperReturn<Defs> => {
@@ -268,10 +268,10 @@ const createDefineSteps = <TFields,>(adapters: DefineStepsAdapters<TFields>) => 
         window.addEventListener('beforeunload', h)
         return () => window.removeEventListener('beforeunload', h)
       }, [dirty])
-      const currentStep = s.inner.state.current.data
-      const currentIdx = s.inner.state.current.index
-      const currentIsFirst = s.inner.state.isFirst
-      const currentIsLast = s.inner.state.isLast
+      const currentStep = s.inner.current
+      const currentIdx = s.inner.index
+      const currentIsFirst = s.inner.isFirst
+      const currentIsLast = s.inner.isLast
       const currentId = currentStep.id
       const stepRenders: Record<string, (f: TFields) => ReactNode> = {}
       const childArr = Array.isArray(children) ? children : [children]
@@ -306,13 +306,13 @@ const createDefineSteps = <TFields,>(adapters: DefineStepsAdapters<TFields>) => 
                 adapters.onFinalSubmitError?.(error)
               }
             })()
-          } else s.inner.navigation.next()
+          } else s.inner.next()
         },
         [currentId, currentIsLast, s]
       )
       const handlePrev = useCallback(() => {
         if (formHandleRef.current) stepDataRef.current[currentId] = formHandleRef.current.values()
-        s.inner.navigation.prev()
+        s.inner.prev()
       }, [currentId, s.inner])
       const registerForm = useCallback((handle: FormHandle | null) => {
         formHandleRef.current = handle
