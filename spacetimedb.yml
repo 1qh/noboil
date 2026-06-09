@@ -3,13 +3,17 @@ services:
     image: clockworklabs/spacetime:latest
     command: start --listen-addr 0.0.0.0:${CONTAINER_PORT_STDB}
     ports:
-      - "${PORT_STDB}:${CONTAINER_PORT_STDB}"
-      - "${PORT_POSTGRES}:${CONTAINER_PORT_POSTGRES}"
+      - '${PORT_STDB}:${CONTAINER_PORT_STDB}'
+      - '${PORT_POSTGRES}:${CONTAINER_PORT_POSTGRES}'
     volumes:
       - spacetimedb_data:/stdb
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://localhost:${CONTAINER_PORT_STDB}/v1/ping 2>/dev/null || curl -fsS http://localhost:${CONTAINER_PORT_STDB}/database/ping 2>/dev/null || exit 1"]
+      test:
+        [
+          'CMD-SHELL',
+          'curl -fsS http://localhost:${CONTAINER_PORT_STDB}/v1/ping 2>/dev/null || curl -fsS http://localhost:${CONTAINER_PORT_STDB}/database/ping 2>/dev/null || exit 1'
+        ]
       interval: 5s
       timeout: 3s
       retries: 10

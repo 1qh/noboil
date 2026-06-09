@@ -1,9 +1,9 @@
 extends: default
 ignore:
-  - "**/.build/"
-  - "**/Skip/"
-  - ".github/"
-  - "/*.yml"
+  - '**/.build/'
+  - '**/Skip/'
+  - '.github/'
+  - '/*.yml'
   - node_modules/
 rules:
   anchors: enable
