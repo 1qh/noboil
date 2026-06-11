@@ -1,10 +1,19 @@
-import type { Sharp } from 'sharp'
-
 type Format = 'jpeg' | 'png' | 'webp'
 interface FormatOpts {
   contentType: string
   format: Format | undefined
   quality: number
+}
+interface ImagePipeline {
+  jpeg: (options: { quality: number }) => ImagePipeline
+  png: (options: { quality: number }) => ImagePipeline
+  resize: (options: {
+    fit: 'contain' | 'cover' | 'fill' | 'inside' | 'outside'
+    height?: number
+    width?: number
+  }) => ImagePipeline
+  toBuffer: () => Promise<Buffer>
+  webp: (options: { quality: number }) => ImagePipeline
 }
 interface ProcessOptions {
   compress?: { quality?: number }
@@ -14,7 +23,7 @@ interface ProcessOptions {
 interface TransformOpts {
   contentType: string
   options: ProcessOptions | undefined
-  pipeline: Sharp
+  pipeline: ImagePipeline
   thumbnail: boolean
 }
 const IMAGE_TYPES = new Set(['image/gif', 'image/jpeg', 'image/png', 'image/svg+xml', 'image/webp'])
@@ -24,7 +33,12 @@ const formatToMime: Record<Format, string> = {
   png: 'image/png',
   webp: 'image/webp'
 }
-const applyFormat = ({ contentType, format, pipeline, quality }: FormatOpts & { pipeline: Sharp }): Sharp => {
+const applyFormat = ({
+  contentType,
+  format,
+  pipeline,
+  quality
+}: FormatOpts & { pipeline: ImagePipeline }): ImagePipeline => {
   if (format === 'jpeg') return pipeline.jpeg({ quality })
   if (format === 'png') return pipeline.png({ quality })
   if (format === 'webp') return pipeline.webp({ quality })
@@ -34,7 +48,7 @@ const applyFormat = ({ contentType, format, pipeline, quality }: FormatOpts & { 
   if (ext === 'webp') return pipeline.webp({ quality })
   return pipeline
 }
-const applyTransforms = ({ contentType, options, pipeline, thumbnail }: TransformOpts): Sharp => {
+const applyTransforms = ({ contentType, options, pipeline, thumbnail }: TransformOpts): ImagePipeline => {
   const DEFAULT_QUALITY = 80
   const THUMB_SIZE = 200
   const quality = options?.compress?.quality ?? DEFAULT_QUALITY
@@ -51,5 +65,5 @@ const applyTransforms = ({ contentType, options, pipeline, thumbnail }: Transfor
     result = applyFormat({ contentType, format: options.format, pipeline: result, quality })
   return result
 }
-export type { Format, FormatOpts, ProcessOptions, TransformOpts }
+export type { Format, FormatOpts, ImagePipeline, ProcessOptions, TransformOpts }
 export { applyFormat, applyTransforms, formatToMime, isImageType }
