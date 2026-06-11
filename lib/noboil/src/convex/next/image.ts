@@ -3,9 +3,9 @@ import type { FunctionReference } from 'convex/server'
 import type { NextRequest } from 'next/server'
 import { ConvexHttpClient } from 'convex/browser'
 import { NextResponse } from 'next/server'
-import sharp from 'sharp'
 import type { ProcessOptions } from '../../shared/next/image'
 import { applyTransforms, formatToMime, isImageType } from '../../shared/next/image'
+import { loadSharp } from '../../shared/next/sharp'
 
 interface ImageRouteConfig {
   convexUrl: string
@@ -64,6 +64,7 @@ const makePost =
       const result = await fetchImage({ client: getClient(), queryRef, storageId })
       if ('error' in result) return NextResponse.json({ error: result.error }, { status: result.status })
       const { buffer, contentType } = result
+      const sharp = loadSharp()
       const pipeline = applyTransforms({
         contentType,
         options,

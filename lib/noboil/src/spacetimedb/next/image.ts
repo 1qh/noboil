@@ -3,9 +3,9 @@
 /* eslint-disable @typescript-eslint/require-await */
 import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
-import sharp from 'sharp'
 import type { ProcessOptions } from '../../shared/next/image'
 import { applyTransforms, formatToMime, isImageType } from '../../shared/next/image'
+import { loadSharp } from '../../shared/next/sharp'
 
 interface ImageRouteConfig {
   fileInfoEndpoint?: string
@@ -106,6 +106,7 @@ const makePost =
       if ('error' in result) return NextResponse.json({ error: result.error }, { status: result.status })
       const { buffer, contentType } = result
       const thumbnail = body.thumbnail ?? false
+      const sharp = loadSharp()
       const pipeline = applyTransforms({
         contentType,
         options: body.options,
