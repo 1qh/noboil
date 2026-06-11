@@ -11,7 +11,7 @@
   ],
   "scripts": {
     "action": "sh up.sh && bun run test && bun docs:check",
-    "build": "bash -c \"turbo run build --output-logs=errors-only 2> >(grep -vE 'WARNING|Could not resolve workspaces|missing field|Turborepo will still function' >&2)\"",
+    "build": "bash -c \"turbo build --output-logs=errors-only 2> >(grep -vE 'WARNING|Could not resolve workspaces|missing field|Turborepo will still function' >&2)\"",
     "check": "lintmax check",
     "clean": "sh clean.sh",
     "convex:reset": "docker compose -f convex.yml down -v && bun script/setup-convex.ts",

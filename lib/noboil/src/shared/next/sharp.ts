@@ -2,7 +2,6 @@ import { createRequire } from 'node:module'
 import type { ImagePipeline } from './image'
 
 type SharpFactory = (input: Buffer) => ImagePipeline
-
 const require = createRequire(import.meta.url)
 const isSharpFactory = (value: unknown): value is SharpFactory => typeof value === 'function'
 const loadSharp = (): SharpFactory => {
