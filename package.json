@@ -11,7 +11,7 @@
   ],
   "scripts": {
     "action": "sh up.sh && bun run test && bun docs:check",
-    "build": "turbo run build --output-logs=errors-only",
+    "build": "bash -c \"turbo run build --output-logs=errors-only 2> >(grep -vE 'WARNING|Could not resolve workspaces|missing field|Turborepo will still function' >&2)\"",
     "check": "lintmax check",
     "clean": "sh clean.sh",
     "convex:reset": "docker compose -f convex.yml down -v && bun script/setup-convex.ts",
@@ -22,7 +22,7 @@
     "docs": "bun doc/scripts/gen-all.ts",
     "docs:check": "bun doc/scripts/gen-all.ts --check",
     "doctor": "bun script/doctor.ts",
-    "fix": "lintmax fix && bun doc/scripts/gen-all.ts && turbo typecheck build --output-logs=errors-only",
+    "fix": "bun run build && bun doc/scripts/gen-all.ts && lintmax fix",
     "gha:run-ci-full": "bash -lc 'b=$(git branch --show-current); gh workflow run CI --ref \"$b\" -f force_full=true && gh run list --workflow CI --branch \"$b\" --limit 3'",
     "postinstall": "sherif && bun script/patch-stdb-sdk.ts",
     "prepare": "bunx simple-git-hooks",
@@ -37,11 +37,11 @@
     "spacetime:reset": "docker compose -f spacetimedb.yml down -v && bun script/setup-spacetimedb.ts",
     "spacetime:up": "bun script/emit-env.ts && docker compose -f spacetimedb.yml up -d --quiet-pull",
     "sync:convex": "bun script/sync-convex.ts",
-    "test": "turbo test --concurrency=1 --output-logs=errors-only",
+    "test": "bash -c \"turbo test --concurrency=1 --output-logs=errors-only 2> >(grep -vE 'WARNING|Could not resolve workspaces|missing field|Turborepo will still function' >&2)\"",
     "test:all": "bun script/test-all.ts",
     "test:all:watch": "bash script/watch-test-all.sh",
     "test:web": "bun run test",
-    "tsc": "turbo run typecheck --output-logs=errors-only",
+    "tsc": "bash -c \"turbo run typecheck --output-logs=errors-only 2> >(grep -vE 'WARNING|Could not resolve workspaces|missing field|Turborepo will still function' >&2)\"",
     "verify": "bun run tsc && bun run check && bun run build"
   },
   "simple-git-hooks": {
