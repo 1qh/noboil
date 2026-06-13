@@ -1,7 +1,6 @@
 #!/usr/bin/env bun
-/* eslint-disable no-console, no-continue */
+/* eslint-disable no-console */
 /** biome-ignore-all lint/performance/useTopLevelRegex: per-file scan */
-/** biome-ignore-all lint/nursery/noContinue: walker */
 import { Transpiler } from 'bun'
 import { walkFiles } from 'noboil/walk'
 import { readFileSync } from 'node:fs'
@@ -46,6 +45,30 @@ const SYNTAX_TOKENS = [
   ': boolean'
 ]
 const looksLikeTypeScript = (code: string): boolean => SYNTAX_TOKENS.some(t => code.includes(t))
+const SOFT = [
+  'has already been declared',
+  'cannot be reassigned',
+  'Top-level return',
+  'must have an initializer',
+  'cannot use import',
+  'export from a non ECMAScript',
+  'Parse error',
+  'Multiple exports with the same name'
+]
+const checkBlock = (b: Block): { issue?: string; parseable: boolean } => {
+  if (!looksLikeTypeScript(b.code)) return { parseable: true }
+  if (/\{\s*\.\.\.\s*\}/u.test(b.code) || b.code.includes('/* ... */') || /^\s*\{\s*\n/u.test(b.code))
+    return { parseable: true }
+  try {
+    new Transpiler({ loader: 'tsx', target: 'browser' }).scan(b.code)
+    return { parseable: true }
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : String(error)
+    const first = msg.split('\n')[0] ?? ''
+    if (SOFT.some(s => first.includes(s))) return { parseable: true }
+    return { issue: `${relative(REPO, b.file)} block #${b.index}: ${first}`, parseable: false }
+  }
+}
 const main = () => {
   const files = walk(DOCS_DIR)
   let total = 0
@@ -55,33 +78,9 @@ const main = () => {
     const blocks = extractBlocks(readFileSync(file, 'utf8'), file)
     for (const b of blocks) {
       total += 1
-      if (!looksLikeTypeScript(b.code)) {
-        parseable += 1
-        continue
-      }
-      if (/\{\s*\.\.\.\s*\}/u.test(b.code) || b.code.includes('/* ... */') || /^\s*\{\s*\n/u.test(b.code)) {
-        parseable += 1
-        continue
-      }
-      try {
-        new Transpiler({ loader: 'tsx', target: 'browser' }).scan(b.code)
-        parseable += 1
-      } catch (error: unknown) {
-        const msg = error instanceof Error ? error.message : String(error)
-        const first = msg.split('\n')[0] ?? ''
-        const SOFT = [
-          'has already been declared',
-          'cannot be reassigned',
-          'Top-level return',
-          'must have an initializer',
-          'cannot use import',
-          'export from a non ECMAScript',
-          'Parse error',
-          'Multiple exports with the same name'
-        ]
-        if (SOFT.some(s => first.includes(s))) parseable += 1
-        else issues.push(`${relative(REPO, b.file)} block #${b.index}: ${first}`)
-      }
+      const res = checkBlock(b)
+      if (res.parseable) parseable += 1
+      if (res.issue) issues.push(res.issue)
     }
   }
   const pct = total === 0 ? 100 : Math.round((parseable / total) * 100)

@@ -1,6 +1,4 @@
-/** biome-ignore-all lint/nursery/noContinue: classify-or-skip loop */
 /** biome-ignore-all lint/performance/useTopLevelRegex: codegen script */
-/* eslint-disable no-continue */
 /* oxlint-disable unicorn/prefer-spread */
 import { Glob } from 'bun'
 import { readFile } from 'node:fs/promises'
@@ -34,6 +32,42 @@ const detectKind = async (
   const kind = kindMap[(m.groups as { def: string; exp: string }).def as 'Mutation' | 'Query' | 'Tool']
   return { exportName, kind }
 }
+const buildToolFile = async ({
+  filename,
+  provider,
+  rel,
+  segments,
+  toolsRoot
+}: {
+  filename: string
+  provider: string
+  rel: string
+  segments: string[]
+  toolsRoot: string
+}): Promise<null | ToolFile> => {
+  const baseName = filename.replace(/\.ts$/u, '')
+  const moduleSegs = segments.slice(0, -1).concat(baseName)
+  const cliSegs = moduleSegs.map((s, i) => (i === 0 ? camelToKebab(s.replace(/^_/u, '')) : camelToKebab(s)))
+  const tier = provider.startsWith(TIER_ADMIN_PREFIX) ? 'admin' : 'user'
+  const importPath = `../${moduleSegs.join('/')}`
+  const importVar = `${moduleSegs.map((s, i) => (i === 0 ? s : s.charAt(0).toUpperCase() + s.slice(1))).join('')}_mod`
+  const absPath = resolve(toolsRoot, rel)
+  const detected = await detectKind(absPath)
+  if (!detected) return null
+  const fnAccessor = `internal.tools.${moduleSegs.join('.')}.${detected.exportName}`
+  return {
+    absPath,
+    cliPath: cliSegs,
+    exportName: detected.exportName,
+    fnAccessor,
+    importPath,
+    importVar,
+    kind: detected.kind,
+    modulePath: moduleSegs,
+    registryKey: cliSegs.join('.'),
+    tier
+  }
+}
 const collect = async (toolsRoot: string): Promise<{ providers: string[]; tools: ToolFile[] }> => {
   const tools: ToolFile[] = []
   const providers = new Set<string>()
@@ -42,32 +76,17 @@ const collect = async (toolsRoot: string): Promise<{ providers: string[]; tools:
     const segments = rel.split('/')
     const [provider] = segments
     const filename = segments.at(-1)
-    if (!(provider && filename) || segments.length < 2) continue
-    if (SKIP_DIRS.has(provider)) continue
-    if (segments.slice(1).some(s => s.startsWith('_'))) continue
-    providers.add(provider)
-    const baseName = filename.replace(/\.ts$/u, '')
-    const moduleSegs = segments.slice(0, -1).concat(baseName)
-    const cliSegs = moduleSegs.map((s, i) => (i === 0 ? camelToKebab(s.replace(/^_/u, '')) : camelToKebab(s)))
-    const tier = provider.startsWith(TIER_ADMIN_PREFIX) ? 'admin' : 'user'
-    const importPath = `../${moduleSegs.join('/')}`
-    const importVar = `${moduleSegs.map((s, i) => (i === 0 ? s : s.charAt(0).toUpperCase() + s.slice(1))).join('')}_mod`
-    const absPath = resolve(toolsRoot, rel)
-    const detected = await detectKind(absPath)
-    if (!detected) continue
-    const fnAccessor = `internal.tools.${moduleSegs.join('.')}.${detected.exportName}`
-    tools.push({
-      absPath,
-      cliPath: cliSegs,
-      exportName: detected.exportName,
-      fnAccessor,
-      importPath,
-      importVar,
-      kind: detected.kind,
-      modulePath: moduleSegs,
-      registryKey: cliSegs.join('.'),
-      tier
-    })
+    if (
+      provider &&
+      filename &&
+      segments.length >= 2 &&
+      !SKIP_DIRS.has(provider) &&
+      !segments.slice(1).some(s => s.startsWith('_'))
+    ) {
+      providers.add(provider)
+      const tool = await buildToolFile({ filename, provider, rel, segments, toolsRoot })
+      if (tool) tools.push(tool)
+    }
   }
   return {
     providers: [...providers].toSorted(),

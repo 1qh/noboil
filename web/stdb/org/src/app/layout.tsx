@@ -1,7 +1,6 @@
 /* eslint-disable @eslint-react/dom/no-dangerously-set-innerhtml, react/no-danger, @eslint-react/hooks-extra/no-direct-set-state-in-use-effect */
 /* oxlint-disable jsx-no-new-array-as-prop */
 // biome-ignore-all lint/security/noDangerouslySetInnerHtml: controlled redirect
-// biome-ignore-all lint/nursery/useGlobalThis: browser API
 'use client'
 import type { Org, OrgMember } from '@a/be-spacetimedb/spacetimedb/types'
 import type { OrgRole } from 'noboil/spacetimedb'
@@ -55,8 +54,8 @@ const OrgLayoutInner = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (!isPlaywright()) return
     setPlaywrightWaitExpired(false)
-    const timer = window.setTimeout(() => setPlaywrightWaitExpired(true), 5000)
-    return () => window.clearTimeout(timer)
+    const timer = globalThis.setTimeout(() => setPlaywrightWaitExpired(true), 5000)
+    return () => globalThis.clearTimeout(timer)
   }, [activeOrgId, pathname])
   if (!pathname) return children
   if (!needsOrgLayout(pathname)) return children

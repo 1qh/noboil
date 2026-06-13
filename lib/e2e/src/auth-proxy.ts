@@ -1,5 +1,5 @@
-/** biome-ignore-all lint/nursery/noUndeclaredEnvVars: e2e proxy env vars */
 /** biome-ignore-all lint/style/noProcessEnv: env fallbacks */
+/** biome-ignore-all lint/suspicious/noUndeclaredEnvVars: e2e proxy reads optional override env vars */
 import { config, urls } from '@a/config'
 import { serve } from 'bun'
 

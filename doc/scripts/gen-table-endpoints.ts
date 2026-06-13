@@ -1,6 +1,5 @@
 #!/usr/bin/env bun
-/* eslint-disable no-console, no-continue */
-/** biome-ignore-all lint/nursery/noContinue: parser */
+/* eslint-disable no-console */
 import { readdirSync, readFileSync } from 'node:fs'
 import { DOCS_DIR, replaceBetween, REPO } from './lib'
 
@@ -11,20 +10,23 @@ const main = () => {
   let totalEndpoints = 0
   let tableCount = 0
   for (const f of readdirSync(dir).toSorted()) {
-    if (!f.endsWith('.ts') || f.startsWith('_') || f === 'schema.ts' || f === 'http.ts' || f === 'auth.ts') continue
-    const src = readFileSync(`${dir}/${f}`, 'utf8')
-    const m = EXPORT_BLOCK_RE.exec(src)
-    if (!m?.groups?.syms) continue
-    const names = m.groups.syms
-      .split(',')
-      .map(s => s.trim())
-      .filter(s => s && s !== 'type')
-      .toSorted()
-    if (names.length === 0) continue
-    tableCount += 1
-    totalEndpoints += names.length
-    const table = f.slice(0, -'.ts'.length)
-    rows.push(`| \`${table}\` | ${names.length} | ${names.map(n => `\`${n}\``).join(', ')} |`)
+    const skip = !f.endsWith('.ts') || f.startsWith('_') || f === 'schema.ts' || f === 'http.ts' || f === 'auth.ts'
+    if (!skip) {
+      const src = readFileSync(`${dir}/${f}`, 'utf8')
+      const m = EXPORT_BLOCK_RE.exec(src)
+      const names =
+        m?.groups?.syms
+          ?.split(',')
+          .map(s => s.trim())
+          .filter(s => s && s !== 'type')
+          .toSorted() ?? []
+      if (names.length > 0) {
+        tableCount += 1
+        totalEndpoints += names.length
+        const table = f.slice(0, -'.ts'.length)
+        rows.push(`| \`${table}\` | ${names.length} | ${names.map(n => `\`${n}\``).join(', ')} |`)
+      }
+    }
   }
   const body = [
     `**${totalEndpoints} endpoints across ${tableCount} table modules** in \`backend/convex/convex/\`. Each row is a re-export aggregator combining factory-generated CRUD + custom \`pq\`/\`q\`/\`m\` builders.`,

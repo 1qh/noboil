@@ -1,6 +1,5 @@
-/* eslint-disable no-console, @typescript-eslint/max-params, no-continue, @typescript-eslint/no-unnecessary-condition */
+/* eslint-disable no-console, @typescript-eslint/max-params, @typescript-eslint/no-unnecessary-condition */
 /** biome-ignore-all lint/complexity/useMaxParams: internal helper */
-/** biome-ignore-all lint/nursery/noContinue: parser */
 import { readFileSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 
@@ -34,22 +33,37 @@ const NON_SLUG_CHAR_RE = /[^a-z0-9 -]/gu
 const WHITESPACE_RE = /\s+/gu
 const slugify = (heading: string): string =>
   heading.toLowerCase().replace(HEADING_PREFIX_RE, '').replaceAll(NON_SLUG_CHAR_RE, '').replaceAll(WHITESPACE_RE, '-')
+const addBraceSym = (part: string, out: Set<string>) => {
+  const t = part.trim()
+  if (t) {
+    const idx = t.indexOf(' as ')
+    const name = idx === -1 ? t.replace(TYPE_PREFIX_RE, '') : t.slice(idx + 4).trim()
+    if (name && name !== 'type') out.add(name)
+  }
+}
 const collectBraceExports = (src: string, out: Set<string>) => {
   let m = EXPORT_BRACE_RE.exec(src)
   while (m) {
-    if (m.groups?.syms)
-      for (const part of m.groups.syms.split(',')) {
-        const t = part.trim()
-        if (!t) continue
-        const idx = t.indexOf(' as ')
-        const name = idx === -1 ? t.replace(TYPE_PREFIX_RE, '') : t.slice(idx + 4).trim()
-        if (name && name !== 'type') out.add(name)
-      }
+    if (m.groups?.syms) for (const part of m.groups.syms.split(',')) addBraceSym(part, out)
     m = EXPORT_BRACE_RE.exec(src)
   }
   EXPORT_BRACE_RE.lastIndex = 0
 }
 const isCheck = (): boolean => process.argv.includes('--check')
+const columnWidths = (block: string[][]): number[] => {
+  const widths: number[] = []
+  for (const row of block)
+    for (const [k, cell] of row.entries()) {
+      const w = (cell ?? '').length
+      if ((widths[k] ?? 0) < w) widths[k] = w
+    }
+  return widths
+}
+const padSepCell = (c: string, w: number): string => {
+  if (c.startsWith(':') && c.endsWith(':')) return `:${'-'.repeat(Math.max(1, w - 2))}:`
+  if (c.endsWith(':')) return `${'-'.repeat(Math.max(1, w - 1))}:`
+  return '-'.repeat(Math.max(3, w))
+}
 const padMarkdownTables = (text: string): string => {
   const lines = text.split('\n')
   const out: string[] = []
@@ -57,42 +71,29 @@ const padMarkdownTables = (text: string): string => {
   while (i < lines.length) {
     const line = lines[i] ?? ''
     const sepLine = lines[i + 1]?.trim() ?? ''
-    if (!(line.trim().startsWith('|') && TABLE_SEP_RE.test(sepLine))) {
+    if (line.trim().startsWith('|') && TABLE_SEP_RE.test(sepLine)) {
+      let j = i
+      const block: string[][] = []
+      while (j < lines.length && lines[j]?.trim().startsWith('|')) {
+        const cells = (lines[j] ?? '')
+          .trim()
+          .slice(1, -1)
+          .split('|')
+          .map(c => c.trim())
+        block.push(cells)
+        j += 1
+      }
+      const widths = columnWidths(block)
+      for (const row of block) {
+        const isSep = row.every(c => TABLE_SEP_CELL_RE.test(c))
+        const padded = row.map((c, k) => (isSep ? padSepCell(c, widths[k] ?? c.length) : c.padEnd(widths[k] ?? c.length)))
+        out.push(`| ${padded.join(' | ')} |`)
+      }
+      i = j
+    } else {
       out.push(line)
       i += 1
-      continue
     }
-    let j = i
-    const block: string[][] = []
-    while (j < lines.length && lines[j]?.trim().startsWith('|')) {
-      const cells = (lines[j] ?? '')
-        .trim()
-        .slice(1, -1)
-        .split('|')
-        .map(c => c.trim())
-      block.push(cells)
-      j += 1
-    }
-    const widths: number[] = []
-    for (const row of block)
-      for (const [k, cell] of row.entries()) {
-        const w = (cell ?? '').length
-        if ((widths[k] ?? 0) < w) widths[k] = w
-      }
-    for (const row of block) {
-      const isSep = row.every(c => TABLE_SEP_CELL_RE.test(c))
-      const padded = row.map((c, k) => {
-        const w = widths[k] ?? c.length
-        if (isSep) {
-          if (c.startsWith(':') && c.endsWith(':')) return `:${'-'.repeat(Math.max(1, w - 2))}:`
-          if (c.endsWith(':')) return `${'-'.repeat(Math.max(1, w - 1))}:`
-          return '-'.repeat(Math.max(3, w))
-        }
-        return c.padEnd(w)
-      })
-      out.push(`| ${padded.join(' | ')} |`)
-    }
-    i = j
   }
   return out.join('\n')
 }

@@ -1,6 +1,5 @@
 #!/usr/bin/env bun
-/* eslint-disable no-console, no-continue, @typescript-eslint/require-await */
-/** biome-ignore-all lint/nursery/noContinue: flow clarity */
+/* eslint-disable no-console, @typescript-eslint/require-await */
 /** biome-ignore-all lint/suspicious/useAwait: TUI expects Promise<void> */
 import { env } from 'bun'
 import { spawnSync } from 'node:child_process'
@@ -168,6 +167,53 @@ const refreshCache = (cwd: string) => {
     err: 'git clone failed during sync'
   })
 }
+const processUpstreamFile = ({
+  actions,
+  additions,
+  cwd,
+  onProgress,
+  opts,
+  relPath,
+  rootReview,
+  skipped,
+  tmpDir,
+  updates
+}: {
+  actions: { kind: 'added' | 'review' | 'skipped' | 'updated'; relPath: string }[]
+  additions: string[]
+  cwd: string
+  onProgress: (p: Record<string, unknown>) => void
+  opts: SyncOpts
+  relPath: string
+  rootReview: string[]
+  skipped: string[]
+  tmpDir: string
+  updates: string[]
+}) => {
+  if (relPath === '.noboilrc.json') return
+  const before = {
+    additions: additions.length,
+    rootReview: rootReview.length,
+    skipped: skipped.length,
+    updates: updates.length
+  }
+  processOneFile({
+    additions,
+    cwd,
+    dryRun: opts.dryRun,
+    force: opts.force,
+    relPath,
+    rootReview,
+    skipped,
+    tmpDir,
+    updates
+  })
+  if (updates.length > before.updates) actions.push({ kind: 'updated', relPath })
+  else if (additions.length > before.additions) actions.push({ kind: 'added', relPath })
+  else if (rootReview.length > before.rootReview) actions.push({ kind: 'review', relPath })
+  else if (skipped.length > before.skipped) actions.push({ kind: 'skipped', relPath })
+  onProgress({ actions: [...actions], current: relPath })
+}
 const runSync = async (opts: SyncOpts, onProgress: (p: Record<string, unknown>) => void): Promise<void> => {
   const cwd = findProjectRoot(process.cwd())
   const manifest = readManifest(cwd)
@@ -196,31 +242,8 @@ const runSync = async (opts: SyncOpts, onProgress: (p: Record<string, unknown>) 
     const additions: string[] = []
     const rootReview: string[] = []
     const actions: { kind: 'added' | 'review' | 'skipped' | 'updated'; relPath: string }[] = []
-    for (const relPath of upstreamFiles) {
-      if (relPath === '.noboilrc.json') continue
-      const before = {
-        additions: additions.length,
-        rootReview: rootReview.length,
-        skipped: skipped.length,
-        updates: updates.length
-      }
-      processOneFile({
-        additions,
-        cwd,
-        dryRun: opts.dryRun,
-        force: opts.force,
-        relPath,
-        rootReview,
-        skipped,
-        tmpDir,
-        updates
-      })
-      if (updates.length > before.updates) actions.push({ kind: 'updated', relPath })
-      else if (additions.length > before.additions) actions.push({ kind: 'added', relPath })
-      else if (rootReview.length > before.rootReview) actions.push({ kind: 'review', relPath })
-      else if (skipped.length > before.skipped) actions.push({ kind: 'skipped', relPath })
-      onProgress({ actions: [...actions], current: relPath })
-    }
+    for (const relPath of upstreamFiles)
+      processUpstreamFile({ actions, additions, cwd, onProgress, opts, relPath, rootReview, skipped, tmpDir, updates })
     if (!opts.dryRun) {
       const nextManifest: Manifest = {
         db: manifest.db,

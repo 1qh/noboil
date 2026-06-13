@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/nursery/noUndeclaredClasses: standard tailwind v4 utilities biome cannot resolve */
 // biome-ignore-all lint/a11y/useSemanticElements: intentional div usage
 'use client'
 import type { AnyFieldApi } from '@tanstack/react-form'

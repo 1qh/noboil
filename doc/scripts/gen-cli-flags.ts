@@ -1,7 +1,6 @@
 #!/usr/bin/env bun
-/* eslint-disable no-console, no-continue */
+/* eslint-disable no-console */
 /** biome-ignore-all lint/performance/useTopLevelRegex: per-block */
-/** biome-ignore-all lint/nursery/noContinue: parser */
 import { readFileSync } from 'node:fs'
 import { DOCS_DIR, replaceBetween } from './lib'
 
@@ -23,14 +22,14 @@ const parseHelpBlock = (text: string): Flag[] => {
   let inOpts = false
   for (const raw of text.split('\n')) {
     const line = raw.trimEnd()
-    if (/^\s*Options:\s*$/u.test(line)) {
-      inOpts = true
-      continue
+    if (/^\s*Options:\s*$/u.test(line)) inOpts = true
+    else {
+      if (/^[A-Z]/u.test(line.trim()) && line.trim().endsWith(':')) inOpts = line.trim() === 'Options:'
+      if (inOpts) {
+        const m = FLAG_RE.exec(line)
+        if (m?.groups?.desc && m.groups.flag) flags.push({ description: m.groups.desc.trim(), flag: m.groups.flag.trim() })
+      }
     }
-    if (/^[A-Z]/u.test(line.trim()) && line.trim().endsWith(':')) inOpts = line.trim() === 'Options:'
-    if (!inOpts) continue
-    const m = FLAG_RE.exec(line)
-    if (m?.groups?.desc && m.groups.flag) flags.push({ description: m.groups.desc.trim(), flag: m.groups.flag.trim() })
   }
   return flags
 }

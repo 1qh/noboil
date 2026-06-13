@@ -1,6 +1,5 @@
 #!/usr/bin/env bun
-/* eslint-disable no-console, no-continue */
-/** biome-ignore-all lint/nursery/noContinue: walker */
+/* eslint-disable no-console */
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { DOCS_DIR, replaceBetween, REPO } from './lib'
 
@@ -22,13 +21,13 @@ const collectDir = (dir: string): { describes: number; files: number; tests: num
   let describes = 0
   let tests = 0
   let files = 0
-  for (const name of readdirSync(dir).toSorted()) {
-    if (!name.endsWith('.test.ts')) continue
-    const src = readFileSync(`${dir}/${name}`, 'utf8')
-    files += 1
-    describes += countMatches(DESCRIBE_RE, src)
-    tests += countMatches(TEST_RE, src)
-  }
+  for (const name of readdirSync(dir).toSorted())
+    if (name.endsWith('.test.ts')) {
+      const src = readFileSync(`${dir}/${name}`, 'utf8')
+      files += 1
+      describes += countMatches(DESCRIBE_RE, src)
+      tests += countMatches(TEST_RE, src)
+    }
   return { describes, files, tests }
 }
 const main = () => {

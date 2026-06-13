@@ -1,4 +1,3 @@
-// biome-ignore-all lint/nursery/useGlobalThis: browser API in page.evaluate
 import path from 'node:path'
 import { expect, test } from './fixtures'
 import { api, createTestOrg, ensureTestUser, login, makeOrgTestUtils, tc } from './helpers'
@@ -372,7 +371,7 @@ test.describe
       await expect(onboardingPage.getStepIndicator('org')).toHaveAttribute('aria-current', 'step', { timeout: 5000 })
       const hasHandler = await page.evaluate(() => {
         const event = new Event('beforeunload', { cancelable: true })
-        window.dispatchEvent(event)
+        globalThis.dispatchEvent(event)
         return event.defaultPrevented
       })
       expect(hasHandler).toBe(true)

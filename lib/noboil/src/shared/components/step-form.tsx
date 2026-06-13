@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/nursery/noUndeclaredClasses: standard tailwind v4 utilities biome cannot resolve */
 /** biome-ignore-all lint/nursery/noComponentHookFactories: factory returns hook by design */
 /* oxlint-disable jsx-no-new-object-as-prop, react/jsx-handler-names */
 /* eslint-disable complexity, react-hooks/refs */

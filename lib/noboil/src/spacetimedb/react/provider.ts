@@ -1,5 +1,4 @@
 // oxlint-disable no-document-cookie
-// biome-ignore-all lint/nursery/useGlobalThis: browser API
 import type { UploadOptions, UploadResponse } from '../components'
 import { DEFAULT_TOKEN_KEY, DEFAULT_WS_URI, TOKEN_COOKIE_KEY } from '../defaults'
 import { err } from '../server/helpers'
@@ -59,13 +58,15 @@ const toWsUri = (uri: null | string | undefined): string => {
  */
 const createTokenStore = (key = DEFAULT_TOKEN_KEY): TokenStore => {
   const get = (): string | undefined => {
-    if (typeof window === 'undefined') return
-    const token = window.localStorage.getItem(key)
+    // oxlint-disable-next-line unicorn/no-typeof-undefined
+    if (typeof globalThis.window === 'undefined') return
+    const token = globalThis.localStorage.getItem(key)
     return token ?? undefined
   }
   const store = (token: string) => {
-    if (typeof window === 'undefined') return
-    window.localStorage.setItem(key, token)
+    // oxlint-disable-next-line unicorn/no-typeof-undefined
+    if (typeof globalThis.window === 'undefined') return
+    globalThis.localStorage.setItem(key, token)
     /** biome-ignore lint/suspicious/noDocumentCookie: token cookie storage */
     document.cookie = `${TOKEN_COOKIE_KEY}=${encodeURIComponent(token)}; Path=/; SameSite=Lax`
   }

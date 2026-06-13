@@ -1,7 +1,6 @@
 #!/usr/bin/env bun
-/* eslint-disable no-console, no-template-curly-in-string, no-continue */
+/* eslint-disable no-console, no-template-curly-in-string */
 /** biome-ignore-all lint/suspicious/noTemplateCurlyInString: literal placeholder */
-/** biome-ignore-all lint/nursery/noContinue: simple parser */
 import { readFileSync } from 'node:fs'
 import { DOCS_DIR, LIB_NOBOIL, replaceBetween } from './lib'
 
@@ -22,18 +21,17 @@ const extract = (file: string): Entry[] => {
   let pendingDoc = ''
   for (const line of lines) {
     const docMatch = JSDOC_RE.exec(line)
-    if (docMatch?.groups?.text) {
-      pendingDoc = docMatch.groups.text
-      continue
+    if (docMatch?.groups?.text) pendingDoc = docMatch.groups.text
+    else {
+      const m = NAME_RE.exec(line)
+      if (m?.groups?.role && m.groups.tpl) {
+        const pm = PARAMS_RE.exec(pendingDoc)
+        const params = pm?.groups?.params ?? ''
+        const desc = pm?.groups?.desc ?? pendingDoc
+        out.push({ desc, params, role: m.groups.role, tpl: m.groups.tpl })
+        pendingDoc = ''
+      } else if (line.trim() && !line.trim().startsWith('//')) pendingDoc = ''
     }
-    const m = NAME_RE.exec(line)
-    if (m?.groups?.role && m.groups.tpl) {
-      const pm = PARAMS_RE.exec(pendingDoc)
-      const params = pm?.groups?.params ?? ''
-      const desc = pm?.groups?.desc ?? pendingDoc
-      out.push({ desc, params, role: m.groups.role, tpl: m.groups.tpl })
-      pendingDoc = ''
-    } else if (line.trim() && !line.trim().startsWith('//')) pendingDoc = ''
   }
   return out
 }

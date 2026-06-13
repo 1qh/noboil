@@ -1,5 +1,5 @@
+/** biome-ignore-all lint/nursery/noUndeclaredClasses: standard tailwind v4 utilities biome cannot resolve */
 /* eslint-disable @eslint-react/hooks-extra/no-direct-set-state-in-use-effect, react-hooks/refs */
-/** biome-ignore-all lint/nursery/noRedundantDefaultExport: backward-compat alias */
 /* eslint-disable complexity */
 // biome-ignore-all lint/style/noProcessEnv: intentional process.env access
 'use client'
@@ -370,5 +370,5 @@ const DevtoolsAutoMount = (props: DevtoolsProps) => {
   return createPortal(<Devtools {...props} />, containerRef.current)
 }
 export default Devtools
-export { Devtools, DevtoolsAutoMount }
+export { DevtoolsAutoMount }
 export type { DevtoolsProps }

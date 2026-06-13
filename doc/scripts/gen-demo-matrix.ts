@@ -1,6 +1,5 @@
 #!/usr/bin/env bun
-/* eslint-disable no-console, no-continue */
-/** biome-ignore-all lint/nursery/noContinue: walker */
+/* eslint-disable no-console */
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 import { DOCS_DIR, replaceBetween, REPO } from './lib'
@@ -26,13 +25,13 @@ const parseTables = (src: string): Map<string, string[]> => {
 }
 const walkSrc = (dir: string, out: string[] = []): string[] => {
   if (!statSync(dir, { throwIfNoEntry: false })) return out
-  for (const name of readdirSync(dir).toSorted()) {
-    if (name === 'node_modules' || name === '.next' || name === 'module_bindings' || name.startsWith('.')) continue
-    const full = join(dir, name)
-    const stat = statSync(full)
-    if (stat.isDirectory()) walkSrc(full, out)
-    else if (name.endsWith('.ts') || name.endsWith('.tsx')) out.push(full)
-  }
+  for (const name of readdirSync(dir).toSorted())
+    if (!(name === 'node_modules' || name === '.next' || name === 'module_bindings' || name.startsWith('.'))) {
+      const full = join(dir, name)
+      const stat = statSync(full)
+      if (stat.isDirectory()) walkSrc(full, out)
+      else if (name.endsWith('.ts') || name.endsWith('.tsx')) out.push(full)
+    }
   return out
 }
 const cvxTablesUsedBy = (root: string): Set<string> => {

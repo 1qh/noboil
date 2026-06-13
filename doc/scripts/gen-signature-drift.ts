@@ -1,7 +1,6 @@
 #!/usr/bin/env bun
-/* eslint-disable no-console, no-continue */
+/* eslint-disable no-console */
 /** biome-ignore-all lint/performance/useTopLevelRegex: per-file scan */
-/** biome-ignore-all lint/nursery/noContinue: walker */
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join, relative } from 'node:path'
 import { DOCS_DIR, LIB_NOBOIL, replaceBetween, REPO } from './lib'
@@ -22,34 +21,33 @@ const balancedParens = (src: string, openIdx: number): string => {
   }
   return src.slice(openIdx + 1, i - 1)
 }
+const collectHooksFromFile = (root: string, f: string, out: Hook[]) => {
+  const src = readFileSync(`${root}/${f}`, 'utf8')
+  let m = HOOK_RE.exec(src)
+  while (m) {
+    const openIdx = m.groups?.name ? src.indexOf('(', m.index + m[0].length - 1) : -1
+    if (m.groups?.name && openIdx !== -1) {
+      const params = balancedParens(src, openIdx).replaceAll(/\s+/gu, ' ').trim()
+      out.push({ args: params || '', file: relative(REPO, `${root}/${f}`), name: m.groups.name })
+    }
+    m = HOOK_RE.exec(src)
+  }
+  HOOK_RE.lastIndex = 0
+}
 const collectHooks = (root: string): Hook[] => {
   const out: Hook[] = []
   if (!statSync(root, { throwIfNoEntry: false })) return out
-  for (const f of readdirSync(root).toSorted()) {
-    if (!(f.startsWith('use-') && f.endsWith('.ts')) || f.endsWith('.test.ts')) continue
-    const src = readFileSync(`${root}/${f}`, 'utf8')
-    let m = HOOK_RE.exec(src)
-    while (m) {
-      if (m.groups?.name) {
-        const openIdx = src.indexOf('(', m.index + m[0].length - 1)
-        if (openIdx !== -1) {
-          const params = balancedParens(src, openIdx).replaceAll(/\s+/gu, ' ').trim()
-          out.push({ args: params || '', file: relative(REPO, `${root}/${f}`), name: m.groups.name })
-        }
-      }
-      m = HOOK_RE.exec(src)
-    }
-    HOOK_RE.lastIndex = 0
-  }
+  for (const f of readdirSync(root).toSorted())
+    if (f.startsWith('use-') && f.endsWith('.ts') && !f.endsWith('.test.ts')) collectHooksFromFile(root, f, out)
   return out
 }
 const walkDocs = (dir: string, out: string[] = []): string[] => {
-  for (const name of readdirSync(dir).toSorted()) {
-    if (name.startsWith('.')) continue
-    const full = join(dir, name)
-    if (statSync(full).isDirectory()) walkDocs(full, out)
-    else if (name.endsWith('.mdx')) out.push(full)
-  }
+  for (const name of readdirSync(dir).toSorted())
+    if (!name.startsWith('.')) {
+      const full = join(dir, name)
+      if (statSync(full).isDirectory()) walkDocs(full, out)
+      else if (name.endsWith('.mdx')) out.push(full)
+    }
   return out
 }
 const main = () => {
@@ -65,22 +63,23 @@ const main = () => {
   let drift = 0
   for (const hook of sources) {
     const re = new RegExp(`\\b${hook.name}\\b`, 'u')
-    if (!re.test(allDocText)) continue
-    mentioned += 1
-    const declRe = new RegExp(`(?:const|function)\\s+${hook.name}\\s*=?\\s*(?:<[^>]+>)?\\s*\\(([^)]{0,300})\\)`, 'gu')
-    let dm = declRe.exec(allDocText)
-    while (dm) {
-      withDecl += 1
-      const docArgs = (dm[1] ?? '').trim()
-      const docFirst = docArgs.split(',')[0]?.trim() ?? ''
-      const srcFirst = hook.args.split(',')[0]?.trim() ?? ''
-      const docName = docFirst.split(/[\s:]/u)[0] ?? ''
-      const srcName = srcFirst.split(/[\s:]/u)[0] ?? ''
-      if (docName && srcName && docName !== srcName) {
-        drift += 1
-        issues.push(`\`${hook.name}\`: doc declaration shows first arg \`${docName}\`, source has \`${srcName}\``)
+    if (re.test(allDocText)) {
+      mentioned += 1
+      const declRe = new RegExp(`(?:const|function)\\s+${hook.name}\\s*=?\\s*(?:<[^>]+>)?\\s*\\(([^)]{0,300})\\)`, 'gu')
+      let dm = declRe.exec(allDocText)
+      while (dm) {
+        withDecl += 1
+        const docArgs = (dm[1] ?? '').trim()
+        const docFirst = docArgs.split(',')[0]?.trim() ?? ''
+        const srcFirst = hook.args.split(',')[0]?.trim() ?? ''
+        const docName = docFirst.split(/[\s:]/u)[0] ?? ''
+        const srcName = srcFirst.split(/[\s:]/u)[0] ?? ''
+        if (docName && srcName && docName !== srcName) {
+          drift += 1
+          issues.push(`\`${hook.name}\`: doc declaration shows first arg \`${docName}\`, source has \`${srcName}\``)
+        }
+        dm = declRe.exec(allDocText)
       }
-      dm = declRe.exec(allDocText)
     }
   }
   const total = sources.length

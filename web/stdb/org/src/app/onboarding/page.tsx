@@ -1,4 +1,3 @@
-// biome-ignore-all lint/nursery/useGlobalThis: browser API
 'use client'
 import { reducers, tables } from '@a/be-spacetimedb/spacetimedb'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@a/ui/card'
@@ -58,7 +57,7 @@ const OnboardingPage = () => {
     },
     onSuccess: () => {
       toast.success('Welcome aboard!')
-      window.location.href = '/dashboard'
+      globalThis.location.href = '/dashboard'
     },
     values: initialValues
   })

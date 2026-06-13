@@ -1,5 +1,3 @@
-/* eslint-disable no-continue */
-/** biome-ignore-all lint/nursery/noContinue: script */
 /** biome-ignore-all lint/performance/noAwaitInLoops: sequential by design */
 /** biome-ignore-all lint/suspicious/noEmptyBlockStatements: keep process alive */
 /* eslint-disable no-await-in-loop, no-empty */
@@ -39,22 +37,19 @@ mkdirSync(logDir, { recursive: true })
 log(c.bold(`\nStarting ${all.length} app${all.length > 1 ? 's' : ''}\n`))
 const procs: { app: App; proc: ReturnType<typeof spawn> }[] = []
 const occupied: App[] = []
-for (const app of all) {
-  if (!(await portFree(app.port))) {
-    occupied.push(app)
-    continue
-  }
-  const fd = openSync(join(logDir, `${app.name}.log`), 'w')
-  const proc = spawn({
-    cmd: ['bun', 'run', 'dev'],
-    cwd: app.dir,
-    stderr: fd,
-    stdin: 'ignore',
-    stdout: fd
-  })
-  procs.push({ app, proc })
-  log(`  ${c.dim('→')} ${app.name.padEnd(12)} :${app.port} ${c.dim(`(pid ${proc.pid})`)}`)
-}
+for (const app of all)
+  if (await portFree(app.port)) {
+    const fd = openSync(join(logDir, `${app.name}.log`), 'w')
+    const proc = spawn({
+      cmd: ['bun', 'run', 'dev'],
+      cwd: app.dir,
+      stderr: fd,
+      stdin: 'ignore',
+      stdout: fd
+    })
+    procs.push({ app, proc })
+    log(`  ${c.dim('→')} ${app.name.padEnd(12)} :${app.port} ${c.dim(`(pid ${proc.pid})`)}`)
+  } else occupied.push(app)
 if (occupied.length > 0) warn(`Skipped (port busy): ${occupied.map(a => `${a.name}:${a.port}`).join(', ')}`)
 const shutdown = () => {
   log(c.dim('\nShutting down…'))

@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/nursery/noUndeclaredClasses: standard tailwind v4 utilities biome cannot resolve */
 import type { ComponentProps } from 'react'
 import { cn } from '@a/ui'
 import { Avatar, AvatarFallback } from '@a/ui/avatar'

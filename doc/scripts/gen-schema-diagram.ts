@@ -1,6 +1,5 @@
 #!/usr/bin/env bun
-/* eslint-disable no-console, no-continue, complexity */
-/** biome-ignore-all lint/nursery/noContinue: parser */
+/* eslint-disable no-console, complexity */
 import { readFileSync } from 'node:fs'
 import { DOCS_DIR, replaceBetween, REPO } from './lib'
 
@@ -89,10 +88,11 @@ const main = () => {
   const lines = ['```mermaid', 'graph LR']
   for (const slot of SLOTS) {
     const tables = slotMap[slot] ?? []
-    if (tables.length === 0) continue
-    lines.push(`  subgraph ${slot}`)
-    for (const t of tables) lines.push(`    ${t}["${t}"]`)
-    lines.push('  end')
+    if (tables.length > 0) {
+      lines.push(`  subgraph ${slot}`)
+      for (const t of tables) lines.push(`    ${t}["${t}"]`)
+      lines.push('  end')
+    }
   }
   for (const e of dedupedEdges) lines.push(`  ${e.from} -->|${e.label}| ${e.to}`)
   for (const slot of SLOTS) {

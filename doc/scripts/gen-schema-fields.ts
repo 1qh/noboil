@@ -1,7 +1,6 @@
 #!/usr/bin/env bun
-/* eslint-disable no-console, no-continue, complexity */
+/* eslint-disable no-console, complexity */
 /** biome-ignore-all lint/performance/useTopLevelRegex: parsed once */
-/** biome-ignore-all lint/nursery/noContinue: parser */
 import { readFileSync } from 'node:fs'
 import { DOCS_DIR, replaceBetween, REPO } from './lib'
 
@@ -24,58 +23,78 @@ const SKIP_KEYS = new Set([
   'schema',
   'writeRole'
 ])
+interface ScanState {
+  currentSlot: string
+  currentTable: string
+  depth: number
+  inSchema: boolean
+  tableFields: Map<string, { fields: { name: string; type: string }[]; slot: string }>
+  tableIndent: number
+}
+const scanLine = (st: ScanState, raw: string): void => {
+  if (!st.inSchema) {
+    if (raw.includes('schema({')) {
+      st.inSchema = true
+      st.depth = 1
+    }
+    return
+  }
+  for (const ch of raw)
+    if (ch === '{' || ch === '(') st.depth += 1
+    else if (ch === '}' || ch === ')') st.depth -= 1
+  if (st.depth <= 0) {
+    st.inSchema = false
+    return
+  }
+  const slotMatch = /^\s{2}(?<slot>\w+):\s*\{/u.exec(raw)
+  if (slotMatch?.groups?.slot && SLOTS.includes(slotMatch.groups.slot as (typeof SLOTS)[number])) {
+    st.currentSlot = slotMatch.groups.slot
+    st.currentTable = ''
+    return
+  }
+  const tableMatch = /^(?<indent>\s+)(?<name>\w+):\s*(?:object\(\{|child\(\{|\{|orgSchema)/u.exec(raw)
+  if (tableMatch?.groups?.indent && tableMatch.groups.name && tableMatch.groups.indent.length === 4 && st.currentSlot) {
+    st.currentTable = tableMatch.groups.name
+    st.tableIndent = tableMatch.groups.indent.length
+    st.tableFields.set(st.currentTable, { fields: [], slot: st.currentSlot })
+    return
+  }
+  if (st.currentTable) {
+    const indent = raw.length - raw.trimStart().length
+    if (indent <= st.tableIndent) {
+      st.currentTable = ''
+      return
+    }
+    const fieldMatch = /^\s+(?<fname>\w+):\s*(?<ftype>.+?)[,]?$/u.exec(raw)
+    if (fieldMatch?.groups?.fname && fieldMatch.groups.ftype && !SKIP_KEYS.has(fieldMatch.groups.fname)) {
+      const t = fieldMatch.groups.ftype.trim().replace(/[,;]+$/u, '')
+      if (t && !t.startsWith('//') && !t.startsWith('object('))
+        st.tableFields.get(st.currentTable)?.fields.push({ name: fieldMatch.groups.fname, type: t })
+    }
+  }
+}
+const renderTable = (name: string, fields: { name: string; type: string }[]): string[] => {
+  const out = [`**\`${name}\`** — ${fields.length} field(s)`, '']
+  if (fields.length === 0) out.push('_(no inline fields parsed — see source)_')
+  else {
+    out.push('| Field | Zod chain |', '|---|---|')
+    for (const f of fields) out.push(`| \`${f.name}\` | \`${escapeMd(f.type)}\` |`)
+  }
+  out.push('')
+  return out
+}
 const main = () => {
   const lines = readFileSync(`${REPO}/backend/convex/s.ts`, 'utf8').split('\n')
-  let inSchema = false
-  let depth = 0
-  let currentSlot = ''
-  let currentTable = ''
-  let tableIndent = -1
-  const tableFields = new Map<string, { fields: { name: string; type: string }[]; slot: string }>()
-  for (const raw of lines) {
-    const trimmed = raw.trim()
-    if (!inSchema) {
-      if (raw.includes('schema({')) {
-        inSchema = true
-        depth = 1
-      }
-      continue
-    }
-    for (const ch of raw)
-      if (ch === '{' || ch === '(') depth += 1
-      else if (ch === '}' || ch === ')') depth -= 1
-    if (depth <= 0) {
-      inSchema = false
-      continue
-    }
-    const slotMatch = /^\s{2}(?<slot>\w+):\s*\{/u.exec(raw)
-    if (slotMatch?.groups?.slot && SLOTS.includes(slotMatch.groups.slot as (typeof SLOTS)[number])) {
-      currentSlot = slotMatch.groups.slot
-      currentTable = ''
-      continue
-    }
-    const tableMatch = /^(?<indent>\s+)(?<name>\w+):\s*(?:object\(\{|child\(\{|\{|orgSchema)/u.exec(raw)
-    if (tableMatch?.groups?.indent && tableMatch.groups.name && tableMatch.groups.indent.length === 4 && currentSlot) {
-      currentTable = tableMatch.groups.name
-      tableIndent = tableMatch.groups.indent.length
-      tableFields.set(currentTable, { fields: [], slot: currentSlot })
-      continue
-    }
-    if (currentTable) {
-      const indent = raw.length - raw.trimStart().length
-      if (indent <= tableIndent) {
-        currentTable = ''
-        continue
-      }
-      const fieldMatch = /^\s+(?<fname>\w+):\s*(?<ftype>.+?)[,]?$/u.exec(raw)
-      if (fieldMatch?.groups?.fname && fieldMatch.groups.ftype && !SKIP_KEYS.has(fieldMatch.groups.fname)) {
-        const t = fieldMatch.groups.ftype.trim().replace(/[,;]+$/u, '')
-        if (t && !t.startsWith('//') && !t.startsWith('object('))
-          tableFields.get(currentTable)?.fields.push({ name: fieldMatch.groups.fname, type: t })
-      }
-    }
-    if (trimmed.startsWith('//') || trimmed === '') continue
+  const st: ScanState = {
+    currentSlot: '',
+    currentTable: '',
+    depth: 0,
+    inSchema: false,
+    tableFields: new Map(),
+    tableIndent: -1
   }
+  for (const raw of lines) scanLine(st, raw)
+  const { tableFields } = st
   const sections: string[] = []
   let totalTables = 0
   let totalFields = 0
@@ -87,21 +106,13 @@ const main = () => {
   }
   for (const slot of SLOTS) {
     const tables = bySlot.get(slot)
-    if (!tables || tables.length === 0) continue
-    sections.push(`### slot: \`${slot}\``)
-    sections.push('')
-    for (const { fields, name } of tables.toSorted((a, b) => a.name.localeCompare(b.name))) {
-      totalTables += 1
-      totalFields += fields.length
-      sections.push(`**\`${name}\`** — ${fields.length} field(s)`)
-      sections.push('')
-      if (fields.length === 0) sections.push('_(no inline fields parsed — see source)_')
-      else {
-        sections.push('| Field | Zod chain |')
-        sections.push('|---|---|')
-        for (const f of fields) sections.push(`| \`${f.name}\` | \`${escapeMd(f.type)}\` |`)
+    if (tables && tables.length > 0) {
+      sections.push(`### slot: \`${slot}\``, '')
+      for (const { fields, name } of tables.toSorted((a, b) => a.name.localeCompare(b.name))) {
+        totalTables += 1
+        totalFields += fields.length
+        sections.push(...renderTable(name, fields))
       }
-      sections.push('')
     }
   }
   const body = [

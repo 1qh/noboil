@@ -1,4 +1,4 @@
-/** biome-ignore-all lint/nursery/noUndeclaredEnvVars: test-only env keys */
+/** biome-ignore-all lint/suspicious/noUndeclaredEnvVars: test mutates throwaway env vars for createEnv */
 import { afterEach, describe, expect, test } from 'bun:test'
 import { object, string } from 'zod/v4'
 import { createEnv, createOptionalEnv } from '../env-zod'

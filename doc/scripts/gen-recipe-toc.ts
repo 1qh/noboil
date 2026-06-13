@@ -1,6 +1,5 @@
 #!/usr/bin/env bun
-/* eslint-disable no-console, no-continue */
-/** biome-ignore-all lint/nursery/noContinue: simple parser */
+/* eslint-disable no-console */
 import { readFileSync } from 'node:fs'
 import { DOCS_DIR, replaceBetween, slugify } from './lib'
 
@@ -8,12 +7,11 @@ const RECIPES = `${DOCS_DIR}/recipes.mdx`
 const main = () => {
   const src = readFileSync(RECIPES, 'utf8')
   const headings: { slug: string; text: string }[] = []
-  for (const line of src.split('\n')) {
-    if (!line.startsWith('## ')) continue
-    if (line.includes('AUTO-GENERATED')) continue
-    const text = line.slice(3).trim()
-    headings.push({ slug: slugify(line), text })
-  }
+  for (const line of src.split('\n'))
+    if (line.startsWith('## ') && !line.includes('AUTO-GENERATED')) {
+      const text = line.slice(3).trim()
+      headings.push({ slug: slugify(line), text })
+    }
   const lines = ['## Recipes index', '', `${headings.length} recipes (auto-generated TOC):`, '']
   for (const h of headings) lines.push(`- [${h.text}](#${h.slug})`)
   const body = lines.join('\n')

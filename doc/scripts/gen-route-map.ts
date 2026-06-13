@@ -1,6 +1,5 @@
 #!/usr/bin/env bun
-/* eslint-disable no-console, no-continue */
-/** biome-ignore-all lint/nursery/noContinue: walker */
+/* eslint-disable no-console */
 import { readdirSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 import { DOCS_DIR, replaceBetween, REPO } from './lib'
@@ -9,13 +8,13 @@ const DEMOS = ['blog', 'chat', 'movie', 'org', 'poll']
 const walkRoutes = (root: string, base = ''): string[] => {
   if (!statSync(root, { throwIfNoEntry: false })) return []
   const out: string[] = []
-  for (const name of readdirSync(root).toSorted()) {
-    if (name.startsWith('.') || name === 'node_modules' || name === 'api') continue
-    const full = join(root, name)
-    const s = statSync(full)
-    if (s.isDirectory()) out.push(...walkRoutes(full, `${base}/${name}`))
-    else if (name === 'page.tsx') out.push(base || '/')
-  }
+  for (const name of readdirSync(root).toSorted())
+    if (!(name.startsWith('.') || name === 'node_modules' || name === 'api')) {
+      const full = join(root, name)
+      const s = statSync(full)
+      if (s.isDirectory()) out.push(...walkRoutes(full, `${base}/${name}`))
+      else if (name === 'page.tsx') out.push(base || '/')
+    }
   return out.toSorted()
 }
 const main = () => {

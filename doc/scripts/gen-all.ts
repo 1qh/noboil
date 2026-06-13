@@ -1,7 +1,6 @@
 #!/usr/bin/env bun
-/* eslint-disable no-console, no-await-in-loop, no-continue */
+/* eslint-disable no-console, no-await-in-loop */
 /** biome-ignore-all lint/performance/noAwaitInLoops: sequential by design */
-/** biome-ignore-all lint/nursery/noContinue: skip-on-failure */
 import { $ } from 'bun'
 import { REPO } from './lib'
 
@@ -68,15 +67,10 @@ const main = async () => {
   for (const script of SCRIPTS) {
     const proc = await $`bun ${REPO}/doc/scripts/${script}`.cwd(REPO).quiet().nothrow()
     const out = (proc.stdout.toString() + proc.stderr.toString()).trim()
-    if (proc.exitCode !== 0) {
-      failures.push(`✗ ${script}: exit ${proc.exitCode}\n${out}`)
-      continue
-    }
-    if (isCheck && out.startsWith('Updated')) {
+    if (proc.exitCode !== 0) failures.push(`✗ ${script}: exit ${proc.exitCode}\n${out}`)
+    else if (isCheck && out.startsWith('Updated'))
       failures.push(`✗ ${script}: drift — run \`bun doc/scripts/gen-all.ts\`\n${out}`)
-      continue
-    }
-    if (verbose) console.log(`✓ ${script} — ${out.split('\n').pop()}`)
+    else if (verbose) console.log(`✓ ${script} — ${out.split('\n').pop()}`)
   }
   if (failures.length > 0) {
     for (const f of failures) console.error(f)

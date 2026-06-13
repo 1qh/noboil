@@ -1,6 +1,5 @@
 #!/usr/bin/env bun
-/* eslint-disable no-console, no-continue */
-/** biome-ignore-all lint/nursery/noContinue: simple scanner */
+/* eslint-disable no-console */
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 import { replaceLineBetween, REPO } from './lib'
@@ -14,9 +13,8 @@ const collect = (kind: 'cvx' | 'stdb'): string[] => {
   const entries: string[] = []
   for (const name of readdirSync(root).toSorted()) {
     const dir = join(root, name)
-    if (!statSync(dir).isDirectory()) continue
-    if (!readFileSync(join(dir, 'package.json'), 'utf8').includes('"name"')) continue
-    entries.push(name)
+    if (statSync(dir).isDirectory() && readFileSync(join(dir, 'package.json'), 'utf8').includes('"name"'))
+      entries.push(name)
   }
   return entries.toSorted()
 }

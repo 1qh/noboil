@@ -1,5 +1,3 @@
-/* eslint-disable no-continue */
-/** biome-ignore-all lint/nursery/noContinue: skip iter on missing reservation */
 import { describe, expect, test } from 'bun:test'
 import type { Lcg } from '../../shared/test/index'
 import type { BudgetDB } from './_budget-fakes'
@@ -74,15 +72,16 @@ describe('budget property invariants', () => {
         } else if (reservations.length > 0) {
           const idx = rng.int(reservations.length)
           const reservation = reservations[idx]
-          if (!reservation) continue
-          reservations.splice(idx, 1)
-          const actual = Math.max(0, Math.floor(reservation.amount * (rng.next() * 1.5)))
-          await (exports.settle as unknown as (c: unknown, a: Record<string, unknown>) => Promise<void>)(ctx, {
-            actualAmount: actual,
-            owner,
-            reservedAmount: reservation.amount,
-            reservedPeriodKey: reservation.periodKey
-          })
+          if (reservation) {
+            reservations.splice(idx, 1)
+            const actual = Math.max(0, Math.floor(reservation.amount * (rng.next() * 1.5)))
+            await (exports.settle as unknown as (c: unknown, a: Record<string, unknown>) => Promise<void>)(ctx, {
+              actualAmount: actual,
+              owner,
+              reservedAmount: reservation.amount,
+              reservedPeriodKey: reservation.periodKey
+            })
+          }
         }
         for (const r of db.rows.filter(rr => rr.owner === owner)) {
           expect(r.balance).toBeGreaterThanOrEqual(0)

@@ -1,6 +1,5 @@
 #!/usr/bin/env bun
-/* eslint-disable no-console, no-continue */
-/** biome-ignore-all lint/nursery/noContinue: walker */
+/* eslint-disable no-console */
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 import { DOCS_DIR, LIB_NOBOIL, replaceBetween } from './lib'
@@ -109,12 +108,12 @@ const FACTORIES: FactorySpec[] = [
 const TEST_BLOCK_RE = /\b(?:test|it)\(\s*['"`][^'"`]+['"`][\s\S]*?^\s*\}\)/gmu
 const walk = (dir: string, out: string[] = []): string[] => {
   if (!statSync(dir, { throwIfNoEntry: false })) return out
-  for (const name of readdirSync(dir).toSorted()) {
-    if (name.startsWith('.') || name === 'node_modules') continue
-    const full = join(dir, name)
-    if (statSync(full).isDirectory()) walk(full, out)
-    else if (name.endsWith('.test.ts')) out.push(full)
-  }
+  for (const name of readdirSync(dir).toSorted())
+    if (!(name.startsWith('.') || name === 'node_modules')) {
+      const full = join(dir, name)
+      if (statSync(full).isDirectory()) walk(full, out)
+      else if (name.endsWith('.test.ts')) out.push(full)
+    }
   return out
 }
 const lineCount = (path: string): number => (existsSync(path) ? readFileSync(path, 'utf8').split('\n').length : 0)

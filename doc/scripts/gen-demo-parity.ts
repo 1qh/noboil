@@ -1,6 +1,5 @@
 #!/usr/bin/env bun
-/* eslint-disable no-console, no-continue */
-/** biome-ignore-all lint/nursery/noContinue: walker */
+/* eslint-disable no-console */
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 import { DOCS_DIR, replaceBetween, REPO } from './lib'
@@ -9,49 +8,47 @@ const DEMOS = ['blog', 'chat', 'movie', 'org', 'poll']
 const TEST_RE = /\b(?:test|it)\(\s*['"`]/gu
 const walk = (dir: string, out: string[] = []): string[] => {
   if (!statSync(dir, { throwIfNoEntry: false })) return out
-  for (const name of readdirSync(dir).toSorted()) {
-    if (name.startsWith('.') || name === 'node_modules' || name === '.next') continue
-    const full = join(dir, name)
-    if (statSync(full).isDirectory()) walk(full, out)
-    else out.push(full)
-  }
+  for (const name of readdirSync(dir).toSorted())
+    if (!(name.startsWith('.') || name === 'node_modules' || name === '.next')) {
+      const full = join(dir, name)
+      if (statSync(full).isDirectory()) walk(full, out)
+      else out.push(full)
+    }
   return out
 }
 const collectRoutes = (root: string, base = ''): string[] => {
   if (!statSync(root, { throwIfNoEntry: false })) return []
   const out: string[] = []
-  for (const name of readdirSync(root).toSorted()) {
-    if (name.startsWith('.') || name === 'node_modules' || name === 'api') continue
-    const full = join(root, name)
-    const s = statSync(full)
-    if (s.isDirectory()) out.push(...collectRoutes(full, `${base}/${name}`))
-    else if (name === 'page.tsx') out.push(base || '/')
-  }
+  for (const name of readdirSync(root).toSorted())
+    if (!(name.startsWith('.') || name === 'node_modules' || name === 'api')) {
+      const full = join(root, name)
+      const s = statSync(full)
+      if (s.isDirectory()) out.push(...collectRoutes(full, `${base}/${name}`))
+      else if (name === 'page.tsx') out.push(base || '/')
+    }
   return out.toSorted()
 }
 const countTests = (dir: string): number => {
   let n = 0
   if (!statSync(dir, { throwIfNoEntry: false })) return 0
-  for (const f of readdirSync(dir).toSorted()) {
-    if (!f.endsWith('.test.ts')) continue
-    const src = readFileSync(`${dir}/${f}`, 'utf8')
-    let m = TEST_RE.exec(src)
-    while (m) {
-      n += 1
-      m = TEST_RE.exec(src)
+  for (const f of readdirSync(dir).toSorted())
+    if (f.endsWith('.test.ts')) {
+      const src = readFileSync(`${dir}/${f}`, 'utf8')
+      let m = TEST_RE.exec(src)
+      while (m) {
+        n += 1
+        m = TEST_RE.exec(src)
+      }
+      TEST_RE.lastIndex = 0
     }
-    TEST_RE.lastIndex = 0
-  }
   return n
 }
 const countSrcLines = (root: string): number => {
   if (!statSync(root, { throwIfNoEntry: false })) return 0
   let total = 0
-  for (const f of walk(root)) {
-    if (!(f.endsWith('.ts') || f.endsWith('.tsx'))) continue
-    if (f.endsWith('.test.ts')) continue
-    total += readFileSync(f, 'utf8').split('\n').length
-  }
+  for (const f of walk(root))
+    if ((f.endsWith('.ts') || f.endsWith('.tsx')) && !f.endsWith('.test.ts'))
+      total += readFileSync(f, 'utf8').split('\n').length
   return total
 }
 const KNOWN_BACKEND_ONLY = {

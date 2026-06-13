@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/nursery/noUndeclaredClasses: standard tailwind v4 utilities biome cannot resolve */
 /** biome-ignore-all lint/nursery/noComponentHookFactories: factory returns hook by design */
 'use client'
 import type { ComponentProps } from 'react'

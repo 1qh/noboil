@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /** biome-ignore-all lint/style/noProcessEnv: CLI binary reads env directly */
-/** biome-ignore-all lint/nursery/noUndeclaredEnvVars: consumer-facing env vars (CLI_SESSION_*, CONVEX_*) */
+/** biome-ignore-all lint/suspicious/noUndeclaredEnvVars: CLI reads optional session/auth env vars */
 /** biome-ignore-all lint/suspicious/noControlCharactersInRegex: sanitize strips control chars */
 /* eslint-disable no-console, no-control-regex, @typescript-eslint/no-unnecessary-condition, complexity */
 import { readFileSync } from 'node:fs'

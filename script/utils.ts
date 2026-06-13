@@ -1,5 +1,3 @@
-/* eslint-disable no-continue */
-/** biome-ignore-all lint/nursery/noContinue: script */
 /** biome-ignore-all lint/performance/noAwaitInLoops: sequential by design */
 /** biome-ignore-all lint/suspicious/noControlCharactersInRegex: ANSI color codes */
 /* eslint-disable no-await-in-loop, no-control-regex */
@@ -55,9 +53,10 @@ const readEnv = (): Record<string, string> => {
   if (!existsSync(envPath)) return current
   for (const line of readFileSync(envPath, 'utf8').split('\n')) {
     const t = line.trim()
-    if (!t || t.startsWith('#')) continue
-    const i = t.indexOf('=')
-    if (i > 0) current[t.slice(0, i)] = t.slice(i + 1)
+    if (t && !t.startsWith('#')) {
+      const i = t.indexOf('=')
+      if (i > 0) current[t.slice(0, i)] = t.slice(i + 1)
+    }
   }
   return current
 }

@@ -1,6 +1,5 @@
 #!/usr/bin/env bun
-/* eslint-disable no-console, no-continue */
-/** biome-ignore-all lint/nursery/noContinue: walker */
+/* eslint-disable no-console */
 import { readdirSync, readFileSync } from 'node:fs'
 import { DOCS_DIR, LIB_NOBOIL, replaceBetween } from './lib'
 
@@ -41,10 +40,9 @@ const extractHookSigs = (src: string): { args: string; name: string }[] => {
 const collect = (kind: 'convex' | 'spacetimedb'): { args: string; name: string }[] => {
   const dir = `${LIB_NOBOIL}/src/${kind}/react`
   const out: { args: string; name: string }[] = []
-  for (const f of readdirSync(dir).toSorted()) {
-    if (!(f.startsWith('use-') && f.endsWith('.ts') && !f.endsWith('.test.ts'))) continue
-    for (const sig of extractHookSigs(readFileSync(`${dir}/${f}`, 'utf8'))) out.push(sig)
-  }
+  for (const f of readdirSync(dir).toSorted())
+    if (f.startsWith('use-') && f.endsWith('.ts') && !f.endsWith('.test.ts'))
+      for (const sig of extractHookSigs(readFileSync(`${dir}/${f}`, 'utf8'))) out.push(sig)
   return out.toSorted((a, b) => a.name.localeCompare(b.name))
 }
 const main = () => {

@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/style/noProcessEnv: next.config reads env directly to build CSP/runtime config */
 import { env as nodeEnv } from 'node:process'
 import type { CreateNextConfigOptions } from './next-config-core'
 import { createNextConfigWithCsp } from './next-config-core'

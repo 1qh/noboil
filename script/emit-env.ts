@@ -1,5 +1,3 @@
-/* eslint-disable no-continue */
-/** biome-ignore-all lint/nursery/noContinue: sequential */
 /** biome-ignore-all lint/suspicious/noEmptyBlockStatements: silent cleanup */
 /* eslint-disable no-empty */
 import { config, infraVars, portVars, urlVars } from '@a/config'
@@ -30,11 +28,11 @@ const linkAppEnvs = () => {
   const targets: Target[] = []
   for (const kind of ['cvx', 'stdb'] as const) {
     const parent = join(root, kind === 'cvx' ? config.paths.webCvx : config.paths.webStdb)
-    if (!existsSync(parent)) continue
-    for (const name of readdirSync(parent)) {
-      const d = join(parent, name)
-      if (existsSync(join(d, 'package.json'))) targets.push({ depth: 3, dir: d, web: true })
-    }
+    if (existsSync(parent))
+      for (const name of readdirSync(parent)) {
+        const d = join(parent, name)
+        if (existsSync(join(d, 'package.json'))) targets.push({ depth: 3, dir: d, web: true })
+      }
   }
   const docDir = join(root, config.paths.doc)
   if (existsSync(join(docDir, 'package.json'))) targets.push({ depth: 1, dir: docDir, web: true })

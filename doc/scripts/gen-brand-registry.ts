@@ -1,6 +1,5 @@
 #!/usr/bin/env bun
-/* eslint-disable no-console, no-continue */
-/** biome-ignore-all lint/nursery/noContinue: simple parser */
+/* eslint-disable no-console */
 import { readFileSync } from 'node:fs'
 import { DOCS_DIR, LIB_NOBOIL, replaceBetween } from './lib'
 
@@ -11,19 +10,16 @@ const main = () => {
   const lines = src.split('\n')
   let inBlock = false
   const rows: string[] = []
-  for (const line of lines) {
-    if (line.includes('interface SchemaHintMap')) {
-      inBlock = true
-      continue
+  for (const line of lines)
+    if (line.includes('interface SchemaHintMap')) inBlock = true
+    else if (inBlock) {
+      if (line.trim() === '}') break
+      const m = ENTRY_RE.exec(line)
+      if (m?.groups?.brand && m.groups.hint) {
+        const safeHint = m.groups.hint.replaceAll('{', String.raw`\{`).replaceAll('}', String.raw`\}`)
+        rows.push(`| \`${m.groups.brand}\` | ${safeHint} |`)
+      }
     }
-    if (!inBlock) continue
-    if (line.trim() === '}') break
-    const m = ENTRY_RE.exec(line)
-    if (m?.groups?.brand && m.groups.hint) {
-      const safeHint = m.groups.hint.replaceAll('{', String.raw`\{`).replaceAll('}', String.raw`\}`)
-      rows.push(`| \`${m.groups.brand}\` | ${safeHint} |`)
-    }
-  }
   rows.sort()
   const table = ['| Brand | Maker → Factory + Wrapper |', '|---|---|', ...rows].join('\n')
   const target = `${DOCS_DIR}/architecture.mdx`

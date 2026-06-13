@@ -61,7 +61,6 @@
     "@types/mdx": "latest",
     "axe-core": "latest",
     "babel-plugin-react-compiler": "latest",
-    "depcheck": "latest",
     "lintmax": "latest",
     "sherif": "latest",
     "simple-git-hooks": "latest",

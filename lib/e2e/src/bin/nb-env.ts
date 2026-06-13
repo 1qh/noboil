@@ -1,6 +1,4 @@
 #!/usr/bin/env bun
-/* eslint-disable no-continue */
-/** biome-ignore-all lint/nursery/noContinue: parser */
 /** biome-ignore-all lint/style/noProcessEnv: env loader */
 import { spawn } from 'bun'
 import { existsSync, readFileSync } from 'node:fs'
@@ -14,19 +12,21 @@ const findRepoRoot = (start: string): string => {
   }
   throw new Error(`Could not find repo root (noboil.config.ts) from ${start}`)
 }
+const loadEnvLine = (line: string) => {
+  const t = line.trim()
+  if (t && !t.startsWith('#')) {
+    const i = t.indexOf('=')
+    if (i >= 1) {
+      const k = t.slice(0, i)
+      let v = t.slice(i + 1)
+      if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) v = v.slice(1, -1)
+      if (!(k in process.env)) process.env[k] = v
+    }
+  }
+}
 const root = findRepoRoot(process.cwd())
 const envPath = resolve(root, '.env')
-if (existsSync(envPath))
-  for (const line of readFileSync(envPath, 'utf8').split('\n')) {
-    const t = line.trim()
-    if (!t || t.startsWith('#')) continue
-    const i = t.indexOf('=')
-    if (i < 1) continue
-    const k = t.slice(0, i)
-    let v = t.slice(i + 1)
-    if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) v = v.slice(1, -1)
-    if (!(k in process.env)) process.env[k] = v
-  }
+if (existsSync(envPath)) for (const line of readFileSync(envPath, 'utf8').split('\n')) loadEnvLine(line)
 const args = process.argv.slice(2)
 let cwd = process.cwd()
 while (args[0]?.startsWith('--cwd=')) {

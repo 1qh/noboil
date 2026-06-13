@@ -188,6 +188,54 @@ const makeOrgCrud = <S extends ZodRawShape>({
       .collect()
     for (const kid of kids) await dbDelete(db, kid._id as string)
   }
+  const updateItem = async ({
+    c,
+    orgIdVal,
+    rawItem,
+    role
+  }: {
+    c: MutCtx
+    orgIdVal: string
+    rawItem: Rec & { expectedUpdatedAt?: number; id: string }
+    role: OrgRole
+  }): Promise<null | Rec> => {
+    const doc = await c.db.get(rawItem.id)
+    if (doc?.orgId !== orgIdVal) return null
+    const aclDoc = await resolveAclDoc(c.db, doc, opt)
+    if (!canEdit({ acl: useAcl, doc: aclDoc, role, userId: c.user._id as string })) return null
+    let patch = partial.parse(rawItem) as Rec
+    if (hooks?.beforeUpdate) patch = await hooks.beforeUpdate(hk(c), { id: rawItem.id, patch, prev: doc })
+    const now = time()
+    await cleanFiles({ doc, fileFields: fileFs, next: patch, storage: c.storage })
+    await dbPatch(c.db, rawItem.id, { ...patch, ...now })
+    if (hooks?.afterUpdate) await hooks.afterUpdate(hk(c), { id: rawItem.id, patch, prev: doc })
+    return { ...doc, ...patch, ...now }
+  }
+  const removeItem = async ({
+    c,
+    id,
+    orgIdVal,
+    role
+  }: {
+    c: MutCtx
+    id: string
+    orgIdVal: string
+    role: OrgRole
+  }): Promise<boolean> => {
+    const doc = await c.db.get(id)
+    if (doc?.orgId !== orgIdVal) return false
+    const aclDoc = await resolveAclDoc(c.db, doc, opt)
+    if (!canEdit({ acl: useAcl, doc: aclDoc, role, userId: c.user._id as string })) return false
+    if (hooks?.beforeDelete) await hooks.beforeDelete(hk(c), { doc, id })
+    if (softDel) await dbPatch(c.db, id, { deletedAt: Date.now() })
+    else {
+      await cascadeDelete(c.db, id)
+      await dbDelete(c.db, id)
+    }
+    await cleanFiles({ doc, fileFields: fileFs, storage: c.storage })
+    if (hooks?.afterDelete) await hooks.afterDelete(hk(c), { doc, id })
+    return true
+  }
   const create = m({
     args: { ...orgIdArg, ...partial.shape, items: array(schema).max(BULK_MAX).optional() },
     handler: typed(async (c: MutCtx, a: Rec) => {
@@ -257,27 +305,8 @@ const makeOrgCrud = <S extends ZodRawShape>({
         const { role } = await requireOrgMember({ db: c.db, orgId, userId: c.user._id as string })
         const results: Rec[] = []
         for (const rawItem of rawItems) {
-          const doc = await c.db.get(rawItem.id)
-          /** biome-ignore lint/nursery/noContinue: guard clause reduces nesting */
-          if (doc?.orgId !== orgId) continue // eslint-disable-line no-continue
-          const aclDoc = await resolveAclDoc(c.db, doc, opt)
-          if (
-            !canEdit({
-              acl: useAcl,
-              doc: aclDoc,
-              role,
-              userId: c.user._id as string
-            })
-          )
-            /** biome-ignore lint/nursery/noContinue: guard clause reduces nesting */
-            continue // eslint-disable-line no-continue
-          let patch = partial.parse(rawItem) as Rec
-          if (hooks?.beforeUpdate) patch = await hooks.beforeUpdate(hk(c), { id: rawItem.id, patch, prev: doc })
-          const now = time()
-          await cleanFiles({ doc, fileFields: fileFs, next: patch, storage: c.storage })
-          await dbPatch(c.db, rawItem.id, { ...patch, ...now })
-          if (hooks?.afterUpdate) await hooks.afterUpdate(hk(c), { id: rawItem.id, patch, prev: doc })
-          results.push({ ...doc, ...patch, ...now })
+          const updated = await updateItem({ c, orgIdVal: orgId, rawItem, role })
+          if (updated) results.push(updated)
         }
         return results
       }
@@ -315,29 +344,8 @@ const makeOrgCrud = <S extends ZodRawShape>({
         const { role } = await requireOrgMember({ db: c.db, orgId, userId: c.user._id as string })
         let deleted = 0
         for (const id of ids) {
-          const doc = await c.db.get(id)
-          /** biome-ignore lint/nursery/noContinue: guard clause reduces nesting */
-          if (doc?.orgId !== orgId) continue // eslint-disable-line no-continue
-          const aclDoc = await resolveAclDoc(c.db, doc, opt)
-          if (
-            !canEdit({
-              acl: useAcl,
-              doc: aclDoc,
-              role,
-              userId: c.user._id as string
-            })
-          )
-            /** biome-ignore lint/nursery/noContinue: guard clause reduces nesting */
-            continue // eslint-disable-line no-continue
-          if (hooks?.beforeDelete) await hooks.beforeDelete(hk(c), { doc, id })
-          if (softDel) await dbPatch(c.db, id, { deletedAt: Date.now() })
-          else {
-            await cascadeDelete(c.db, id)
-            await dbDelete(c.db, id)
-          }
-          await cleanFiles({ doc, fileFields: fileFs, storage: c.storage })
-          if (hooks?.afterDelete) await hooks.afterDelete(hk(c), { doc, id })
-          deleted += 1
+          const didDelete = await removeItem({ c, id, orgIdVal: orgId, role })
+          if (didDelete) deleted += 1
         }
         return deleted
       }

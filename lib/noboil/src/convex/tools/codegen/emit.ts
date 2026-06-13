@@ -1,6 +1,4 @@
-/** biome-ignore-all lint/nursery/noContinue: control flow */
 /** biome-ignore-all lint/performance/useTopLevelRegex: codegen helpers */
-/* eslint-disable no-continue */
 import type { ToolFile } from './scan'
 import type { Extracted, SchemaNode } from './schema'
 
@@ -39,14 +37,15 @@ const emitToolTypes = (tools: ToolFile[], schemas: Map<string, Extracted>): stri
   const exportedNames: string[] = []
   for (const t of tools) {
     const ex = schemas.get(t.absPath)
-    if (!ex) continue
-    const name = pascalCase(t.cliPath.join('-'))
-    if (ex.args) {
-      lines.push(`interface ${name}Args ${schemaToTs(ex.args)}`, '')
-      exportedNames.push(`${name}Args`)
+    if (ex) {
+      const name = pascalCase(t.cliPath.join('-'))
+      if (ex.args) {
+        lines.push(`interface ${name}Args ${schemaToTs(ex.args)}`, '')
+        exportedNames.push(`${name}Args`)
+      }
+      lines.push(`interface ${name}Result ${schemaToTs(ex.schema)}`, '')
+      exportedNames.push(`${name}Result`)
     }
-    lines.push(`interface ${name}Result ${schemaToTs(ex.schema)}`, '')
-    exportedNames.push(`${name}Result`)
   }
   lines.push(`export type { ${exportedNames.join(', ')} }`)
   return lines.join('\n')
@@ -88,17 +87,18 @@ const emitToolCallers = (tools: ToolFile[], schemas: Map<string, Extracted>): st
   const emits: Emit[] = []
   for (const t of tools) {
     const ex = schemas.get(t.absPath)
-    if (!ex) continue
-    const name = pascalCase(t.cliPath.join('-'))
-    const key = t.cliPath.join('.')
-    const ctxType = t.kind === 'query' ? 'QueryCtx' : t.kind === 'mutation' ? 'MutationCtx' : 'ActionCtx'
-    const argsType = ex.args ? `${name}Args` : 'Record<string, never>'
-    if (ex.args) typeImports.push(`${name}Args`)
-    typeImports.push(`${name}Result`)
-    tableEntries.push(
-      `  ${JSON.stringify(key)}: { args: ${argsType}; ctx: ${ctxType}; kind: '${t.kind}'; result: ${name}Result };`
-    )
-    emits.push({ args: argsType, ctxType, fn: t.fnAccessor, key, kind: t.kind, name, result: `${name}Result` })
+    if (ex) {
+      const name = pascalCase(t.cliPath.join('-'))
+      const key = t.cliPath.join('.')
+      const ctxType = t.kind === 'query' ? 'QueryCtx' : t.kind === 'mutation' ? 'MutationCtx' : 'ActionCtx'
+      const argsType = ex.args ? `${name}Args` : 'Record<string, never>'
+      if (ex.args) typeImports.push(`${name}Args`)
+      typeImports.push(`${name}Result`)
+      tableEntries.push(
+        `  ${JSON.stringify(key)}: { args: ${argsType}; ctx: ${ctxType}; kind: '${t.kind}'; result: ${name}Result };`
+      )
+      emits.push({ args: argsType, ctxType, fn: t.fnAccessor, key, kind: t.kind, name, result: `${name}Result` })
+    }
   }
   const internals: string[] = [`import type { ${typeImports.join(', ')} } from './toolTypes'`, '']
   const callerFns: string[] = []

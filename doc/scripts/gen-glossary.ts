@@ -1,6 +1,5 @@
 #!/usr/bin/env bun
-/** biome-ignore-all lint/nursery/noContinue: walker */
-/* eslint-disable no-console, no-continue */
+/* eslint-disable no-console */
 import { readJson } from 'noboil/env-file'
 import { readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
 import { basename, relative, resolve } from 'node:path'
@@ -24,34 +23,46 @@ interface Entry {
   file: string
   subpaths: string[]
 }
-const main = () => {
-  const pkg = readJson(PKG_JSON_PATH) as {
-    exports: Record<string, string | { default?: string; import?: string; require?: string; types?: string }>
-    name: string
-  }
-  const symToEntry = new Map<string, Entry>()
-  for (const [sub, target] of Object.entries(pkg.exports)) {
-    const path = typeof target === 'string' ? target : (target.types ?? target.default ?? target.import ?? '')
-    if (!path) continue
-    const abs = resolve(LIB_NOBOIL, path)
-    if (!statSync(abs, { throwIfNoEntry: false })) continue
-    const subpath = sub === '.' ? pkg.name : `${pkg.name}/${sub.replace('./', '')}`
+const indexSubpath = ({
+  pkgName,
+  sub,
+  symToEntry,
+  target
+}: {
+  pkgName: string
+  sub: string
+  symToEntry: Map<string, Entry>
+  target: string | { default?: string; import?: string; types?: string }
+}) => {
+  const path = typeof target === 'string' ? target : (target.types ?? target.default ?? target.import ?? '')
+  const abs = path ? resolve(LIB_NOBOIL, path) : ''
+  if (abs && statSync(abs, { throwIfNoEntry: false })) {
+    const subpath = sub === '.' ? pkgName : `${pkgName}/${sub.replace('./', '')}`
     for (const sym of collectExports(abs)) {
       const e = symToEntry.get(sym) ?? { docs: [], file: relative(REPO, abs), subpaths: [] }
       if (!e.subpaths.includes(subpath)) e.subpaths.push(subpath)
       symToEntry.set(sym, e)
     }
   }
-  const docsDir = DOCS_DIR
-  for (const file of readdirSync(docsDir).toSorted()) {
-    if (!file.endsWith('.mdx') || file === 'glossary.mdx') continue
-    const src = readFileSync(`${docsDir}/${file}`, 'utf8').replaceAll(STRIP_AUTOGEN_RE, '').replaceAll(STRIP_FENCE_RE, '')
-    const slug = basename(file, '.mdx')
-    for (const [sym, entry] of symToEntry) {
-      const re = new RegExp(`\\b${sym}\\b`, 'u')
-      if (re.test(src) && !entry.docs.includes(slug)) entry.docs.push(slug)
-    }
+}
+const linkDocsFor = (docsDir: string, file: string, symToEntry: Map<string, Entry>) => {
+  const src = readFileSync(`${docsDir}/${file}`, 'utf8').replaceAll(STRIP_AUTOGEN_RE, '').replaceAll(STRIP_FENCE_RE, '')
+  const slug = basename(file, '.mdx')
+  for (const [sym, entry] of symToEntry) {
+    const re = new RegExp(`\\b${sym}\\b`, 'u')
+    if (re.test(src) && !entry.docs.includes(slug)) entry.docs.push(slug)
   }
+}
+const main = () => {
+  const pkg = readJson(PKG_JSON_PATH) as {
+    exports: Record<string, string | { default?: string; import?: string; require?: string; types?: string }>
+    name: string
+  }
+  const symToEntry = new Map<string, Entry>()
+  for (const [sub, target] of Object.entries(pkg.exports)) indexSubpath({ pkgName: pkg.name, sub, symToEntry, target })
+  const docsDir = DOCS_DIR
+  for (const file of readdirSync(docsDir).toSorted())
+    if (file.endsWith('.mdx') && file !== 'glossary.mdx') linkDocsFor(docsDir, file, symToEntry)
   const sorted = [...symToEntry.entries()].toSorted(([a], [b]) => a.localeCompare(b))
   const rows: string[] = []
   for (const [sym, e] of sorted) {

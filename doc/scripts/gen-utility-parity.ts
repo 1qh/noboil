@@ -1,6 +1,5 @@
 #!/usr/bin/env bun
-/* eslint-disable no-console, no-continue */
-/** biome-ignore-all lint/nursery/noContinue: parser */
+/* eslint-disable no-console */
 import { existsSync, readFileSync } from 'node:fs'
 import { collectBraceExports, DOCS_DIR, LIB_NOBOIL, replaceBetween } from './lib'
 
@@ -119,15 +118,16 @@ const collectExports = (root: string, files: string[]): Set<string> => {
   const out = new Set<string>()
   for (const f of files) {
     const path = `${root}/${f}`
-    if (!existsSync(path)) continue
-    const src = readFileSync(path, 'utf8')
-    collectBraceExports(src, out)
-    let dm = EXPORT_DECL_RE.exec(src)
-    while (dm) {
-      if (dm.groups?.name) out.add(dm.groups.name)
-      dm = EXPORT_DECL_RE.exec(src)
+    if (existsSync(path)) {
+      const src = readFileSync(path, 'utf8')
+      collectBraceExports(src, out)
+      let dm = EXPORT_DECL_RE.exec(src)
+      while (dm) {
+        if (dm.groups?.name) out.add(dm.groups.name)
+        dm = EXPORT_DECL_RE.exec(src)
+      }
+      EXPORT_DECL_RE.lastIndex = 0
     }
-    EXPORT_DECL_RE.lastIndex = 0
   }
   return out
 }

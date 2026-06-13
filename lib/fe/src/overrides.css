@@ -4,6 +4,7 @@
 :root {
   --destructive-foreground: oklch(1 0 0);
 }
+/* biome-ignore lint/nursery/noUnusedClasses: .dark applied by next-themes at runtime */
 .dark {
   --destructive-foreground: oklch(1 0 0);
 }

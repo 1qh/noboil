@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/nursery/noUndeclaredClasses: standard tailwind v4 utilities biome cannot resolve */
 /* eslint-disable @typescript-eslint/no-misused-promises, @typescript-eslint/strict-void-return */
 /* oxlint-disable jsx-no-new-object-as-prop, jsx-a11y/prefer-tag-over-role */
 /** biome-ignore-all lint/a11y/useSemanticElements: dropzone requires div role button */

@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/nursery/noUndeclaredClasses: standard tailwind v4 utilities biome cannot resolve */
 /* eslint-disable react/require-optimization, react/sort-comp */
 /** biome-ignore-all lint/nursery/noComponentHookFactories: factory returns hook by design */
 /** biome-ignore-all lint/suspicious/useAwait: render-only class method */

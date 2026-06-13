@@ -1,17 +1,14 @@
-/* eslint-disable @typescript-eslint/no-unnecessary-condition, @typescript-eslint/strict-void-return, no-console, no-continue */
-/** biome-ignore-all lint/nursery/noContinue: crawler */
+/* eslint-disable @typescript-eslint/no-unnecessary-condition, @typescript-eslint/strict-void-return, no-console */
 /** biome-ignore-all lint/nursery/noPlaywrightElementHandle: crawler */
 /** biome-ignore-all lint/nursery/noPlaywrightEval: crawler */
 /** biome-ignore-all lint/nursery/noPlaywrightWaitForTimeout: crawler */
-/** biome-ignore-all lint/nursery/noShadow: crawler */
-/** biome-ignore-all lint/nursery/useGlobalThis: crawler */
 /** biome-ignore-all lint/performance/noAwaitInLoops: crawler */
 /** biome-ignore-all lint/performance/useTopLevelRegex: crawler */
 /** biome-ignore-all lint/style/useExplicitLengthCheck: crawler */
 /** biome-ignore-all lint/suspicious/noControlCharactersInRegex: crawler */
 /** biome-ignore-all lint/suspicious/noEmptyBlockStatements: crawler */
 /* oxlint-disable unicorn/no-process-exit */
-/* eslint-disable @typescript-eslint/max-params, @typescript-eslint/no-shadow, complexity, no-await-in-loop, no-control-regex, no-empty, no-promise-executor-return, no-useless-assignment */
+/* eslint-disable @typescript-eslint/max-params, complexity, no-await-in-loop, no-control-regex, no-empty, no-promise-executor-return, no-useless-assignment */
 /* oxlint-disable unicorn/consistent-function-scoping */
 /* oxlint-disable promise/always-return, promise/param-names, promise/prefer-await-to-then, unicorn/no-process-exit */
 import type { Browser, BrowserContext, Page } from 'playwright'
@@ -373,7 +370,7 @@ const crawlApp = async (app: AppSpec): Promise<Result> => {
             }
           })
           .join(' ')
-        const w = window as Window & { __crawlReport?: (s: string) => void }
+        const w = globalThis as typeof globalThis & { __crawlReport?: (s: string) => void }
         w.__crawlReport?.(flat)
       } catch {}
       return orig.apply(console, args)
@@ -449,14 +446,13 @@ const crawlApp = async (app: AppSpec): Promise<Result> => {
               },
               80
             )
-            for (const el of [...document.querySelectorAll('button, a, [role="button"]')].slice(0, 10)) {
-              if (!vis(el)) continue
-              try {
-                el.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }))
-                await sleep(50)
-                el.dispatchEvent(new MouseEvent('mouseleave', { bubbles: true }))
-              } catch {}
-            }
+            for (const el of [...document.querySelectorAll('button, a, [role="button"]')].slice(0, 10))
+              if (vis(el))
+                try {
+                  el.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }))
+                  await sleep(50)
+                  el.dispatchEvent(new MouseEvent('mouseleave', { bubbles: true }))
+                } catch {}
             await sleep(500)
             document.body.click()
             await sleep(200)
@@ -474,14 +470,14 @@ const crawlApp = async (app: AppSpec): Promise<Result> => {
         )
         for (const { i } of buttons.slice(0, 6)) {
           const handle = await page.$(`button:not([type="submit"]) >> nth=${i}`).catch(() => null)
-          if (!handle) continue
-          await handle
-            .click({ timeout: 1500 })
-            .then(async () => {
-              await page.waitForTimeout(300)
-              await pollOverlay(page, `${route} (btn${i})`, x => issues.push(x))
-            })
-            .catch(() => null)
+          if (handle)
+            await handle
+              .click({ timeout: 1500 })
+              .then(async () => {
+                await page.waitForTimeout(300)
+                await pollOverlay(page, `${route} (btn${i})`, x => issues.push(x))
+              })
+              .catch(() => null)
         }
       }
       await Promise.race([Promise.all(pendingArgs).catch(() => null), new Promise(r => setTimeout(r, 3000))])
@@ -493,7 +489,7 @@ const crawlApp = async (app: AppSpec): Promise<Result> => {
           await page.evaluate(axeSrc)
           const violations = await page
             .evaluate(async () => {
-              const win = window as Window & {
+              const win = globalThis as typeof globalThis & {
                 axe?: {
                   run: (
                     ctx: Document,
@@ -530,12 +526,13 @@ const crawlApp = async (app: AppSpec): Promise<Result> => {
   while (queue.length > 0 && seen.size < maxRoutes) {
     const route = queue.shift()
     if (!route) break
-    if (seen.has(route)) continue
-    seen.add(route)
-    const ok = await Promise.race([processRoute(route), new Promise<boolean>(r => setTimeout(() => r(false), 20_000))])
-    if (!ok) {
-      issues.push({ kind: 'route-timeout', msg: `route ${route} exceeded 20s`, route })
-      for (const p of ctx.pages()) await p.close({ runBeforeUnload: false }).catch(() => null)
+    if (!seen.has(route)) {
+      seen.add(route)
+      const ok = await Promise.race([processRoute(route), new Promise<boolean>(r => setTimeout(() => r(false), 20_000))])
+      if (!ok) {
+        issues.push({ kind: 'route-timeout', msg: `route ${route} exceeded 20s`, route })
+        for (const p of ctx.pages()) await p.close({ runBeforeUnload: false }).catch(() => null)
+      }
     }
   }
   await Promise.race([ctx.close(), new Promise(r => setTimeout(r, 3000))]).catch(() => null)
@@ -596,14 +593,14 @@ for (const a of apps) {
   if (!jsonOut) printResult(r)
   if (r.issues.some(i => i.kind === 'timeout' || i.kind === 'app-down')) {
     process.stderr.write(`  retrying ${a.name} after 5s...\n`)
-    await new Promise(r => setTimeout(r, 5000))
+    await new Promise(resolve => setTimeout(resolve, 5000))
     const retry = await Promise.race([crawlApp(a), new Promise<Result>(resolve => setTimeout(() => resolve(r), 60_000))])
     if (!retry.issues.some(i => i.kind === 'timeout' || i.kind === 'app-down')) {
       results[results.length - 1] = retry
       if (!jsonOut) printResult(retry)
     }
   }
-  await new Promise(r => setTimeout(r, 500))
+  await new Promise(resolve => setTimeout(resolve, 500))
 }
 if (sharedBrowser !== null) {
   const b: Browser = sharedBrowser

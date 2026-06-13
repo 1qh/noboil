@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/nursery/noUndeclaredClasses: standard tailwind v4 utilities biome cannot resolve */
 import '@a/ui/globals.css'
 import './overrides.css'
 import type { ComponentProps, ReactNode } from 'react'

@@ -1,6 +1,5 @@
 #!/usr/bin/env bun
-/* eslint-disable no-console, no-continue */
-/** biome-ignore-all lint/nursery/noContinue: walker */
+/* eslint-disable no-console */
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 import { collectBraceExports, DOCS_DIR, LIB_NOBOIL, replaceBetween, REPO, stripStrings } from './lib'
@@ -33,25 +32,25 @@ const walkRel = (root: string, rel = ''): string[] => {
   const out: string[] = []
   const dir = join(root, rel)
   if (!statSync(dir, { throwIfNoEntry: false })) return out
-  for (const name of readdirSync(dir).toSorted()) {
-    if (name.startsWith('.') || SKIP_DIRS.has(name)) continue
-    const full = join(dir, name)
-    const s = statSync(full)
-    const r = rel ? `${rel}/${name}` : name
-    if (s.isDirectory()) out.push(...walkRel(root, r))
-    else if (
-      !SKIP_FILE_SUFFIX.some(suf => name.endsWith(suf)) &&
-      (name.endsWith('.ts') ||
-        name.endsWith('.tsx') ||
-        name.endsWith('.json') ||
-        name.endsWith('.sh') ||
-        name.endsWith('.toml') ||
-        name.endsWith('.md') ||
-        name.endsWith('.yml') ||
-        name.endsWith('.yaml'))
-    )
-      out.push(r)
-  }
+  for (const name of readdirSync(dir).toSorted())
+    if (!(name.startsWith('.') || SKIP_DIRS.has(name))) {
+      const full = join(dir, name)
+      const s = statSync(full)
+      const r = rel ? `${rel}/${name}` : name
+      if (s.isDirectory()) out.push(...walkRel(root, r))
+      else if (
+        !SKIP_FILE_SUFFIX.some(suf => name.endsWith(suf)) &&
+        (name.endsWith('.ts') ||
+          name.endsWith('.tsx') ||
+          name.endsWith('.json') ||
+          name.endsWith('.sh') ||
+          name.endsWith('.toml') ||
+          name.endsWith('.md') ||
+          name.endsWith('.yml') ||
+          name.endsWith('.yaml'))
+      )
+        out.push(r)
+    }
   return out
 }
 const collectExports = (path: string): Set<string> => {

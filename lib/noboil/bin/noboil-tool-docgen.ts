@@ -1,8 +1,7 @@
 #!/usr/bin/env bun
-/* eslint-disable no-console, no-continue */
+/* eslint-disable no-console */
 /** biome-ignore-all lint/style/noProcessEnv: CLI script */
-/** biome-ignore-all lint/nursery/noUndeclaredEnvVars: CLI script */
-/** biome-ignore-all lint/nursery/noContinue: classify-or-skip loop */
+/** biome-ignore-all lint/suspicious/noUndeclaredEnvVars: CLI reads optional runtime env vars */
 import { mkdir, writeFile } from 'node:fs/promises'
 import { dirname, resolve } from 'node:path'
 import type { ExtractedMeta } from '../src/convex/tools/codegen/extract-meta'
@@ -12,6 +11,21 @@ import { collect } from '../src/convex/tools/codegen/scan'
 const PROVIDER_PREFIX_RE = /^_/u
 const mdRow = (cells: string[]): string => `| ${cells.join(' | ')} |`
 const escapeMd = (s: string): string => s.replaceAll('|', String.raw`\|`).replaceAll('\n', ' ')
+const detailLines = (t: { cliPath: string[]; meta: ExtractedMeta }): string[] => {
+  if (t.meta.examples.length === 0 && Object.keys(t.meta.argDescriptions).length === 0) return []
+  const out: string[] = [`### \`${t.cliPath.join(' ').replace(PROVIDER_PREFIX_RE, '')}\``, '']
+  if (Object.keys(t.meta.argDescriptions).length > 0) {
+    out.push('Args:', '')
+    for (const [name, desc] of Object.entries(t.meta.argDescriptions)) out.push(`- \`--${name}\` — ${escapeMd(desc)}`)
+    out.push('')
+  }
+  if (t.meta.examples.length > 0) {
+    out.push('Examples:', '', '```sh')
+    for (const ex of t.meta.examples) out.push(ex)
+    out.push('```', '')
+  }
+  return out
+}
 const run = async (): Promise<void> => {
   const TOOLS_ROOT = resolve(process.cwd(), process.env.TOOLS_ROOT ?? 'convex/tools')
   const OUT = resolve(process.cwd(), process.env.DOCS_OUT ?? 'convex/tools/INVENTORY.md')
@@ -20,10 +34,11 @@ const run = async (): Promise<void> => {
   const toolsByProvider = new Map<string, { cliPath: string[]; meta: ExtractedMeta; tier: 'admin' | 'user' }[]>()
   for (const t of data.tools) {
     const m = metas.get(t.absPath)
-    if (!m) continue
-    const key = t.cliPath[0] ?? 'unknown'
-    if (!toolsByProvider.has(key)) toolsByProvider.set(key, [])
-    toolsByProvider.get(key)?.push({ cliPath: t.cliPath, meta: m, tier: t.tier })
+    if (m) {
+      const key = t.cliPath[0] ?? 'unknown'
+      if (!toolsByProvider.has(key)) toolsByProvider.set(key, [])
+      toolsByProvider.get(key)?.push({ cliPath: t.cliPath, meta: m, tier: t.tier })
+    }
   }
   const now = new Date().toISOString().slice(0, 10)
   const lines: string[] = [
@@ -55,21 +70,7 @@ const run = async (): Promise<void> => {
       )
     }
     lines.push('')
-    for (const t of tools) {
-      if (t.meta.examples.length === 0 && Object.keys(t.meta.argDescriptions).length === 0) continue
-      lines.push(`### \`${t.cliPath.join(' ').replace(PROVIDER_PREFIX_RE, '')}\``, '')
-      if (Object.keys(t.meta.argDescriptions).length > 0) {
-        lines.push('Args:', '')
-        for (const [name, desc] of Object.entries(t.meta.argDescriptions))
-          lines.push(`- \`--${name}\` — ${escapeMd(desc)}`)
-        lines.push('')
-      }
-      if (t.meta.examples.length > 0) {
-        lines.push('Examples:', '', '```sh')
-        for (const ex of t.meta.examples) lines.push(ex)
-        lines.push('```', '')
-      }
-    }
+    for (const t of tools) lines.push(...detailLines(t))
   }
   await mkdir(dirname(OUT), { recursive: true })
   await writeFile(OUT, `${lines.join('\n')}\n`)

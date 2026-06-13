@@ -1,6 +1,5 @@
 #!/usr/bin/env bun
-/** biome-ignore-all lint/nursery/noContinue: walker */
-/* eslint-disable no-console, no-continue */
+/* eslint-disable no-console */
 import { readJson } from 'noboil/env-file'
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { resolve } from 'node:path'
@@ -33,9 +32,10 @@ const main = () => {
   const publicExports = new Set<string>()
   for (const [, target] of Object.entries(pkg.exports)) {
     const path = typeof target === 'string' ? target : (target.types ?? target.default ?? target.import ?? '')
-    if (!path) continue
-    const abs = resolve(LIB_NOBOIL, path)
-    if (statSync(abs, { throwIfNoEntry: false })) for (const sym of collectExports(abs)) publicExports.add(sym)
+    if (path) {
+      const abs = resolve(LIB_NOBOIL, path)
+      if (statSync(abs, { throwIfNoEntry: false })) for (const sym of collectExports(abs)) publicExports.add(sym)
+    }
   }
   const docsText = collectDocsText(DOCS_DIR)
   const documented: string[] = []

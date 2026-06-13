@@ -1,6 +1,5 @@
 #!/usr/bin/env bun
 /** biome-ignore-all lint/performance/noAwaitInLoops: dashboard session loop */
-/** biome-ignore-all lint/nursery/noUnnecessaryConditions: dashboard loop intentionally infinite until exit */
 /* oxlint-disable promise/prefer-await-to-then */
 /* eslint-disable no-console, no-await-in-loop, @typescript-eslint/no-unnecessary-condition */
 import { bold, dim, red } from './ansi'
@@ -68,9 +67,8 @@ if (cmd === '--version' || cmd === '-v') {
 } else if (cmd === '--help' || cmd === '-h') printHelp()
 else if (!cmd) {
   const { runDashboard } = await import('./dashboard-tui')
-  while (true) {
-    const action = await runDashboard()
-    if (action === 'exit') break
+  let action = await runDashboard()
+  while (action !== 'exit') {
     if (action === 'init') {
       const { init } = await import('./init')
       await init([])
@@ -99,6 +97,7 @@ else if (!cmd) {
         await runNs(['add'])
       } else console.log(`${red('No .noboilrc.json found.')} Run ${dim('noboil init')} first.`)
     }
+    action = await runDashboard()
   }
 } else if (cmd === 'init') {
   const { init } = await import('./init')

@@ -1,6 +1,5 @@
 #!/usr/bin/env bun
-/* eslint-disable no-console, no-continue */
-/** biome-ignore-all lint/nursery/noContinue: filter loop */
+/* eslint-disable no-console */
 import { readFileSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 
@@ -46,18 +45,18 @@ const genTable = (pkgDir: string, filter: string): string => {
     name: string
   }
   const rows: string[] = []
-  for (const [subpath, target] of Object.entries(pkgJson.exports)) {
-    if (!subpath.startsWith(`./${filter}`)) continue
-    const targetPath = typeof target === 'string' ? target : (target.types ?? target.default ?? '')
-    if (targetPath) {
-      const filePath = resolve(pkgDir, targetPath)
-      const names = extractExports(filePath)
-      if (names.length > 0) {
-        const modulePath = `${pkgJson.name}/${subpath.replace('./', '')}`
-        rows.push(`| \`${modulePath}\` | \`${names.join('`, `')}\` |`)
+  for (const [subpath, target] of Object.entries(pkgJson.exports))
+    if (subpath.startsWith(`./${filter}`)) {
+      const targetPath = typeof target === 'string' ? target : (target.types ?? target.default ?? '')
+      if (targetPath) {
+        const filePath = resolve(pkgDir, targetPath)
+        const names = extractExports(filePath)
+        if (names.length > 0) {
+          const modulePath = `${pkgJson.name}/${subpath.replace('./', '')}`
+          rows.push(`| \`${modulePath}\` | \`${names.join('`, `')}\` |`)
+        }
       }
     }
-  }
   return rows.join('\n')
 }
 const START = '{/* AUTO-GENERATED:IMPORTS:START */}'

@@ -1,6 +1,5 @@
 /** biome-ignore-all lint/performance/noAwaitInLoops: sequential Convex DB deletes/inserts */
-/** biome-ignore-all lint/nursery/noContinue: bulk-loop skip on missing doc */
-/* eslint-disable complexity, no-await-in-loop, no-continue */
+/* eslint-disable complexity, no-await-in-loop */
 import type { ZodObject, ZodRawShape } from 'zod/v4'
 import { zid } from 'convex-helpers/server/zod4'
 import { array, boolean, number, string } from 'zod/v4'
@@ -305,18 +304,16 @@ const makeLog = <S extends ZodRawShape>({
       const results: { deleted: boolean; id: string; soft?: boolean }[] = []
       for (const id of targets) {
         const doc = await c.db.get(id)
-        if (!doc) {
-          results.push({ deleted: false, id })
-          continue
-        }
-        if (hooks?.beforeDelete) await hooks.beforeDelete(hk(c), { doc, id })
-        if (softDelete) await dbPatch(c.db, id, { deletedAt: Date.now() })
-        else {
-          await dbDelete(c.db, id)
-          await cleanFiles({ doc, fileFields: fileFs, storage: c.storage })
-        }
-        if (hooks?.afterDelete) await hooks.afterDelete(hk(c), { doc, id })
-        results.push({ deleted: true, id, soft: Boolean(softDelete) })
+        if (doc) {
+          if (hooks?.beforeDelete) await hooks.beforeDelete(hk(c), { doc, id })
+          if (softDelete) await dbPatch(c.db, id, { deletedAt: Date.now() })
+          else {
+            await dbDelete(c.db, id)
+            await cleanFiles({ doc, fileFields: fileFs, storage: c.storage })
+          }
+          if (hooks?.afterDelete) await hooks.afterDelete(hk(c), { doc, id })
+          results.push({ deleted: true, id, soft: Boolean(softDelete) })
+        } else results.push({ deleted: false, id })
       }
       return args.ids ? results : results[0]
     })

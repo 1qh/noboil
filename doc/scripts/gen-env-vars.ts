@@ -1,6 +1,5 @@
 #!/usr/bin/env bun
-/* eslint-disable no-console, no-continue */
-/** biome-ignore-all lint/nursery/noContinue: walker */
+/* eslint-disable no-console */
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join, relative } from 'node:path'
 import { DOCS_DIR, LIB_NOBOIL, replaceBetween, REPO } from './lib'
@@ -8,19 +7,17 @@ import { DOCS_DIR, LIB_NOBOIL, replaceBetween, REPO } from './lib'
 const ENV_RE = /process\.env\.(?<name>[A-Z][A-Z0-9_]+)/gu
 const walk = (dir: string, out: string[] = []): string[] => {
   for (const name of readdirSync(dir).toSorted()) {
-    if (
+    const skip =
       name.startsWith('.') ||
       name === 'node_modules' ||
       name === 'dist' ||
       name === '_generated' ||
       name === 'module_bindings' ||
       name === '__tests__'
-    )
-      continue
     const full = join(dir, name)
-    if (!statSync(full, { throwIfNoEntry: false })) continue
-    if (statSync(full).isDirectory()) walk(full, out)
-    else if ((name.endsWith('.ts') || name.endsWith('.tsx')) && !name.endsWith('.test.ts')) out.push(full)
+    if (!skip && statSync(full, { throwIfNoEntry: false }))
+      if (statSync(full).isDirectory()) walk(full, out)
+      else if ((name.endsWith('.ts') || name.endsWith('.tsx')) && !name.endsWith('.test.ts')) out.push(full)
   }
   return out
 }

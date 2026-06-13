@@ -1,4 +1,4 @@
-/** biome-ignore-all lint/nursery/noUndeclaredEnvVars: test env */
+/** biome-ignore-all lint/suspicious/noUndeclaredEnvVars: test asserts behavior on an undeclared env var */
 import { describe, expect, test } from 'bun:test'
 import { defineSchema, defineTable } from 'convex/server'
 import { v } from 'convex/values'

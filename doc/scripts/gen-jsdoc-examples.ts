@@ -1,25 +1,20 @@
 #!/usr/bin/env bun
-/* eslint-disable no-console, no-continue */
+/* eslint-disable no-console */
 /** biome-ignore-all lint/performance/useTopLevelRegex: per-file scan */
-/** biome-ignore-all lint/nursery/noContinue: walker */
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join, relative } from 'node:path'
 import { DOCS_DIR, LIB_NOBOIL, replaceBetween, REPO } from './lib'
 
 const walk = (dir: string, out: string[] = []): string[] => {
   for (const name of readdirSync(dir).toSorted()) {
-    if (
-      name.startsWith('.') ||
-      name === 'node_modules' ||
-      name === 'dist' ||
-      name === '_generated' ||
-      name === '__tests__'
-    )
-      continue
-    const full = join(dir, name)
-    if (!statSync(full, { throwIfNoEntry: false })) continue
-    if (statSync(full).isDirectory()) walk(full, out)
-    else if ((name.endsWith('.ts') || name.endsWith('.tsx')) && !name.endsWith('.test.ts')) out.push(full)
+    const skip =
+      name.startsWith('.') || name === 'node_modules' || name === 'dist' || name === '_generated' || name === '__tests__'
+    if (!skip) {
+      const full = join(dir, name)
+      if (statSync(full, { throwIfNoEntry: false }))
+        if (statSync(full).isDirectory()) walk(full, out)
+        else if ((name.endsWith('.ts') || name.endsWith('.tsx')) && !name.endsWith('.test.ts')) out.push(full)
+    }
   }
   return out
 }

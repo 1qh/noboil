@@ -1,5 +1,3 @@
-/** biome-ignore-all lint/nursery/noContinue: bulk-loop skip on missing row */
-/* eslint-disable no-continue */
 import type { Identity, Timestamp } from 'spacetimedb'
 import type { AlgebraicTypeType, ColumnBuilder, TypeBuilder } from 'spacetimedb/server'
 import type { RateLimitConfig } from './types'
@@ -262,9 +260,9 @@ const makeLog = <DB, Tbl extends LogTableLike, T extends string = string>(
       }
       for (const id of typedArgs.ids) {
         const row = table.id.find(id)
-        if (!row) continue
-        if (softDelete) table.id.update({ ...row, deletedAt: ctx.timestamp })
-        else table.id.delete(id)
+        if (row)
+          if (softDelete) table.id.update({ ...row, deletedAt: ctx.timestamp })
+          else table.id.delete(id)
       }
     })
     exports[bulkRmName] = bulkRmReducer as ReducerExportLike
