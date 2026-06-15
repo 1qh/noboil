@@ -161,20 +161,15 @@ const generateMarkdown = (calls: FactoryCall[], tableFields: Map<string, { name:
     const eps = endpointsForFactory(call)
     const desc = FACTORY_DESCRIPTIONS[call.factory] ?? ''
     const fields = tableFields.get(call.table)
-    lines.push(`## ${call.table}`, '')
-    lines.push(`**Factory:** \`${call.factory}\` · **File:** \`${call.file}\``)
+    lines.push(`## ${call.table}`, '', `**Factory:** \`${call.factory}\` · **File:** \`${call.file}\``)
     if (desc) lines.push('', desc)
     lines.push('')
     if (fields !== undefined && fields.length > 0) {
-      lines.push('### Schema Fields', '')
-      lines.push('| Field | Type |')
-      lines.push('|-------|------|')
+      lines.push('### Schema Fields', '', '| Field | Type |', '|-------|------|')
       for (const f of fields) lines.push(`| ${f.name} | \`${f.type}\` |`)
       lines.push('')
     }
-    lines.push('### Endpoints', '')
-    lines.push('| Endpoint | Type | Args | Returns |')
-    lines.push('|----------|------|------|---------|')
+    lines.push('### Endpoints', '', '| Endpoint | Type | Args | Returns |', '|----------|------|------|---------|')
     for (const ep of eps) {
       const epType = ENDPOINT_TYPES[ep] ?? 'query'
       const args = ENDPOINT_ARGS[ep] ?? ''

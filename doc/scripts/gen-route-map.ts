@@ -21,10 +21,7 @@ const main = () => {
   const sections: string[] = []
   let totalRoutes = 0
   for (const db of ['cvx', 'stdb']) {
-    sections.push(`### ${db === 'cvx' ? 'Convex' : 'SpacetimeDB'}`)
-    sections.push('')
-    sections.push('| Demo | Routes |')
-    sections.push('|---|---|')
+    sections.push(`### ${db === 'cvx' ? 'Convex' : 'SpacetimeDB'}`, '', '| Demo | Routes |', '|---|---|')
     for (const demo of DEMOS) {
       const root = `${REPO}/web/${db}/${demo}/src/app`
       const routes = walkRoutes(root)

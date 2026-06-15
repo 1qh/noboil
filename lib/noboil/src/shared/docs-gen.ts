@@ -75,9 +75,12 @@ const processEntryPoint = (ep: { label: string; path: string }, srcDir: string, 
   const indexContent = readFileSync(indexPath, 'utf8')
   const reExports = resolveReExports(indexContent)
   if (reExports.length === 0) return 0
-  lines.push(`## ${ep.label}`, '')
-  lines.push('| Export | Kind | Description | Signature |')
-  lines.push('|--------|------|-------------|-----------|')
+  lines.push(
+    `## ${ep.label}`,
+    '',
+    '| Export | Kind | Description | Signature |',
+    '|--------|------|-------------|-----------|'
+  )
   let count = 0
   for (const re of reExports) {
     const sourceFile = join(dirname(indexPath), `${re.sourcePath.replace(tsExtPat, '')}.ts`)

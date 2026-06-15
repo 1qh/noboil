@@ -128,44 +128,48 @@ describe('stdb makeMemberReducers', () => {
   })
   test('org_remove_member as admin removes plain member', () => {
     const { member, reducers } = setup()
-    member.rows.push({
-      createdAt: tsAtMs(0),
-      id: 60,
-      isAdmin: true,
-      orgId: 1,
-      updatedAt: tsAtMs(0),
-      userId: ident('admin')
-    })
-    member.rows.push({
-      createdAt: tsAtMs(0),
-      id: 61,
-      isAdmin: false,
-      orgId: 1,
-      updatedAt: tsAtMs(0),
-      userId: ident('plain')
-    })
+    member.rows.push(
+      {
+        createdAt: tsAtMs(0),
+        id: 60,
+        isAdmin: true,
+        orgId: 1,
+        updatedAt: tsAtMs(0),
+        userId: ident('admin')
+      },
+      {
+        createdAt: tsAtMs(0),
+        id: 61,
+        isAdmin: false,
+        orgId: 1,
+        updatedAt: tsAtMs(0),
+        userId: ident('plain')
+      }
+    )
     const remove = reducers.org_remove_member as (c: never, a: never) => void
     remove({ db: {}, sender: ident('admin'), timestamp: tsAtMs(1) } as never, { memberId: 61 } as never)
     expect(member.rows.find(r => r.id === 61)).toBeUndefined()
   })
   test('org_remove_member CANNOT_MODIFY_ADMIN when admin removes admin', () => {
     const { member, reducers } = setup()
-    member.rows.push({
-      createdAt: tsAtMs(0),
-      id: 60,
-      isAdmin: true,
-      orgId: 1,
-      updatedAt: tsAtMs(0),
-      userId: ident('admin1')
-    })
-    member.rows.push({
-      createdAt: tsAtMs(0),
-      id: 61,
-      isAdmin: true,
-      orgId: 1,
-      updatedAt: tsAtMs(0),
-      userId: ident('admin2')
-    })
+    member.rows.push(
+      {
+        createdAt: tsAtMs(0),
+        id: 60,
+        isAdmin: true,
+        orgId: 1,
+        updatedAt: tsAtMs(0),
+        userId: ident('admin1')
+      },
+      {
+        createdAt: tsAtMs(0),
+        id: 61,
+        isAdmin: true,
+        orgId: 1,
+        updatedAt: tsAtMs(0),
+        userId: ident('admin2')
+      }
+    )
     const remove = reducers.org_remove_member as (c: never, a: never) => void
     expect(() => {
       remove({ db: {}, sender: ident('admin1'), timestamp: tsAtMs(1) } as never, { memberId: 61 } as never)

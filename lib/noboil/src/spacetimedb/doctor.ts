@@ -236,13 +236,15 @@ const doctor = (opts?: { json?: boolean }) => {
   else results.push({ details: ['All where clauses have matching indexes'], status: 'pass', title: 'Index Coverage' })
   const levels = new Set<string>()
   for (const c of calls) for (const e of accessForFactory(c)) levels.add(e.level)
-  results.push({
-    details: [`Access levels: ${[...levels].join(', ') || 'none'}`],
-    status: 'pass',
-    title: 'Access Control'
-  })
-  results.push(checkSpacetimeCli())
-  results.push(checkDocker())
+  results.push(
+    {
+      details: [`Access levels: ${[...levels].join(', ') || 'none'}`],
+      status: 'pass',
+      title: 'Access Control'
+    },
+    checkSpacetimeCli(),
+    checkDocker()
+  )
   const lintmaxConfigPath = join(root, 'lintmax.config.ts')
   const eslintContent = existsSync(lintmaxConfigPath) ? readFileSync(lintmaxConfigPath, 'utf8') : undefined
   results.push(checkEslintContent(eslintContent))

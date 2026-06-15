@@ -50,23 +50,25 @@ const main = () => {
       `**Tag counts:** ${Object.entries(counts)
         .filter(([, n]) => n > 0)
         .map(([t, n]) => `${t}: ${n}`)
-        .join(', ')}`
+        .join(', ')}`,
+      '',
+      '| Symbol | Tag | File | Reason |',
+      '|---|---|---|---|'
     )
-    lines.push('')
-    lines.push('| Symbol | Tag | File | Reason |')
-    lines.push('|---|---|---|---|')
     for (const t of tagged.toSorted((a, b) => a.tag.localeCompare(b.tag) || a.symbol.localeCompare(b.symbol)))
       lines.push(`| \`${t.symbol}\` | \`${t.tag}\` | \`${t.file}\` | ${t.reason} |`)
-  } else {
-    lines.push('To mark API stability, add JSDoc tags above an export:')
-    lines.push('')
-    lines.push('```ts')
-    lines.push('/** @beta New shape, may change without major version bump. */')
-    lines.push('export const someExperiment = () => 42')
-    lines.push('```')
-    lines.push('')
-    lines.push('This generator picks them up automatically.')
-  }
+  } else
+    lines.push(
+      'To mark API stability, add JSDoc tags above an export:',
+      '',
+      '```ts',
+      '/** @beta New shape, may change without major version bump. */',
+      'export const someExperiment = () => 42',
+      '```',
+      '',
+      'This generator picks them up automatically.'
+    )
+
   const body = lines.join('\n')
   const target = `${DOCS_DIR}/api-reference.mdx`
   const dirty = replaceBetween(target, 'STABILITY', body)

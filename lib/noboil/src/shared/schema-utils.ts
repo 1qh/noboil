@@ -124,10 +124,7 @@ const createSchemaUtils = ({ baseTables, schemaFactoryMap, wrapperFactories }: C
     if (factory === 'cacheCrud') return [...CACHE_BASE]
     if (factory === 'childCrud') {
       const eps = [...CHILD_BASE]
-      if (hasOption(opts, 'pub')) {
-        eps.push('pub.list')
-        eps.push('pub.get')
-      }
+      if (hasOption(opts, 'pub')) eps.push('pub.list', 'pub.get')
       return eps
     }
     if (factory === 'orgCrud') {

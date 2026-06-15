@@ -101,20 +101,15 @@ const generateMarkdown = (calls: FactoryCall[], tableFields: Map<string, { name:
     const eps = endpointsForFactory(call)
     const desc = FACTORY_DESCRIPTIONS[call.factory] ?? ''
     const fields = tableFields.get(call.table)
-    lines.push(`## ${call.table}`, '')
-    lines.push(`**Source:** \`${call.file}\``)
+    lines.push(`## ${call.table}`, '', `**Source:** \`${call.file}\``)
     if (desc) lines.push('', desc)
     lines.push('')
     if (fields && fields.length > 0) {
-      lines.push('### Schema Fields', '')
-      lines.push('| Field | Type |')
-      lines.push('|-------|------|')
+      lines.push('### Schema Fields', '', '| Field | Type |', '|-------|------|')
       for (const f of fields) lines.push(`| ${f.name} | \`${f.type}\` |`)
       lines.push('')
     }
-    lines.push('### Reducers', '')
-    lines.push('| Reducer | Type | Args | Returns |')
-    lines.push('|---------|------|------|---------|')
+    lines.push('### Reducers', '', '| Reducer | Type | Args | Returns |', '|---------|------|------|---------|')
     for (const ep of eps) {
       const rootName = ep.includes('.') ? ep.slice(ep.lastIndexOf('.') + 1) : ep
       const epType = ENDPOINT_TYPES[rootName] ?? 'reducer'

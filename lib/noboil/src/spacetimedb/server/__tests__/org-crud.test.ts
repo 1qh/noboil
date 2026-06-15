@@ -91,8 +91,10 @@ describe('stdb makeOrgCrud', () => {
     const { reducer, reducers } = captureReducers()
     const project = mkProjectTable()
     const member = mkMemberTable()
-    member.rows.push({ isAdmin: false, orgId: 1, userId: ident('owner') })
-    member.rows.push({ isAdmin: false, orgId: 1, userId: ident('peer') })
+    member.rows.push(
+      { isAdmin: false, orgId: 1, userId: ident('owner') },
+      { isAdmin: false, orgId: 1, userId: ident('peer') }
+    )
     makeOrgCrud({ reducer }, baseConfig(project, member))
     const create = reducers.create_project as (c: never, a: never) => void
     const update = reducers.update_project as (c: never, a: never) => void

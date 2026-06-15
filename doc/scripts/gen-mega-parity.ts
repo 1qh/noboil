@@ -548,10 +548,7 @@ const main = () => {
     '|---|--:|---|---|--:|--|',
     ...summary
   ]
-  if (allGapDetails.length > 0) {
-    lines.push('', '### Unaccounted gaps', '')
-    lines.push(...allGapDetails)
-  }
+  if (allGapDetails.length > 0) lines.push('', '### Unaccounted gaps', '', ...allGapDetails)
   const target = `${DOCS_DIR}/architecture.mdx`
   const dirty = replaceBetween(target, 'MEGA-PARITY', lines.join('\n'))
   if (dirty) console.log(`Updated mega parity (${totalUnaccounted} unaccounted-for gaps across ${PAIRS.length} pairs)`)

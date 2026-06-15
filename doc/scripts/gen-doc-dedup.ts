@@ -1,7 +1,6 @@
 #!/usr/bin/env bun
 /* eslint-disable no-console */
 import { walkFiles } from 'noboil/walk'
-/* oxlint-disable oxc/branches-sharing-code */
 import { readFileSync } from 'node:fs'
 import { relative } from 'node:path'
 import { DOCS_DIR, replaceBetween, REPO, STRIP_AUTOGEN_RE, STRIP_FENCE_RE } from './lib'
@@ -38,16 +37,14 @@ const main = () => {
   ]
   if (dupes.length > 0) {
     lines.push('')
-    for (const d of dupes.slice(0, 20)) {
-      lines.push('')
-      lines.push(`- in ${d.files.map(f => `\`${f}\``).join(' + ')}:`)
-      lines.push(`  > ${d.paragraph.slice(0, 200)}${d.paragraph.length > 200 ? '…' : ''}`)
-    }
+    for (const d of dupes.slice(0, 20))
+      lines.push(
+        '',
+        `- in ${d.files.map(f => `\`${f}\``).join(' + ')}:`,
+        `  > ${d.paragraph.slice(0, 200)}${d.paragraph.length > 200 ? '…' : ''}`
+      )
     if (dupes.length > 20) lines.push(`\n_(showing first 20 of ${dupes.length})_`)
-  } else {
-    lines.push('')
-    lines.push('_No duplicates above threshold — every long paragraph appears in exactly one file._')
-  }
+  } else lines.push('', '_No duplicates above threshold — every long paragraph appears in exactly one file._')
   const body = lines.join('\n')
   const archTarget = `${DOCS_DIR}/architecture.mdx`
   const dirty = replaceBetween(archTarget, 'DOC-DEDUP', body)

@@ -68,25 +68,21 @@ const main = () => {
     for (const ex of extractExamples(readFileSync(file, 'utf8'), rel)) all.push(ex)
   }
   const sections: string[] = [`**${all.length} \`@example\` blocks** harvested from JSDoc across \`lib/noboil/src/\`.`, '']
-  if (all.length === 0) {
-    sections.push('No JSDoc `@example` blocks found yet. Add them above any export:')
-    sections.push('')
-    sections.push('```ts')
-    sections.push('/**')
-    sections.push(' * @example')
-    sections.push(' * const result = await myThing({ x: 1 })')
-    sections.push(' */')
-    sections.push('export const myThing = ...')
-    sections.push('```')
-  } else
-    for (const ex of all.toSorted((a, b) => a.symbol.localeCompare(b.symbol) || a.file.localeCompare(b.file))) {
-      sections.push(`### \`${ex.symbol}\` — \`${ex.file}\``)
-      sections.push('')
-      sections.push('```ts')
-      sections.push(ex.code)
-      sections.push('```')
-      sections.push('')
-    }
+  if (all.length === 0)
+    sections.push(
+      'No JSDoc `@example` blocks found yet. Add them above any export:',
+      '',
+      '```ts',
+      '/**',
+      ' * @example',
+      ' * const result = await myThing({ x: 1 })',
+      ' */',
+      'export const myThing = ...',
+      '```'
+    )
+  else
+    for (const ex of all.toSorted((a, b) => a.symbol.localeCompare(b.symbol) || a.file.localeCompare(b.file)))
+      sections.push(`### \`${ex.symbol}\` — \`${ex.file}\``, '', '```ts', ex.code, '```', '')
   const body = sections.join('\n')
   const target = `${DOCS_DIR}/recipes.mdx`
   const dirty = replaceBetween(target, 'JSDOC-EXAMPLES', body)

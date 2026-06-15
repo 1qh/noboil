@@ -43,10 +43,12 @@ const main = () => {
       const flags = parseHelpBlock(m.groups.body)
       if (flags.length > 0) {
         total += flags.length
-        sections.push(`**\`${m.groups.cmd.replace(' --help', '')}\`** — ${flags.length} option(s)`)
-        sections.push('')
-        sections.push('| Flag | Description |')
-        sections.push('|---|---|')
+        sections.push(
+          `**\`${m.groups.cmd.replace(' --help', '')}\`** — ${flags.length} option(s)`,
+          '',
+          '| Flag | Description |',
+          '|---|---|'
+        )
         for (const f of flags) sections.push(`| \`${escapeMd(f.flag)}\` | ${escapeMd(f.description)} |`)
         sections.push('')
       }

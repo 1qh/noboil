@@ -439,8 +439,7 @@ const accessForFactory = (call: FactoryCall): AccessEntry[] => {
   if (factory === 'orgCrud') {
     const memberEps = ['list', 'read']
     if (hasOption(opts, 'search')) memberEps.push('search')
-    result.push({ endpoints: memberEps, level: 'Org Member' })
-    result.push({ endpoints: ['create', 'update'], level: 'Org Member' })
+    result.push({ endpoints: memberEps, level: 'Org Member' }, { endpoints: ['create', 'update'], level: 'Org Member' })
     const adminEps = ['rm']
     if (hasOption(opts, 'softDelete')) adminEps.push('restore')
     result.push({ endpoints: adminEps, level: 'Org Admin' })
@@ -449,8 +448,7 @@ const accessForFactory = (call: FactoryCall): AccessEntry[] => {
   }
   const pubEps = [...CRUD_PUB]
   if (hasOption(opts, 'search')) pubEps.push('pub.search')
-  result.push({ endpoints: pubEps, level: 'Public' })
-  result.push({ endpoints: ['create'], level: 'Authenticated' })
+  result.push({ endpoints: pubEps, level: 'Public' }, { endpoints: ['create'], level: 'Authenticated' })
   const ownerEps = ['update', 'rm']
   if (hasOption(opts, 'softDelete')) ownerEps.push('restore')
   result.push({ endpoints: ownerEps, level: 'Owner' })

@@ -179,9 +179,7 @@ const emitRegistry = (data: { providers: string[]; schemas: Map<string, Extracte
       '  },'
     )
   }
-  lines.push('}')
-  lines.push('export { PROVIDERS, REGISTRY }')
-  lines.push('')
+  lines.push('}', 'export { PROVIDERS, REGISTRY }', '')
   return lines.join('\n')
 }
 export { emitRegistry, emitToolCallers, emitToolTypes }
