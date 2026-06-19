@@ -14,12 +14,6 @@ One schema. Typed backend. Auto forms. Zero boilerplate.
 
 Define a Zod schema once. Get authenticated CRUD, typesafe forms, file upload, real-time subscriptions, pagination, search, soft delete, org multi-tenancy with ACL, rate limiting, and conflict detection — all generated. Currently supports Convex and SpacetimeDB.
 
-<!-- AUTO-GENERATED:TEST-COUNTS -->
-
-4017 tests — 3178 unit + 235 integration + 604 e2e (52 cvx/blog, 26 cvx/chat, 14 cvx/movie, 128 cvx/org, 82 cvx/poll, 52 stdb/blog, 26 stdb/chat, 14 stdb/movie, 128 stdb/org, 82 stdb/poll).
-
-<!-- /AUTO-GENERATED:TEST-COUNTS -->
-
 ## Quick Start
 
 ```sh
