@@ -23,4 +23,3 @@ test-results/
 # operator-local secrets/paths (book-system; never committed)
 CLAUDE.local.md
 .eslintcache
-.claude/
