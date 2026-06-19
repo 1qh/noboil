@@ -5,7 +5,7 @@ import { $ } from 'bun'
 import { walkFiles } from 'noboil/walk'
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join } from 'node:path'
-import { LIB_NOBOIL, replaceLineBetween, REPO, stripComments } from './lib'
+import { DOC_REPO, LIB_NOBOIL, replaceLineBetween, REPO, stripComments } from './lib'
 
 const PASS_RE = /(?<pass>\d+)\s+pass/u
 const TEST_CALL_RE = /(?:^|[\s;,([])(?:test|it)(?:\.skip|\.only|\.each\(.+?\))?\s*\(/gu
@@ -45,8 +45,9 @@ const main = async () => {
   const e2eBreakdown = e2eCounts.map(x => `${x.count} ${x.name}`).join(', ')
   const total = unit + integration + e2eTotal
   const summary = `${total} tests — ${unit} unit + ${integration} integration + ${e2eTotal} e2e (${e2eBreakdown}).`
-  const todo = `${REPO}/TODO.md`
-  const dirty = replaceLineBetween(todo, 'TEST-COUNTS', summary)
+  const dirtyDoc = replaceLineBetween(`${DOC_REPO}/testing.md`, 'TEST-COUNTS', summary)
+  const dirtyReadme = replaceLineBetween(`${LIB_NOBOIL}/README.md`, 'TEST-COUNTS', summary)
+  const dirty = dirtyDoc || dirtyReadme
   console.log(dirty ? `Updated test counts: ${total} total` : `Test counts up to date: ${total} total`)
 }
 main()

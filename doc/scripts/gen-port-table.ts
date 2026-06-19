@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /* eslint-disable no-console */
 import { config } from '../../noboil.config'
-import { replaceLineBetween, REPO } from './lib'
+import { DOC_REPO, replaceLineBetween } from './lib'
 
 const main = () => {
   const p = config.ports
@@ -24,7 +24,7 @@ const main = () => {
     [p.doc, 'Doc site']
   ]
   const lines = ['| Port | Service |', '| ---- | ------- |', ...rows.map(([port, name]) => `| ${port} | ${name} |`)]
-  const dirty = replaceLineBetween(`${REPO}/RULES.md`, 'PORT-TABLE', lines.join('\n'))
+  const dirty = replaceLineBetween(`${DOC_REPO}/architecture.md`, 'PORT-TABLE', lines.join('\n'))
   console.log(dirty ? 'Updated port table' : 'Port table up to date')
 }
 main()

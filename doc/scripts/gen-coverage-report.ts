@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /* eslint-disable no-console */
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs'
-import { DOCS_DIR, REPO } from './lib'
+import { DOC_REPO, DOCS_DIR, LIB_NOBOIL, REPO } from './lib'
 
 const SCRIPTS_DIR = `${REPO}/doc/scripts`
 const OUT = `${DOCS_DIR}/single-source-of-truth.mdx`
@@ -38,7 +38,9 @@ const descriptions: Record<string, string> = {
 const describeScript = (s: string): string => descriptions[s] ?? '(undocumented)'
 const targets = [
   `${REPO}/README.md`,
-  `${REPO}/TODO.md`,
+  `${LIB_NOBOIL}/README.md`,
+  `${DOC_REPO}/architecture.md`,
+  `${DOC_REPO}/testing.md`,
   `${DOCS_DIR}/architecture.mdx`,
   `${DOCS_DIR}/api-reference.mdx`,
   `${DOCS_DIR}/cli.mdx`

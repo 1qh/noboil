@@ -11,16 +11,7 @@ interface PackageJson {
   scripts?: Record<string, string>
   workspaces?: string[]
 }
-const REMOVE_ALWAYS = [
-  '.github',
-  'AGENTS.md',
-  'LEARNING.md',
-  'PLAN.md',
-  'RULES.md',
-  'TODO.md',
-  'doc',
-  'script/prep-publish.ts'
-]
+const REMOVE_ALWAYS = ['.github', 'AGENTS.md', 'doc', 'script/prep-publish.ts']
 const rmSafe = (path: string) => {
   if (existsSync(path)) rmSync(path, { force: true, recursive: true })
 }

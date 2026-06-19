@@ -3,7 +3,7 @@ title: Single source of truth
 description: How noboil docs stay in sync with the code that produces them.
 ---
 
-noboil ships **53 generators** that own **44 marker blocks** across 5 doc files. Every block is rebuilt from source on `bun docs` and CI fails on drift via `bun docs:check`.
+noboil ships **53 generators** that own **52 marker blocks** across 7 doc files. Every block is rebuilt from source on `bun docs` and CI fails on drift via `bun docs:check`.
 
 ## Generators
 
@@ -68,7 +68,9 @@ noboil ships **53 generators** that own **44 marker blocks** across 5 doc files.
 | File | Auto-generated sections |
 |---|---|
 | `README.md` | `PACKAGE-INFO`, `DEMO-COUNT`, `HOTKEYS`, `CLI-TABLE-TYPES`, `FACTORY-TABLE`, `DEMO-TREE` |
-| `TODO.md` | `TEST-COUNTS` |
+| `lib/noboil/README.md` | `PACKAGE-INFO`, `TEST-COUNTS`, `DEMO-COUNT`, `HOTKEYS`, `CLI-TABLE-TYPES`, `FACTORY-TABLE`, `DEMO-TREE` |
+| `/Users/o/noboil/noboil-doc/architecture.md` | `PORT-TABLE` |
+| `/Users/o/noboil/noboil-doc/testing.md` | `TEST-COUNTS` |
 | `doc/content/docs/architecture.mdx` | `BRAND-REGISTRY`, `AUTO-FIELDS`, `UI-COMPONENTS`, `DEMO-MATRIX`, `NOBOIL-OPTIONS`, `MIDDLEWARE`, `SCHEMA-DIAGRAM`, `SCHEMA-FIELDS`, `ROUTE-MAP`, `OPTIONS-INVENTORY`, `EXAMPLE-CHECK`, `SIGNATURE-DRIFT`, `DOC-DEDUP`, `FACTORY-PARITY`, `FACTORY-DEPTH`, `OPTION-PARITY`, `DEMO-PARITY`, `UTILITY-PARITY`, `COMPONENT-PARITY`, `MEGA-PARITY` |
 | `doc/content/docs/api-reference.mdx` | `IMPORTS`, `FACTORY-OPTIONS`, `CVX-FACTORY-ENDPOINTS`, `STDB-FACTORY-REDUCERS`, `REACT-HOOKS`, `HOOK-INTERFACES`, `HOOK-PARAMS`, `ERROR-CODES`, `ESLINT-RULES`, `STABILITY`, `TABLE-ENDPOINTS`, `PACKAGE-EXPORTS`, `HTTP-ROUTES`, `SYMBOL-COVERAGE` |
 | `doc/content/docs/cli.mdx` | `HELP`, `CLI-FLAGS`, `CONFIG-SCHEMA` |

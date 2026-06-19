@@ -4,6 +4,7 @@ import { readFileSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 
 const REPO = resolve(import.meta.dir, '../..')
+const DOC_REPO = resolve(REPO, '../noboil-doc')
 const LIB_NOBOIL = `${REPO}/lib/noboil`
 const DOCS_DIR = `${REPO}/doc/content/docs`
 const PKG_JSON_PATH = `${LIB_NOBOIL}/package.json`
@@ -142,6 +143,7 @@ const replaceLineBetween = (path: string, name: string, body: string): boolean =
 }
 export {
   collectBraceExports,
+  DOC_REPO,
   DOCS_DIR,
   EXPORT_BRACE_RE,
   isCheck,

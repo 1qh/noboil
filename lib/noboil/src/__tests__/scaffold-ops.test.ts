@@ -15,8 +15,8 @@ import {
 describe('scaffold-ops', () => {
   test('REMOVE_ALWAYS includes expected entries', () => {
     expect(REMOVE_ALWAYS).toContain('AGENTS.md')
-    expect(REMOVE_ALWAYS).toContain('LEARNING.md')
-    expect(REMOVE_ALWAYS).toContain('TODO.md')
+    expect(REMOVE_ALWAYS).toContain('.github')
+    expect(REMOVE_ALWAYS).toContain('doc')
   })
   test('rmSafe handles non-existent paths', () => {
     expect(() => rmSafe(join(tmpdir(), 'noboil-nonexistent-zzz-9999'))).not.toThrow()
