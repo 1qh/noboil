@@ -12,7 +12,7 @@ const walk = (dir: string, out: string[] = []): string[] => {
   return out
 }
 const FORBIDDEN_IMPORTS = [/from '\.\.\/[a-z][a-zA-Z]*\//u]
-const FORBIDDEN_TOKENS = ['exim', 'macmap', 'tariff', 'hscode', 'typesense', 'anthropic', 'gemini', 'serper']
+const FORBIDDEN_TOKENS = ['clamav', 'corpus', 'gvisor', 'kimi', 'nomic', 'ollama', 'runsc']
 const FORBIDDEN_TOKEN_RES = FORBIDDEN_TOKENS.map(t => ({ re: new RegExp(`\\b${t}\\b`, 'iu'), token: t }))
 describe('framework boundary — tools/ imports nothing project-specific', () => {
   const files = walk(LIB).filter(f => statSync(f).isFile())

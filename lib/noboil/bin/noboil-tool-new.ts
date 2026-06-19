@@ -9,7 +9,7 @@ const run = async (argv: string[] = process.argv.slice(2)): Promise<void> => {
   const kindFlag = argv.find(a => a.startsWith('--kind='))?.slice(7) ?? 'action'
   if (!pathArg) {
     console.error('usage: noboil tool new <provider>/<...segments> [--kind=action|query|mutation]')
-    console.error('  example: noboil tool new exim/hscode/detail --kind=action')
+    console.error('  example: noboil tool new acme/orders/get --kind=action')
     process.exit(2)
   }
   if (!['action', 'mutation', 'query'].includes(kindFlag)) {

@@ -32,12 +32,12 @@ describe(parseFlags, () => {
 })
 describe(didYouMean, () => {
   it('suggests close match', () => {
-    expect(didYouMean('eximm', ['exim', 'admin'])).toBe('exim')
+    expect(didYouMean('acmee', ['acme', 'admin'])).toBe('acme')
   })
   it('returns null for no options', () => {
     expect(didYouMean('anything', [])).toBeNull()
   })
   it('returns null when nothing close', () => {
-    expect(didYouMean('xyz', ['exim', 'admin'])).toBeNull()
+    expect(didYouMean('xyz', ['acme', 'admin'])).toBeNull()
   })
 })

@@ -71,10 +71,10 @@ describe(validateArgs, () => {
 })
 const KEBAB_RE = /^[a-z][a-z0-9-]*$/u
 describe('kEBAB_RE path segment validation', () => {
-  it.each(['exim', 'a', 'a-b', 'a1', 'extract-static'])('accepts %s', s => {
+  it.each(['acme', 'a', 'a-b', 'a1', 'extract-static'])('accepts %s', s => {
     expect(KEBAB_RE.test(s)).toBeTruthy()
   })
-  it.each(['Exim', '_admin', 'a_b', '-a', '1a', 'a/b', '../foo', ''])('rejects %s', s => {
+  it.each(['Acme', '_admin', 'a_b', '-a', '1a', 'a/b', '../foo', ''])('rejects %s', s => {
     expect(KEBAB_RE.test(s)).toBeFalsy()
   })
 })

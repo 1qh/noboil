@@ -25,4 +25,4 @@ Architecture mermaid · “first 10 minutes” walkthrough · `file-uploads.mdx`
 
 ## Next
 
-v0.2 absorb-eximagent step 5: table-by-table migration (chats→owned, messages→log, sandboxes→singleton, ownerSpend→budget, etc.) — gated by user greenlight.
+byerag adoption — map its tables onto noboil factories (owned / log / audit / singleton / quota / budget / kv / cache), import the tools `_lib`, keep domain + provider code product-side. Gated by user greenlight.

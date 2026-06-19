@@ -1,120 +1,28 @@
-# noboil v0.2 — absorb eximagent patterns
+# Substrate primitives
 
-Source of truth: see also `~/.claude/projects/-Users-o-z/memory/project_noboil_v02_absorb_eximagent.md`.
+noboil is the substrate; a product is the smallest delta on top. byerag is the reference product consumer — its generic engineering lives here, its domain (corpus, retrieval, agent-driver, assessment) stays in byerag.
 
-Both noboil + eximagent are owned by `1qh`. Plan: noboil absorbs eximagent’s superior generic engineering, then eximagent becomes a thin consumer.
+## Primitives
 
-## Order — pull-then-shrink, no parallel
-
-Land each pattern in noboil first. Eximagent untouched until step 5+.
-
-### 1. `noboil/test` — hermetic adapter + property-test helpers
-
-- Hermetic adapter: `setHermeticAdapter` / `hermeticTry(op, fn)` — generic op interception for tests
-- Deterministic LCG: seeded RNG class for fuzz-style state machine tests
-- Fake clock: `setNow(ms) / restoreNow()`
-- Source: `eximagent/apps/backend/test-utils/convex.ts` + `ownerSpend.property.test.ts`
-
-### 2. `budget` factory — reserve / commit / refund + daily cap
-
-- Generic over: cap unit, period (day/hour), inflight max, estimate-per-call
-- Distinct from `quota` (sliding window timestamps)
-- Source: `eximagent/apps/backend/convex/ownerSpend.ts`
-- Property-tested invariants: no overshoot beyond tolerance, no negative inflight/cents, consolidation safe
-- **Convex-first**: STDB equivalent deferred until first consumer demand. Eximagent migration only needs Convex.
-
-### 3. `audit` factory — preset over `log`
-
-- Fixed schema: action, actor, args, ok, mode, traceId
-- TTL-based purge cron
-- Source: eximagent `auditLogs` + `lib.ts` rate-limit helper
-
-### 4. `noboil/convex/tools` — three-tier framework (Convex-only, accepted)
-
-- `_lib/` ✅ shipped — framework primitives (builder, types, error, http, manifest, validate, parser, prompt-blocks, define-provider, hermetic re-export from shared)
-- `_app/` ⏸ deferred — eximagent’s dispatch.ts mixes generic patterns with project glue. Re-evaluate after eximagent migrates `@a/cli` imports to `noboil/convex/tools`. Generalization happens during step 5 if a clean abstraction emerges.
-- `<provider>/` — consumer responsibility, never in noboil
-- Tier-gated registry, schema fingerprinting, manifest endpoint, dispatch endpoint = consumer concerns
-- STDB has NO equivalent. Documented same way as file storage / pagination.
-
-### 5. Eximagent migration — one PR per table
-
-- chats → owned, messages/streamEvents/auditLogs → log/audit, sandboxes → singleton
-- xToolCache → cache, xTraces → owned, systemStatus → kv
-- rateLimits → quota, ownerSpend → budget (NEW from step 2)
-- tools/\_lib + \_app → import from noboil/convex/tools
-- Keep raw: HTTP actions (anthropic proxy, sandbox lifecycle), proxy helpers, stream protocol, redactor
+- `noboil/test` — hermetic adapter (`setHermeticAdapter` / `hermeticTry`, `loadHermeticFixtures`), deterministic LCG RNG (`createLcg` with int/next/pick), fake clock (`setNow` / `restoreNow` / `advanceNow` / `withFakeNow`).
+- `budget` factory — `reserve` / `settle` / `check` / `add` / `pruneStale` / `auditInvariants`; generic over cap unit, period (day/hour), inflight max, per-call estimate; cross-period settlement refunds the old window and books overage to today; distinct from `quota`. Convex-first; the STDB equivalent lands on first consumer demand.
+- `audit` factory — preset over `log` with a fixed schema (action, actor, args, ok, mode, traceId); `append` / `recent` / `listByActor` / `listByTrace` / `pruneStale`; TTL purge cron.
+- `noboil/convex/tools` — Convex-only CLI-tool framework. `_lib/`: builder, types, error, http, manifest, validate, parser, prompt-blocks, define-provider, caller-runtime, codegen (emit / extract-meta / scan / schema). `_bin/`: runtime, codegen, docgen CLIs. `<provider>/` is consumer responsibility, never in noboil. STDB has no equivalent — documented like file storage and pagination.
+- shared utils — `noboil/shared/{security,redact,log,sanitize,url,env-file,bounded-stream,http-body}`, plus `noboil/convex/server/test-harness` (`createTestHarness`: convex-test wrapper + scheduled-function drainer + hermetic reset).
 
 ## Architecture rules
 
-- Subpath isolation: `noboil/test`, `noboil/budget`, `noboil/convex/tools`
-- Cross-DB promise unchanged for factories — all dual-DB
-- CLI tools explicitly Convex-only
-- Each new factory = new noboil minor version before user publishes 0.1.0
+- Subpath isolation: `noboil/test`, `noboil/budget`, `noboil/convex/tools`.
+- Factories stay dual-DB (cross-DB API parity); the CLI-tool framework is Convex-only.
+- Each new factory ships a new noboil minor before 0.1.0.
 
-## Quality bar (from eximagent)
+## Quality bar
 
-- Property-based tests for state machines (budget, log seq, quota window)
-- Invariant logging on every transition
-- Constant-time comparison for secrets
-- Header allowlists for any HTTP I/O
-- Generated artifacts checked in + drift-tested
-- Framework boundary tests (assert `_lib` has zero project imports)
+- Property-based tests for every state machine (budget, log seq, quota window).
+- Invariant logging on every transition; constant-time secret comparison; HTTP header allowlists.
+- Generated artifacts checked in + drift-tested.
+- Framework boundary test: the tools `_lib` carries zero consumer-domain tokens and zero project-scope imports.
 
-## What stays in eximagent (not generic)
+## Consumer adoption
 
-- `messages/proxyHelpers.ts` — Anthropic proxy header/beta allowlist
-- `messages/streamHelpers.ts` — model rate cards, bounded body
-- `messages/sendCore.ts` — chat title sanitizer + content limits
-- `streamProtocol.ts` — Anthropic stream event Zod
-- `sandboxLaunch.ts` / `sandboxKill.ts` — E2B lifecycle
-- `redactor.ts` — secret redaction (could become noboil util later)
-- All `tools/exim/*` — business tools (USPTO/HS code/etc)
-
-## Status
-
-Plan agreed 2026-04-29.
-
-### Steps 1-4 complete
-
-**Step 1 — `noboil/test/utils`** ✅
-
-- `setHermeticAdapter` / `hermeticTry`, `loadHermeticFixtures`
-- `createLcg` (deterministic RNG with int/next/pick)
-- `setNow` / `restoreNow` / `advanceNow` / `withFakeNow`
-
-**Step 2 — `makeBudget` factory** ✅
-
-- reserve / settle / check / add / pruneStale / auditInvariants
-- Cross-period settlement (refund old + book overage today)
-- Property tests: 5 seeds × 200 ops × invariant checks (cap tolerance, no negative inflight/balance, inflight cap, cap rejection, cross-period)
-
-**Step 3 — `makeAudit` factory** ✅
-
-- append / recent / listByActor / listByTrace / pruneStale
-- TTL cron-friendly
-
-**Step 4 — `noboil/convex/tools` `_lib` + codegen + bin** ✅
-
-- Full CLI framework: builder, types, error, http, manifest, validate, parser, prompt-blocks, define-provider, caller-runtime
-- `_lib/codegen/`: emit, extract-meta, scan, schema
-- `_bin/`: x.ts (runtime CLI), x-codegen.ts, x-docgen.ts (consumer-facing reference)
-- Boundary test enforces zero project-token leakage
-- 98 framework tests pass
-- `_app/` deferred — generalize during step 5 if clean abstraction emerges
-
-### Bonus generic utils absorbed
-
-- `noboil/shared/security`: `constantTimeEqual`, `hashSecret` (SHA-256), `generateSecret` (UUID)
-- `noboil/shared/redact`: 7 secret-type regex + `redactSecrets`
-- `noboil/shared/log`: structured JSON logger + `setLogSink`
-- `noboil/shared/sanitize`: `canonicalizeEmail` (gmail-style), `sanitizeForDisplay`, `sanitizeExternal`
-- `noboil/shared/url`: `normalizeOrigin`, `parseSiteUrls`
-- `noboil/shared/env-file`: `parseEnvFile`, `findProjectRoot`
-- `noboil/shared/bounded-stream`: `boundedBody` (ReadableStream wrapper with idle timeout / max bytes / SSE-aware error)
-- `noboil/shared/http-body`: `parseHttpBody` (JSON + size-cap), `jsonErr`
-- `noboil/convex/server/test-harness`: `createTestHarness` (convex-test wrapper with `afterEach` scheduled-function drainer + hermetic reset)
-
-### Step 5 — Eximagent migration (next)
-
-One PR per table, table-by-table, each independently revertable.
+A product maps its tables onto factories: owned rows → `crud`, append-only event streams → `log`, audit trails → `audit`, per-user singletons → `singletonCrud`, sliding-window limits → `quota`, spend caps → `budget`, key-value state → `kv`, derived caches → `cacheCrud`. Provider-specific tool code, LLM proxy allowlists, stream protocol, sandbox lifecycle, and secret redaction stay product-side.

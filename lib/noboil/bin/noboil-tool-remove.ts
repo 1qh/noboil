@@ -8,7 +8,7 @@ const run = async (argv: string[] = process.argv.slice(2)): Promise<void> => {
   const pathArg = argv[0]
   if (!pathArg) {
     console.error('usage: noboil tool remove <provider>/<...segments>')
-    console.error('  example: noboil tool remove exim/hscode/detail')
+    console.error('  example: noboil tool remove acme/orders/get')
     process.exit(2)
   }
   const parts = pathArg.split('/').filter(Boolean)

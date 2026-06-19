@@ -68,7 +68,6 @@ const main = () => {
       '',
       'This generator picks them up automatically.'
     )
-
   const body = lines.join('\n')
   const target = `${DOCS_DIR}/api-reference.mdx`
   const dirty = replaceBetween(target, 'STABILITY', body)
