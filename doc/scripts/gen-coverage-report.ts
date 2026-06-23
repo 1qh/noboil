@@ -1,15 +1,15 @@
 #!/usr/bin/env bun
 /* eslint-disable no-console */
-import { readdirSync, readFileSync, writeFileSync } from 'node:fs'
-import { DOC_REPO, DOCS_DIR, LIB_NOBOIL, REPO } from './lib'
+import { readdirSync, writeFileSync } from 'node:fs'
+import { DOC_REPO, DOCS_DIR, LIB_NOBOIL, readIfExists, REPO } from './lib'
 
 const SCRIPTS_DIR = `${REPO}/doc/scripts`
 const OUT = `${DOCS_DIR}/single-source-of-truth.mdx`
 const LINE_TAG_RE = /<!-- AUTO-GENERATED:(?<name>[A-Z0-9_-]+) -->/gu
 const BLOCK_TAG_RE = /\{\/\* AUTO-GENERATED:(?<name>[A-Z0-9_-]+):START \*\/\}/gu
 const findMarkers = (path: string): string[] => {
-  // oxlint-disable-next-line node/no-sync
-  const src = readFileSync(path, 'utf8')
+  const src = readIfExists(path)
+  if (src === null) return []
   const out = new Set<string>()
   let m = LINE_TAG_RE.exec(src)
   while (m) {

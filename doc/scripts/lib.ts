@@ -133,11 +133,19 @@ const replaceBetween = (path: string, name: string, body: string): boolean => {
   writeFileSync(path, next)
   return true
 }
+const readIfExists = (path: string): null | string => {
+  try {
+    // oxlint-disable-next-line node/no-sync
+    return readFileSync(path, 'utf8')
+  } catch {
+    return null
+  }
+}
 const replaceLineBetween = (path: string, name: string, body: string): boolean => {
   const tag = `<!-- AUTO-GENERATED:${name} -->`
   const endTag = `<!-- /AUTO-GENERATED:${name} -->`
-  // oxlint-disable-next-line node/no-sync
-  const mdx = readFileSync(path, 'utf8')
+  const mdx = readIfExists(path)
+  if (mdx === null) return false
   const startIdx = mdx.indexOf(tag)
   const endIdx = mdx.indexOf(endTag)
   if (startIdx === -1 || endIdx === -1) {
@@ -160,6 +168,7 @@ export {
   LIB_NOBOIL,
   padMarkdownTables,
   PKG_JSON_PATH,
+  readIfExists,
   replaceBetween,
   replaceLineBetween,
   REPO,
