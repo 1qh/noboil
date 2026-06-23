@@ -29,19 +29,26 @@ const splitName = (name: string): [string, string] => {
   return [parts[0] ?? '', parts[1] ?? '']
 }
 const raw = {
-  action: <T>(name: string, args: Record<string, unknown>) => {
+  action: async <T>(name: string, args: Record<string, unknown>) => {
     const [mod, fn] = splitName(name)
-    return expectError<T>(async () => getClient().action(ref(mod, fn) as FunctionReference<'action'>, args) as Promise<T>)
+    const result = await expectError<T>(
+      async () => getClient().action(ref(mod, fn) as FunctionReference<'action'>, args) as Promise<T>
+    )
+    return result
   },
-  mutation: <T>(name: string, args: Record<string, unknown>) => {
+  mutation: async <T>(name: string, args: Record<string, unknown>) => {
     const [mod, fn] = splitName(name)
-    return expectError<T>(
+    const result = await expectError<T>(
       async () => getClient().mutation(ref(mod, fn) as FunctionReference<'mutation'>, args) as Promise<T>
     )
+    return result
   },
-  query: <T>(name: string, args: Record<string, unknown>) => {
+  query: async <T>(name: string, args: Record<string, unknown>) => {
     const [mod, fn] = splitName(name)
-    return expectError<T>(async () => getClient().query(ref(mod, fn) as FunctionReference<'query'>, args) as Promise<T>)
+    const result = await expectError<T>(
+      async () => getClient().query(ref(mod, fn) as FunctionReference<'query'>, args) as Promise<T>
+    )
+    return result
   }
 }
 const tc = {

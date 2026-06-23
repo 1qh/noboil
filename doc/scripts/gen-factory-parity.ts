@@ -116,11 +116,12 @@ const tableUsedInBackend = (backendDir: string, schemaTable: string): boolean =>
   if (!statSync(backendDir, { throwIfNoEntry: false })) return false
   const re = new RegExp(`\\bs\\.${schemaTable}\\b`, 'u')
   // oxlint-disable-next-line node/no-sync
-  // oxlint-disable-next-line node/no-sync
-  // oxlint-disable-next-line node/no-sync
   for (const f of readdirSync(backendDir).toSorted())
-    // oxlint-disable-next-line node/no-sync
-    if (f.endsWith('.ts') && re.test(readFileSync(`${backendDir}/${f}`, 'utf8'))) return true
+    if (f.endsWith('.ts')) {
+      // oxlint-disable-next-line node/no-sync
+      const content = readFileSync(`${backendDir}/${f}`, 'utf8')
+      if (re.test(content)) return true
+    }
   return false
 }
 const lazyNameForSchema = (lazy: string, schemaTable: string): string | undefined => {
@@ -135,10 +136,9 @@ const scanEntry = ({ dir, name, re, stack }: { dir: string; name: string; re: Re
     stack.push(full)
     return false
   }
-  return (
-    // oxlint-disable-next-line node/no-sync
-    (name.endsWith('.ts') || name.endsWith('.tsx')) && !name.endsWith('.test.ts') && re.test(readFileSync(full, 'utf8'))
-  )
+  // oxlint-disable-next-line node/no-sync
+  const content = readFileSync(full, 'utf8')
+  return (name.endsWith('.ts') || name.endsWith('.tsx')) && !name.endsWith('.test.ts') && re.test(content)
 }
 const rootMatches = (root: string, re: RegExp): boolean => {
   // oxlint-disable-next-line node/no-sync
@@ -146,8 +146,9 @@ const rootMatches = (root: string, re: RegExp): boolean => {
   const stack = [root]
   while (stack.length > 0) {
     const dir = stack.pop()
-    // oxlint-disable-next-line node/no-sync
-    if (dir) for (const name of readdirSync(dir).toSorted()) if (scanEntry({ dir, name, re, stack })) return true
+    if (dir)
+      // oxlint-disable-next-line node/no-sync
+      for (const name of readdirSync(dir).toSorted()) if (scanEntry({ dir, name, re, stack })) return true
   }
   return false
 }

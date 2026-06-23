@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/* eslint-disable no-console, prefer-named-capture-group */
+/* eslint-disable no-console */
 import { readFileSync } from 'node:fs'
 import { LIB_NOBOIL, replaceLineBetween, REPO } from './lib'
 

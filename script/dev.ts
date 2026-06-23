@@ -1,4 +1,5 @@
-/* eslint-disable no-await-in-loop, no-empty */
+/** biome-ignore-all lint/performance/noAwaitInLoops: sequential by design */
+/* eslint-disable no-await-in-loop */
 import { allAppPorts, config } from '@a/config'
 /* oxlint-disable no-process-exit */
 import { sleep, spawn } from 'bun'
@@ -38,7 +39,6 @@ log(c.bold(`\nStarting ${all.length} app${all.length > 1 ? 's' : ''}\n`))
 const procs: { app: App; proc: ReturnType<typeof spawn> }[] = []
 const occupied: App[] = []
 for (const app of all)
-  // biome-ignore lint/performance/noAwaitInLoops: sequential by design
   if (await portFree(app.port)) {
     // oxlint-disable-next-line node/no-sync
     const fd = openSync(join(logDir, `${app.name}.log`), 'w')
@@ -71,7 +71,6 @@ const results = await Promise.all(
   procs.map(async ({ app }) => {
     const start = Date.now()
     while (Date.now() - start < healthTimeout) {
-      // biome-ignore lint/performance/noAwaitInLoops: sequential by design
       const r = await fetch(`http://localhost:${app.port}/`, { signal: AbortSignal.timeout(1500) }).catch(() => null)
       if (r && r.status < 500) return { app, ok: true }
       await sleep(500)

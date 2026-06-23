@@ -645,9 +645,8 @@ const makeTc = () => ({
       return count as T
     }
     if (apiPath === 'wiki.rm' && Array.isArray(args.ids)) {
-      for (const id of args.ids)
-        // biome-ignore lint/performance/noAwaitInLoops: sequential by design
-        await httpReducer('rm_wiki', [toU32(id)], token)
+      // biome-ignore lint/performance/noAwaitInLoops: sequential by design
+      for (const id of args.ids) await httpReducer('rm_wiki', [toU32(id)], token)
       await delay(200)
       return undefined as T
     }

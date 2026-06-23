@@ -223,7 +223,7 @@ const makeCrud = <S extends ZodRawShape>({
   }
   const searchH =
     (fb?: W) =>
-    (
+    async (
       c: ReadCtx,
       {
         query: qry,
@@ -234,7 +234,8 @@ const makeCrud = <S extends ZodRawShape>({
       }
     ) => {
       const w = parseW(where, fb)
-      return searchIndexed(c, qry, w)
+      const result = await searchIndexed(c, qry, w)
+      return result
     }
   const readApi = (wrap: Qb, fb?: W) => ({
     list: wrap({ args: { paginationOpts: pgOpts, ...wArgs }, handler: typed(listH(fb)) }),

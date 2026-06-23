@@ -1,4 +1,4 @@
-/* eslint-disable no-console, @typescript-eslint/max-params, @typescript-eslint/no-unnecessary-condition */
+/* eslint-disable no-console, @typescript-eslint/no-unnecessary-condition */
 import { readFileSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 

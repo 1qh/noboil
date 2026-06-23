@@ -21,14 +21,16 @@ const run = async (argv: string[] = process.argv.slice(2)): Promise<void> => {
   const toolFile = join('convex/tools', dir, `${name}.ts`)
   const testFile = join('convex/tools', dir, `${name}.integration.test.ts`)
   let removed = 0
-  for (const f of [toolFile, testFile])
+  for (const f of [toolFile, testFile]) {
     // oxlint-disable-next-line node/no-sync
-    if (existsSync(f)) {
+    const exists = existsSync(f)
+    if (exists) {
       // oxlint-disable-next-line node/no-sync
       rmSync(f)
       console.log(`removed ${f}`)
       removed += 1
     }
+  }
   if (removed === 0) {
     console.error(`no files found for ${pathArg}`)
     process.exit(1)

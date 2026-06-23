@@ -29,7 +29,7 @@ const resolveUrlByEndpoint = async ({ fileInfoEndpoint, storageId }: { fileInfoE
   if (!body.url) return { error: 'File info endpoint response missing url field', status: 502 } as const
   return body.url
 }
-const fetchSourceUrl = ({
+const fetchSourceUrl = async ({
   fileInfoEndpoint,
   sourceUrl,
   storageBaseUrl,
@@ -44,7 +44,10 @@ const fetchSourceUrl = ({
   if (storageId && isHttpUrl(storageId)) return storageId
   if (sourceUrl) return { error: 'sourceUrl must be an http(s) url', status: 400 }
   if (storageId && storageBaseUrl) return buildStorageUrl({ storageBaseUrl, storageId })
-  if (storageId && fileInfoEndpoint) return resolveUrlByEndpoint({ fileInfoEndpoint, storageId })
+  if (storageId && fileInfoEndpoint) {
+    const url = await resolveUrlByEndpoint({ fileInfoEndpoint, storageId })
+    return url
+  }
   return { error: 'sourceUrl or storageId is required', status: 400 }
 }
 const fetchImage = async ({

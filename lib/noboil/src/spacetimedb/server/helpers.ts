@@ -256,21 +256,32 @@ const toId = (x: unknown): null | string => {
   if (typeof x === 'string') return x
   return null
 }
-const callStorageDelete = (storage: StorageLike, id: string) => {
+const callStorageDelete = async (storage: StorageLike, id: string) => {
   const ext = storage as StorageLike & {
     deleteFile?: (id: string) => Promise<void>
   }
-  if (typeof ext.deleteFile === 'function') return ext.deleteFile(id)
-  return storage.delete(id)
+  if (typeof ext.deleteFile === 'function') {
+    const deleted = await ext.deleteFile(id)
+    return deleted
+  }
+  const result = await storage.delete(id)
+  return result
 }
-const callStorageGetUrl = (storage: StorageLike, id: string) => {
+const callStorageGetUrl = async (storage: StorageLike, id: string) => {
   const ext = storage as StorageLike & {
     getSignedUrl?: (id: string) => Promise<null | string>
     getUploadUrl?: (id: string) => Promise<null | string>
   }
-  if (typeof ext.getSignedUrl === 'function') return ext.getSignedUrl(id)
-  if (typeof ext.getUploadUrl === 'function') return ext.getUploadUrl(id)
-  return storage.getUrl(id)
+  if (typeof ext.getSignedUrl === 'function') {
+    const signed = await ext.getSignedUrl(id)
+    return signed
+  }
+  if (typeof ext.getUploadUrl === 'function') {
+    const upload = await ext.getUploadUrl(id)
+    return upload
+  }
+  const result = await storage.getUrl(id)
+  return result
 }
 const setArrayUrls = async (opts: {
   getUrl: (x: unknown) => Promise<null | string>

@@ -38,9 +38,10 @@ const findModuleDir = (root: string): string | undefined => {
     join(root, 'src'),
     join(root, 'backend', 'spacetimedb', 'src')
   ]
-  for (const candidate of candidates)
+  for (const candidate of candidates) {
     // oxlint-disable-next-line node/no-sync
-    if (existsSync(candidate)) {
+    const exists = existsSync(candidate)
+    if (exists) {
       const files = listTypeScriptFiles(candidate)
       for (const file of files) {
         // oxlint-disable-next-line node/no-sync
@@ -48,8 +49,10 @@ const findModuleDir = (root: string): string | undefined => {
         if (isSchemaFile(content)) return candidate
       }
     }
+  }
   // oxlint-disable-next-line node/no-sync
-  if (!existsSync(root)) return
+  const rootExists = existsSync(root)
+  if (!rootExists) return
   // oxlint-disable-next-line node/no-sync
   for (const sub of readdirSync(root, { withFileTypes: true }))
     if (sub.isDirectory()) {

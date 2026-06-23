@@ -118,25 +118,28 @@ const makeAudit = ({
   const recent = b.q({
     // oxlint-disable-next-line unicorn/max-nested-calls
     args: typed({ limit: optional(string()) }),
-    handler: typed((c: DbCtx, args: { limit?: string }): Promise<AuditRow[]> => {
+    handler: typed(async (c: DbCtx, args: { limit?: string }): Promise<AuditRow[]> => {
       const lim = clampLimit(args.limit ? Number(args.limit) : undefined)
-      return queryRecent(c.db, table, lim)
+      const result = await queryRecent(c.db, table, lim)
+      return result
     })
   })
   const listByActor = b.q({
     // oxlint-disable-next-line unicorn/max-nested-calls
     args: typed({ actor: string(), limit: optional(string()) }),
-    handler: typed((c: DbCtx, args: { actor: string; limit?: string }): Promise<AuditRow[]> => {
+    handler: typed(async (c: DbCtx, args: { actor: string; limit?: string }): Promise<AuditRow[]> => {
       const lim = clampLimit(args.limit ? Number(args.limit) : undefined)
-      return queryByActor(c.db, table, args.actor, lim)
+      const result = await queryByActor(c.db, table, args.actor, lim)
+      return result
     })
   })
   const listByTrace = b.q({
     // oxlint-disable-next-line unicorn/max-nested-calls
     args: typed({ limit: optional(string()), traceId: string() }),
-    handler: typed((c: DbCtx, args: { limit?: string; traceId: string }): Promise<AuditRow[]> => {
+    handler: typed(async (c: DbCtx, args: { limit?: string; traceId: string }): Promise<AuditRow[]> => {
       const lim = clampLimit(args.limit ? Number(args.limit) : undefined)
-      return queryByTrace(c.db, table, args.traceId, lim)
+      const result = await queryByTrace(c.db, table, args.traceId, lim)
+      return result
     })
   })
   const pruneStale = b.m({

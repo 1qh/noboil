@@ -67,9 +67,10 @@ const hasSpacetimeImportsFresh = (root: string): boolean => {
   const schemaDir = findSchemaDirFresh(root)
   const searchRoots: string[] = [root]
   if (schemaDir) searchRoots.push(dirname(schemaDir))
-  for (const dir of searchRoots)
+  for (const dir of searchRoots) {
     // oxlint-disable-next-line node/no-sync
-    if (existsSync(dir))
+    const dirExists = existsSync(dir)
+    if (dirExists)
       // oxlint-disable-next-line node/no-sync
       for (const entry of readdirSync(dir, { withFileTypes: true }))
         if (entry.isFile() && (entry.name.endsWith('.ts') || entry.name.endsWith('.tsx'))) {
@@ -77,6 +78,7 @@ const hasSpacetimeImportsFresh = (root: string): boolean => {
           const content = readFileSync(join(dir, entry.name), 'utf8')
           for (const marker of STDB_IMPORT_MARKERS) if (content.includes(marker)) return true
         }
+  }
   return false
 }
 const getModulesFrom = (root: string): string[] => {

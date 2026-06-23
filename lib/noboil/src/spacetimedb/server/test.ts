@@ -87,9 +87,9 @@ const getSchema = async (ctx: Pick<TestContext, 'baseHttpUrl' | 'moduleName'>): 
   return parseJsonResponse<SchemaResponse>(response)
 }
 /** Open a fresh authenticated WebSocket connection to a SpacetimeDB module for use in integration tests. */
-const createConnectedUser = (ctx: Pick<TestContext, 'baseWsUrl' | 'moduleName'>): Promise<TestUser> => {
+const createConnectedUser = async (ctx: Pick<TestContext, 'baseWsUrl' | 'moduleName'>): Promise<TestUser> => {
   const builder = new DbConnectionBuilder(REMOTE_MODULE, config => new DbConnectionImpl(config))
-  return new Promise<TestUser>((resolve, reject) => {
+  const result = await new Promise<TestUser>((resolve, reject) => {
     let finished = false
     const timeout = setTimeout(() => {
       if (finished) return
@@ -117,6 +117,7 @@ const createConnectedUser = (ctx: Pick<TestContext, 'baseWsUrl' | 'moduleName'>)
       })
       .build()
   })
+  return result
 }
 const ensureIdentifier = (value: string, kind: string): string => {
   const valid = IDENTIFIER_RE.test(value)
@@ -235,9 +236,11 @@ const createTestUser = async (ctx: TestContext): Promise<TestUser> => {
   ctx.users.push(user)
   return user
 }
-const asUser = async <T>(_ctx: TestContext, user: TestUser, fn: (activeUser: TestUser) => Promise<T>): Promise<T> =>
-  fn(user)
-const callReducer = (
+const asUser = async <T>(_ctx: TestContext, user: TestUser, fn: (activeUser: TestUser) => Promise<T>): Promise<T> => {
+  const result = await fn(user)
+  return result
+}
+const callReducer = async (
   ctx: TestContext,
   name: string,
   ...rest: [args?: unknown, user?: TestUser]
@@ -246,11 +249,12 @@ const callReducer = (
   const activeUser = user ?? ctx.defaultUser
   const safeName = ensureIdentifier(name, 'REDUCER_NAME')
   const callArgs = normalizeReducerArgs(ctx, safeName, args)
-  return postReducer(ctx, {
+  const result = await postReducer(ctx, {
     args: callArgs,
     reducerName: safeName,
     token: activeUser.token
   })
+  return result
 }
 const queryTable = async (ctx: TestContext, tableName: string, user?: TestUser): Promise<unknown[]> => {
   const activeUser = user ?? ctx.defaultUser

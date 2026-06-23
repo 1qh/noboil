@@ -1,4 +1,3 @@
-/* eslint-disable no-await-in-loop */
 /* eslint-disable max-depth */
 import type { RegisteredQuery } from 'convex/server'
 import type { ZodRawShape } from 'zod/v4'
@@ -246,9 +245,10 @@ const addUrls = async <D extends Record<string, unknown>>({
 }): Promise<WithUrls<D>> => {
   if (fileFields.length === 0) return asWithUrls<D>(doc)
   const o = { ...doc } as Record<string, unknown>
-  const getUrl = (x: unknown) => {
+  const getUrl = async (x: unknown) => {
     const id = toId(x)
-    return id ? storage.getUrl(id) : null
+    const result = id ? await storage.getUrl(id) : null
+    return result
   }
   const resolveField = async (f: string): Promise<void> => {
     const fv = doc[f]

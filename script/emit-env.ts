@@ -1,4 +1,3 @@
-/* eslint-disable no-empty */
 import { config, infraVars, portVars, urlVars } from '@a/config'
 import { existsSync, lstatSync, readdirSync, symlinkSync, unlinkSync } from 'node:fs'
 import { join } from 'node:path'

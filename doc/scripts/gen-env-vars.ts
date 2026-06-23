@@ -17,10 +17,9 @@ const walk = (dir: string, out: string[] = []): string[] => {
       name === '__tests__'
     const full = join(dir, name)
     // oxlint-disable-next-line node/no-sync
-    if (!skip && statSync(full, { throwIfNoEntry: false }))
-      // oxlint-disable-next-line node/no-sync
-      if (statSync(full).isDirectory())
-        // oxlint-disable-next-line node/no-sync
+    const stat = statSync(full, { throwIfNoEntry: false })
+    if (!skip && stat)
+      if (stat.isDirectory())
         // oxlint-disable-next-line node/no-sync
         walk(full, out)
       else if ((name.endsWith('.ts') || name.endsWith('.tsx')) && !name.endsWith('.test.ts')) out.push(full)

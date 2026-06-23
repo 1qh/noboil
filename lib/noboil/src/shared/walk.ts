@@ -48,15 +48,18 @@ const STDB_MODULE_CANDIDATES = (root: string): string[] => [
   join(root, 'backend', 'spacetimedb', 'src')
 ]
 const findStdbModuleDir = (root: string): string | undefined => {
-  // oxlint-disable-next-line node/no-sync
-  // oxlint-disable-next-line node/no-sync
-  for (const candidate of STDB_MODULE_CANDIDATES(root))
+  for (const candidate of STDB_MODULE_CANDIDATES(root)) {
     // oxlint-disable-next-line node/no-sync
-    if (existsSync(candidate)) {
+    const exists = existsSync(candidate)
+    if (exists) {
       const files = listTypeScriptFiles(candidate)
-      // oxlint-disable-next-line node/no-sync
-      for (const file of files) if (isSchemaFile(readFileSync(file, 'utf8'))) return candidate
+      for (const file of files) {
+        // oxlint-disable-next-line node/no-sync
+        const content = readFileSync(file, 'utf8')
+        if (isSchemaFile(content)) return candidate
+      }
     }
+  }
 }
 const findStdbModuleDirDeep = (root: string): string | undefined => {
   const direct = findStdbModuleDir(root)

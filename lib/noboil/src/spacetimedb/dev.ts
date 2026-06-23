@@ -137,7 +137,7 @@ const pingSpacetime = async (): Promise<boolean> => {
   for (const result of results) if (result) return true
   return false
 }
-const waitForSpacetimeHealth = (timeoutMs = 120_000, intervalMs = 1000): Promise<boolean> => {
+const waitForSpacetimeHealth = async (timeoutMs = 120_000, intervalMs = 1000): Promise<boolean> => {
   const started = Date.now()
   const poll = async (): Promise<boolean> => {
     const isHealthy = await pingSpacetime()
@@ -146,7 +146,8 @@ const waitForSpacetimeHealth = (timeoutMs = 120_000, intervalMs = 1000): Promise
     await sleep(intervalMs)
     return poll()
   }
-  return poll()
+  const result = await poll()
+  return result
 }
 const findComposeFile = (cwd: string): null | string => {
   const candidates = ['docker-compose.yml', 'docker-compose.yaml', 'compose.yml', 'compose.yaml']

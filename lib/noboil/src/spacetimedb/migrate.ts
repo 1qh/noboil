@@ -124,9 +124,10 @@ const listTypeScriptFiles = (root: string): string[] => {
 }
 const findSchemaFile = (root: string): undefined | { content: string; path: string } => {
   const candidates = [join(root, 'module'), join(root, 'src', 'module')]
-  for (const dir of candidates)
+  for (const dir of candidates) {
     // oxlint-disable-next-line node/no-sync
-    if (existsSync(dir)) {
+    const exists = existsSync(dir)
+    if (exists) {
       const files = listTypeScriptFiles(dir)
       for (const full of files) {
         // oxlint-disable-next-line node/no-sync
@@ -135,6 +136,7 @@ const findSchemaFile = (root: string): undefined | { content: string; path: stri
           return { content, path: full }
       }
     }
+  }
   for (const full of listTypeScriptFiles(root)) {
     // oxlint-disable-next-line node/no-sync
     const content = readFileSync(full, 'utf8')

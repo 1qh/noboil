@@ -1,4 +1,3 @@
-/* eslint-disable no-empty */
 import { write } from 'bun'
 import { homedir } from 'node:os'
 import { join } from 'node:path'

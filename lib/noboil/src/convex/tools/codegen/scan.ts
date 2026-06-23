@@ -48,7 +48,9 @@ const buildToolFile = async ({
 }): Promise<null | ToolFile> => {
   const baseName = filename.replace(TS_EXT_RE, '')
   const moduleSegs = segments.slice(0, -1).concat(baseName)
-  const cliSegs = moduleSegs.map((s, i) => (i === 0 ? camelToKebab(s.replace(LEADING_UNDERSCORE_RE, '')) : camelToKebab(s)))
+  const cliSegs = moduleSegs.map((s, i) =>
+    i === 0 ? camelToKebab(s.replace(LEADING_UNDERSCORE_RE, '')) : camelToKebab(s)
+  )
   const tier = provider.startsWith(TIER_ADMIN_PREFIX) ? 'admin' : 'user'
   const importPath = `../${moduleSegs.join('/')}`
   const importVar = `${moduleSegs.map((s, i) => (i === 0 ? s : s.charAt(0).toUpperCase() + s.slice(1))).join('')}_mod`

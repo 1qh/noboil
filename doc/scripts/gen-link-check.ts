@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/* eslint-disable no-console, prefer-named-capture-group */
+/* eslint-disable no-console */
 import { readJson } from 'noboil/env-file'
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'

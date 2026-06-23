@@ -24,10 +24,10 @@ const EditWikiForm = ({ wiki, wikis }: { wiki: Wiki; wikis: readonly Wiki[] }) =
   const rmWikiReducer = useReducer(reducers.rmWiki)
   const { remove } = useSoftDelete({
     label: 'wiki page',
-    restore: (restoreArgs: { id: string }) => {
+    restore: async (restoreArgs: { id: string }) => {
       const target = wikis.find(w => w.id === Number(restoreArgs.id))
       if (target)
-        updateWikiReducer({
+        await updateWikiReducer({
           content: target.content,
           editors: undefined,
           expectedUpdatedAt: undefined,
@@ -36,11 +36,9 @@ const EditWikiForm = ({ wiki, wikis }: { wiki: Wiki; wikis: readonly Wiki[] }) =
           status: target.status,
           title: target.title
         })
-      return Promise.resolve()
     },
-    rm: (rmArgs: { id: string }) => {
-      rmWikiReducer({ id: Number(rmArgs.id) })
-      return Promise.resolve()
+    rm: async (rmArgs: { id: string }) => {
+      await rmWikiReducer({ id: Number(rmArgs.id) })
     },
     toast
   })

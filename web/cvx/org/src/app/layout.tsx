@@ -28,13 +28,17 @@ interface MyOrgsResult {
   org: { _id: string; avatarId?: string; name: string; slug: string }
   role: OrgRole
 }
-const queryOrDirect = <T,>(
+const queryOrDirect = async <T,>(
   token: null | string | undefined,
   query: FunctionReference<'query'>,
   args: Record<string, unknown>
 ): Promise<null | T> => {
-  if (token) return fetchQuery(query, args, { token }) as Promise<T>
-  return getTestClient().query(query, args) as Promise<T>
+  if (token) {
+    const r = (await fetchQuery(query, args, { token })) as T
+    return r
+  }
+  const result = (await getTestClient().query(query, args)) as T
+  return result
 }
 type OrgContext =
   | { kind: 'ok'; membership: MembershipResult; org: Doc<'org'> }

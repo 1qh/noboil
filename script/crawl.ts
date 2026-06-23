@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unnecessary-condition, @typescript-eslint/strict-void-return, no-console */
 /* oxlint-disable unicorn/no-process-exit */
-/* eslint-disable @typescript-eslint/max-params, complexity, no-await-in-loop, no-control-regex, no-empty, no-promise-executor-return, no-useless-assignment */
+/* eslint-disable @typescript-eslint/max-params, complexity, no-await-in-loop, no-control-regex, no-promise-executor-return, no-useless-assignment */
 /* oxlint-disable unicorn/consistent-function-scoping */
 /* oxlint-disable promise/always-return, promise/param-names, promise/prefer-await-to-then, unicorn/no-process-exit */
 /** biome-ignore-all lint/performance/noAwaitInLoops: sequential by design */
@@ -264,10 +264,12 @@ const cvxSignUp = async (ctx: BrowserContext, port: number, issues: Issue[]): Pr
   const page = await ctx.newPage()
   try {
     await page.goto(`http://localhost:${port}/login/email`, { timeout: 15_000, waitUntil: 'domcontentloaded' })
-    await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => null)
     const toggle = page.locator('button[type="button"]', { hasText: SIGNUP_TOGGLE_RE }).first()
     if (await toggle.count()) await toggle.click().catch(() => null)
-    await page.locator('input[name="email"]').waitFor({ state: 'visible', timeout: 5000 }).catch(() => null)
+    await page
+      .locator('input[name="email"]')
+      .waitFor({ state: 'visible', timeout: 5000 })
+      .catch(() => null)
     await page.locator('input[name="email"]').fill(TEST_EMAIL)
     await page.locator('input[name="password"]').fill(TEST_PASSWORD)
     const errors: string[] = []
@@ -400,7 +402,6 @@ const crawlApp = async (app: AppSpec): Promise<Result> => {
         .goto(`http://localhost:${app.port}${route}`, { timeout: navTimeout, waitUntil: 'commit' })
         .catch(() => null)
       await page.waitForLoadState('domcontentloaded', { timeout: 5000 }).catch(() => null)
-      await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => null)
       await pollOverlay(page, route, i => issues.push(i))
       if (doShots) {
         const slug = `${app.name}${route.replaceAll(/[^\w]+/gu, '_')}`.slice(0, 80)

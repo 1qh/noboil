@@ -33,11 +33,16 @@ const createErrorBoundary = ({ readErrorCode, readErrorMessage }: CreateErrorBou
       const { onError } = this.props
       if (onError) onError(error, errorInfo)
     }
+    // eslint-disable-next-line @typescript-eslint/promise-function-async
     public override render() {
       const { error } = this.state
       const { children, className, fallback } = this.props
       if (!error) return children
-      if (fallback) return fallback({ error, resetErrorBoundary: () => this.setState({ error: null }) })
+      if (fallback)
+        return fallback({
+          error,
+          resetErrorBoundary: () => this.setState({ error: null })
+        })
       const code = readErrorCode(error)
       const message = readErrorMessage(error)
       return (
@@ -61,5 +66,5 @@ const createErrorBoundary = ({ readErrorCode, readErrorMessage }: CreateErrorBou
   }
   return SharedErrorBoundary
 }
-export { createErrorBoundary }
 export type { ErrorBoundaryProps, ErrorBoundaryState }
+export { createErrorBoundary }
