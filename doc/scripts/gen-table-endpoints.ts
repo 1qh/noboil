@@ -9,9 +9,11 @@ const main = () => {
   const rows: string[] = []
   let totalEndpoints = 0
   let tableCount = 0
+  // oxlint-disable-next-line node/no-sync
   for (const f of readdirSync(dir).toSorted()) {
     const skip = !f.endsWith('.ts') || f.startsWith('_') || f === 'schema.ts' || f === 'http.ts' || f === 'auth.ts'
     if (!skip) {
+      // oxlint-disable-next-line node/no-sync
       const src = readFileSync(`${dir}/${f}`, 'utf8')
       const m = EXPORT_BLOCK_RE.exec(src)
       const names =

@@ -1,5 +1,4 @@
-/** biome-ignore-all lint/nursery/noUndeclaredClasses: standard tailwind v4 utilities biome cannot resolve */
-// biome-ignore-all lint/a11y/useSemanticElements: intentional div usage
+/** biome-ignore-all lint/nursery/noUndeclaredClasses: tailwind-v4 utilities biome cannot resolve */
 'use client'
 import type { AnyFieldApi } from '@tanstack/react-form'
 import type { ComponentProps, ReactNode } from 'react'
@@ -136,6 +135,7 @@ const DropSlot = ({
       aria-label='File upload'
       tabIndex={-1}
     />
+    {/* biome-ignore lint/a11y/useSemanticElements: intentional role, semantic element not applicable */}
     <div
       {...rootProps}
       aria-label='Upload file'
@@ -215,7 +215,10 @@ const useFileUpload = (uploadFile: FileApi['upload']): UploadState => {
   const uploadOnce = async (file: File, controller: AbortController): Promise<null | string> => {
     try {
       const result = await uploadFile(file, {
-        onProgress: n => setProgress(Math.max(0, Math.min(100, Math.round(n)))),
+        onProgress: n => {
+          const clamped = Math.max(0, Math.min(100, Math.round(n)))
+          setProgress(clamped)
+        },
         signal: controller.signal
       })
       const value = getUploadedValue(result)

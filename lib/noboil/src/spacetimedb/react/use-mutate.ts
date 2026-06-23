@@ -1,5 +1,3 @@
-/** biome-ignore-all lint/nursery/noComponentHookFactories: factory returns hook by design */
-// biome-ignore-all lint/style/noProcessEnv: intentional process.env access
 /* eslint-disable complexity */
 'use client'
 import { useCallback } from 'react'
@@ -30,13 +28,16 @@ interface MutateToast<A extends Record<string, unknown>, R = void> {
   fieldErrors?: boolean
   success?: ((result: R, args: A) => string) | string
 }
+/** biome-ignore lint/style/noProcessEnv: intentional env access */
 const isDev = typeof process !== 'undefined' && process.env.NODE_ENV !== 'production'
 /** Default mutation error handler. Toasts NOT_AUTHENTICATED and RATE_LIMITED with user-friendly messages, falls back to error message for other codes. */
 const defaultOnError = (error: unknown) => {
   handleError(error, {
+    /** biome-ignore lint/nursery/noComponentHookFactories: handler map, not a component/hook */
     NOT_AUTHENTICATED: () => {
       toast.error('Please log in')
     },
+    /** biome-ignore lint/nursery/noComponentHookFactories: handler map, not a component/hook */
     RATE_LIMITED: () => {
       const data = extractErrorData(error)
       toast.error(

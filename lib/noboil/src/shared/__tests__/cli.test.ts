@@ -86,30 +86,38 @@ describe('readArgOrEqFlag', () => {
 })
 describe('writeIfNotExists / writeFilesToDir', () => {
   test('writes new file', () => {
+    // oxlint-disable-next-line node/no-sync
     const dir = mkdtempSync(join(tmpdir(), 'noboil-cli-'))
     try {
       const path = join(dir, 'sub/foo.ts')
       const wrote = writeIfNotExists({ content: 'hello', label: 'foo.ts', path })
       expect(wrote).toBe(true)
+      // oxlint-disable-next-line node/no-sync
       expect(existsSync(path)).toBe(true)
+      // oxlint-disable-next-line node/no-sync
       expect(readFileSync(path, 'utf8')).toBe('hello')
     } finally {
+      // oxlint-disable-next-line node/no-sync
       rmSync(dir, { force: true, recursive: true })
     }
   })
   test('skips existing file', () => {
+    // oxlint-disable-next-line node/no-sync
     const dir = mkdtempSync(join(tmpdir(), 'noboil-cli-'))
     try {
       const path = join(dir, 'foo.ts')
       writeIfNotExists({ content: 'first', label: 'foo.ts', path })
       const wrote = writeIfNotExists({ content: 'second', label: 'foo.ts', path })
       expect(wrote).toBe(false)
+      // oxlint-disable-next-line node/no-sync
       expect(readFileSync(path, 'utf8')).toBe('first')
     } finally {
+      // oxlint-disable-next-line node/no-sync
       rmSync(dir, { force: true, recursive: true })
     }
   })
   test('writeFilesToDir reports created/skipped', () => {
+    // oxlint-disable-next-line node/no-sync
     const dir = mkdtempSync(join(tmpdir(), 'noboil-cli-'))
     try {
       const r1 = writeFilesToDir({
@@ -131,6 +139,7 @@ describe('writeIfNotExists / writeFilesToDir', () => {
       })
       expect(r2).toEqual({ created: 1, skipped: 1 })
     } finally {
+      // oxlint-disable-next-line node/no-sync
       rmSync(dir, { force: true, recursive: true })
     }
   })

@@ -83,10 +83,12 @@ const SPECS: Spec[] = [
     }
   }
 ]
+// oxlint-disable-next-line node/no-sync
 const fileExists = (path: string): boolean => statSync(path, { throwIfNoEntry: false }) !== undefined
 const optReferenced = (root: string, file: string, opt: string): boolean => {
   const path = `${root}/${file}`
   if (!fileExists(path)) return false
+  // oxlint-disable-next-line node/no-sync
   const src = readFileSync(path, 'utf8')
   return new RegExp(`\\b${opt}\\b`, 'u').test(src)
 }

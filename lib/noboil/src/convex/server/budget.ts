@@ -1,4 +1,3 @@
-/** biome-ignore-all lint/performance/noAwaitInLoops: sequential dup-row consolidation */
 /* eslint-disable no-await-in-loop, @typescript-eslint/max-params */
 /* oxlint-disable unicorn/prefer-ternary */
 import { number, optional, string } from 'zod/v4'
@@ -106,6 +105,7 @@ const consolidate = async (
   if (rows.length === 0) return { balance: 0, id: null, inflight: 0 }
   const cur = rows.find(r => r.periodKey === current)
   const stale = rows.filter(r => r._id !== cur?._id && r.periodKey < current && (r.inflight ?? 0) === 0)
+  /** biome-ignore lint/performance/noAwaitInLoops: sequential by design */
   for (const d of stale) await db.delete(d._id)
   if (!cur) return { balance: 0, id: null, inflight: 0 }
   return { balance: cur.balance, id: cur._id, inflight: cur.inflight ?? 0 }
@@ -148,6 +148,7 @@ const makeBudget = ({
     })
   })
   const reserve = b.m({
+    // oxlint-disable-next-line unicorn/max-nested-calls
     args: typed({ amount: optional(number()), owner: string() }),
     handler: typed(
       async (c: MutCtx, { amount, owner }: { amount?: number; owner: string }): Promise<BudgetReserveResult> => {
@@ -225,6 +226,7 @@ const makeBudget = ({
     )
   })
   const add = b.m({
+    // oxlint-disable-next-line unicorn/max-nested-calls
     args: typed({ amount: number(), owner: string(), periodKey: optional(string()) }),
     handler: typed(async (c: MutCtx, args: { amount: number; owner: string; periodKey?: string }): Promise<void> => {
       const key = args.periodKey ?? periodKeyFor(Date.now(), periodMs)

@@ -1,4 +1,4 @@
-/** biome-ignore-all lint/nursery/noUndeclaredClasses: standard tailwind v4 utilities biome cannot resolve */
+/** biome-ignore-all lint/nursery/noUndeclaredClasses: tailwind-v4 utilities biome cannot resolve */
 /* eslint-disable @eslint-react/hooks-extra/no-direct-set-state-in-use-effect, react-hooks/refs */
 /* eslint-disable complexity */
 'use client'
@@ -163,7 +163,7 @@ const Devtools = ({
   const [open, setOpen] = useState(defaultOpen)
   const [tab, setTab] = useState<TabId>(defaultTab)
   const [showWaterfall, setShowWaterfall] = useState(false)
-  // biome-ignore lint/style/noProcessEnv: env detection
+  /** biome-ignore lint/style/noProcessEnv: env detection */
   if (typeof process !== 'undefined' && process.env.NODE_ENV === 'production') return null
   const errorCount = errors.length
   const subCount = subscriptions.length
@@ -324,7 +324,7 @@ const DevtoolsAutoMount = (props: DevtoolsProps) => {
   const [mounted, setMounted] = useState(false)
   useEffect(() => {
     if (typeof document === 'undefined') return
-    // biome-ignore lint/style/noProcessEnv: env detection
+    /** biome-ignore lint/style/noProcessEnv: env detection */
     if (typeof process !== 'undefined' && process.env.NODE_ENV === 'production') return
     if (autoMounted) return
     autoMounted = true

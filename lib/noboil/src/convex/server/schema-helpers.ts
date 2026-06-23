@@ -122,6 +122,7 @@ const quotaTable = () =>
  */
 const orgTables = () => ({
   org: defineTable({
+    // oxlint-disable-next-line unicorn/max-nested-calls
     avatarId: v.optional(v.union(v.null(), v.id('_storage'))),
     name: v.string(),
     slug: v.string(),

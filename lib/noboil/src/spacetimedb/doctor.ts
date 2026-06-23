@@ -39,20 +39,26 @@ const findModuleDir = (root: string): string | undefined => {
     join(root, 'backend', 'spacetimedb', 'src')
   ]
   for (const candidate of candidates)
+    // oxlint-disable-next-line node/no-sync
     if (existsSync(candidate)) {
       const files = listTypeScriptFiles(candidate)
       for (const file of files) {
+        // oxlint-disable-next-line node/no-sync
         const content = readFileSync(file, 'utf8')
         if (isSchemaFile(content)) return candidate
       }
     }
+  // oxlint-disable-next-line node/no-sync
   if (!existsSync(root)) return
+  // oxlint-disable-next-line node/no-sync
   for (const sub of readdirSync(root, { withFileTypes: true }))
     if (sub.isDirectory()) {
       const nested = join(root, sub.name, 'module')
+      // oxlint-disable-next-line node/no-sync
       if (existsSync(nested)) {
         const files = listTypeScriptFiles(nested)
         for (const file of files) {
+          // oxlint-disable-next-line node/no-sync
           const content = readFileSync(file, 'utf8')
           if (isSchemaFile(content)) return nested
         }
@@ -62,6 +68,7 @@ const findModuleDir = (root: string): string | undefined => {
 const findSchemaFile = (moduleDir: string): undefined | { content: string; path: string } => {
   const files = listTypeScriptFiles(moduleDir)
   for (const full of files) {
+    // oxlint-disable-next-line node/no-sync
     const content = readFileSync(full, 'utf8')
     if (isSchemaFile(content) && content.includes('schema(') && content.includes('table(')) return { content, path: full }
   }
@@ -70,6 +77,7 @@ const extractFactoryCalls = (moduleDir: string): FactoryCall[] => {
   const files = listTypeScriptFiles(moduleDir)
   const byTable = new Map<string, { endpoints: Set<string>; file: string }>()
   for (const full of files) {
+    // oxlint-disable-next-line node/no-sync
     const content = readFileSync(full, 'utf8')
     const file = full.slice(moduleDir.length + 1)
     let m = reducerPat.exec(content)
@@ -91,6 +99,7 @@ const extractFactoryCalls = (moduleDir: string): FactoryCall[] => {
   return calls
 }
 const checkSpacetimeCli = (): CheckResult => {
+  // oxlint-disable-next-line node/no-sync
   const result = spawnSync('spacetime', ['--version'], { encoding: 'utf8' })
   if (result.status !== 0)
     return {
@@ -102,6 +111,7 @@ const checkSpacetimeCli = (): CheckResult => {
   return { details: [version || 'spacetime CLI available'], status: 'pass', title: 'Spacetime CLI' }
 }
 const checkDocker = (): CheckResult => {
+  // oxlint-disable-next-line node/no-sync
   const result = spawnSync('docker', ['ps', '--format', '{{.Names}}'], { encoding: 'utf8' })
   if (result.status !== 0)
     return { details: ['Docker not running or not installed'], status: 'warn', title: 'Docker Health' }
@@ -246,6 +256,7 @@ const doctor = (opts?: { json?: boolean }) => {
     checkDocker()
   )
   const lintmaxConfigPath = join(root, 'lintmax.config.ts')
+  // oxlint-disable-next-line node/no-sync
   const eslintContent = existsSync(lintmaxConfigPath) ? readFileSync(lintmaxConfigPath, 'utf8') : undefined
   results.push(checkEslintContent(eslintContent))
   const pkgPath = join(root, 'package.json')

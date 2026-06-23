@@ -1,4 +1,3 @@
-/** biome-ignore-all lint/nursery/noUndeclaredClasses: standard tailwind v4 utilities biome cannot resolve */
 import type { ComponentProps, ReactNode } from 'react'
 import { cn } from '@a/ui'
 import { Badge } from '@a/ui/badge'
@@ -16,8 +15,10 @@ const PermissionGuard = (props: PermissionGuardProps): ReactNode => {
   const { backHref, backLabel, canAccess, children, className, resource, ...rest } = props
   if (canAccess) return children
   return (
+    /* biome-ignore lint/nursery/noUndeclaredClasses: tailwind-v4 utilities biome cannot resolve */
     <div className={cn('flex flex-col items-center gap-4 py-12', className)} {...rest}>
       <Badge variant='secondary'>View only</Badge>
+      {/* biome-ignore lint/nursery/noUndeclaredClasses: tailwind-v4 utilities biome cannot resolve */}
       <p className='text-muted-foreground'>You don&apos;t have edit permission for this {resource}.</p>
       <Button nativeButton={false} render={p => <Link {...p} href={backHref} />} variant='outline'>
         Back to {backLabel}

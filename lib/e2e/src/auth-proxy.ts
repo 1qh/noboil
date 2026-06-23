@@ -1,10 +1,10 @@
-/** biome-ignore-all lint/style/noProcessEnv: env fallbacks */
-/** biome-ignore-all lint/suspicious/noUndeclaredEnvVars: e2e proxy reads optional override env vars */
+/** biome-ignore-all lint/style/noProcessEnv: env/CLI module, intentional process.env */
 import { config, urls } from '@a/config'
 import { serve } from 'bun'
 
 const u = urls()
 const BACKEND_API = process.env.CONVEX_URL ?? u.convexApi
+// biome-ignore lint/suspicious/noUndeclaredEnvVars: env/CLI module, intentional process.env
 const BACKEND_WS = process.env.CONVEX_WS_URL ?? u.convexApi.replace('http://', 'ws://')
 const SITE_URL = process.env.CONVEX_SITE_URL ?? u.convexSite
 const swallow = () => undefined

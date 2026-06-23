@@ -1,13 +1,11 @@
 #!/usr/bin/env node
-/** biome-ignore-all lint/style/noProcessEnv: CLI binary reads env directly */
-/** biome-ignore-all lint/suspicious/noUndeclaredEnvVars: CLI reads optional session/auth env vars */
-/** biome-ignore-all lint/suspicious/noControlCharactersInRegex: sanitize strips control chars */
 /* eslint-disable no-console, no-control-regex, @typescript-eslint/no-unnecessary-condition, complexity */
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { didYouMean, parseFlags } from '../src/convex/tools/parser'
 import { parseEnvFile } from '../src/shared/env-file'
 
+/** biome-ignore lint/suspicious/noControlCharactersInRegex: intentional control-char strip for terminal-safe output */
 const STRIP_RE = /[\u0000-\u001F\u007F-\u009F\u200B-\u200F\u202A-\u202E\u2060-\u2069\uFEFF]/gu
 const KEBAB_RE = /^[a-z][a-z0-9-]*$/u
 const strip = (s: string): string => s.replaceAll(STRIP_RE, '')
@@ -15,7 +13,9 @@ const findProjectRoot = (): string => {
   let dir = process.cwd()
   for (let i = 0; i < 20; i += 1)
     try {
+      // oxlint-disable-next-line node/no-sync
       readFileSync(join(dir, 'package.json'))
+      // oxlint-disable-next-line node/no-sync
       readFileSync(join(dir, '.env'))
       return dir
     } catch {
@@ -31,19 +31,30 @@ interface Auth {
   headers?: Record<string, string>
 }
 const resolveAuth = (): Auth => {
+  /** biome-ignore lint/style/noProcessEnv: intentional env access */
+  /** biome-ignore lint/suspicious/noUndeclaredEnvVars: intentional env access */
   const sessionSecret = process.env.CLI_SESSION_SECRET
+  /** biome-ignore lint/style/noProcessEnv: intentional env access */
+  /** biome-ignore lint/suspicious/noUndeclaredEnvVars: intentional env access */
   const sessionId = process.env.CLI_SESSION_ID
+  /** biome-ignore lint/style/noProcessEnv: intentional env access */
   const siteUrl = process.env.CONVEX_SITE_URL
   if (sessionSecret && sessionId && siteUrl) return { baseUrl: siteUrl, body: { secret: sessionSecret, sessionId } }
   const root = findProjectRoot()
   const env = parseEnvFile(join(root, '.env'))
+  /** biome-ignore lint/style/noProcessEnv: intentional env access */
+  /** biome-ignore lint/suspicious/noUndeclaredEnvVars: intentional env access */
   const adminKey = env.CONVEX_SELF_HOSTED_ADMIN_KEY ?? process.env.CONVEX_SELF_HOSTED_ADMIN_KEY
+  /** biome-ignore lint/style/noProcessEnv: intentional env access */
   const devSiteUrl = env.CONVEX_SITE_URL ?? process.env.CONVEX_SITE_URL
   if (adminKey && devSiteUrl) {
     const identity = Buffer.from(JSON.stringify({ issuer: 'x-cli', subject: 'dev' })).toString('base64')
     return { baseUrl: devSiteUrl, headers: { Authorization: `Convex ${adminKey}:${identity}` } }
   }
+  /** biome-ignore lint/style/noProcessEnv: intentional env access */
+  /** biome-ignore lint/suspicious/noUndeclaredEnvVars: intentional env access */
   const apiKey = env.X_API_KEY ?? process.env.X_API_KEY
+  /** biome-ignore lint/style/noProcessEnv: intentional env access */
   const apiSiteUrl = env.CONVEX_SITE_URL ?? process.env.CONVEX_SITE_URL
   if (apiKey && apiSiteUrl) return { baseUrl: apiSiteUrl, headers: { Authorization: `Bearer ${apiKey}` } }
   console.error(

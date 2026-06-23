@@ -112,7 +112,9 @@ const mergeGlobalBeforeCreate = (left: GlobalHooks, right: GlobalHooks): GlobalH
   if (!(left.beforeCreate || right.beforeCreate)) return
   return (ctx, { data: initialData }) => {
     let data = initialData
+    // oxlint-disable-next-line node/no-sync
     if (left.beforeCreate) data = requireSync(left.beforeCreate(ctx, { data }), 'global.beforeCreate:left')
+    // oxlint-disable-next-line node/no-sync
     if (right.beforeCreate) data = requireSync(right.beforeCreate(ctx, { data }), 'global.beforeCreate:right')
     return data
   }
@@ -120,7 +122,9 @@ const mergeGlobalBeforeCreate = (left: GlobalHooks, right: GlobalHooks): GlobalH
 const mergeGlobalAfterCreate = (left: GlobalHooks, right: GlobalHooks): GlobalHooks['afterCreate'] => {
   if (!(left.afterCreate || right.afterCreate)) return
   return (ctx, args) => {
+    // oxlint-disable-next-line node/no-sync
     if (left.afterCreate) requireSync(left.afterCreate(ctx, args), 'global.afterCreate:left')
+    // oxlint-disable-next-line node/no-sync
     if (right.afterCreate) requireSync(right.afterCreate(ctx, args), 'global.afterCreate:right')
   }
 }
@@ -128,7 +132,9 @@ const mergeGlobalBeforeUpdate = (left: GlobalHooks, right: GlobalHooks): GlobalH
   if (!(left.beforeUpdate || right.beforeUpdate)) return
   return (ctx, { patch: initialPatch, prev }) => {
     let patch = initialPatch
+    // oxlint-disable-next-line node/no-sync
     if (left.beforeUpdate) patch = requireSync(left.beforeUpdate(ctx, { patch, prev }), 'global.beforeUpdate:left')
+    // oxlint-disable-next-line node/no-sync
     if (right.beforeUpdate) patch = requireSync(right.beforeUpdate(ctx, { patch, prev }), 'global.beforeUpdate:right')
     return patch
   }
@@ -136,21 +142,27 @@ const mergeGlobalBeforeUpdate = (left: GlobalHooks, right: GlobalHooks): GlobalH
 const mergeGlobalAfterUpdate = (left: GlobalHooks, right: GlobalHooks): GlobalHooks['afterUpdate'] => {
   if (!(left.afterUpdate || right.afterUpdate)) return
   return (ctx, args) => {
+    // oxlint-disable-next-line node/no-sync
     if (left.afterUpdate) requireSync(left.afterUpdate(ctx, args), 'global.afterUpdate:left')
+    // oxlint-disable-next-line node/no-sync
     if (right.afterUpdate) requireSync(right.afterUpdate(ctx, args), 'global.afterUpdate:right')
   }
 }
 const mergeGlobalBeforeDelete = (left: GlobalHooks, right: GlobalHooks): GlobalHooks['beforeDelete'] => {
   if (!(left.beforeDelete || right.beforeDelete)) return
   return (ctx, args) => {
+    // oxlint-disable-next-line node/no-sync
     if (left.beforeDelete) requireSync(left.beforeDelete(ctx, args), 'global.beforeDelete:left')
+    // oxlint-disable-next-line node/no-sync
     if (right.beforeDelete) requireSync(right.beforeDelete(ctx, args), 'global.beforeDelete:right')
   }
 }
 const mergeGlobalAfterDelete = (left: GlobalHooks, right: GlobalHooks): GlobalHooks['afterDelete'] => {
   if (!(left.afterDelete || right.afterDelete)) return
   return (ctx, args) => {
+    // oxlint-disable-next-line node/no-sync
     if (left.afterDelete) requireSync(left.afterDelete(ctx, args), 'global.afterDelete:left')
+    // oxlint-disable-next-line node/no-sync
     if (right.afterDelete) requireSync(right.afterDelete(ctx, args), 'global.afterDelete:right')
   }
 }
@@ -189,12 +201,14 @@ const mergeCrudBeforeCreate = <DB, Row extends Rec, CreateArgs extends Rec, Upda
   return (ctx, { data: initialData }) => {
     let data = initialData
     if (globalHooks?.beforeCreate)
+      // oxlint-disable-next-line node/no-sync
       data = requireSync(
         globalHooks.beforeCreate(toGlobalCtx(table, ctx), {
           data
         }),
         'crud.beforeCreate:global'
       ) as CreateArgs
+    // oxlint-disable-next-line node/no-sync
     if (localHooks?.beforeCreate) data = requireSync(localHooks.beforeCreate(ctx, { data }), 'crud.beforeCreate:local')
     return data
   }
@@ -207,6 +221,7 @@ const mergeCrudAfterCreate = <DB, Row extends Rec, CreateArgs extends Rec, Updat
   if (!(globalHooks?.afterCreate || localHooks?.afterCreate)) return
   return (ctx, { data, row }) => {
     if (globalHooks?.afterCreate)
+      // oxlint-disable-next-line node/no-sync
       requireSync(
         globalHooks.afterCreate(toGlobalCtx(table, ctx), {
           data,
@@ -214,6 +229,7 @@ const mergeCrudAfterCreate = <DB, Row extends Rec, CreateArgs extends Rec, Updat
         }),
         'crud.afterCreate:global'
       )
+    // oxlint-disable-next-line node/no-sync
     if (localHooks?.afterCreate) requireSync(localHooks.afterCreate(ctx, { data, row }), 'crud.afterCreate:local')
   }
 }
@@ -226,6 +242,7 @@ const mergeCrudBeforeUpdate = <DB, Row extends Rec, CreateArgs extends Rec, Upda
   return (ctx, { patch: initialPatch, prev }) => {
     let patch = initialPatch
     if (globalHooks?.beforeUpdate)
+      // oxlint-disable-next-line node/no-sync
       patch = requireSync(
         globalHooks.beforeUpdate(toGlobalCtx(table, ctx), {
           patch,
@@ -234,6 +251,7 @@ const mergeCrudBeforeUpdate = <DB, Row extends Rec, CreateArgs extends Rec, Upda
         'crud.beforeUpdate:global'
       ) as UpdatePatch
     if (localHooks?.beforeUpdate)
+      // oxlint-disable-next-line node/no-sync
       patch = requireSync(localHooks.beforeUpdate(ctx, { patch, prev }), 'crud.beforeUpdate:local')
     return patch
   }
@@ -246,6 +264,7 @@ const mergeCrudAfterUpdate = <DB, Row extends Rec, CreateArgs extends Rec, Updat
   if (!(globalHooks?.afterUpdate || localHooks?.afterUpdate)) return
   return (ctx, { next, patch, prev }) => {
     if (globalHooks?.afterUpdate)
+      // oxlint-disable-next-line node/no-sync
       requireSync(
         globalHooks.afterUpdate(toGlobalCtx(table, ctx), {
           next,
@@ -254,6 +273,7 @@ const mergeCrudAfterUpdate = <DB, Row extends Rec, CreateArgs extends Rec, Updat
         }),
         'crud.afterUpdate:global'
       )
+    // oxlint-disable-next-line node/no-sync
     if (localHooks?.afterUpdate) requireSync(localHooks.afterUpdate(ctx, { next, patch, prev }), 'crud.afterUpdate:local')
   }
 }
@@ -265,12 +285,14 @@ const mergeCrudBeforeDelete = <DB, Row extends Rec, CreateArgs extends Rec, Upda
   if (!(globalHooks?.beforeDelete || localHooks?.beforeDelete)) return
   return (ctx, { row }) => {
     if (globalHooks?.beforeDelete)
+      // oxlint-disable-next-line node/no-sync
       requireSync(
         globalHooks.beforeDelete(toGlobalCtx(table, ctx), {
           row
         }),
         'crud.beforeDelete:global'
       )
+    // oxlint-disable-next-line node/no-sync
     if (localHooks?.beforeDelete) requireSync(localHooks.beforeDelete(ctx, { row }), 'crud.beforeDelete:local')
   }
 }
@@ -282,7 +304,9 @@ const mergeCrudAfterDelete = <DB, Row extends Rec, CreateArgs extends Rec, Updat
   if (!(globalHooks?.afterDelete || localHooks?.afterDelete)) return
   return (ctx, { row }) => {
     if (globalHooks?.afterDelete)
+      // oxlint-disable-next-line node/no-sync
       requireSync(globalHooks.afterDelete(toGlobalCtx(table, ctx), { row }), 'crud.afterDelete:global')
+    // oxlint-disable-next-line node/no-sync
     if (localHooks?.afterDelete) requireSync(localHooks.afterDelete(ctx, { row }), 'crud.afterDelete:local')
   }
 }
@@ -316,6 +340,7 @@ const mergeSingletonBeforeCreate = <DB, Row extends Rec, UpdatePatch extends Rec
   return (ctx, { data: initialData }) => {
     let data = initialData
     if (globalHooks?.beforeCreate)
+      // oxlint-disable-next-line node/no-sync
       data = requireSync(
         globalHooks.beforeCreate(toGlobalCtx(table, ctx), {
           data
@@ -323,6 +348,7 @@ const mergeSingletonBeforeCreate = <DB, Row extends Rec, UpdatePatch extends Rec
         'singleton.beforeCreate:global'
       ) as UpdatePatch
     if (localHooks?.beforeCreate)
+      // oxlint-disable-next-line node/no-sync
       data = requireSync(localHooks.beforeCreate(ctx, { data }), 'singleton.beforeCreate:local')
     return data
   }
@@ -335,6 +361,7 @@ const mergeSingletonAfterCreate = <DB, Row extends Rec, UpdatePatch extends Rec>
   if (!(globalHooks?.afterCreate || localHooks?.afterCreate)) return
   return (ctx, { data, row }) => {
     if (globalHooks?.afterCreate)
+      // oxlint-disable-next-line node/no-sync
       requireSync(
         globalHooks.afterCreate(toGlobalCtx(table, ctx), {
           data,
@@ -342,6 +369,7 @@ const mergeSingletonAfterCreate = <DB, Row extends Rec, UpdatePatch extends Rec>
         }),
         'singleton.afterCreate:global'
       )
+    // oxlint-disable-next-line node/no-sync
     if (localHooks?.afterCreate) requireSync(localHooks.afterCreate(ctx, { data, row }), 'singleton.afterCreate:local')
   }
 }
@@ -354,6 +382,7 @@ const mergeSingletonBeforeUpdate = <DB, Row extends Rec, UpdatePatch extends Rec
   return (ctx, { patch: initialPatch, prev }) => {
     let patch = initialPatch
     if (globalHooks?.beforeUpdate)
+      // oxlint-disable-next-line node/no-sync
       patch = requireSync(
         globalHooks.beforeUpdate(toGlobalCtx(table, ctx), {
           patch,
@@ -362,6 +391,7 @@ const mergeSingletonBeforeUpdate = <DB, Row extends Rec, UpdatePatch extends Rec
         'singleton.beforeUpdate:global'
       ) as UpdatePatch
     if (localHooks?.beforeUpdate)
+      // oxlint-disable-next-line node/no-sync
       patch = requireSync(localHooks.beforeUpdate(ctx, { patch, prev }), 'singleton.beforeUpdate:local')
     return patch
   }
@@ -374,6 +404,7 @@ const mergeSingletonAfterUpdate = <DB, Row extends Rec, UpdatePatch extends Rec>
   if (!(globalHooks?.afterUpdate || localHooks?.afterUpdate)) return
   return (ctx, { next, patch, prev }) => {
     if (globalHooks?.afterUpdate)
+      // oxlint-disable-next-line node/no-sync
       requireSync(
         globalHooks.afterUpdate(toGlobalCtx(table, ctx), {
           next,
@@ -383,6 +414,7 @@ const mergeSingletonAfterUpdate = <DB, Row extends Rec, UpdatePatch extends Rec>
         'singleton.afterUpdate:global'
       )
     if (localHooks?.afterUpdate)
+      // oxlint-disable-next-line node/no-sync
       requireSync(localHooks.afterUpdate(ctx, { next, patch, prev }), 'singleton.afterUpdate:local')
   }
 }

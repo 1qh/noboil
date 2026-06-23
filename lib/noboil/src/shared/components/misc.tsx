@@ -1,5 +1,3 @@
-/** biome-ignore-all lint/nursery/noUndeclaredClasses: standard tailwind v4 utilities biome cannot resolve */
-/** biome-ignore-all lint/nursery/noComponentHookFactories: factory returns hook by design */
 'use client'
 import type { ComponentProps } from 'react'
 import { cn } from '@a/ui'
@@ -9,6 +7,7 @@ import { Badge } from '@a/ui/badge'
 const OrgAvatar = ({ name, src, ...props }: ComponentProps<typeof Avatar> & { name: string; src?: string }) => (
   <Avatar {...props}>
     {src ? <AvatarImage src={src} /> : null}
+    {/* biome-ignore lint/nursery/noUndeclaredClasses: tailwind-v4 utilities biome cannot resolve */}
     <AvatarFallback className='bg-foreground text-background'>{name.slice(0, 2).toUpperCase()}</AvatarFallback>
   </Avatar>
 )
@@ -23,12 +22,14 @@ const RoleBadge = ({ role, ...props }: ComponentProps<typeof Badge> & { role: st
   </Badge>
 )
 const createOfflineIndicator = (useOnlineStatus: () => boolean) => {
+  // biome-ignore lint/nursery/noComponentHookFactories: field/handler factory, not a component/hook
   const OfflineIndicator = ({ className, ...props }: ComponentProps<'p'>) => {
     const online = useOnlineStatus()
     if (online) return null
     return (
       <p
         className={cn(
+          // biome-ignore lint/nursery/noUndeclaredClasses: tailwind-v4 utilities biome cannot resolve
           'fixed bottom-4 left-4 z-50 rounded-md bg-destructive px-4 py-2 text-sm font-medium text-foreground shadow-lg',
           className
         )}

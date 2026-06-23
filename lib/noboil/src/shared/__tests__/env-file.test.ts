@@ -5,24 +5,29 @@ import { join } from 'node:path'
 import { findProjectRoot, parseEnvFile } from '../env-file'
 
 describe('parseEnvFile', () => {
+  // oxlint-disable-next-line node/no-sync
   const dir = mkdtempSync(join(tmpdir(), 'env-test-'))
   const path = join(dir, '.env')
   afterAll(() => {
+    // oxlint-disable-next-line node/no-sync
     rmSync(dir, { force: true, recursive: true })
   })
   test('parses key=value pairs', () => {
+    // oxlint-disable-next-line node/no-sync
     writeFileSync(path, 'FOO=bar\nBAZ=qux\n')
     const r = parseEnvFile(path)
     expect(r.FOO).toBe('bar')
     expect(r.BAZ).toBe('qux')
   })
   test('strips quoted values', () => {
+    // oxlint-disable-next-line node/no-sync
     writeFileSync(path, `WITH_QUOTES="hello world"\nWITH_TICKS='single'\n`)
     const r = parseEnvFile(path)
     expect(r.WITH_QUOTES).toBe('hello world')
     expect(r.WITH_TICKS).toBe('single')
   })
   test('skips comments and empty', () => {
+    // oxlint-disable-next-line node/no-sync
     writeFileSync(path, '# comment\n\nA=1\n   \nB=2\n')
     const r = parseEnvFile(path)
     expect(r.A).toBe('1')
@@ -40,9 +45,11 @@ describe('findProjectRoot', () => {
     expect(typeof root).toBe('string')
   })
   test('returns start when no marker found', () => {
+    // oxlint-disable-next-line node/no-sync
     const dir = mkdtempSync(join(tmpdir(), 'no-marker-'))
     const r = findProjectRoot(dir, ['nonexistent.marker'])
     expect(r).toBe(dir)
+    // oxlint-disable-next-line node/no-sync
     rmSync(dir, { force: true, recursive: true })
   })
 })

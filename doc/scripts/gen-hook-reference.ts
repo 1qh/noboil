@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs'
 import { DOCS_DIR, LIB_NOBOIL, replaceBetween } from './lib'
 
 const extractInterface = (file: string, name: string): null | string => {
+  // oxlint-disable-next-line node/no-sync
   const src = readFileSync(file, 'utf8')
   const re = new RegExp(`interface ${name}(?:<[^>]*>)?\\s*\\{([^}]+)\\}`, 'u')
   const m = re.exec(src)

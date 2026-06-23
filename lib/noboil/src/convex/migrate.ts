@@ -171,17 +171,22 @@ const diffSnapshots = (before: SchemaSnapshot, after: SchemaSnapshot): Migration
 }
 const findSchemaFile = (root: string): undefined | { content: string; path: string } => {
   const scanDir = (dir: string): undefined | { content: string; path: string } => {
+    // oxlint-disable-next-line node/no-sync
     if (!existsSync(dir)) return
+    // oxlint-disable-next-line node/no-sync
     for (const entry of readdirSync(dir))
       if (entry.endsWith('.ts') && !entry.endsWith('.test.ts') && !entry.endsWith('.config.ts')) {
         const full = join(dir, entry)
+        // oxlint-disable-next-line node/no-sync
         const content = readFileSync(full, 'utf8')
         if (isSchemaFile(content)) return { content, path: full }
       }
   }
   const direct = scanDir(root)
   if (direct) return direct
+  // oxlint-disable-next-line node/no-sync
   if (!existsSync(root)) return
+  // oxlint-disable-next-line node/no-sync
   for (const entry of readdirSync(root, { withFileTypes: true }))
     if (entry.isDirectory()) {
       const sub = scanDir(join(root, entry.name))
@@ -190,6 +195,7 @@ const findSchemaFile = (root: string): undefined | { content: string; path: stri
 }
 const getSchemaFromGit = (ref: string, filePath: string): string | undefined => {
   try {
+    // oxlint-disable-next-line node/no-sync
     return execSync(`git show ${ref}:${filePath}`, { encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] })
   } catch {
     return ''

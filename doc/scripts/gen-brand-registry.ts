@@ -6,6 +6,7 @@ import { DOCS_DIR, LIB_NOBOIL, replaceBetween } from './lib'
 const TYPES_PATH = `${LIB_NOBOIL}/src/convex/server/types.ts`
 const ENTRY_RE = /(?<brand>\w+):\s*'(?<hint>[^']+)'/u
 const main = () => {
+  // oxlint-disable-next-line node/no-sync
   const src = readFileSync(TYPES_PATH, 'utf8')
   const lines = src.split('\n')
   let inBlock = false

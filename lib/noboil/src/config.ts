@@ -1,4 +1,3 @@
-/** biome-ignore-all lint/performance/noAwaitInLoops: sequential config file probe */
 /* eslint-disable no-await-in-loop */
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
@@ -28,8 +27,10 @@ const CONFIG_NAMES = ['noboil.config.ts', 'noboil.config.mts', 'noboil.config.js
 const loadConfig = async (cwd: string): Promise<NoboilConfig | null> => {
   for (const name of CONFIG_NAMES) {
     const p = join(cwd, name)
+    // oxlint-disable-next-line node/no-sync
     if (existsSync(p))
       try {
+        /** biome-ignore lint/performance/noAwaitInLoops: sequential by design */
         const mod = (await import(pathToFileURL(p).href)) as { default?: NoboilConfig }
         return mod.default ?? null
       } catch {

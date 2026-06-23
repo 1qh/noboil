@@ -1,4 +1,4 @@
-/** biome-ignore-all lint/performance/noAwaitInLoops: sequential Convex DB deletes/inserts */
+/** biome-ignore-all lint/performance/noAwaitInLoops: sequential by design */
 /* eslint-disable complexity, no-await-in-loop */
 import type { ZodObject, ZodRawShape } from 'zod/v4'
 import { zid } from 'convex-helpers/server/zod4'
@@ -296,6 +296,7 @@ const makeLog = <S extends ZodRawShape>({
     })
   })
   const rmOne = b.m({
+    // oxlint-disable-next-line unicorn/max-nested-calls
     args: typed({ id: zid(table).optional(), ids: array(zid(table)).max(BULK_MAX).optional() }),
     handler: typed(async (c: MutCtx, args: { id?: string; ids?: string[] }) => {
       await rl(c)

@@ -1,5 +1,4 @@
 /* eslint-disable no-alert */
-/** biome-ignore-all lint/suspicious/noAlert: demo page uses native confirm */
 'use client'
 import type { OrgMember } from '@a/be-spacetimedb/spacetimedb/types'
 import { reducers, tables } from '@a/be-spacetimedb/spacetimedb'
@@ -54,16 +53,19 @@ const OrgSettingsPage = () => {
     return <div className='text-center text-muted-foreground'>You do not have permission to access settings.</div>
   const adminMembers = members.filter(m => m.isAdmin)
   const handleLeave = () => {
+    // biome-ignore lint/suspicious/noAlert: demo page uses native confirm
     if (!confirm('Are you sure you want to leave this organization?')) return
     leaveOrg({})
   }
   const handleTransfer = () => {
     const target = adminMembers.find(m => m.userId.toHexString() === transferTarget)
     if (!target) return
+    // biome-ignore lint/suspicious/noAlert: demo page uses native confirm
     if (!confirm('Are you sure? You will become an admin and lose owner privileges.')) return
     transferOwnership({ newOwnerId: target.userId })
   }
   const handleDelete = () => {
+    // biome-ignore lint/suspicious/noAlert: demo page uses native confirm
     if (!confirm('Are you sure? This will delete all data.')) return
     removeOrg({})
   }

@@ -1,6 +1,4 @@
 /* eslint-disable @typescript-eslint/strict-void-return */
-/* eslint-disable @next/next/no-img-element */
-// biome-ignore-all lint/performance/noImgElement: x
 'use client'
 import type { FunctionReturnType } from 'convex/server'
 import type { ComponentProps } from 'react'
@@ -246,7 +244,7 @@ const Card = ({
     />
     <Link className='mt-1 block' data-testid='blog-card-link' href={`/${_id}`}>
       {coverImageUrl ? (
-        <img
+        <Image
           alt={title}
           className='my-1 w-full rounded-lg object-cover'
           data-testid='blog-cover-image'

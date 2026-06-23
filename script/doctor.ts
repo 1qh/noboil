@@ -1,4 +1,3 @@
-/** biome-ignore-all lint/performance/useTopLevelRegex: script */
 /* oxlint-disable no-process-exit */
 import { config } from '@a/config'
 import { $ } from 'bun'
@@ -11,6 +10,7 @@ interface CheckResult {
   label: string
   pass: boolean
 }
+const TOOL_VERSION_RE = /tool version (?<v>\d+\.\d+\.\d+)/u
 const flags = parseArgs(process.argv.slice(2))
 const want = {
   convex: flags.has('convex') || flags.has('all') || !(flags.has('convex') || flags.has('stdb')),
@@ -65,11 +65,13 @@ const stdbChecks: (() => Promise<CheckResult>)[] = [
   },
   async () => {
     const pkgPath = join(root, 'node_modules/spacetimedb/package.json')
+    // oxlint-disable-next-line node/no-sync
     if (!existsSync(pkgPath)) return { hint: 'Run `bun i`', label: 'spacetimedb SDK installed', pass: false }
+    // oxlint-disable-next-line node/no-sync
     const pkg = JSON.parse(readFileSync(pkgPath, 'utf8')) as { version: string }
     const sdkVer = pkg.version
     const r = await $`bash -lc 'PATH="$HOME/.local/bin:$PATH" spacetime --version 2>/dev/null'`.quiet().nothrow()
-    const verMatch = /tool version (?<v>\d+\.\d+\.\d+)/u.exec(r.stdout.toString())
+    const verMatch = TOOL_VERSION_RE.exec(r.stdout.toString())
     const cliVer = verMatch?.groups?.v ?? ''
     const match = Boolean(cliVer) && sdkVer.startsWith(cliVer.split('.').slice(0, 2).join('.'))
     return {

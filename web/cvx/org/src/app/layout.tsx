@@ -1,4 +1,3 @@
-/** biome-ignore-all lint/suspicious/useAwait: promise-function-async conflict */
 import type { Doc } from '@a/be-convex/model'
 import type { FunctionReference } from 'convex/server'
 import type { Metadata } from 'next'
@@ -29,7 +28,7 @@ interface MyOrgsResult {
   org: { _id: string; avatarId?: string; name: string; slug: string }
   role: OrgRole
 }
-const queryOrDirect = async <T,>(
+const queryOrDirect = <T,>(
   token: null | string | undefined,
   query: FunctionReference<'query'>,
   args: Record<string, unknown>

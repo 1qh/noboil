@@ -32,6 +32,7 @@ const main = async () => {
   ]
   const blocks = await Promise.all(items.map(async i => codeBlock(i.label, await runHelp(i.bin, i.args))))
   const section = `\n${blocks.join('\n\n')}\n`
+  // oxlint-disable-next-line node/no-sync
   const mdx = readFileSync(mdxPath, 'utf8')
   const startIdx = mdx.indexOf(START)
   const endIdx = mdx.indexOf(END)
@@ -43,6 +44,7 @@ const main = async () => {
   if (updated === mdx) console.log('cli.mdx help section already up to date')
   else if (process.argv.includes('--check')) console.log('Updated cli.mdx help section (drift)')
   else {
+    // oxlint-disable-next-line node/no-sync
     writeFileSync(mdxPath, updated)
     console.log('Updated cli.mdx help section')
   }

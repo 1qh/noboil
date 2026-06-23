@@ -30,6 +30,7 @@ describe('convex schema-helpers', () => {
   test('checkSchema does nothing on allowed schemas', () => {
     const prevExit = process.exitCode
     process.exitCode = 0
+    // oxlint-disable-next-line unicorn/max-nested-calls
     checkSchema({ todo: z.object({ name: z.string(), nested: z.object({ id: z.number() }) }) })
     expect(process.exitCode).toBe(0)
     process.exitCode = prevExit

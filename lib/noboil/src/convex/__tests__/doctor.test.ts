@@ -39,19 +39,24 @@ const runDoctorExpectExit = (dir: string) => {
 }
 describe('convex doctor()', () => {
   test('clean project hits all-matched + indexes warn branches', () => {
+    // oxlint-disable-next-line node/no-sync
     const dir = mkdtempSync(join(tmpdir(), 'noboil-doc-clean-'))
     try {
+      // oxlint-disable-next-line node/no-sync
       mkdirSync(join(dir, 'convex', '_generated'), { recursive: true })
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(
         join(dir, 'convex', 'todos.ts'),
         `export const x = crud('todo', schema, { rateLimit: { max: 1, window: 1000 }, where: { unindexed_field: 1 } })`,
         'utf8'
       )
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(
         join(dir, 'schema.ts'),
         'const owned = makeOwned({ todo: object({ title: string() }) })\nexport default defineSchema({ todo: defineTable({}) })',
         'utf8'
       )
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(
         join(dir, 'package.json'),
         JSON.stringify({ dependencies: { convex: '1', noboil: '1', zod: '4' } }),
@@ -60,41 +65,53 @@ describe('convex doctor()', () => {
       runDoctorExpectExit(dir)
       expect(true).toBe(true)
     } finally {
+      // oxlint-disable-next-line node/no-sync
       rmSync(dir, { force: true, recursive: true })
     }
   })
   test('exits when no convex/_generated dir', () => {
+    // oxlint-disable-next-line node/no-sync
     const dir = mkdtempSync(join(tmpdir(), 'noboil-doc-empty-'))
     try {
       expect(runDoctorExpectExit(dir)).toBeGreaterThan(0)
     } finally {
+      // oxlint-disable-next-line node/no-sync
       rmSync(dir, { force: true, recursive: true })
     }
   })
   test('exits when convex dir exists but no schema file with markers', () => {
+    // oxlint-disable-next-line node/no-sync
     const dir = mkdtempSync(join(tmpdir(), 'noboil-doc-noschema-'))
     try {
+      // oxlint-disable-next-line node/no-sync
       mkdirSync(join(dir, 'convex', '_generated'), { recursive: true })
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(join(dir, 'plain.ts'), 'export const x = 1', 'utf8')
       expect(runDoctorExpectExit(dir)).toBeGreaterThan(0)
     } finally {
+      // oxlint-disable-next-line node/no-sync
       rmSync(dir, { force: true, recursive: true })
     }
   })
   test('finds nested convex dir via subdirectory recursion', () => {
+    // oxlint-disable-next-line node/no-sync
     const dir = mkdtempSync(join(tmpdir(), 'noboil-doc-sub-'))
     try {
+      // oxlint-disable-next-line node/no-sync
       mkdirSync(join(dir, 'app', 'convex', '_generated'), { recursive: true })
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(
         join(dir, 'app', 'schema.ts'),
         'const owned = makeOwned({ todo: object({ title: string() }) })\nexport default defineSchema({ todo: defineTable({}) })',
         'utf8'
       )
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(
         join(dir, 'app', 'convex', 'todos.ts'),
         `export const x = crud('todo', schema, { rateLimit: { max: 1, window: 1000 } })`,
         'utf8'
       )
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(
         join(dir, 'package.json'),
         JSON.stringify({ dependencies: { convex: '1', noboil: '1', zod: '4' } }),
@@ -103,24 +120,30 @@ describe('convex doctor()', () => {
       runDoctorExpectExit(dir)
       expect(true).toBe(true)
     } finally {
+      // oxlint-disable-next-line node/no-sync
       rmSync(dir, { force: true, recursive: true })
     }
   })
   test('runs full health check against tmp project with valid schema + factory', () => {
+    // oxlint-disable-next-line node/no-sync
     const dir = mkdtempSync(join(tmpdir(), 'noboil-doctor-'))
     const orig = process.cwd()
     try {
+      // oxlint-disable-next-line node/no-sync
       mkdirSync(join(dir, 'convex', '_generated'), { recursive: true })
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(
         join(dir, 'convex', 'todos.ts'),
         `export const x = crud('todo', schema, { rateLimit: { max: 1, window: 1000 } })`,
         'utf8'
       )
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(
         join(dir, 'convex', 'schema.ts'),
         'const owned = makeOwned({ todo: object({ title: string() }) })\nexport default defineSchema({ todo: defineTable({}), missing: defineTable({}) })',
         'utf8'
       )
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(
         join(dir, 'package.json'),
         JSON.stringify({ dependencies: { convex: '1', noboil: '1', zod: '4' } }),
@@ -144,6 +167,7 @@ describe('convex doctor()', () => {
       expect(exitCode === undefined || exitCode === 1).toBe(true)
     } finally {
       process.chdir(orig)
+      // oxlint-disable-next-line node/no-sync
       rmSync(dir, { force: true, recursive: true })
     }
   })

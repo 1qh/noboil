@@ -26,13 +26,16 @@ const silenced = (fn: () => unknown) => {
 }
 describe('stdb check helpers', () => {
   test('checkSchemaConsistency reports duplicates and missing tables', () => {
+    // oxlint-disable-next-line node/no-sync
     const dir = mkdtempSync(join(tmpdir(), 'noboil-stdb-check-'))
     try {
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(
         join(dir, 'todos.ts'),
         `export const a = makeCrud({ tableName: 'todo' })\nreducer('todo.create', () => undefined)\nreducer('mismatch.create', () => undefined)`,
         'utf8'
       )
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(
         join(dir, 'orphan.ts'),
         `export const c = makeCrud({ tableName: 'todo' })\nreducer('todo.list', () => undefined)`,
@@ -49,6 +52,7 @@ describe('stdb check helpers', () => {
       const issues = checkSchemaConsistency(dir, { content: schemaContent, path: join(dir, 'schema.ts') })
       expect(Array.isArray(issues)).toBe(true)
     } finally {
+      // oxlint-disable-next-line node/no-sync
       rmSync(dir, { force: true, recursive: true })
     }
   })
@@ -60,9 +64,11 @@ describe('stdb check helpers', () => {
     expect(true).toBe(true)
   })
   test('viz run prints summary + --mermaid', () => {
+    // oxlint-disable-next-line node/no-sync
     const dir = mkdtempSync(join(tmpdir(), 'noboil-stdb-viz-'))
     const orig = process.cwd()
     try {
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(
         join(dir, 'schema.ts'),
         'export default schema({ tables: { todo: table(t.u64(), { id: t.u64(), title: t.string() }) } })',
@@ -93,23 +99,28 @@ describe('stdb check helpers', () => {
       expect(true).toBe(true)
     } finally {
       process.chdir(orig)
+      // oxlint-disable-next-line node/no-sync
       rmSync(dir, { force: true, recursive: true })
     }
   })
   test('check run() variants (--endpoints, --schema, --health, --access, --indexes)', () => {
+    // oxlint-disable-next-line node/no-sync
     const dir = mkdtempSync(join(tmpdir(), 'noboil-stdb-check-run-'))
     const orig = process.cwd()
     try {
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(
         join(dir, 'schema.ts'),
         'export default schema({ tables: { todo: table(t.u64(), { id: t.u64(), title: t.string() }) } })',
         'utf8'
       )
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(
         join(dir, 'reducers.ts'),
         `export const x = makeCrud({ tableName: 'todo' })\nreducer('todo.create', () => undefined)\nreducer('todo.list', () => undefined)\nreducer('todo.rm', () => undefined)`,
         'utf8'
       )
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(join(dir, 'app.ts'), 'useList(api.todo.list, { where: { unindexed_field: 1 } })', 'utf8')
       process.chdir(dir)
       // eslint-disable-next-line @typescript-eslint/unbound-method
@@ -135,13 +146,16 @@ describe('stdb check helpers', () => {
       expect(true).toBe(true)
     } finally {
       process.chdir(orig)
+      // oxlint-disable-next-line node/no-sync
       rmSync(dir, { force: true, recursive: true })
     }
   })
   test('migrate run --snapshot reads stdb schema', () => {
+    // oxlint-disable-next-line node/no-sync
     const dir = mkdtempSync(join(tmpdir(), 'noboil-stdb-migrate-snap-'))
     const orig = process.cwd()
     try {
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(
         join(dir, 'schema.ts'),
         'export default schema({ tables: { todo: table(t.u64(), { id: t.u64(), title: t.string() }) } })',
@@ -152,48 +166,65 @@ describe('stdb check helpers', () => {
       expect(true).toBe(true)
     } finally {
       process.chdir(orig)
+      // oxlint-disable-next-line node/no-sync
       rmSync(dir, { force: true, recursive: true })
     }
   })
   test('stdb migrate run "no changes" path (printMigrationPlan early return)', async () => {
     const { execSync } = await import('node:child_process')
+    // oxlint-disable-next-line node/no-sync
     const dir = mkdtempSync(join(tmpdir(), 'noboil-stdb-mig-noop-'))
     const orig = process.cwd()
     try {
       process.chdir(dir)
+      // oxlint-disable-next-line node/no-sync
       execSync('git init -q', { cwd: dir })
+      // oxlint-disable-next-line node/no-sync
       execSync('git config user.email "t@t"', { cwd: dir })
+      // oxlint-disable-next-line node/no-sync
       execSync('git config user.name "t"', { cwd: dir })
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(
         join(dir, 'schema.ts'),
         'export default schema({ tables: { todo: table(t.u64(), { id: t.u64(), title: t.string() }) } })',
         'utf8'
       )
+      // oxlint-disable-next-line node/no-sync
       execSync('git add -A', { cwd: dir })
+      // oxlint-disable-next-line node/no-sync
       execSync('git commit -q -m initial', { cwd: dir })
       silenced(() => migrateRun([]))
       expect(true).toBe(true)
     } finally {
       process.chdir(orig)
+      // oxlint-disable-next-line node/no-sync
       rmSync(dir, { force: true, recursive: true })
     }
   })
   test('stdb migrate run hits all dangerous branches (fieldAddedReq + fieldRemoved + fieldTypeChanged + tableRemoved)', async () => {
     const { execSync } = await import('node:child_process')
+    // oxlint-disable-next-line node/no-sync
     const dir = mkdtempSync(join(tmpdir(), 'noboil-stdb-mig-dang-'))
     const orig = process.cwd()
     try {
       process.chdir(dir)
+      // oxlint-disable-next-line node/no-sync
       execSync('git init -q', { cwd: dir })
+      // oxlint-disable-next-line node/no-sync
       execSync('git config user.email "t@t"', { cwd: dir })
+      // oxlint-disable-next-line node/no-sync
       execSync('git config user.name "t"', { cwd: dir })
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(
         join(dir, 'schema.ts'),
         'export default schema({ tables: { todo: table(t.u64(), { id: t.u64(), removed: t.string(), changed: t.string() }), gone: table(t.u64(), { id: t.u64() }) } })',
         'utf8'
       )
+      // oxlint-disable-next-line node/no-sync
       execSync('git add -A', { cwd: dir })
+      // oxlint-disable-next-line node/no-sync
       execSync('git commit -q -m initial', { cwd: dir })
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(
         join(dir, 'schema.ts'),
         'export default schema({ tables: { todo: table(t.u64(), { id: t.u64(), changed: t.f64(), addedReq: t.string() }) } })',
@@ -203,25 +234,34 @@ describe('stdb check helpers', () => {
       expect(true).toBe(true)
     } finally {
       process.chdir(orig)
+      // oxlint-disable-next-line node/no-sync
       rmSync(dir, { force: true, recursive: true })
     }
   })
   test('stdb migrate run "optional field added" only safe branch', async () => {
     const { execSync } = await import('node:child_process')
+    // oxlint-disable-next-line node/no-sync
     const dir = mkdtempSync(join(tmpdir(), 'noboil-stdb-mig-opt-'))
     const orig = process.cwd()
     try {
       process.chdir(dir)
+      // oxlint-disable-next-line node/no-sync
       execSync('git init -q', { cwd: dir })
+      // oxlint-disable-next-line node/no-sync
       execSync('git config user.email "t@t"', { cwd: dir })
+      // oxlint-disable-next-line node/no-sync
       execSync('git config user.name "t"', { cwd: dir })
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(
         join(dir, 'schema.ts'),
         'export default schema({ tables: { todo: table(t.u64(), { id: t.u64(), title: t.string() }) } })',
         'utf8'
       )
+      // oxlint-disable-next-line node/no-sync
       execSync('git add -A', { cwd: dir })
+      // oxlint-disable-next-line node/no-sync
       execSync('git commit -q -m initial', { cwd: dir })
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(
         join(dir, 'schema.ts'),
         'export default schema({ tables: { todo: table(t.u64(), { id: t.u64(), title: t.string(), bio: t.option(t.string()) }) } })',
@@ -231,28 +271,34 @@ describe('stdb check helpers', () => {
       expect(true).toBe(true)
     } finally {
       process.chdir(orig)
+      // oxlint-disable-next-line node/no-sync
       rmSync(dir, { force: true, recursive: true })
     }
   })
   test('check run() no-flag with duplicate reducer groups + missing schema table + unindexed where', () => {
+    // oxlint-disable-next-line node/no-sync
     const dir = mkdtempSync(join(tmpdir(), 'noboil-stdb-check-runfull-'))
     const orig = process.cwd()
     try {
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(
         join(dir, 'schema.ts'),
         'export default schema({ tables: { todo: table(t.u64(), { id: t.u64(), title: t.string() }), unused: table(t.u64(), { id: t.u64() }) } })',
         'utf8'
       )
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(
         join(dir, 'reducers_a.ts'),
         `export const a = makeCrud({ tableName: 'todo' })\nreducer('todo.create', () => undefined)\nreducer('todo.list', () => undefined)`,
         'utf8'
       )
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(
         join(dir, 'reducers_b.ts'),
         `export const b = makeCrud({ tableName: 'todo' })\nreducer('todo.rm', () => undefined)`,
         'utf8'
       )
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(
         join(dir, 'reducers_c.ts'),
         `export const c = makeCrud({ tableName: 'gone' })\nreducer('gone.create', () => undefined)`,
@@ -276,18 +322,22 @@ describe('stdb check helpers', () => {
       expect(true).toBe(true)
     } finally {
       process.chdir(orig)
+      // oxlint-disable-next-line node/no-sync
       rmSync(dir, { force: true, recursive: true })
     }
   })
   test('check run() no-flag clean schema → all-checks-passed branch', () => {
+    // oxlint-disable-next-line node/no-sync
     const dir = mkdtempSync(join(tmpdir(), 'noboil-stdb-check-clean-'))
     const orig = process.cwd()
     try {
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(
         join(dir, 'schema.ts'),
         'export default schema({ tables: { todo: table(t.u64(), { id: t.u64(), title: t.string() }) } })',
         'utf8'
       )
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(
         join(dir, 'todo.ts'),
         `export const x = makeCrud({ tableName: 'todo' })\nreducer('todo.create', () => undefined)`,
@@ -311,13 +361,16 @@ describe('stdb check helpers', () => {
       expect(true).toBe(true)
     } finally {
       process.chdir(orig)
+      // oxlint-disable-next-line node/no-sync
       rmSync(dir, { force: true, recursive: true })
     }
   })
   test('check run() --indexes + --access + --health with all factory types + where filters', () => {
+    // oxlint-disable-next-line node/no-sync
     const dir = mkdtempSync(join(tmpdir(), 'noboil-stdb-check-divf-'))
     const orig = process.cwd()
     try {
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(
         join(dir, 'schema.ts'),
         `export default schema({
@@ -330,26 +383,31 @@ describe('stdb check helpers', () => {
         })`,
         'utf8'
       )
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(
         join(dir, 'todo.ts'),
         `export const x = makeCrud({ tableName: 'todo' })\nreducer('todo.create', () => undefined)`,
         'utf8'
       )
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(
         join(dir, 'project.ts'),
         `export const x = makeOrg({ tableName: 'project' })\nreducer('project.create', () => undefined)`,
         'utf8'
       )
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(
         join(dir, 'message.ts'),
         `export const x = makeChildCrud({ tableName: 'message' })\nreducer('message.create', () => undefined)`,
         'utf8'
       )
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(
         join(dir, 'movie.ts'),
         `export const x = makeCacheCrud({ tableName: 'movie' })\nreducer('movie.refresh', () => undefined)`,
         'utf8'
       )
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(
         join(dir, 'app.ts'),
         'useList(api.todo.list, { where: { unindexed_a: 1 } })\nuseList(api.project.list, { where: { unindexed_b: 2 } })',
@@ -379,20 +437,25 @@ describe('stdb check helpers', () => {
       expect(true).toBe(true)
     } finally {
       process.chdir(orig)
+      // oxlint-disable-next-line node/no-sync
       rmSync(dir, { force: true, recursive: true })
     }
   })
   test('check finds schema in nested */module/ subdirectory', async () => {
     const { mkdirSync } = await import('node:fs')
+    // oxlint-disable-next-line node/no-sync
     const dir = mkdtempSync(join(tmpdir(), 'noboil-stdb-check-sub-'))
     const orig = process.cwd()
     try {
+      // oxlint-disable-next-line node/no-sync
       mkdirSync(join(dir, 'app', 'module'), { recursive: true })
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(
         join(dir, 'app', 'module', 'schema.ts'),
         'export default schema({ tables: { todo: table(t.u64(), { id: t.u64(), title: t.string() }) } })',
         'utf8'
       )
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(join(dir, 'app', 'module', 'reducers.ts'), `export const x = makeCrud({ tableName: 'todo' })`, 'utf8')
       process.chdir(dir)
       // eslint-disable-next-line @typescript-eslint/unbound-method
@@ -412,15 +475,19 @@ describe('stdb check helpers', () => {
       expect(true).toBe(true)
     } finally {
       process.chdir(orig)
+      // oxlint-disable-next-line node/no-sync
       rmSync(dir, { force: true, recursive: true })
     }
   })
   test('stdb migrate finds schema in module/ subdirectory', async () => {
     const { mkdirSync } = await import('node:fs')
+    // oxlint-disable-next-line node/no-sync
     const dir = mkdtempSync(join(tmpdir(), 'noboil-stdb-mig-mod-'))
     const orig = process.cwd()
     try {
+      // oxlint-disable-next-line node/no-sync
       mkdirSync(join(dir, 'module'), { recursive: true })
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(
         join(dir, 'module', 'schema.ts'),
         'export default schema({ tables: { todo: table(t.u64(), { id: t.u64(), title: t.string() }) } })',
@@ -431,25 +498,34 @@ describe('stdb check helpers', () => {
       expect(true).toBe(true)
     } finally {
       process.chdir(orig)
+      // oxlint-disable-next-line node/no-sync
       rmSync(dir, { force: true, recursive: true })
     }
   })
   test('stdb migrate run with git history triggers printMigrationPlan branches', async () => {
     const { execSync } = await import('node:child_process')
+    // oxlint-disable-next-line node/no-sync
     const dir = mkdtempSync(join(tmpdir(), 'noboil-stdb-migrate-git-'))
     const orig = process.cwd()
     try {
       process.chdir(dir)
+      // oxlint-disable-next-line node/no-sync
       execSync('git init -q', { cwd: dir })
+      // oxlint-disable-next-line node/no-sync
       execSync('git config user.email "t@t"', { cwd: dir })
+      // oxlint-disable-next-line node/no-sync
       execSync('git config user.name "t"', { cwd: dir })
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(
         join(dir, 'schema.ts'),
         'export default schema({ tables: { todo: table(t.u64(), { id: t.u64(), title: t.string(), removed: t.string(), changed: t.string() }), gone: table(t.u64(), { id: t.u64() }) } })',
         'utf8'
       )
+      // oxlint-disable-next-line node/no-sync
       execSync('git add -A', { cwd: dir })
+      // oxlint-disable-next-line node/no-sync
       execSync('git commit -q -m initial', { cwd: dir })
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(
         join(dir, 'schema.ts'),
         'export default schema({ tables: { todo: table(t.u64(), { id: t.u64(), title: t.string(), changed: t.f64(), addedReq: t.string() }), brandNew: table(t.u64(), { id: t.u64() }) } })',
@@ -459,10 +535,12 @@ describe('stdb check helpers', () => {
       expect(true).toBe(true)
     } finally {
       process.chdir(orig)
+      // oxlint-disable-next-line node/no-sync
       rmSync(dir, { force: true, recursive: true })
     }
   })
   test('migrate run no schema → exits, with schema returns warning', () => {
+    // oxlint-disable-next-line node/no-sync
     const dir = mkdtempSync(join(tmpdir(), 'noboil-stdb-mig-edge-'))
     const orig = process.cwd()
     try {
@@ -486,6 +564,7 @@ describe('stdb check helpers', () => {
         process.exit = origExit
       }
       expect(exited).toBeGreaterThan(0)
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(
         join(dir, 'schema.ts'),
         'export default schema({ tables: { todo: table(t.u64(), { id: t.u64(), title: t.string() }) } })',
@@ -494,10 +573,12 @@ describe('stdb check helpers', () => {
       silenced(() => migrateRun([]))
     } finally {
       process.chdir(orig)
+      // oxlint-disable-next-line node/no-sync
       rmSync(dir, { force: true, recursive: true })
     }
   })
   test('viz run no schema exits', () => {
+    // oxlint-disable-next-line node/no-sync
     const dir = mkdtempSync(join(tmpdir(), 'noboil-stdb-viz-empty-'))
     const orig = process.cwd()
     try {
@@ -523,11 +604,13 @@ describe('stdb check helpers', () => {
       expect(exited).toBeGreaterThan(0)
     } finally {
       process.chdir(orig)
+      // oxlint-disable-next-line node/no-sync
       rmSync(dir, { force: true, recursive: true })
     }
   })
   test('stdb add cmd: --help, dry-run for each type, real run, child requires parent', async () => {
     const { add: addCmd } = await import('../add')
+    // oxlint-disable-next-line node/no-sync
     const dir = mkdtempSync(join(tmpdir(), 'noboil-stdb-add-'))
     const orig = process.cwd()
     try {
@@ -559,6 +642,7 @@ describe('stdb check helpers', () => {
       }
     } finally {
       process.chdir(orig)
+      // oxlint-disable-next-line node/no-sync
       rmSync(dir, { force: true, recursive: true })
     }
   })
@@ -592,8 +676,10 @@ describe('stdb check helpers', () => {
     expect(exited).toBeGreaterThan(0)
   })
   test('print* helpers do not throw on empty input', () => {
+    // oxlint-disable-next-line node/no-sync
     const dir = mkdtempSync(join(tmpdir(), 'noboil-stdb-print-'))
     try {
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(join(dir, 'schema.ts'), 'export default schema({ tables: {} })', 'utf8')
       silenced(() => {
         printAccessReport([])
@@ -602,6 +688,7 @@ describe('stdb check helpers', () => {
         printHealthReport(dir, { content: 'export default schema({ tables: {} })', path: join(dir, 'schema.ts') })
       })
     } finally {
+      // oxlint-disable-next-line node/no-sync
       rmSync(dir, { force: true, recursive: true })
     }
     expect(true).toBe(true)

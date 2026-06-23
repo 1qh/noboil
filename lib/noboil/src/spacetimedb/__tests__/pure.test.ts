@@ -1,6 +1,6 @@
+/** biome-ignore-all lint/nursery/noComponentHookFactories: test fixture, not a component/hook */
 /* eslint-disable no-console */
 /* eslint-disable @typescript-eslint/naming-convention, @typescript-eslint/no-deprecated, @typescript-eslint/no-unnecessary-condition, @typescript-eslint/no-unnecessary-type-parameters */
-/** biome-ignore-all lint/nursery/noComponentHookFactories: factory returns hook by design */
 import type { ComponentProps } from 'react'
 import type { Identity } from 'spacetimedb'
 import type { z } from 'zod/v4'
@@ -862,6 +862,7 @@ describe('branded schema type enforcement', () => {
         foreignKey: 'chatId',
         parent: 'chat',
         parentSchema: makeOwned({
+          // oxlint-disable-next-line unicorn/max-nested-calls
           chat: object({ isPublic: boolean(), title: string() })
         }).chat,
         schema: object({ chatId: string(), text: string() })
@@ -904,6 +905,7 @@ describe('universal table()', () => {
   })
   test('noboil define helpers include table helper', async () => {
     const { readFileSync } = await import('node:fs')
+    // oxlint-disable-next-line node/no-sync
     const content = readFileSync(join(import.meta.dir, '..', 'server', 'setup.ts'), 'utf8')
     expect(content.includes('table: TableFn')).toBe(true)
   })
@@ -1678,18 +1680,22 @@ describe('getMeta', () => {
     expect(getMeta(files().max(5))).toEqual({ kind: 'files', max: 5 })
   })
   test('array(string) returns kind stringArray', () => {
+    // oxlint-disable-next-line unicorn/max-nested-calls
     expect(getMeta(array(string()))).toEqual({ kind: 'stringArray' })
   })
   test('array(string).max(10) returns stringArray with max', () => {
+    // oxlint-disable-next-line unicorn/max-nested-calls
     expect(getMeta(array(string()).max(10))).toEqual({
       kind: 'stringArray',
       max: 10
     })
   })
   test('array(number) returns kind unknown', () => {
+    // oxlint-disable-next-line unicorn/max-nested-calls
     expect(getMeta(array(number()))).toEqual({ kind: 'unknown' })
   })
   test('optional string returns kind string', () => {
+    // oxlint-disable-next-line unicorn/max-nested-calls
     expect(getMeta(optional(string()))).toEqual({ kind: 'string' })
   })
   test('nullable file returns kind file', () => {
@@ -2234,6 +2240,7 @@ describe('Fix #1: getOrgMember compound index', () => {
   })
   test('getOrgMember is not re-exported from server/index', async () => {
     const { readFileSync } = await import('node:fs')
+    // oxlint-disable-next-line node/no-sync
     const content = readFileSync(join(import.meta.dir, '..', 'server', 'index.ts'), 'utf8')
     expect(content.includes('getOrgMember')).toBe(false)
   })
@@ -2321,11 +2328,13 @@ describe('Fix #2: singleton first-upsert validates full schema', () => {
 describe('Fix #3: factory table names typed as keyof DM & string', () => {
   test('setup is exported from server/setup', async () => {
     const { readFileSync } = await import('node:fs')
+    // oxlint-disable-next-line node/no-sync
     const content = readFileSync(join(import.meta.dir, '..', 'server', 'setup.ts'), 'utf8')
     expect(content.includes('export') && content.includes('setup')).toBe(true)
   })
   test('setup is re-exported from server/index', async () => {
     const { readFileSync } = await import('node:fs')
+    // oxlint-disable-next-line node/no-sync
     const content = readFileSync(join(import.meta.dir, '..', 'server', 'index.ts'), 'utf8')
     expect(content.includes('setup')).toBe(true)
   })
@@ -2386,6 +2395,7 @@ describe('Fix #4: ownedCascade helper', () => {
   })
   test('ownedCascade is re-exported from server/index', async () => {
     const { readFileSync } = await import('node:fs')
+    // oxlint-disable-next-line node/no-sync
     const content = readFileSync(join(import.meta.dir, '..', 'server', 'index.ts'), 'utf8')
     expect(content.includes('ownedCascade')).toBe(true)
   })
@@ -3398,11 +3408,13 @@ describe('noboil-stdb-check --endpoints', () => {
 describe('bundle verification', () => {
   test('noboil/spacetimedb/server does not export React hooks', async () => {
     const { readFileSync } = await import('node:fs')
+    // oxlint-disable-next-line node/no-sync
     const content = readFileSync(join(import.meta.dir, '..', 'server', 'index.ts'), 'utf8')
     expect(EXPORT_HOOK_PATTERN.test(content)).toBe(false)
   })
   test('noboil/spacetimedb/schema has no React imports', async () => {
     const { readFileSync } = await import('node:fs')
+    // oxlint-disable-next-line node/no-sync
     const content = readFileSync(join(import.meta.dir, '..', 'schema.ts'), 'utf8')
     expect(content.includes("from 'react'")).toBe(false)
     expect(content.includes('useState')).toBe(false)
@@ -3410,17 +3422,20 @@ describe('bundle verification', () => {
   })
   test('noboil/spacetimedb/schema has no node:fs imports', async () => {
     const { readFileSync } = await import('node:fs')
+    // oxlint-disable-next-line node/no-sync
     const content = readFileSync(join(import.meta.dir, '..', 'schema.ts'), 'utf8')
     expect(content.includes("from 'node:fs'")).toBe(false)
   })
   test('noboil/spacetimedb/retry has no React or server imports', async () => {
     const { readFileSync } = await import('node:fs')
+    // oxlint-disable-next-line node/no-sync
     const content = readFileSync(join(import.meta.dir, '..', 'retry.ts'), 'utf8')
     expect(content.includes("from 'react'")).toBe(false)
     expect(content.includes("from 'node:fs'")).toBe(false)
   })
   test('entry point count matches package.json exports', async () => {
     const { readFileSync } = await import('node:fs')
+    // oxlint-disable-next-line node/no-sync
     const content = readFileSync(join(import.meta.dir, '..', '..', '..', 'package.json'), 'utf8')
     const pkg = JSON.parse(content) as { exports: Record<string, string> }
     const exportKeys = Object.keys(pkg.exports)
@@ -6013,7 +6028,9 @@ describe('health check', () => {
       const { mkdirSync, writeFileSync } = await import('node:fs')
       const { tmpdir } = await import('node:os')
       const tmpDir = `${tmpdir()}/noboil-stdb-test-health-${Date.now()}`
+      // oxlint-disable-next-line node/no-sync
       mkdirSync(`${tmpDir}/spacetimedb/_generated`, { recursive: true })
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(`${tmpDir}/spacetimedb/blog.ts`, "crud('blog', owned.blog)")
       const schemaFile = {
         content: 'const owned = makeOwned({ blog: object({ title: string() }) })',
@@ -6030,7 +6047,9 @@ describe('health check', () => {
       const { tmpdir } = await import('node:os')
       const calls: FactoryCall[] = [{ factory: 'crud', file: 'blog.ts', options: '', table: 'blog' }]
       const tmpDir = `${tmpdir()}/noboil-stdb-test-idx-${Date.now()}`
+      // oxlint-disable-next-line node/no-sync
       mkdirSync(`${tmpDir}/spacetimedb/_generated`, { recursive: true })
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(`${tmpDir}/spacetimedb/schema.ts`, 'export default defineSchema({})')
       const issues = checkIndexCoverage(`${tmpDir}/spacetimedb`, calls)
       expect(issues).toHaveLength(0)
@@ -8347,6 +8366,7 @@ describe('Sprint 5 useMutation exports', () => {
   })
   test('useMut signature in source matches generic reducer-first contract', async () => {
     const { readFileSync } = await import('node:fs')
+    // oxlint-disable-next-line node/no-sync
     const content = readFileSync(join(import.meta.dir, '..', 'react', 'use-mutate.ts'), 'utf8')
     expect(content.includes('useMut = <A extends Record<string, unknown>, R = void>(')).toBe(true)
   })
@@ -8980,6 +9000,7 @@ describe('unified schema()', () => {
     const s = buildSchema({
       base: { movie: object({ title: string() }) },
       children: {
+        // oxlint-disable-next-line unicorn/max-nested-calls
         comment: child('blog', object({ blogId: string(), body: string() }))
       },
       org: { organization: object({ name: string(), slug: string() }) },
@@ -9045,6 +9066,7 @@ describe('unified schema()', () => {
 describe('softDelete auto-adds deletedAt column', () => {
   const readSetupSource = async (): Promise<string> => {
     const { readFileSync } = await import('node:fs')
+    // oxlint-disable-next-line node/no-sync
     return readFileSync(join(import.meta.dir, '..', 'server', 'setup.ts'), 'utf8')
   }
   test('setup source includes softDelete auto-injection code', async () => {
@@ -9073,6 +9095,7 @@ describe('softDelete auto-adds deletedAt column', () => {
 describe('compoundIndex shorthand', () => {
   const readSetupSource = async (): Promise<string> => {
     const { readFileSync } = await import('node:fs')
+    // oxlint-disable-next-line node/no-sync
     return readFileSync(join(import.meta.dir, '..', 'server', 'setup.ts'), 'utf8')
   }
   test('compoundIndexToEntry function exists', async () => {
@@ -9258,6 +9281,7 @@ describe('type-safe column references in table options', () => {
   })
   test('setup source constrains pub option to typed schema keys', async () => {
     const { readFileSync } = await import('node:fs')
+    // oxlint-disable-next-line node/no-sync
     const content = readFileSync(join(import.meta.dir, '..', 'server', 'setup.ts'), 'utf8')
     expect(content.includes('pub?: boolean | ZodKeys<F>')).toBe(true)
     expect(content.includes('pub?: string')).toBe(false)
@@ -10011,11 +10035,13 @@ describe('factory parity (stdb under-coverage closure)', () => {
       expect(Object.keys(s).toSorted()).toEqual(['pref', 'settings'])
     })
     test('singleton schema parses nested objects', () => {
+      // oxlint-disable-next-line unicorn/max-nested-calls
       const s = makeSingleton({ pref: object({ ui: object({ theme: string() }) }) })
       const r = s.pref.safeParse({ ui: { theme: 'dark' } })
       expect(r.success).toBe(true)
     })
     test('singleton with array field validates', () => {
+      // oxlint-disable-next-line unicorn/max-nested-calls
       const s = makeSingleton({ pref: object({ tags: object({ list: string() }).array() }) })
       const r = s.pref.safeParse({ tags: [{ list: 'a' }, { list: 'b' }] })
       expect(r.success).toBe(true)
@@ -10055,6 +10081,7 @@ describe('factory parity (stdb under-coverage closure)', () => {
       expect(Object.keys(b).toSorted()).toEqual(['a', 'b'])
     })
     test('base schema accepts arrays', () => {
+      // oxlint-disable-next-line unicorn/max-nested-calls
       const b = makeBase({ movie: object({ genres: object({ name: string() }).array() }) })
       expect(b.movie.safeParse({ genres: [{ name: 'action' }] }).success).toBe(true)
     })
@@ -10089,6 +10116,7 @@ describe('factory parity (stdb under-coverage closure)', () => {
       expect(o.wiki.safeParse({}).success).toBe(false)
     })
     test('orgScoped supports nested objects', () => {
+      // oxlint-disable-next-line unicorn/max-nested-calls
       const o = makeOrgScoped({ wiki: object({ meta: object({ author: string() }) }) })
       expect(o.wiki.safeParse({ meta: { author: 'A' } }).success).toBe(true)
     })

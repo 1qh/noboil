@@ -6,6 +6,7 @@ const findAncestorFile = (start: string, name: string, maxDepth = 10): null | st
   let dir = resolve(start)
   for (let i = 0; i < maxDepth; i += 1) {
     const candidate = join(dir, name)
+    // oxlint-disable-next-line node/no-sync
     if (existsSync(candidate)) return candidate
     const parent = resolve(dir, '..')
     if (parent === dir) return null
@@ -23,7 +24,9 @@ const walkFiles = (root: string, opts: WalkOpts = {}): string[] => {
   const accept = opts.accept ?? (() => true)
   const out: string[] = []
   const walk = (dir: string) => {
+    // oxlint-disable-next-line node/no-sync
     if (!existsSync(dir)) return
+    // oxlint-disable-next-line node/no-sync
     for (const entry of readdirSync(dir, { withFileTypes: true })) {
       const full = join(dir, entry.name)
       if (entry.isDirectory()) {
@@ -45,16 +48,22 @@ const STDB_MODULE_CANDIDATES = (root: string): string[] => [
   join(root, 'backend', 'spacetimedb', 'src')
 ]
 const findStdbModuleDir = (root: string): string | undefined => {
+  // oxlint-disable-next-line node/no-sync
+  // oxlint-disable-next-line node/no-sync
   for (const candidate of STDB_MODULE_CANDIDATES(root))
+    // oxlint-disable-next-line node/no-sync
     if (existsSync(candidate)) {
       const files = listTypeScriptFiles(candidate)
+      // oxlint-disable-next-line node/no-sync
       for (const file of files) if (isSchemaFile(readFileSync(file, 'utf8'))) return candidate
     }
 }
 const findStdbModuleDirDeep = (root: string): string | undefined => {
   const direct = findStdbModuleDir(root)
   if (direct) return direct
+  // oxlint-disable-next-line node/no-sync
   if (!existsSync(root)) return
+  // oxlint-disable-next-line node/no-sync
   for (const sub of readdirSync(root, { withFileTypes: true }))
     if (sub.isDirectory()) {
       const nested = findStdbModuleDir(join(root, sub.name, 'module'))

@@ -1,4 +1,3 @@
-/** biome-ignore-all lint/performance/noAwaitInLoops: sequential by design */
 /* eslint-disable no-await-in-loop */
 import { config } from '@a/config'
 import { $ } from 'bun'
@@ -22,6 +21,7 @@ const syncConvexEnv = async ({ jwks, pem }: SyncOpts = {}) => {
     ['AUTH_GOOGLE_ID', env.AUTH_GOOGLE_ID],
     ['AUTH_GOOGLE_SECRET', env.AUTH_GOOGLE_SECRET]
   ] as const)
+    // biome-ignore lint/performance/noAwaitInLoops: sequential by design
     if (v) await setEnv(k, v)
   await setEnv('CONVEX_TEST_MODE', 'true')
   await setEnv('CI', '')

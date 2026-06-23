@@ -5,9 +5,12 @@ import { createEslintPluginBundle } from '../shared/eslint'
 import { buildRules, readSchemaContentFrom } from '../shared/eslint-factory'
 
 const cache: { modules?: string[]; schemaDir?: string } = {}
+// oxlint-disable-next-line node/no-sync
 const hasGenerated = (dir: string): boolean => existsSync(join(dir, '_generated'))
 const searchSubdirs = (root: string): string | undefined => {
+  // oxlint-disable-next-line node/no-sync
   if (!existsSync(root)) return
+  // oxlint-disable-next-line node/no-sync
   for (const sub of readdirSync(root, { withFileTypes: true }))
     if (sub.isDirectory()) {
       const nested = join(root, sub.name, 'convex')
@@ -26,6 +29,7 @@ const findConvexDir = (root: string): string | undefined => {
 }
 const listModuleFiles = (dir: string): string[] => {
   const result: string[] = []
+  // oxlint-disable-next-line node/no-sync
   for (const entry of readdirSync(dir))
     if (entry.endsWith('.ts') && !entry.startsWith('_') && !entry.includes('.test.') && !entry.includes('.config.'))
       result.push(entry.slice(0, -'.ts'.length))

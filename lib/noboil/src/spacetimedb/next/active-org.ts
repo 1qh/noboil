@@ -1,4 +1,4 @@
-// biome-ignore-all lint/style/noProcessEnv: intentional process.env access
+/** biome-ignore-all lint/style/noProcessEnv: intentional env access */
 'use server'
 import { cookies } from 'next/headers'
 import type { ActiveOrgQuery } from './active-org-types'
@@ -61,7 +61,7 @@ const queryActiveOrgSql = async <T>({
   const wsUri = process.env.NEXT_PUBLIC_SPACETIMEDB_URI ?? process.env.SPACETIMEDB_URI
   const moduleName = process.env.SPACETIMEDB_MODULE_NAME
   if (!(wsUri && moduleName)) return null
-  const parsed = Number.parseInt(orgId, 10)
+  const parsed = Math.trunc(Number(orgId))
   if (Number.isNaN(parsed) || parsed < 1) return null
   const statement = sql.replace(':orgId', `'${String(parsed)}'`)
   const response = await fetch(`${toHttpUri(wsUri)}/v1/database/${moduleName}/sql`, {
@@ -95,7 +95,7 @@ const resolveActiveOrg = async <T>({
       table: query.table,
       token: activeToken,
       uri: toHttpUri(wsUri),
-      where: `id = ${Number.parseInt(orgId, 10)}`
+      where: `id = ${Math.trunc(Number(orgId))}`
     })
     return rows[0] ?? null
   }

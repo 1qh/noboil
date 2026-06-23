@@ -9,6 +9,7 @@ const discoverModules = (
   const absConvex = isAbsolute(convexDir) ? convexDir : join(process.cwd(), convexDir)
   const parentDir = dirname(absConvex)
   const scanDir = (dir: string, prefix: string) => {
+    // oxlint-disable-next-line node/no-sync
     for (const entry of readdirSync(dir, { withFileTypes: true }))
       if (entry.isDirectory() && !entry.name.startsWith('_') && entry.name !== 'node_modules')
         scanDir(join(dir, entry.name), `${prefix}${entry.name}/`)
@@ -19,6 +20,7 @@ const discoverModules = (
       }
   }
   scanDir(absConvex, '')
+  // oxlint-disable-next-line node/no-sync
   for (const entry of readdirSync(parentDir))
     if (entry.endsWith('.ts') && !entry.endsWith('.test.ts') && !entry.endsWith('.config.ts')) {
       const relKey = `../${entry}`

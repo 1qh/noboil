@@ -19,15 +19,19 @@ describe('spacetimedb eslint plugin export', () => {
     expect(ruleNames.every(n => n.startsWith('noboil-stdb/'))).toBe(true)
   })
   test('discovery-check fires hasSpacetimeImportsFresh + searchSubdirs walker', () => {
+    // oxlint-disable-next-line node/no-sync
     const dir = mkdtempSync(join(tmpdir(), 'noboil-stdb-eslint-disc-'))
     try {
       const sub = join(dir, 'app', 'mod')
+      // oxlint-disable-next-line node/no-sync
       mkdirSync(sub, { recursive: true })
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(
         join(sub, 'schema.ts'),
         'export default schema({ tables: { todo: table(t.u64(), { id: t.u64(), title: t.string() }) } })',
         'utf8'
       )
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(
         join(dir, 'main.ts'),
         `import { connection } from 'noboil/spacetimedb'\nexport const x = connection`,
@@ -44,6 +48,7 @@ describe('spacetimedb eslint plugin export', () => {
       if (visitor.Program) visitor.Program({ type: 'Program' })
       expect(true).toBe(true)
     } finally {
+      // oxlint-disable-next-line node/no-sync
       rmSync(dir, { force: true, recursive: true })
     }
   })
@@ -67,11 +72,15 @@ describe('spacetimedb eslint plugin export', () => {
     expect(reports.some(r => r.messageId === 'unsafeApiCast')).toBe(true)
   })
   test('api-casing visitor exercises stdb module-bindings discovery helpers', () => {
+    // oxlint-disable-next-line node/no-sync
     const dir = mkdtempSync(join(tmpdir(), 'noboil-stdb-eslint-plug-'))
     try {
       const mod = join(dir, 'module_bindings')
+      // oxlint-disable-next-line node/no-sync
       mkdirSync(mod, { recursive: true })
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(join(mod, 'todo_table.ts'), 'export const x = 1', 'utf8')
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(join(dir, 'schema.ts'), 'export default schema({ tables: { todo: table() } })', 'utf8')
       const reports: { messageId: string }[] = []
       const apiCasingRule = (rules as Record<string, { create: (ctx: unknown) => Record<string, unknown> }>)['api-casing']
@@ -88,6 +97,7 @@ describe('spacetimedb eslint plugin export', () => {
       })
       expect(reports.length).toBeGreaterThanOrEqual(0)
     } finally {
+      // oxlint-disable-next-line node/no-sync
       rmSync(dir, { force: true, recursive: true })
     }
   })

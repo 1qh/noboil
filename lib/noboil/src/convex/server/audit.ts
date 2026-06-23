@@ -1,7 +1,6 @@
-/** biome-ignore-all lint/performance/noAwaitInLoops: sequential delete-by-creation-time */
+/** biome-ignore-all lint/performance/noAwaitInLoops: sequential by design */
 /* eslint-disable no-await-in-loop */
 /* eslint-disable @typescript-eslint/max-params */
-/** biome-ignore-all lint/suspicious/useAwait: handlers return thenable chains */
 import { boolean, optional, string } from 'zod/v4'
 import type { DbCtx, DbLike, HookCtx, Mb, MutCtx, Qb } from './types'
 import { idx, typed } from './bridge'
@@ -102,9 +101,12 @@ const makeAudit = ({
     args: typed({
       action: string(),
       actor: string(),
+      // oxlint-disable-next-line unicorn/max-nested-calls
       args: optional(string()),
+      // oxlint-disable-next-line unicorn/max-nested-calls
       mode: optional(string()),
       ok: boolean(),
+      // oxlint-disable-next-line unicorn/max-nested-calls
       traceId: optional(string())
     }),
     handler: typed(async (c: MutCtx, row: AuditAppendInput): Promise<void> => {
@@ -114,22 +116,25 @@ const makeAudit = ({
     })
   })
   const recent = b.q({
+    // oxlint-disable-next-line unicorn/max-nested-calls
     args: typed({ limit: optional(string()) }),
-    handler: typed(async (c: DbCtx, args: { limit?: string }): Promise<AuditRow[]> => {
+    handler: typed((c: DbCtx, args: { limit?: string }): Promise<AuditRow[]> => {
       const lim = clampLimit(args.limit ? Number(args.limit) : undefined)
       return queryRecent(c.db, table, lim)
     })
   })
   const listByActor = b.q({
+    // oxlint-disable-next-line unicorn/max-nested-calls
     args: typed({ actor: string(), limit: optional(string()) }),
-    handler: typed(async (c: DbCtx, args: { actor: string; limit?: string }): Promise<AuditRow[]> => {
+    handler: typed((c: DbCtx, args: { actor: string; limit?: string }): Promise<AuditRow[]> => {
       const lim = clampLimit(args.limit ? Number(args.limit) : undefined)
       return queryByActor(c.db, table, args.actor, lim)
     })
   })
   const listByTrace = b.q({
+    // oxlint-disable-next-line unicorn/max-nested-calls
     args: typed({ limit: optional(string()), traceId: string() }),
-    handler: typed(async (c: DbCtx, args: { limit?: string; traceId: string }): Promise<AuditRow[]> => {
+    handler: typed((c: DbCtx, args: { limit?: string; traceId: string }): Promise<AuditRow[]> => {
       const lim = clampLimit(args.limit ? Number(args.limit) : undefined)
       return queryByTrace(c.db, table, args.traceId, lim)
     })

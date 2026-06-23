@@ -10,24 +10,32 @@ afterEach(() => {
 })
 describe('loadHermeticFixtures', () => {
   test('serves op-level fixtures from JSON file', () => {
+    // oxlint-disable-next-line node/no-sync
     const dir = mkdtempSync(join(tmpdir(), 'fixtures-'))
     const path = join(dir, 'fixtures.json')
+    // oxlint-disable-next-line node/no-sync
     writeFileSync(path, JSON.stringify({ 'svc.greet': { hello: 'world' } }))
     loadHermeticFixtures(path)
     expect(hermeticTry('svc.greet', null)).toEqual({ hello: 'world' })
+    // oxlint-disable-next-line node/no-sync
     rmSync(dir, { force: true, recursive: true })
   })
   test('returns undefined for unmatched op', () => {
+    // oxlint-disable-next-line node/no-sync
     const dir = mkdtempSync(join(tmpdir(), 'fixtures-'))
     const path = join(dir, 'fixtures.json')
+    // oxlint-disable-next-line node/no-sync
     writeFileSync(path, JSON.stringify({ 'svc.a': 1 }))
     loadHermeticFixtures(path)
     expect(hermeticTry('svc.b', null)).toBeUndefined()
+    // oxlint-disable-next-line node/no-sync
     rmSync(dir, { force: true, recursive: true })
   })
   test('matches payload-specific rules before fallback', () => {
+    // oxlint-disable-next-line node/no-sync
     const dir = mkdtempSync(join(tmpdir(), 'fixtures-'))
     const path = join(dir, 'fixtures.json')
+    // oxlint-disable-next-line node/no-sync
     writeFileSync(
       path,
       JSON.stringify({
@@ -39,14 +47,18 @@ describe('loadHermeticFixtures', () => {
     expect(targetHit?.hits).toHaveLength(1)
     const fallback = hermeticTry('svc.search', { collection: 'other' }) as undefined | { hits: unknown[] }
     expect(fallback?.hits).toHaveLength(0)
+    // oxlint-disable-next-line node/no-sync
     rmSync(dir, { force: true, recursive: true })
   })
   test('rule with no match always matches', () => {
+    // oxlint-disable-next-line node/no-sync
     const dir = mkdtempSync(join(tmpdir(), 'fixtures-'))
     const path = join(dir, 'fixtures.json')
+    // oxlint-disable-next-line node/no-sync
     writeFileSync(path, JSON.stringify({ 'svc.x': [{ response: 'always' }] }))
     loadHermeticFixtures(path)
     expect(hermeticTry('svc.x', { anything: 1 })).toBe('always')
+    // oxlint-disable-next-line node/no-sync
     rmSync(dir, { force: true, recursive: true })
   })
 })

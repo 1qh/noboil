@@ -14,6 +14,7 @@ const parseName = (trimmed: string): string | undefined => {
   return name && name !== 'type' ? name : undefined
 }
 const extractExports = (filePath: string): string[] => {
+  // oxlint-disable-next-line node/no-sync
   const content = readFileSync(filePath, 'utf8')
   const names = new Set<string>()
   let m = exportPat.exec(content)
@@ -40,6 +41,7 @@ const extractExports = (filePath: string): string[] => {
   return [...names].toSorted()
 }
 const genTable = (pkgDir: string, filter: string): string => {
+  // oxlint-disable-next-line node/no-sync
   const pkgJson = JSON.parse(readFileSync(join(pkgDir, 'package.json'), 'utf8')) as {
     exports: Record<string, string | { default?: string; types?: string }>
     name: string
@@ -84,6 +86,7 @@ const section = [
   '</Tabs>',
   ''
 ].join('\n')
+// oxlint-disable-next-line node/no-sync
 const mdx = readFileSync(mdxPath, 'utf8')
 const startIdx = mdx.indexOf(START)
 const endIdx = mdx.indexOf(END)
@@ -95,6 +98,7 @@ const updated = mdx.slice(0, startIdx + START.length) + section + mdx.slice(endI
 if (updated === mdx) console.log('api-reference.mdx imports section already up to date')
 else if (process.argv.includes('--check')) console.log('Updated api-reference.mdx imports section (drift)')
 else {
+  // oxlint-disable-next-line node/no-sync
   writeFileSync(mdxPath, updated)
   console.log('Updated api-reference.mdx imports section')
 }

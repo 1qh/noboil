@@ -44,6 +44,7 @@ const switchTarget = (args: string[] = []) => {
     console.log(`${red('No .env file found.')} Create one first.\n`)
     process.exit(1)
   }
+  // oxlint-disable-next-line node/no-sync
   const original = readFileSync(envPath, 'utf8')
   const updated = original.replace(URI_PAT, (line: string) => {
     const key = line.slice(0, line.indexOf('='))
@@ -60,8 +61,11 @@ const switchTarget = (args: string[] = []) => {
     const additions: string[] = []
     if (!hasPublic) additions.push(`NEXT_PUBLIC_SPACETIMEDB_URI=${target.uri}`)
     if (!hasServer) additions.push(`SPACETIMEDB_URI=${target.uri}`)
+    // oxlint-disable-next-line node/no-sync
     if (additions.length > 0) writeFileSync(envPath, `${original.trimEnd()}\n${additions.join('\n')}\n`)
+    // oxlint-disable-next-line node/no-sync
   } else writeFileSync(envPath, updated)
+  // oxlint-disable-next-line node/no-sync
   spawnSync('spacetime', ['server', 'set-default', target.server], { stdio: 'pipe' })
   console.log(`${green('✓')} ${target.label}`)
   console.log(`  ${dim(envPath)} → ${bold(target.uri)}`)

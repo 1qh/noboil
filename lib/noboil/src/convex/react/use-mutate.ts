@@ -1,5 +1,5 @@
-/** biome-ignore-all lint/nursery/noComponentHookFactories: factory returns hook by design */
-/** biome-ignore-all lint/style/noProcessEnv: env detection */
+/** biome-ignore-all lint/nursery/noComponentHookFactories: handler map, not a component/hook */
+/** biome-ignore-all lint/style/noProcessEnv: intentional env access */
 /* eslint-disable complexity */
 'use client'
 import type { FunctionReference, FunctionReturnType, OptionalRestArgs } from 'convex/server'

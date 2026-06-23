@@ -22,7 +22,9 @@ const run = async (argv: string[] = process.argv.slice(2)): Promise<void> => {
   const testFile = join('convex/tools', dir, `${name}.integration.test.ts`)
   let removed = 0
   for (const f of [toolFile, testFile])
+    // oxlint-disable-next-line node/no-sync
     if (existsSync(f)) {
+      // oxlint-disable-next-line node/no-sync
       rmSync(f)
       console.log(`removed ${f}`)
       removed += 1

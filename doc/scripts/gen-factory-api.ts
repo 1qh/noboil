@@ -1,6 +1,5 @@
 #!/usr/bin/env bun
 /* eslint-disable no-console, no-template-curly-in-string */
-/** biome-ignore-all lint/suspicious/noTemplateCurlyInString: literal placeholder */
 import { readFileSync } from 'node:fs'
 import { DOCS_DIR, LIB_NOBOIL, replaceBetween } from './lib'
 
@@ -16,6 +15,7 @@ interface Entry {
 }
 const extract = (file: string): Entry[] => {
   const out: Entry[] = []
+  // oxlint-disable-next-line node/no-sync
   const src = readFileSync(file, 'utf8')
   const lines = src.split('\n')
   let pendingDoc = ''
@@ -38,6 +38,7 @@ const extract = (file: string): Entry[] => {
 const factoryRows = (factory: string, names: Entry[]): string[] => {
   if (names.length === 0) return [`| \`${factory}\` | _(none)_ | _(none)_ | _(none)_ |`]
   return names.map((n, i) => {
+    // biome-ignore lint/suspicious/noTemplateCurlyInString: intentional literal placeholder to replace
     const tpl = `\`${n.tpl.replaceAll('${tableName}', '{table}')}\``
     const params = n.params ? `\`${n.params.replaceAll('|', String.raw`\|`)}\`` : ''
     const desc = n.desc.replaceAll('|', String.raw`\|`)

@@ -1,4 +1,3 @@
-/** biome-ignore-all lint/nursery/noUndeclaredClasses: standard tailwind v4 utilities biome cannot resolve */
 import '@a/ui/globals.css'
 import './overrides.css'
 import type { ComponentProps, ReactNode } from 'react'
@@ -33,6 +32,7 @@ const AuthLayout = ({
   <html {...htmlProps} lang='en' suppressHydrationWarning>
     <body
       {...bodyProps}
+      // biome-ignore lint/nursery/noUndeclaredClasses: valid tailwind-v4 utilities biome can't resolve
       className={cn('min-h-screen bg-background font-sans tracking-tight text-foreground antialiased', bodyClassName)}>
       <Suspense>
         <ErrorBoundary>

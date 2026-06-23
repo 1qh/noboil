@@ -5,6 +5,7 @@ import { z } from 'zod/v4'
 import { internalAction } from '../_generated/server'
 
 const geoApiResponseSchema = z.object({
+  // oxlint-disable-next-line unicorn/max-nested-calls
   results: z.array(z.object({ latitude: z.number(), longitude: z.number(), name: z.string() })).optional()
 })
 const weatherApiResponseSchema = z.object({
@@ -43,6 +44,7 @@ const fetchWeather = async (city: string, unit: 'celsius' | 'fahrenheit' = 'cels
   }
 }
 const getWeather = internalAction({
+  // oxlint-disable-next-line unicorn/max-nested-calls
   args: { city: v.string(), unit: v.optional(v.union(v.literal('celsius'), v.literal('fahrenheit'))) },
   handler: async (_ctx, { city, unit = 'celsius' }) => {
     try {

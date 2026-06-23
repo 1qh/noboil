@@ -44,6 +44,7 @@ describe('stdb stdb-tables', () => {
     expect(out.count).toBeDefined()
   })
   test('cacheTable accepts zod schema as fields (uses zodToStdbFields path)', () => {
+    // oxlint-disable-next-line unicorn/max-nested-calls
     expect(sc.cacheTable('tmdb_id', z.object({ rating: z.number(), title: z.string() }) as never)).toBeDefined()
   })
 })

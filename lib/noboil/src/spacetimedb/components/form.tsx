@@ -1,4 +1,4 @@
-/** biome-ignore-all lint/nursery/noUndeclaredClasses: standard tailwind v4 utilities biome cannot resolve */
+/** biome-ignore-all lint/nursery/noUndeclaredClasses: tailwind-v4 utilities biome cannot resolve */
 /* oxlint-disable react/jsx-handler-names */
 'use client'
 import type { useNavigationGuard } from 'next-navigation-guard'

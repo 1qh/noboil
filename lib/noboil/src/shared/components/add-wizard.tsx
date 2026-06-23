@@ -1,4 +1,3 @@
-/** biome-ignore-all lint/suspicious/noArrayIndexKey: stable per-field */
 /* eslint-disable react/no-array-index-key, @eslint-react/no-array-index-key */
 import type { ReactNode } from 'react'
 import { Box, render, Text, useApp, useInput } from 'ink'
@@ -182,6 +181,7 @@ const Summary = ({
           <Text dimColor> (none — defaults will be used)</Text>
         ) : (
           fields.map((f, i) => (
+            /** biome-ignore lint/suspicious/noArrayIndexKey: static list, index stable */
             <Text key={i}>
               <Text dimColor> · </Text>
               {f.name}: {f.type === 'enum' ? `enum(${(f.enumValues ?? []).join(',')})` : f.type}
@@ -213,6 +213,7 @@ const Preview = ({ files, onBack, onConfirm }: { files: PreviewFile[]; onBack: (
       </Text>
       <Box borderColor='gray' borderStyle='round' flexDirection='column' marginTop={1} paddingLeft={1} paddingRight={1}>
         {lines.map((line, i) => (
+          /** biome-ignore lint/suspicious/noArrayIndexKey: static list, index stable */
           <Text key={i}>{line || ' '}</Text>
         ))}
         {(current?.content.split('\n').length ?? 0) > 24 ? <Text dimColor>… (truncated)</Text> : null}

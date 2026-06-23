@@ -1,9 +1,8 @@
-/** biome-ignore-all lint/performance/noAwaitInLoops: sequential Convex DB mutations */
+/** biome-ignore-all lint/performance/noAwaitInLoops: sequential by design */
 // oxlint-disable promise/prefer-await-to-then
 /* eslint-disable no-await-in-loop */
 /* eslint-disable complexity */
 /* eslint-disable max-depth */
-// biome-ignore-all lint/suspicious/useAwait: x
 import type { ZodObject, ZodRawShape } from 'zod/v4'
 import { zid } from 'convex-helpers/server/zod4'
 import { array, boolean, number, string } from 'zod/v4'
@@ -224,7 +223,7 @@ const makeCrud = <S extends ZodRawShape>({
   }
   const searchH =
     (fb?: W) =>
-    async (
+    (
       c: ReadCtx,
       {
         query: qry,

@@ -1,4 +1,4 @@
-/** biome-ignore-all lint/suspicious/noDocumentCookie: org cookie management */
+/** biome-ignore-all lint/suspicious/noDocumentCookie: intentional direct cookie access */
 // oxlint-disable no-document-cookie
 'use client'
 import type { ReactNode } from 'react'

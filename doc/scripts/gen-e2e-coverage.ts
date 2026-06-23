@@ -17,12 +17,15 @@ const countMatches = (re: RegExp, src: string): number => {
   return n
 }
 const collectDir = (dir: string): { describes: number; files: number; tests: number } => {
+  // oxlint-disable-next-line node/no-sync
   if (!statSync(dir, { throwIfNoEntry: false })) return { describes: 0, files: 0, tests: 0 }
   let describes = 0
   let tests = 0
   let files = 0
+  // oxlint-disable-next-line node/no-sync
   for (const name of readdirSync(dir).toSorted())
     if (name.endsWith('.test.ts')) {
+      // oxlint-disable-next-line node/no-sync
       const src = readFileSync(`${dir}/${name}`, 'utf8')
       files += 1
       describes += countMatches(DESCRIBE_RE, src)

@@ -1,6 +1,4 @@
 /* eslint-disable no-await-in-loop, complexity */
-/** biome-ignore-all lint/suspicious/useAwait: test helper */
-/** biome-ignore-all lint/performance/noAwaitInLoops: sequential test operations */
 import { join } from 'node:path'
 import { makeExpectError } from './_shared'
 import { STDB_HTTP_URL, STDB_MODULE } from './stdb-env'
@@ -213,6 +211,7 @@ const ensureTestUser = async (): Promise<void> => {
   setToken(data.token)
   try {
     const { writeFileSync } = await import('node:fs')
+    // oxlint-disable-next-line node/no-sync
     writeFileSync(join(process.cwd(), 'e2e', '.stdb-test-token.json'), JSON.stringify(data))
   } catch {
     /* */
@@ -239,7 +238,9 @@ const createTestOrg = async (slug: string, name: string): Promise<OrgCreateResul
   try {
     const { readFileSync, writeFileSync } = await import('node:fs')
     const tokenFile = join(process.cwd(), 'e2e', '.stdb-test-token.json')
+    // oxlint-disable-next-line node/no-sync
     const existing = JSON.parse(readFileSync(tokenFile, 'utf8')) as Record<string, unknown>
+    // oxlint-disable-next-line node/no-sync
     writeFileSync(tokenFile, JSON.stringify({ ...existing, orgId }))
   } catch {
     /* */
@@ -291,6 +292,7 @@ const makeOrgTestUtils = (prefix: string) => ({
       const invites = await httpQuery('org_invite', token)
       for (const inv of invites)
         try {
+          // biome-ignore lint/performance/noAwaitInLoops: sequential by design
           await httpReducer('org_revoke_invite', [inv.id], token)
         } catch {
           /* */
@@ -298,6 +300,7 @@ const makeOrgTestUtils = (prefix: string) => ({
       const orgs = await httpQuery('org', token)
       for (const org of orgs)
         try {
+          // biome-ignore lint/performance/noAwaitInLoops: sequential by design
           await httpReducer('org_remove', [org.id], token)
         } catch {
           /* */
@@ -306,8 +309,7 @@ const makeOrgTestUtils = (prefix: string) => ({
       /* */
     }
   },
-  // eslint-disable-next-line @typescript-eslint/require-await
-  cleanupTestUsers: async () => {
+  cleanupTestUsers: () => {
     httpCtx = null
     userTokens.clear()
   },
@@ -497,6 +499,7 @@ const queryRows = async (apiPath: string, args: Record<string, unknown>): Promis
   if (apiPath === 'orgProfile.get') {
     try {
       const fs = await import('node:fs')
+      // oxlint-disable-next-line node/no-sync
       const tokenFileContent = fs.readFileSync(`${process.cwd()}/e2e/.stdb-test-token.json`, 'utf8')
       const parsed = JSON.parse(tokenFileContent) as IdentityResponse
       const { identity } = parsed
@@ -634,6 +637,7 @@ const makeTc = () => ({
     if (apiPath === 'project.rm' && Array.isArray(args.ids)) {
       let count = 0
       for (const id of args.ids) {
+        // biome-ignore lint/performance/noAwaitInLoops: sequential by design
         await httpReducer('rm_project', [toU32(id)], token)
         count += 1
       }
@@ -641,7 +645,9 @@ const makeTc = () => ({
       return count as T
     }
     if (apiPath === 'wiki.rm' && Array.isArray(args.ids)) {
-      for (const id of args.ids) await httpReducer('rm_wiki', [toU32(id)], token)
+      for (const id of args.ids)
+        // biome-ignore lint/performance/noAwaitInLoops: sequential by design
+        await httpReducer('rm_wiki', [toU32(id)], token)
       await delay(200)
       return undefined as T
     }

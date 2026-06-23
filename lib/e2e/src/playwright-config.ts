@@ -1,4 +1,3 @@
-/** biome-ignore-all lint/style/noProcessEnv: env detection in config */
 import { appPort } from '@a/config'
 import { defineConfig, devices } from '@playwright/test'
 import { basename, dirname } from 'node:path'
@@ -16,6 +15,7 @@ const detectAppId = (cwd = process.cwd()): string => {
 const createPlaywrightConfig = (opts: PlaywrightOptions = {}) => {
   const port = opts.port ?? appPort(detectAppId())
   const baseURL = `http://localhost:${port}`
+  // biome-ignore lint/style/noProcessEnv: env/CLI module, intentional process.env
   const isCI = Boolean(process.env.CI)
   return defineConfig({
     expect: { timeout: 5000 },

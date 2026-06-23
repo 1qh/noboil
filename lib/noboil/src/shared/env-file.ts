@@ -17,6 +17,7 @@ const parseEnvFile = (path: string): Record<string, string> => {
   const vars: Record<string, string> = {}
   let text: string
   try {
+    // oxlint-disable-next-line node/no-sync
     text = readFileSync(path, 'utf8')
   } catch {
     return vars
@@ -27,6 +28,7 @@ const parseEnvFile = (path: string): Record<string, string> => {
   }
   return vars
 }
+// oxlint-disable-next-line node/no-sync
 const hasMarkers = (dir: string, markers: readonly string[]): boolean => markers.every(m => existsSync(join(dir, m)))
 /** Walk up from `start` looking for any directory that contains all `markers` (default: `package.json`). */
 const findProjectRoot = (start = process.cwd(), markers: readonly string[] = ['package.json']): string => {
@@ -40,8 +42,10 @@ const findProjectRoot = (start = process.cwd(), markers: readonly string[] = ['p
   return start
 }
 /** Read + parse JSON file. Throws on read or parse failure. Cast result at callsite. */
+// oxlint-disable-next-line node/no-sync
 const readJson = (path: string): unknown => JSON.parse(readFileSync(path, 'utf8'))
 /** Write `value` as pretty-printed JSON with trailing newline. */
+// oxlint-disable-next-line node/no-sync
 const writeJson = (path: string, value: unknown): void => writeFileSync(path, `${JSON.stringify(value, null, 2)}\n`)
 /** Read + parse JSON file, returning null on any failure. Cast result at callsite. */
 const readJsonSafe = (path: string): unknown => {

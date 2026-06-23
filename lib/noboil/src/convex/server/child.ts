@@ -1,4 +1,4 @@
-/** biome-ignore-all lint/performance/noAwaitInLoops: sequential Convex DB mutations */
+/** biome-ignore-all lint/performance/noAwaitInLoops: sequential by design */
 /* eslint-disable no-await-in-loop */
 /* eslint-disable complexity */
 import type { ZodObject, ZodRawShape } from 'zod/v4'

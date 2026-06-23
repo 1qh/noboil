@@ -11,8 +11,10 @@ const dbDescription: Record<string, string> = {
 const collect = (kind: 'cvx' | 'stdb'): string[] => {
   const root = join(REPO, 'web', kind)
   const entries: string[] = []
+  // oxlint-disable-next-line node/no-sync
   for (const name of readdirSync(root).toSorted()) {
     const dir = join(root, name)
+    // oxlint-disable-next-line node/no-sync
     if (statSync(dir).isDirectory() && readFileSync(join(dir, 'package.json'), 'utf8').includes('"name"'))
       entries.push(name)
   }

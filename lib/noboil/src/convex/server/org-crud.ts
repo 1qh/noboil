@@ -1,5 +1,3 @@
-/** biome-ignore-all lint/nursery/noComponentHookFactories: factory returns hook by design */
-/** biome-ignore-all lint/performance/noAwaitInLoops: sequential Convex DB mutations */
 /* eslint-disable no-await-in-loop */
 import type { ZodObject, ZodRawShape } from 'zod/v4'
 import { zid } from 'convex-helpers/server/zod4'
@@ -170,6 +168,7 @@ const makeOrgCrud = <S extends ZodRawShape>({
   const fileFs = detectFiles(schema.shape)
   const idArgs = { id: zid(table) }
   const orgIdArg = { orgId: zid('org') }
+  /** biome-ignore lint/nursery/noComponentHookFactories: handler map, not a component/hook */
   const useAcl = Boolean(opt?.acl) || Boolean(opt?.aclFrom)
   const softDel = Boolean(opt?.softDelete)
   const enrich = async (c: ReadCtx, docs: Rec[]) => {
@@ -186,6 +185,7 @@ const makeOrgCrud = <S extends ZodRawShape>({
       .query(tbl)
       .filter(flt(f => f.eq(f.field(foreignKey), id)))
       .collect()
+    /** biome-ignore lint/performance/noAwaitInLoops: sequential by design */
     for (const kid of kids) await dbDelete(db, kid._id as string)
   }
   const updateItem = async ({
@@ -248,6 +248,7 @@ const makeOrgCrud = <S extends ZodRawShape>({
           const parsed = schema.safeParse(item)
           if (!parsed.success) return errValidation('VALIDATION_FAILED', parsed.error)
           let data = parsed.data as Rec
+          /** biome-ignore lint/performance/noAwaitInLoops: sequential by design */
           if (hooks?.beforeCreate) data = await hooks.beforeCreate(hk(c), { data })
           const id = await dbInsert(c.db, table, { ...data, orgId, userId: c.user._id, ...time() })
           if (hooks?.afterCreate) await hooks.afterCreate(hk(c), { data, id })
@@ -305,6 +306,7 @@ const makeOrgCrud = <S extends ZodRawShape>({
         const { role } = await requireOrgMember({ db: c.db, orgId, userId: c.user._id as string })
         const results: Rec[] = []
         for (const rawItem of rawItems) {
+          /** biome-ignore lint/performance/noAwaitInLoops: sequential by design */
           const updated = await updateItem({ c, orgIdVal: orgId, rawItem, role })
           if (updated) results.push(updated)
         }
@@ -344,6 +346,7 @@ const makeOrgCrud = <S extends ZodRawShape>({
         const { role } = await requireOrgMember({ db: c.db, orgId, userId: c.user._id as string })
         let deleted = 0
         for (const id of ids) {
+          /** biome-ignore lint/performance/noAwaitInLoops: sequential by design */
           const didDelete = await removeItem({ c, id, orgIdVal: orgId, role })
           if (didDelete) deleted += 1
         }
@@ -473,6 +476,7 @@ const makeOrgCrud = <S extends ZodRawShape>({
         const orgDoc = await c.db.get(orgId)
         for (const editorId of editorIds) {
           const isOwner = orgDoc?.userId === editorId
+          /** biome-ignore lint/performance/noAwaitInLoops: sequential by design */
           const member = await getOrgMember({ db: c.db, orgId, userId: editorId })
           if (!(isOwner || member)) return err('NOT_ORG_MEMBER')
         }

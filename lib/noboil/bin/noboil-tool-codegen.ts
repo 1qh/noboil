@@ -1,7 +1,5 @@
 #!/usr/bin/env bun
 /* eslint-disable no-console */
-/** biome-ignore-all lint/style/noProcessEnv: CLI script env read */
-/** biome-ignore-all lint/suspicious/noUndeclaredEnvVars: CLI reads optional runtime env vars */
 import { createHash } from 'node:crypto'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname, resolve } from 'node:path'
@@ -30,6 +28,8 @@ const diffHashes = async (
   return { added, changed, removed }
 }
 const run = async (): Promise<void> => {
+  /** biome-ignore lint/style/noProcessEnv: intentional env access */
+  /** biome-ignore lint/suspicious/noUndeclaredEnvVars: intentional env access */
   const TOOLS_ROOT = resolve(process.cwd(), process.env.TOOLS_ROOT ?? 'convex/tools')
   const GEN_DIR = resolve(TOOLS_ROOT, 'generated')
   const OUT = resolve(GEN_DIR, 'registry.ts')

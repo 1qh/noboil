@@ -1,6 +1,4 @@
-/* eslint-disable @next/next/no-img-element */
 /* oxlint-disable jsx-no-jsx-as-prop */
-// biome-ignore-all lint/performance/noImgElement: x
 'use client'
 import type { Blog } from '@a/be-spacetimedb/spacetimedb/types'
 import { reducers, tables } from '@a/be-spacetimedb/spacetimedb'
@@ -24,6 +22,7 @@ import { Separator } from '@a/ui/separator'
 import { Spinner } from '@a/ui/spinner'
 import { format, formatDistance } from 'date-fns'
 import { Pencil, Plus, Send, Trash, UserRound } from 'lucide-react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { Form, useFormMutation } from 'noboil/spacetimedb/components'
 import { useMut, useOptimisticMutation, useResolveFileUrl } from 'noboil/spacetimedb/react'
@@ -195,7 +194,7 @@ const Author = ({
   return (
     <div className={cn('flex items-center', className)}>
       {avatarUrl ? (
-        <img
+        <Image
           alt={authorName}
           className='size-8 shrink-0 rounded-full object-cover'
           height={32}
@@ -258,7 +257,7 @@ const Card = ({
       />
       <Link className='mt-1 block' data-testid='blog-card-link' href={`/${id}`}>
         {resolvedCover ? (
-          <img
+          <Image
             alt={title}
             className='my-1 w-full rounded-lg object-cover'
             data-testid='blog-cover-image'

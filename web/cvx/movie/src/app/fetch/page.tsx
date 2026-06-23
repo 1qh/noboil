@@ -1,6 +1,6 @@
+/** biome-ignore-all lint/performance/noImgElement: remote image, dimensions unknown */
+/** biome-ignore-all lint/correctness/useImageSize: remote image, dimensions unknown */
 /* eslint-disable @next/next/no-img-element */
-/** biome-ignore-all lint/correctness/useImageSize: external TMDB image URLs */
-/** biome-ignore-all lint/performance/noImgElement: external TMDB image URLs */
 'use client'
 import { api } from '@a/be-convex'
 import { Badge } from '@a/ui/badge'

@@ -57,31 +57,41 @@ describe('bodyContainsIdent', () => {
 })
 describe('readSchemaContentFrom', () => {
   test('returns empty when dir does not exist', () => {
+    // oxlint-disable-next-line unicorn/max-nested-calls
     expect(readSchemaContentFrom(join(tmpdir(), 'noboil-nonexistent-xyz-12345'))).toBe('')
   })
   test('finds schema file containing a marker', () => {
+    // oxlint-disable-next-line node/no-sync
     const dir = mkdtempSync(join(tmpdir(), 'noboil-eslint-'))
     try {
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(join(dir, 'schema.ts'), 'const owned = makeOwned({ todo: 1 })', 'utf8')
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(join(dir, 'other.ts'), 'export const x = 1', 'utf8')
       expect(readSchemaContentFrom(dir)).toContain('makeOwned')
     } finally {
+      // oxlint-disable-next-line node/no-sync
       rmSync(dir, { force: true, recursive: true })
     }
   })
   test('returns empty when no .ts contains a marker', () => {
+    // oxlint-disable-next-line node/no-sync
     const dir = mkdtempSync(join(tmpdir(), 'noboil-eslint-'))
     try {
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(join(dir, 'a.ts'), 'export const x = 1', 'utf8')
       expect(readSchemaContentFrom(dir)).toBe('')
     } finally {
+      // oxlint-disable-next-line node/no-sync
       rmSync(dir, { force: true, recursive: true })
     }
   })
 })
 describe('buildRules', () => {
   test('returns rules object with expected rule names', () => {
+    // oxlint-disable-next-line node/no-sync
     const dir = mkdtempSync(join(tmpdir(), 'noboil-rules-'))
+    // oxlint-disable-next-line node/no-sync
     mkdirSync(join(dir, 'convex'), { recursive: true })
     try {
       const rules = buildRules({
@@ -109,6 +119,7 @@ describe('buildRules', () => {
         expect(typeof (r as { meta: unknown }).meta).toBe('object')
       }
     } finally {
+      // oxlint-disable-next-line node/no-sync
       rmSync(dir, { force: true, recursive: true })
     }
   })

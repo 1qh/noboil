@@ -8,6 +8,7 @@ const OUT = `${DOCS_DIR}/single-source-of-truth.mdx`
 const LINE_TAG_RE = /<!-- AUTO-GENERATED:(?<name>[A-Z0-9_-]+) -->/gu
 const BLOCK_TAG_RE = /\{\/\* AUTO-GENERATED:(?<name>[A-Z0-9_-]+):START \*\/\}/gu
 const findMarkers = (path: string): string[] => {
+  // oxlint-disable-next-line node/no-sync
   const src = readFileSync(path, 'utf8')
   const out = new Set<string>()
   let m = LINE_TAG_RE.exec(src)
@@ -46,6 +47,7 @@ const targets = [
   `${DOCS_DIR}/cli.mdx`
 ]
 const main = () => {
+  // oxlint-disable-next-line node/no-sync
   const scripts = readdirSync(SCRIPTS_DIR)
     .toSorted()
     .filter(f => f.startsWith('gen-') && f.endsWith('.ts') && f !== 'gen-all.ts' && f !== 'gen-coverage-report.ts')
@@ -91,6 +93,7 @@ const main = () => {
     'Narrative prose: recipes, "when to use" decision matrices, security reasoning, architectural rationale, migration guides. These require human judgment and explanation. Everything machine-derivable is auto-generated.',
     ''
   ]
+  // oxlint-disable-next-line node/no-sync
   writeFileSync(OUT, lines.join('\n'))
   console.log(`Wrote ${OUT.replace(`${REPO}/`, '')} (${scripts.length} generators, ${totalMarkers} markers)`)
 }

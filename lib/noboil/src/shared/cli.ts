@@ -57,18 +57,22 @@ const readArgOrEqFlag = (args: string[], name: string, fallback: string): string
 }
 /** Write `content` to `path` only if absent (skip-and-log otherwise). Auto-creates parent dirs. Returns true on write. */
 const writeIfNotExists = ({ content, label, path }: { content: string; label: string; path: string }): boolean => {
+  // oxlint-disable-next-line node/no-sync
   if (existsSync(path)) {
     console.log(`  ${yellow('skip')} ${label} ${dim('(exists)')}`)
     return false
   }
   const dir = path.slice(0, path.lastIndexOf('/'))
+  // oxlint-disable-next-line node/no-sync
   if (!existsSync(dir)) mkdirSync(dir, { recursive: true })
+  // oxlint-disable-next-line node/no-sync
   writeFileSync(path, content)
   console.log(`  ${green('✓')} ${label}`)
   return true
 }
 /** Write a `[name, content]` list under `baseDir` via `writeIfNotExists`; returns `{ created, skipped }` summary. */
 const writeFilesToDir = ({ baseDir, files, label }: { baseDir: string; files: [string, string][]; label: string }) => {
+  // oxlint-disable-next-line node/no-sync
   if (!existsSync(baseDir)) mkdirSync(baseDir, { recursive: true })
   let created = 0
   let skipped = 0

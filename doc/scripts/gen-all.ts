@@ -1,6 +1,5 @@
 #!/usr/bin/env bun
 /* eslint-disable no-console, no-await-in-loop */
-/** biome-ignore-all lint/performance/noAwaitInLoops: sequential by design */
 import { $ } from 'bun'
 import { REPO } from './lib'
 
@@ -65,6 +64,7 @@ const main = async () => {
   const verbose = process.argv.includes('--verbose')
   const failures: string[] = []
   for (const script of SCRIPTS) {
+    /** biome-ignore lint/performance/noAwaitInLoops: sequential by design in script/e2e */
     const proc = await $`bun ${REPO}/doc/scripts/${script}`.cwd(REPO).quiet().nothrow()
     const out = (proc.stdout.toString() + proc.stderr.toString()).trim()
     if (proc.exitCode !== 0) failures.push(`✗ ${script}: exit ${proc.exitCode}\n${out}`)

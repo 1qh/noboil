@@ -1,4 +1,4 @@
-/** biome-ignore-all lint/performance/noAwaitInLoops: sequential Convex DB mutations */
+/** biome-ignore-all lint/performance/noAwaitInLoops: sequential by design */
 /* eslint-disable no-await-in-loop */
 import type { GenericDataModel } from 'convex/server'
 import type { z as _, ZodObject, ZodRawShape } from 'zod/v4'
@@ -125,6 +125,7 @@ const makeCacheCrud = <S extends ZodRawShape, K extends string, DM extends Gener
     return dbInsert(c.db, table, wt)
   }
   const set = b.internalMutation({
+    // oxlint-disable-next-line unicorn/max-nested-calls
     args: { data: v.object(typed(z2c(schema.shape))) },
     handler: typed(async (c: DbCtx, { data }: { data: Rec }) => {
       await upsert(c, pick(data))

@@ -20,6 +20,7 @@ const main = () => {
   const paraToFiles = new Map<string, Set<string>>()
   for (const file of files) {
     const rel = relative(REPO, file)
+    // oxlint-disable-next-line node/no-sync
     for (const p of splitParas(readFileSync(file, 'utf8'))) {
       const set = paraToFiles.get(p) ?? new Set<string>()
       set.add(rel)

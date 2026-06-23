@@ -6,6 +6,7 @@ import { DOCS_DIR, LIB_NOBOIL, replaceBetween, REPO } from './lib'
 
 const ENV_RE = /process\.env\.(?<name>[A-Z][A-Z0-9_]+)/gu
 const walk = (dir: string, out: string[] = []): string[] => {
+  // oxlint-disable-next-line node/no-sync
   for (const name of readdirSync(dir).toSorted()) {
     const skip =
       name.startsWith('.') ||
@@ -15,8 +16,13 @@ const walk = (dir: string, out: string[] = []): string[] => {
       name === 'module_bindings' ||
       name === '__tests__'
     const full = join(dir, name)
+    // oxlint-disable-next-line node/no-sync
     if (!skip && statSync(full, { throwIfNoEntry: false }))
-      if (statSync(full).isDirectory()) walk(full, out)
+      // oxlint-disable-next-line node/no-sync
+      if (statSync(full).isDirectory())
+        // oxlint-disable-next-line node/no-sync
+        // oxlint-disable-next-line node/no-sync
+        walk(full, out)
       else if ((name.endsWith('.ts') || name.endsWith('.tsx')) && !name.endsWith('.test.ts')) out.push(full)
   }
   return out
@@ -26,6 +32,7 @@ const main = () => {
   const files = walk(root)
   const usage = new Map<string, Set<string>>()
   for (const file of files) {
+    // oxlint-disable-next-line node/no-sync
     const src = readFileSync(file, 'utf8')
     let m = ENV_RE.exec(src)
     while (m) {

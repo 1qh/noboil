@@ -22,6 +22,7 @@ const upgrade = (args: string[]) => {
   if (isGlobal && !args.includes('--global') && !args.includes('-g'))
     console.log(dim('no noboil project detected — defaulting to global install'))
   console.log(`${bold('noboil upgrade')} — running ${dim(`bun ${bunArgs.join(' ')}`)}\n`)
+  // oxlint-disable-next-line node/no-sync
   const result = spawnSync('bun', bunArgs, { stdio: 'inherit' })
   if (result.status === 0) console.log(`\n${green('✓')} noboil upgraded.`)
   else {

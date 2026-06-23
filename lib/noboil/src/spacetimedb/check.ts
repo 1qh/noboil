@@ -48,6 +48,7 @@ const findModuleDir = findStdbModuleDirDeep
 const findSchemaFile = (moduleDir: string): undefined | { content: string; path: string } => {
   const files = listTypeScriptFiles(moduleDir)
   for (const full of files) {
+    // oxlint-disable-next-line node/no-sync
     const content = readFileSync(full, 'utf8')
     if (isSchemaFile(content) && content.includes('schema(') && content.includes('table(')) return { content, path: full }
   }
@@ -97,6 +98,7 @@ const extractFactoryCalls = (moduleDir: string): { calls: FactoryCall[]; files: 
   const byTable = new Map<string, { endpoints: Set<string>; factory: string; file: string }>()
   for (const full of files) {
     const file = basename(full)
+    // oxlint-disable-next-line node/no-sync
     const content = readFileSync(full, 'utf8')
     const helperMatch = helperPat.exec(content)
     let factory = 'reducer'
@@ -235,6 +237,7 @@ const RESERVED_WHERE_KEYS = new Set(['$between', '$gt', '$gte', '$lt', '$lte', '
 const findSchemaDefFile = (moduleDir: string): undefined | { content: string; path: string } => {
   const files = listTypeScriptFiles(moduleDir)
   for (const full of files) {
+    // oxlint-disable-next-line node/no-sync
     const content = readFileSync(full, 'utf8')
     if (content.includes('schema(') && content.includes('table(')) return { content, path: full }
   }
@@ -278,6 +281,7 @@ const scanWhereUsage = (root: string, moduleDir: string): WhereField[] => {
   const schemaPath = findSchemaDefFile(moduleDir)?.path ?? ''
   const skip = new Set(['.cache', '.git', '.next', '.turbo', 'build', 'dist', 'node_modules'])
   const processFile = (filePath: string, fileName: string) => {
+    // oxlint-disable-next-line node/no-sync
     const fileContent = readFileSync(filePath, 'utf8')
     const apiPat = /['"](?<tbl>\w+)\.(?:list|search)['"]/gu
     let am = apiPat.exec(fileContent)
@@ -293,7 +297,9 @@ const scanWhereUsage = (root: string, moduleDir: string): WhereField[] => {
     }
   }
   const scan = (dir: string) => {
+    // oxlint-disable-next-line node/no-sync
     if (!existsSync(dir)) return
+    // oxlint-disable-next-line node/no-sync
     for (const entry of readdirSync(dir, { withFileTypes: true })) {
       const full = join(dir, entry.name)
       if (entry.isDirectory()) {

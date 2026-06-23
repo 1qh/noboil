@@ -11,6 +11,7 @@ const ensureToken = async (tokenFile: string): Promise<{ identity: string; token
     method: 'POST'
   })
   const data = (await response.json()) as { identity: string; token: string }
+  // oxlint-disable-next-line node/no-sync
   writeFileSync(tokenFile, JSON.stringify(data))
   cachedToken = data
   return data

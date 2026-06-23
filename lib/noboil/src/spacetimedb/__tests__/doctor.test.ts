@@ -39,19 +39,23 @@ const runDoctor = (dir: string) => {
 }
 describe('stdb doctor()', () => {
   test('runs full doctor with schema warnings + index issues hits warn branches', () => {
+    // oxlint-disable-next-line node/no-sync
     const dir = mkdtempSync(join(tmpdir(), 'noboil-stdb-doc-warn-'))
     const orig = process.cwd()
     try {
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(
         join(dir, 'schema.ts'),
         'export default schema({ tables: { todo: table(t.u64(), { id: t.u64(), title: t.string() }), unused: table(t.u64(), { id: t.u64() }) } })',
         'utf8'
       )
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(
         join(dir, 'reducers.ts'),
         `export const x = makeCrud({ tableName: 'todo', options: { where: { unindexed_field: 1 } } })`,
         'utf8'
       )
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(
         join(dir, 'package.json'),
         JSON.stringify({ dependencies: { noboil: '1', spacetimedb: '1', zod: '4' } }),
@@ -75,31 +79,38 @@ describe('stdb doctor()', () => {
       expect(true).toBe(true)
     } finally {
       process.chdir(orig)
+      // oxlint-disable-next-line node/no-sync
       rmSync(dir, { force: true, recursive: true })
     }
   })
   test('exits when no schema file present', () => {
+    // oxlint-disable-next-line node/no-sync
     const dir = mkdtempSync(join(tmpdir(), 'noboil-stdb-doc-empty-'))
     try {
       expect(runDoctor(dir)).toBeGreaterThan(0)
     } finally {
+      // oxlint-disable-next-line node/no-sync
       rmSync(dir, { force: true, recursive: true })
     }
   })
   test('runs full health check against tmp project with valid schema + module', () => {
+    // oxlint-disable-next-line node/no-sync
     const dir = mkdtempSync(join(tmpdir(), 'noboil-stdb-doctor-'))
     const orig = process.cwd()
     try {
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(
         join(dir, 'mod.ts'),
         'export default schema({ tables: { todo: table({ fields: { title: t.string() } }) } })',
         'utf8'
       )
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(
         join(dir, 'reducers.ts'),
         `export const x = makeCrud({ tableName: 'todo', options: { rateLimit: { max: 1, window: 1000 } } })`,
         'utf8'
       )
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(
         join(dir, 'package.json'),
         JSON.stringify({ dependencies: { noboil: '1', spacetimedb: '1', zod: '4' } }),
@@ -123,6 +134,7 @@ describe('stdb doctor()', () => {
       expect(exitCode === undefined || exitCode === 1).toBe(true)
     } finally {
       process.chdir(orig)
+      // oxlint-disable-next-line node/no-sync
       rmSync(dir, { force: true, recursive: true })
     }
   })

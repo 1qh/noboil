@@ -13,6 +13,7 @@ const findModuleDir = findStdbModuleDirDeep
 const findSchemaFile = (moduleDir: string): undefined | { content: string; path: string } => {
   const files = listTypeScriptFiles(moduleDir)
   for (const full of files) {
+    // oxlint-disable-next-line node/no-sync
     const content = readFileSync(full, 'utf8')
     if (isSchemaFile(content) && content.includes('schema(') && content.includes('table(')) return { content, path: full }
   }
@@ -21,6 +22,7 @@ const extractFactoryCalls = (moduleDir: string): FactoryCall[] => {
   const byTable = new Map<string, { endpoints: Set<string>; file: string }>()
   const files = listTypeScriptFiles(moduleDir)
   for (const full of files) {
+    // oxlint-disable-next-line node/no-sync
     const content = readFileSync(full, 'utf8')
     const file = full.slice(moduleDir.length + 1)
     let m = reducerPat.exec(content)
@@ -152,6 +154,7 @@ const run = (argv: string[] = process.argv.slice(2)) => {
   console.log(bold('\nnoboil stdb docs\n'))
   if (flags.has('--full')) {
     const srcDir = join(root, 'src')
+    // oxlint-disable-next-line node/no-sync
     if (!existsSync(srcDir)) {
       console.log(red('\u2717 Could not find src/ directory'))
       process.exit(1)

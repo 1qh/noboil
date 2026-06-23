@@ -55,26 +55,34 @@ describe('processEntryPoint', () => {
     expect(processEntryPoint({ label: 'X', path: 'nope.ts' }, '/tmp', lines)).toBe(0)
   })
   test('returns 0 when index file has no re-exports', () => {
+    // oxlint-disable-next-line node/no-sync
     const dir = mkdtempSync(join(tmpdir(), 'noboil-pep-'))
     try {
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(join(dir, 'index.ts'), 'export const x = 1', 'utf8')
       const lines: string[] = []
       expect(processEntryPoint({ label: 'X', path: 'index.ts' }, dir, lines)).toBe(0)
     } finally {
+      // oxlint-disable-next-line node/no-sync
       rmSync(dir, { force: true, recursive: true })
     }
   })
   test('emits markdown table rows for each re-export', () => {
+    // oxlint-disable-next-line node/no-sync
     const dir = mkdtempSync(join(tmpdir(), 'noboil-pep-'))
     try {
+      // oxlint-disable-next-line node/no-sync
       mkdirSync(join(dir, 'sub'), { recursive: true })
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(join(dir, 'sub', 'foo.ts'), '/** does foo */\nconst foo = (a: string) => a', 'utf8')
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(join(dir, 'index.ts'), `export { foo } from './sub/foo'\n`, 'utf8')
       const lines: string[] = []
       expect(processEntryPoint({ label: 'noboil/x', path: 'index.ts' }, dir, lines)).toBe(1)
       expect(lines.join('\n')).toContain('## noboil/x')
       expect(lines.join('\n')).toContain('foo')
     } finally {
+      // oxlint-disable-next-line node/no-sync
       rmSync(dir, { force: true, recursive: true })
     }
   })

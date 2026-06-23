@@ -1,4 +1,4 @@
-/** biome-ignore-all lint/nursery/noComponentHookFactories: factory returns hook by design */
+/** biome-ignore-all lint/nursery/noComponentHookFactories: handler map, not a component/hook */
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 
@@ -168,6 +168,7 @@ const getContextRoot = (context: EslintContext): string => {
   if (!context.filename.startsWith(context.cwd)) return context.cwd
   let current = dirname(context.filename)
   while (current.startsWith(context.cwd)) {
+    // oxlint-disable-next-line node/no-sync
     if (existsSync(join(current, 'package.json'))) return current
     if (current === context.cwd) return context.cwd
     const parent = dirname(current)
@@ -282,9 +283,12 @@ const bodyContainsIdent = (nodes: BaseNode[], target: string): boolean => {
 }
 const isRouteHandler = (filename: string): boolean => routeFilePattern.test(filename)
 const readSchemaContentFrom = (dir: string): string => {
+  // oxlint-disable-next-line node/no-sync
   if (!existsSync(dir)) return ''
+  // oxlint-disable-next-line node/no-sync
   for (const entry of readdirSync(dir))
     if (entry.endsWith('.ts') && !entry.endsWith('.test.ts') && !entry.endsWith('.config.ts')) {
+      // oxlint-disable-next-line node/no-sync
       const content = readFileSync(join(dir, entry), 'utf8')
       if (isSchemaFile(content)) return content
     }

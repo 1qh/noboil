@@ -1,16 +1,9 @@
 /* eslint-disable @typescript-eslint/no-unnecessary-condition, @typescript-eslint/strict-void-return, no-console */
-/** biome-ignore-all lint/nursery/noPlaywrightElementHandle: crawler */
-/** biome-ignore-all lint/nursery/noPlaywrightEval: crawler */
-/** biome-ignore-all lint/nursery/noPlaywrightWaitForTimeout: crawler */
-/** biome-ignore-all lint/performance/noAwaitInLoops: crawler */
-/** biome-ignore-all lint/performance/useTopLevelRegex: crawler */
-/** biome-ignore-all lint/style/useExplicitLengthCheck: crawler */
-/** biome-ignore-all lint/suspicious/noControlCharactersInRegex: crawler */
-/** biome-ignore-all lint/suspicious/noEmptyBlockStatements: crawler */
 /* oxlint-disable unicorn/no-process-exit */
 /* eslint-disable @typescript-eslint/max-params, complexity, no-await-in-loop, no-control-regex, no-empty, no-promise-executor-return, no-useless-assignment */
 /* oxlint-disable unicorn/consistent-function-scoping */
 /* oxlint-disable promise/always-return, promise/param-names, promise/prefer-await-to-then, unicorn/no-process-exit */
+/** biome-ignore-all lint/performance/noAwaitInLoops: sequential by design */
 import type { Browser, BrowserContext, Page } from 'playwright'
 import { appPort, urls } from '@a/config'
 import { ACTIVE_ORG_COOKIE, ACTIVE_ORG_SLUG_COOKIE } from 'noboil/convex'
@@ -88,7 +81,11 @@ const doA11y = argv.includes('--a11y')
 const SHOT_DIR = join(tmpdir(), 'crawl-shots')
 const TEST_EMAIL = `crawl${Date.now()}@test.com`
 const TEST_PASSWORD = 'CrawlTest1234!'
-const stripAnsi = (s: string) => s.replaceAll(/\u001B\[[0-9;]*[A-Za-z]/gu, '')
+// biome-ignore lint/suspicious/noControlCharactersInRegex: intentional control-char match
+const ANSI_RE = /\[[0-9;]*[A-Za-z]/gu
+const SIGNUP_TOGGLE_RE = /sign up|create account/iu
+const DEV_LOG_LINE_RE = /⨯|\[browser\]|Error:|Warning:/u
+const stripAnsi = (s: string) => s.replaceAll(ANSI_RE, '')
 const IGNORED_PATTERNS = [
   /Failed to execute 'measure' on 'Performance'.*negative time stamp/u,
   /The above error occurred in the <\w+> component\. It was handled by the <SharedErrorBoundary>/u,
@@ -154,9 +151,13 @@ const attachListeners = (page: Page, route: string, push: (i: Issue) => void, pe
           const j = JSON.parse(raw) as { action?: string; type?: string }
           if (j.action === 'serverError' || j.type === 'issues')
             safePush({ kind: 'hmr', msg: trim(JSON.stringify(j)), route })
-        } catch {}
+        } catch {
+          // ignore malformed hmr frames
+        }
       })
-    } catch {}
+    } catch {
+      // ignore websocket listener attach failures
+    }
   })
 }
 const pollOverlay = async (page: Page, route: string, push: (i: Issue) => void) => {
@@ -263,10 +264,10 @@ const cvxSignUp = async (ctx: BrowserContext, port: number, issues: Issue[]): Pr
   const page = await ctx.newPage()
   try {
     await page.goto(`http://localhost:${port}/login/email`, { timeout: 15_000, waitUntil: 'domcontentloaded' })
-    await page.waitForTimeout(1000)
-    const toggle = page.locator('button[type="button"]', { hasText: /sign up|create account/iu }).first()
+    await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => null)
+    const toggle = page.locator('button[type="button"]', { hasText: SIGNUP_TOGGLE_RE }).first()
     if (await toggle.count()) await toggle.click().catch(() => null)
-    await page.waitForTimeout(500)
+    await page.locator('input[name="email"]').waitFor({ state: 'visible', timeout: 5000 }).catch(() => null)
     await page.locator('input[name="email"]').fill(TEST_EMAIL)
     await page.locator('input[name="password"]').fill(TEST_PASSWORD)
     const errors: string[] = []
@@ -315,7 +316,6 @@ const fillForm = async (page: Page, route: string, push: (i: Issue) => void) => 
       const submit = form.locator('button[type="submit"]').first()
       if (await submit.count()) {
         await submit.click({ timeout: 2000 }).catch(() => null)
-        await page.waitForTimeout(1500)
         await pollOverlay(page, `${route} (form-submit)`, push)
       }
     }
@@ -372,7 +372,9 @@ const crawlApp = async (app: AppSpec): Promise<Result> => {
           .join(' ')
         const w = globalThis as typeof globalThis & { __crawlReport?: (s: string) => void }
         w.__crawlReport?.(flat)
-      } catch {}
+      } catch {
+        // ignore console.error proxy failures
+      }
       return orig.apply(console, args)
     }
   })
@@ -380,7 +382,7 @@ const crawlApp = async (app: AppSpec): Promise<Result> => {
   const seen = new Set<string>()
   const queue: string[] = [...(app.seedRoutes ?? ['/'])]
   let authed = false
-  if (!skipAuth && app.kind === 'cvx' && app.authedRoutes?.length) {
+  if (!skipAuth && app.kind === 'cvx' && app.authedRoutes && app.authedRoutes.length > 0) {
     authed = await cvxSignUp(ctx, app.port, issues)
     if (authed && app.name === 'cvx-org') await cvxCreateOrgViaApi(ctx, app, issues)
     if (authed) queue.push(...app.authedRoutes)
@@ -398,14 +400,14 @@ const crawlApp = async (app: AppSpec): Promise<Result> => {
         .goto(`http://localhost:${app.port}${route}`, { timeout: navTimeout, waitUntil: 'commit' })
         .catch(() => null)
       await page.waitForLoadState('domcontentloaded', { timeout: 5000 }).catch(() => null)
-      await page.waitForTimeout(1500)
+      await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => null)
       await pollOverlay(page, route, i => issues.push(i))
       if (doShots) {
         const slug = `${app.name}${route.replaceAll(/[^\w]+/gu, '_')}`.slice(0, 80)
         await page.screenshot({ fullPage: true, path: `${SHOT_DIR}/${slug}.png` }).catch(() => null)
       }
       await fillForm(page, route, i => issues.push(i))
-      const links = await page.$$eval('a[href]', as => as.map(a => a.getAttribute('href') ?? ''))
+      const links = await page.locator('a[href]').evaluateAll(as => as.map(a => a.getAttribute('href') ?? ''))
       for (const l of links) {
         const n = normUrl(l, app.port)
         if (n && !seen.has(n) && !queue.includes(n)) queue.push(n)
@@ -424,7 +426,9 @@ const crawlApp = async (app: AppSpec): Promise<Result> => {
                 try {
                   act(el)
                   await sleep(w)
-                } catch {}
+                } catch {
+                  // ignore element interaction failures
+                }
             }
             await fire('[role="switch"]', el => (el as HTMLElement).click())
             await fire('[role="combobox"]', el => (el as HTMLElement).click(), 200)
@@ -452,38 +456,41 @@ const crawlApp = async (app: AppSpec): Promise<Result> => {
                   el.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }))
                   await sleep(50)
                   el.dispatchEvent(new MouseEvent('mouseleave', { bubbles: true }))
-                } catch {}
+                } catch {
+                  // ignore hover dispatch failures
+                }
             await sleep(500)
             document.body.click()
             await sleep(200)
           })
           .catch(() => null)
       if (clickButtons && !route.includes('/login')) {
-        const buttons = await page.$$eval('button:not([type="submit"]):not([data-nextjs-dialog-close-btn])', bs =>
-          bs
-            .filter(b => {
-              if (b.closest('nextjs-portal')) return false
-              const r = b.getBoundingClientRect()
-              return r.width > 0 && r.height > 0
-            })
-            .map((b, i) => ({ i, txt: (b.textContent ?? '').slice(0, 30) }))
-        )
-        for (const { i } of buttons.slice(0, 6)) {
-          const handle = await page.$(`button:not([type="submit"]) >> nth=${i}`).catch(() => null)
-          if (handle)
-            await handle
-              .click({ timeout: 1500 })
-              .then(async () => {
-                await page.waitForTimeout(300)
-                await pollOverlay(page, `${route} (btn${i})`, x => issues.push(x))
+        const buttons = await page
+          .locator('button:not([type="submit"]):not([data-nextjs-dialog-close-btn])')
+          .evaluateAll(bs =>
+            bs
+              .filter(b => {
+                if (b.closest('nextjs-portal')) return false
+                const r = b.getBoundingClientRect()
+                return r.width > 0 && r.height > 0
               })
-              .catch(() => null)
+              .map((b, i) => ({ i, txt: (b.textContent ?? '').slice(0, 30) }))
+          )
+        for (const { i } of buttons.slice(0, 6)) {
+          const handle = page.locator('button:not([type="submit"])').nth(i)
+          await handle
+            .click({ timeout: 1500 })
+            .then(async () => {
+              await pollOverlay(page, `${route} (btn${i})`, x => issues.push(x))
+            })
+            .catch(() => null)
         }
       }
       await Promise.race([Promise.all(pendingArgs).catch(() => null), new Promise(r => setTimeout(r, 3000))])
       if (doA11y)
         try {
           const axeSrc = await import('node:fs').then(m =>
+            // oxlint-disable-next-line node/no-sync
             m.readFileSync('/Users/o/z/noboil/node_modules/axe-core/axe.min.js', 'utf8')
           )
           await page.evaluate(axeSrc)
@@ -516,7 +523,9 @@ const crawlApp = async (app: AppSpec): Promise<Result> => {
             })
             .catch(() => [])
           for (const v of violations) issues.push({ kind: `a11y-${v.impact}`, msg: `${v.id}: ${v.sample}`, route })
-        } catch {}
+        } catch {
+          // ignore axe injection/run failures
+        }
     } catch (error) {
       issues.push({ kind: 'goto', msg: trim((error as Error).message), route })
     }
@@ -539,9 +548,11 @@ const crawlApp = async (app: AppSpec): Promise<Result> => {
   if (app.devLog)
     try {
       const { readFileSync, existsSync } = await import('node:fs')
+      // oxlint-disable-next-line node/no-sync
       if (existsSync(app.devLog)) {
+        // oxlint-disable-next-line node/no-sync
         const log = readFileSync(app.devLog, 'utf8')
-        const lines = log.split('\n').filter(l => /⨯|\[browser\]|Error:|Warning:/u.test(l) && !isIgnored(l))
+        const lines = log.split('\n').filter(l => DEV_LOG_LINE_RE.test(l) && !isIgnored(l))
         const grouped = new Map<string, number>()
         for (const l of lines) {
           const key = stripAnsi(l).replaceAll(/\s+/gu, ' ').trim().slice(0, 200)
@@ -549,7 +560,9 @@ const crawlApp = async (app: AppSpec): Promise<Result> => {
         }
         for (const [k, n] of grouped) issues.push({ kind: 'stderr', msg: `[x${n}] ${k}`, route: '(server)' })
       }
-    } catch {}
+    } catch {
+      // ignore dev-log read failures
+    }
   return { app: app.name, issues, port: app.port, routes: [...seen] }
 }
 const printResult = ({ app, port, routes, issues }: Result) => {
@@ -606,7 +619,9 @@ if (sharedBrowser !== null) {
   const b: Browser = sharedBrowser
   try {
     await Promise.race([b.close(), new Promise<void>(r => setTimeout(r, 3000))])
-  } catch {}
+  } catch {
+    // ignore browser close failures
+  }
 }
 if (jsonOut) process.stdout.write(JSON.stringify(results, null, 2))
 const totalIssues = results.reduce((n, r) => n + r.issues.length, 0)

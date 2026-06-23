@@ -1,5 +1,4 @@
-/** biome-ignore-all lint/nursery/noUndeclaredClasses: standard tailwind v4 utilities biome cannot resolve */
-/** biome-ignore-all lint/nursery/noComponentHookFactories: factory returns hook by design */
+/** biome-ignore-all lint/nursery/noUndeclaredClasses: tailwind-v4 utilities biome cannot resolve */
 'use client'
 import type { ComponentProps, Context } from 'react'
 import { cn } from '@a/ui'
@@ -94,6 +93,7 @@ const createFileFieldWarning = <T,>({
   fileApiContext: Context<T>
   messagePrefix: string
 }) => {
+  /** biome-ignore lint/nursery/noComponentHookFactories: field/handler factory, not a component/hook */
   const FileFieldWarning = ({ meta }: { meta: FileMeta }) => {
     const fileCtx = use(fileApiContext)
     if (hasFileFields(meta) && !fileCtx)

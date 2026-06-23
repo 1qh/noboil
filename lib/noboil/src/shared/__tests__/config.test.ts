@@ -14,9 +14,11 @@ describe('defineConfig', () => {
 describe('loadConfig', () => {
   const dir = join(tmpdir(), `noboil-config-test-${Date.now()}`)
   beforeEach(() => {
+    // oxlint-disable-next-line node/no-sync
     mkdirSync(dir, { recursive: true })
   })
   afterEach(() => {
+    // oxlint-disable-next-line node/no-sync
     rmSync(dir, { force: true, recursive: true })
   })
   test('returns null when no config file exists', async () => {

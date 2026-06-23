@@ -1,6 +1,5 @@
 /* eslint-disable @eslint-react/hooks-extra/no-direct-set-state-in-use-effect */
 /* eslint-disable no-console */
-// biome-ignore-all lint/style/noProcessEnv: intentional process.env access
 'use client'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { trackCacheAccess } from './devtools'
@@ -24,6 +23,7 @@ interface UseCacheEntryResult<T> {
   isStale: boolean
   refresh: () => void
 }
+/** biome-ignore lint/style/noProcessEnv: intentional env access */
 const isDev = typeof process !== 'undefined' && process.env.NODE_ENV !== 'production'
 const fireLoad = async <A extends Record<string, unknown>>({
   args,

@@ -1,4 +1,3 @@
-/** biome-ignore-all lint/complexity/useMaxParams: destructured builder options pattern matches singleton/cache-crud */
 /* oxlint-disable unicorn/prefer-ternary */
 /* eslint-disable @typescript-eslint/max-params */
 import { string } from 'zod/v4'
@@ -25,13 +24,19 @@ const compute = (timestamps: number[], limit: number, durationMs: number, now: n
   const oldest = pruned[0] ?? now
   return { allowed: false, remaining: 0, retryAfter: oldest + durationMs - now }
 }
-const persist = async (
-  db: DbLike,
-  table: string,
-  doc: null | { _id: string },
-  owner: string,
+const persist = async ({
+  db,
+  doc,
+  owner,
+  table,
+  timestamps
+}: {
+  db: DbLike
+  doc: null | { _id: string }
+  owner: string
+  table: string
   timestamps: number[]
-): Promise<void> => {
+}): Promise<void> => {
   if (doc) await dbPatch(db, doc._id, { timestamps })
   else await dbInsert(db, table, { owner, timestamps })
 }
@@ -83,7 +88,7 @@ const makeQuota = ({
       const doc = await byOwner(c.db, owner)
       const pruned = prune(doc?.timestamps ?? [], now - durationMs)
       const next = [...pruned, now]
-      await persist(c.db, table, doc, owner, next)
+      await persist({ db: c.db, doc, owner, table, timestamps: next })
       const result = compute(next, limit, durationMs, now)
       if (hooks?.afterRecord) await hooks.afterRecord(hk(c), { owner, result })
       return result
@@ -104,7 +109,7 @@ const makeQuota = ({
         return result
       }
       const next = [...pruned, now]
-      await persist(c.db, table, doc, owner, next)
+      await persist({ db: c.db, doc, owner, table, timestamps: next })
       const result: QuotaResult = { allowed: true, remaining: Math.max(0, limit - next.length) }
       if (hooks?.afterConsume) await hooks.afterConsume(hk(c), { owner, result })
       return result

@@ -25,11 +25,15 @@ describe('convex eslint plugin export', () => {
     }
   })
   test('api-casing visitor exercises convex dir + module discovery helpers', () => {
+    // oxlint-disable-next-line node/no-sync
     const dir = mkdtempSync(join(tmpdir(), 'noboil-eslint-plug-'))
     try {
       const cvx = join(dir, 'convex')
+      // oxlint-disable-next-line node/no-sync
       mkdirSync(join(cvx, '_generated'), { recursive: true })
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(join(cvx, 'todos.ts'), 'export const x = 1', 'utf8')
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(join(dir, 'schema.ts'), 'const owned = makeOwned({ todo: object({ title: string() }) })', 'utf8')
       const reports: { messageId: string }[] = []
       const apiCasingRule = (rules as Record<string, { create: (ctx: unknown) => Record<string, unknown> }>)['api-casing']
@@ -50,6 +54,7 @@ describe('convex eslint plugin export', () => {
       })
       expect(reports.length).toBeGreaterThanOrEqual(0)
     } finally {
+      // oxlint-disable-next-line node/no-sync
       rmSync(dir, { force: true, recursive: true })
     }
   })

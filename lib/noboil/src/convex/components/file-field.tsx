@@ -1,11 +1,8 @@
-/** biome-ignore-all lint/nursery/noUndeclaredClasses: standard tailwind v4 utilities biome cannot resolve */
+/** biome-ignore-all lint/nursery/noUndeclaredClasses: tailwind-v4 utilities biome cannot resolve */
 /* eslint-disable @typescript-eslint/no-misused-promises, @typescript-eslint/strict-void-return */
 /* oxlint-disable jsx-no-new-object-as-prop, jsx-a11y/prefer-tag-over-role */
-/** biome-ignore-all lint/a11y/useSemanticElements: dropzone requires div role button */
 // oxlint-disable promise/prefer-await-to-then, next/no-img-element
 /* eslint-disable complexity, no-await-in-loop, @next/next/no-img-element */
-// biome-ignore-all lint/performance/noImgElement: x
-// biome-ignore-all lint/performance/noAwaitInLoops: x
 'use client'
 import type { AnyFieldApi } from '@tanstack/react-form'
 import type { FunctionReference } from 'convex/server'
@@ -41,6 +38,7 @@ const Preview = ({ id, onRemove }: { id: string; onRemove?: () => void }) => {
   return (
     <div className='relative'>
       {d.contentType && isImgType(d.contentType) && d.url ? (
+        /** biome-ignore lint/performance/noImgElement: intentional img, not Next.js context */
         <img alt='' className='size-16 rounded-lg object-cover' height={64} src={d.url} width={64} />
       ) : (
         <div className='flex size-16 flex-col items-center justify-center rounded-lg bg-muted text-xs'>
@@ -104,6 +102,7 @@ const FileFieldImpl = ({
       if (multiple && max && vals.length + accepted.length > max) return toast.error(`Max ${max}`)
       const ids: string[] = []
       for (const file of accepted) {
+        /** biome-ignore lint/performance/noAwaitInLoops: sequential by design */
         const res = await upload(await compress(file, compressImg))
         if (res.ok) ids.push(res.storageId)
         else if (res.code === 'HTTP') toast.error(`${file.name}: Upload failed (${res.status})`)
@@ -166,6 +165,7 @@ const FileFieldImpl = ({
                 aria-label={label ?? 'File upload'}
                 tabIndex={-1}
               />
+              {/* biome-ignore lint/a11y/useSemanticElements: intentional role, semantic element not applicable */}
               <div
                 {...getRootProps()}
                 aria-label='Upload file'
@@ -205,6 +205,7 @@ const FileFieldImpl = ({
             aria-label={label ?? 'File upload'}
             tabIndex={-1}
           />
+          {/* biome-ignore lint/a11y/useSemanticElements: intentional role, semantic element not applicable */}
           <div
             {...getRootProps()}
             aria-label='Upload file'

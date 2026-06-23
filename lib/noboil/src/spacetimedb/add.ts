@@ -493,6 +493,7 @@ const add = async (args: string[] = []) => {
       console.log(yellow('Cancelled.'))
       return { created: 0, skipped: 0 }
     }
+    // oxlint-disable-next-line node/no-sync
     return addSync(interactiveFlags)
   }
   if (!flags.name) {
@@ -504,6 +505,7 @@ const add = async (args: string[] = []) => {
     console.log(`${red('Error:')} --parent is required for child type.\n`)
     process.exit(1)
   }
+  // oxlint-disable-next-line node/no-sync
   return addSync(flags)
 }
 if (process.argv[1]?.endsWith('add.ts')) await add(process.argv.slice(2))

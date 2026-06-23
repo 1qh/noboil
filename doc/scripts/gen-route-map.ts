@@ -6,11 +6,14 @@ import { DOCS_DIR, replaceBetween, REPO } from './lib'
 
 const DEMOS = ['blog', 'chat', 'movie', 'org', 'poll']
 const walkRoutes = (root: string, base = ''): string[] => {
+  // oxlint-disable-next-line node/no-sync
   if (!statSync(root, { throwIfNoEntry: false })) return []
   const out: string[] = []
+  // oxlint-disable-next-line node/no-sync
   for (const name of readdirSync(root).toSorted())
     if (!(name.startsWith('.') || name === 'node_modules' || name === 'api')) {
       const full = join(root, name)
+      // oxlint-disable-next-line node/no-sync
       const s = statSync(full)
       if (s.isDirectory()) out.push(...walkRoutes(full, `${base}/${name}`))
       else if (name === 'page.tsx') out.push(base || '/')

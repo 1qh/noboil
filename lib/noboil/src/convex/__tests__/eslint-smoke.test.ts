@@ -13,25 +13,34 @@ describe('convex eslint plugin bundle', () => {
   })
   test('schema callbacks exercise convex/ discovery (direct + nested)', async () => {
     const cwd = process.cwd()
+    // oxlint-disable-next-line node/no-sync
     const dir = mkdtempSync(join(tmpdir(), 'noboil-eslint-direct-'))
     try {
+      // oxlint-disable-next-line node/no-sync
       mkdirSync(join(dir, 'convex', '_generated'), { recursive: true })
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(join(dir, 'convex', 'todos.ts'), 'export const x = 1', 'utf8')
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(join(dir, 'schema.ts'), 'const owned = makeOwned({ todo: object({ title: string() }) })', 'utf8')
       process.chdir(dir)
       const mod = (await import(`../eslint?t=${Date.now()}`)) as { rules: unknown }
       expect(typeof mod.rules).toBe('object')
     } finally {
       process.chdir(cwd)
+      // oxlint-disable-next-line node/no-sync
       rmSync(dir, { force: true, recursive: true })
     }
   })
   test('schema callbacks find subdirectory convex/', async () => {
     const cwd = process.cwd()
+    // oxlint-disable-next-line node/no-sync
     const dir = mkdtempSync(join(tmpdir(), 'noboil-eslint-sub-'))
     try {
+      // oxlint-disable-next-line node/no-sync
       mkdirSync(join(dir, 'app', 'convex', '_generated'), { recursive: true })
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(join(dir, 'app', 'convex', 'todos.ts'), `export const x = crud('todo', schema)`, 'utf8')
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(
         join(dir, 'app', 'schema.ts'),
         'const owned = makeOwned({ todo: object({ title: string() }) })',
@@ -42,15 +51,20 @@ describe('convex eslint plugin bundle', () => {
       expect(typeof mod.rules).toBe('object')
     } finally {
       process.chdir(cwd)
+      // oxlint-disable-next-line node/no-sync
       rmSync(dir, { force: true, recursive: true })
     }
   })
   test('discovery-check rule invokes findSchemaContent + getModules helpers', () => {
     const cwd = process.cwd()
+    // oxlint-disable-next-line node/no-sync
     const dir = mkdtempSync(join(tmpdir(), 'noboil-eslint-disc-'))
     try {
+      // oxlint-disable-next-line node/no-sync
       mkdirSync(join(dir, 'convex', '_generated'), { recursive: true })
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(join(dir, 'convex', 'todos.ts'), 'export const x = 1', 'utf8')
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(join(dir, 'schema.ts'), 'const owned = makeOwned({ todo: object({ title: string() }) })', 'utf8')
       process.chdir(dir)
       const dRule = (rules as Record<string, { create: (ctx: unknown) => Record<string, unknown> }>)['discovery-check']
@@ -65,15 +79,20 @@ describe('convex eslint plugin bundle', () => {
       expect(true).toBe(true)
     } finally {
       process.chdir(cwd)
+      // oxlint-disable-next-line node/no-sync
       rmSync(dir, { force: true, recursive: true })
     }
   })
   test('api-casing rule invokes getModules + isApiExpression helpers', () => {
     const cwd = process.cwd()
+    // oxlint-disable-next-line node/no-sync
     const dir = mkdtempSync(join(tmpdir(), 'noboil-eslint-api-'))
     try {
+      // oxlint-disable-next-line node/no-sync
       mkdirSync(join(dir, 'convex', '_generated'), { recursive: true })
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(join(dir, 'convex', 'todos.ts'), 'export const x = 1', 'utf8')
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(join(dir, 'schema.ts'), 'const owned = makeOwned({ todo: object({}) })', 'utf8')
       process.chdir(dir)
       const apiRule = (rules as Record<string, { create: (ctx: unknown) => Record<string, unknown> }>)['api-casing']
@@ -95,6 +114,7 @@ describe('convex eslint plugin bundle', () => {
       expect(true).toBe(true)
     } finally {
       process.chdir(cwd)
+      // oxlint-disable-next-line node/no-sync
       rmSync(dir, { force: true, recursive: true })
     }
   })

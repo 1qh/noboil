@@ -1,5 +1,5 @@
+/** biome-ignore-all lint/performance/noAwaitInLoops: sequential e2e */
 /* eslint-disable no-await-in-loop */
-/** biome-ignore-all lint/performance/noAwaitInLoops: sequential test operations */
 import type { Page } from '@playwright/test'
 import { ACTIVE_ORG_COOKIE, DEFAULT_TOKEN_KEY, TOKEN_COOKIE_KEY } from 'noboil/spacetimedb'
 import { readFileSync, writeFileSync } from 'node:fs'
@@ -67,6 +67,7 @@ const TOKEN_FILE = join(import.meta.dirname, '.stdb-test-token.json')
 const PENDING_FILE = join(import.meta.dirname, '.stdb-pending-actions.json')
 const readTokenData = (): null | { identity: string; orgId?: string; token: string } => {
   try {
+    // oxlint-disable-next-line node/no-sync
     return JSON.parse(readFileSync(TOKEN_FILE, 'utf8')) as { identity: string; orgId?: string; token: string }
   } catch {
     return null
@@ -74,7 +75,9 @@ const readTokenData = (): null | { identity: string; orgId?: string; token: stri
 }
 const readPendingActions = (): PendingAction[] => {
   try {
+    // oxlint-disable-next-line node/no-sync
     const raw = readFileSync(PENDING_FILE, 'utf8')
+    // oxlint-disable-next-line node/no-sync
     writeFileSync(PENDING_FILE, '[]')
     return JSON.parse(raw) as PendingAction[]
   } catch {

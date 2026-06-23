@@ -1,7 +1,6 @@
-/* eslint-disable @next/next/no-img-element */
-// biome-ignore-all lint/performance/noImgElement: x
 'use client'
 import type { Blog } from '@a/be-spacetimedb/spacetimedb/types'
+import Image from 'next/image'
 import Link from 'next/link'
 import { useResolveFileUrl } from 'noboil/spacetimedb/react'
 import { useSpacetimeDB } from 'spacetimedb/react'
@@ -26,7 +25,7 @@ const Client = ({ blog }: { blog: Blog | null }) => {
     <div data-testid='blog-detail-page'>
       <Author {...blog} />
       {resolvedCover ? (
-        <img
+        <Image
           alt=''
           className='mt-3 w-full rounded-lg object-cover'
           data-testid='blog-detail-cover'

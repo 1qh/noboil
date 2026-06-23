@@ -5,7 +5,7 @@ interface GuardConfig {
   onError: (msg: string) => never | undefined
   suggestWithLabel?: boolean
 }
-// biome-ignore lint/style/noProcessEnv: env detection
+/** biome-ignore lint/style/noProcessEnv: env detection */
 const GUARD_ACTIVE = typeof process !== 'undefined' && process.env.NODE_ENV !== 'production'
 const findSuggestion = (modules: string[], name: string): string | undefined => {
   const lower = name.toLowerCase()

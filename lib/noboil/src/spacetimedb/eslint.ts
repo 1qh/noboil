@@ -13,20 +13,26 @@ import {
 
 const cache: { modules?: string[]; schemaDir?: string } = {}
 const hasSchemaMarkers = (dir: string): boolean => {
+  // oxlint-disable-next-line node/no-sync
   if (!existsSync(dir)) return false
+  // oxlint-disable-next-line node/no-sync
   for (const entry of readdirSync(dir))
     if (entry.endsWith('.ts') && !entry.endsWith('.test.ts') && !entry.endsWith('.config.ts')) {
+      // oxlint-disable-next-line node/no-sync
       const content = readFileSync(join(dir, entry), 'utf8')
       if (isSchemaFile(content)) return true
     }
   return false
 }
 const searchSubdirs = (root: string): string | undefined => {
+  // oxlint-disable-next-line node/no-sync
   if (!existsSync(root)) return
+  // oxlint-disable-next-line node/no-sync
   for (const sub of readdirSync(root, { withFileTypes: true }))
     if (sub.isDirectory()) {
       const nested = join(root, sub.name)
       if (hasSchemaMarkers(nested)) return nested
+      // oxlint-disable-next-line node/no-sync
       for (const child of readdirSync(nested, { withFileTypes: true }))
         if (child.isDirectory()) {
           const deep = join(nested, child.name)
@@ -56,14 +62,18 @@ const STDB_IMPORT_MARKERS = [
   '"spacetimedb/react"'
 ]
 const hasSpacetimeImportsFresh = (root: string): boolean => {
+  // oxlint-disable-next-line node/no-sync
   if (existsSync(join(root, 'module_bindings'))) return true
   const schemaDir = findSchemaDirFresh(root)
   const searchRoots: string[] = [root]
   if (schemaDir) searchRoots.push(dirname(schemaDir))
   for (const dir of searchRoots)
+    // oxlint-disable-next-line node/no-sync
     if (existsSync(dir))
+      // oxlint-disable-next-line node/no-sync
       for (const entry of readdirSync(dir, { withFileTypes: true }))
         if (entry.isFile() && (entry.name.endsWith('.ts') || entry.name.endsWith('.tsx'))) {
+          // oxlint-disable-next-line node/no-sync
           const content = readFileSync(join(dir, entry.name), 'utf8')
           for (const marker of STDB_IMPORT_MARKERS) if (content.includes(marker)) return true
         }

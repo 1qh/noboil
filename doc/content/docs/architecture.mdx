@@ -735,13 +735,13 @@ Quantitative depth per factory: source LOC, hook file LOC, test count (cases tha
 
 | Factory     | src LOC (cvx/stdb) | hook LOC (cvx/stdb) | tests (cvx/stdb) | doc page | tabs (cvx/stdb) |
 | ----------- | ------------------ | ------------------- | ---------------- | -------- | --------------- |
-| `base`      | 251 / 175          | 91 / 86             | 18 / 25          | 236L     | 4 / 4 ✓         |
-| `child`     | 275 / 165          | 43 / 41             | 13 / 27          | 240L     | 4 / 4 ✓         |
+| `base`      | 251 / 175          | 90 / 85             | 18 / 25          | 236L     | 4 / 4 ✓         |
+| `child`     | 274 / 165          | 43 / 41             | 13 / 27          | 240L     | 4 / 4 ✓         |
 | `kv`        | 168 / 163          | 43 / 49             | 10 / 23          | 270L     | 4 / 4 ✓         |
 | `log`       | 392 / 274          | 77 / 78             | 12 / 17          | 357L     | 5 / 5 ✓         |
-| `orgScoped` | 500 / 402          | 43 / 41             | 38 / 47          | 255L     | 4 / 4 ✓         |
-| `owned`     | 440 / 141          | 43 / 41             | 54 / 57          | 266L     | 5 / 5 ✓         |
-| `quota`     | 117 / 125          | 36 / 80             | 14 / 15          | 257L     | 4 / 4 ✓         |
+| `orgScoped` | 498 / 401          | 43 / 41             | 38 / 47          | 255L     | 4 / 4 ✓         |
+| `owned`     | 438 / 141          | 43 / 41             | 54 / 57          | 266L     | 5 / 5 ✓         |
+| `quota`     | 116 / 125          | 36 / 80             | 14 / 15          | 257L     | 4 / 4 ✓         |
 | `singleton` | 76 / 115           | 30 / 41             | 23 / 30          | 227L     | 4 / 4 ✓         |
 {/* AUTO-GENERATED:FACTORY-DEPTH:END */}
 
@@ -799,10 +799,10 @@ Per-demo parity audit. Each of the 5 demos compared across both backends: route 
 **5/5 demos at full parity.** Backend-specific routes (intentional asymmetries) listed below.
 | Demo    | Routes (cvx/stdb) | E2E tests (cvx/stdb) | Source LOC (cvx/stdb) | Status |
 | ------- | ----------------- | -------------------- | --------------------- | ------ |
-| `blog`  | 8/8 ✓             | 52 / 52 ✓            | 881 / 945 ✓           | 🟢     |
-| `chat`  | 5/5 ✓             | 26 / 26 ✓            | 488 / 410 ✓           | 🟢     |
-| `movie` | 2/2 ✓             | 14 / 14 ✓            | 303 / 524 ✓           | 🟢     |
-| `org`   | 18/18 ✓           | 128 / 128 ✓          | 2366 / 2612 ✓         | 🟢     |
+| `blog`  | 8/8 ✓             | 52 / 52 ✓            | 879 / 943 ✓           | 🟢     |
+| `chat`  | 5/5 ✓             | 26 / 26 ✓            | 495 / 410 ✓           | 🟢     |
+| `movie` | 2/2 ✓             | 14 / 14 ✓            | 299 / 519 ✓           | 🟢     |
+| `org`   | 18/18 ✓           | 128 / 128 ✓          | 2364 / 2609 ✓         | 🟢     |
 | `poll`  | 6/7 ✓             | 82 / 82 ✓            | 852 / 888 ✓           | 🟢     |
 ### Backend-specific routes (intentional)
 
@@ -903,8 +903,8 @@ Per-file React component parity. Each `*.tsx` in `lib/noboil/src/{convex,spaceti
 | `editors-section.tsx`  | ✓ 2L   | ✓ 2L   | 1              | —        | —                                            | 🟢     |
 | `error-boundary.tsx`   | ✓ 10L  | ✓ 10L  | 1              | —        | —                                            | 🟢     |
 | `fields.tsx`           | ✓ 20L  | ✓ 26L  | 5              | —        | —                                            | 🟢     |
-| `file-field.tsx`       | ✓ 243L | ✓ 390L | 3              | —        | `FileApi`, `UploadOptions`, `UploadResponse` | 🟡     |
-| `form.tsx`             | ✓ 168L | ✓ 194L | 7              | —        | —                                            | 🟢     |
+| `file-field.tsx`       | ✓ 239L | ✓ 391L | 3              | —        | `FileApi`, `UploadOptions`, `UploadResponse` | 🟡     |
+| `form.tsx`             | ✓ 167L | ✓ 193L | 7              | —        | —                                            | 🟢     |
 | `index.ts`             | ✓ 11L  | ✓ 12L  | 21             | —        | `UploadOptions`, `UploadResponse`            | 🟡     |
 | `misc.tsx`             | ✓ 12L  | ✓ 16L  | 3              | —        | —                                            | 🟢     |
 | `permission-guard.tsx` | ✓ 25L  | ✓ 25L  | 1              | —        | —                                            | 🟢     |

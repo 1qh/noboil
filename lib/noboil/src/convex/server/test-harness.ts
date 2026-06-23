@@ -1,4 +1,3 @@
-/** biome-ignore-all lint/style/noProcessEnv: test env reset */
 /* eslint-disable @typescript-eslint/no-dynamic-delete */
 import type { TestConvex } from 'convex-test'
 import type { GenericSchema, SchemaDefinition } from 'convex/server'
@@ -26,10 +25,12 @@ const createTestHarness = <S extends SchemaDefinition<GenericSchema, boolean>>({
   envClear?: readonly string[]
   schema: S
 }): TestHarness<S> => {
+  /** biome-ignore lint/style/noProcessEnv: intentional env access */
   for (const k of envClear ?? []) delete process.env[k]
   const loadModules = (): Record<string, () => Promise<Record<string, unknown>>> => {
     const out: Record<string, () => Promise<Record<string, unknown>>> = {}
     const glob = new Glob('**/*.{ts,js}')
+    // oxlint-disable-next-line node/no-sync
     for (const rel of glob.scanSync({ cwd: convexDir })) {
       const abs = join(convexDir, rel)
       out[`../convex/${rel}`] = async () => (await import(abs)) as Record<string, unknown>

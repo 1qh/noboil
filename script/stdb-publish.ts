@@ -14,6 +14,7 @@ const hashDir = (dir: string): string => {
     skip: new Set(['.git', '.next', '.turbo', 'build', 'dist', 'module_bindings', 'node_modules'])
   }).toSorted()) {
     h.update(`${path}:`)
+    // oxlint-disable-next-line node/no-sync
     h.update(readFileSync(path))
   }
   return h.digest('hex')
@@ -21,6 +22,7 @@ const hashDir = (dir: string): string => {
 const cacheDir = join(root, '.cache', 'stdb-publish')
 const cacheFile = join(cacheDir, 'last-hash')
 const wantHash = hashDir(join(root, config.paths.backendStdb))
+// oxlint-disable-next-line node/no-sync
 const shouldSkip = !args.includes('--force') && existsSync(cacheFile) && readFileSync(cacheFile, 'utf8') === wantHash
 const publishIfChanged = async () => {
   if (shouldSkip) {
@@ -33,7 +35,9 @@ const publishIfChanged = async () => {
       `bash -lc 'PATH="${root}/node_modules/.bin:$HOME/.local/bin:$PATH" spacetime publish ${config.module} --module-path ${config.paths.backendStdb} ${args}'`,
       { quiet: false }
     )
+    // oxlint-disable-next-line node/no-sync
     mkdirSync(cacheDir, { recursive: true })
+    // oxlint-disable-next-line node/no-sync
     writeFileSync(cacheFile, wantHash)
   })
 }

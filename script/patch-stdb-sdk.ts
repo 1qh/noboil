@@ -1,16 +1,19 @@
 #!/usr/bin/env bun
 /* eslint-disable no-console */
-/** biome-ignore-all lint/performance/useTopLevelRegex: install-time patch */
 import { copyFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 const target = join(import.meta.dir, '..', 'node_modules', 'spacetimedb', 'dist', 'server', 'index.mjs')
 const backup = `${target}.orig`
 const marker = '/* patched: stdb-sys-stub */'
+const VAR_SYS_RE = /^var sys = \{ (?:\.\.\._syscalls\d+_\d+(?:, )?)+ \};\n?/mu
 const patchServer = (): void => {
+  // oxlint-disable-next-line node/no-sync
   if (!existsSync(target)) return
+  // oxlint-disable-next-line node/no-sync
   const src = readFileSync(target, 'utf8')
   if (src.includes(marker)) return
+  // oxlint-disable-next-line node/no-sync
   if (!existsSync(backup)) copyFileSync(target, backup)
   const stub = `${marker}
 const _noop = function () {}
@@ -19,7 +22,8 @@ const sys = new Proxy({}, { get: () => _noop })
 `
   const patched = src
     .replaceAll(/^import (?:\* as _syscalls\d+_\d+|\{ moduleHooks \}) from 'spacetime:sys@\d+\.\d+';\n?/gmu, '')
-    .replace(/^var sys = \{ (?:\.\.\._syscalls\d+_\d+(?:, )?)+ \};\n?/mu, '')
+    .replace(VAR_SYS_RE, '')
+  // oxlint-disable-next-line node/no-sync
   writeFileSync(target, stub + patched)
   console.log('patched', target)
 }
@@ -27,7 +31,9 @@ patchServer()
 const REACT_VARIANTS = ['dist/react/index.mjs', 'dist/browser/react/index.mjs']
 const REACT_MARKER = '/* patched: useTable-deps */'
 const patchReact = (path: string): void => {
+  // oxlint-disable-next-line node/no-sync
   if (!existsSync(path)) return
+  // oxlint-disable-next-line node/no-sync
   const content = readFileSync(path, 'utf8')
   if (content.includes(REACT_MARKER)) return
   const fixed = content
@@ -44,6 +50,7 @@ const patchReact = (path: string): void => {
       '}, [connectionState.isActive, accessorName, querySql, subscribeApplied]);'
     )
   if (fixed === content) return
+  // oxlint-disable-next-line node/no-sync
   writeFileSync(path, fixed)
   console.log('patched useTable deps in', path)
 }

@@ -15,6 +15,7 @@ const findManifestPath = (start: string): null | string => {
   let dir = start
   for (let i = 0; i < 10; i += 1) {
     const p = join(dir, '.noboilrc.json')
+    // oxlint-disable-next-line node/no-sync
     if (existsSync(p)) return p
     const parent = join(dir, '..')
     if (parent === dir) break

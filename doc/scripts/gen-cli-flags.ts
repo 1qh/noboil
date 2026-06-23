@@ -1,6 +1,5 @@
 #!/usr/bin/env bun
 /* eslint-disable no-console */
-/** biome-ignore-all lint/performance/useTopLevelRegex: per-block */
 import { readFileSync } from 'node:fs'
 import { DOCS_DIR, replaceBetween } from './lib'
 
@@ -11,6 +10,8 @@ const escapeMd = (s: string): string =>
     .replaceAll('}', String.raw`\}`)
     .replaceAll('<', '&lt;')
     .replaceAll('>', '&gt;')
+const OPTIONS_HEADER_RE = /^\s*Options:\s*$/u
+const UPPER_START_RE = /^[A-Z]/u
 const FLAG_RE = /^\s{2,}(?<flag>(?:--[\w-]+|-\w)(?:[=,\s][^\s][^\s]*)*)\s{2,}(?<desc>\S.*)$/u
 const COMMAND_RE = /\*\*(?<cmd>noboil(?: \w+)?(?: \w+)?(?: --help)?)\*\*\n+```text\n(?<body>[\s\S]*?)\n```/gu
 interface Flag {
@@ -22,9 +23,9 @@ const parseHelpBlock = (text: string): Flag[] => {
   let inOpts = false
   for (const raw of text.split('\n')) {
     const line = raw.trimEnd()
-    if (/^\s*Options:\s*$/u.test(line)) inOpts = true
+    if (OPTIONS_HEADER_RE.test(line)) inOpts = true
     else {
-      if (/^[A-Z]/u.test(line.trim()) && line.trim().endsWith(':')) inOpts = line.trim() === 'Options:'
+      if (UPPER_START_RE.test(line.trim()) && line.trim().endsWith(':')) inOpts = line.trim() === 'Options:'
       if (inOpts) {
         const m = FLAG_RE.exec(line)
         if (m?.groups?.desc && m.groups.flag) flags.push({ description: m.groups.desc.trim(), flag: m.groups.flag.trim() })
@@ -34,6 +35,7 @@ const parseHelpBlock = (text: string): Flag[] => {
   return flags
 }
 const main = () => {
+  // oxlint-disable-next-line node/no-sync
   const src = readFileSync(`${DOCS_DIR}/cli.mdx`, 'utf8')
   const sections: string[] = []
   let total = 0

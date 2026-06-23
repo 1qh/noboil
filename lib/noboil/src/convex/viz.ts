@@ -18,11 +18,14 @@ const FIELD_PAT = /^\s*(?<fname>\w+)\s*:/u
 const FK_PAT = /foreignKey\s*:\s*['"](?<fk>\w+)['"]/u
 const PARENT_PAT = /parent\s*:\s*['"](?<pn>\w+)['"]/u
 const SCHEMA_OBJ_PAT = /schema\s*:\s*object\(\{/u
+// oxlint-disable-next-line node/no-sync
 const hasGenerated = (dir: string): boolean => existsSync(join(dir, '_generated'))
 const findConvexDir = (root: string): string | undefined => {
   const direct = join(root, 'convex')
   if (hasGenerated(direct)) return direct
+  // oxlint-disable-next-line node/no-sync
   if (!existsSync(root)) return
+  // oxlint-disable-next-line node/no-sync
   for (const sub of readdirSync(root, { withFileTypes: true }))
     if (sub.isDirectory()) {
       const nested = join(root, sub.name, 'convex')
@@ -31,10 +34,13 @@ const findConvexDir = (root: string): string | undefined => {
 }
 const findSchemaFile = (convexDir: string): undefined | { content: string; path: string } => {
   const searchDir = dirname(convexDir)
+  // oxlint-disable-next-line node/no-sync
   if (!existsSync(searchDir)) return
+  // oxlint-disable-next-line node/no-sync
   for (const entry of readdirSync(searchDir))
     if (entry.endsWith('.ts') && !entry.endsWith('.test.ts') && !entry.endsWith('.config.ts')) {
       const full = join(searchDir, entry)
+      // oxlint-disable-next-line node/no-sync
       const content = readFileSync(full, 'utf8')
       if (isSchemaFile(content, schemaMarkers)) return { content, path: full }
     }

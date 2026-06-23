@@ -37,12 +37,14 @@ describe('generateMarkdown', () => {
 })
 describe('generateFullReference', () => {
   test('emits markdown header + summary footer for empty src dir', () => {
+    // oxlint-disable-next-line node/no-sync
     const dir = mkdtempSync(join(tmpdir(), 'noboil-fullref-'))
     try {
       const md = generateFullReference(dir)
       expect(md).toContain('# noboil/convex')
       expect(md).toContain('exports')
     } finally {
+      // oxlint-disable-next-line node/no-sync
       rmSync(dir, { force: true, recursive: true })
     }
   })
@@ -60,6 +62,7 @@ describe('docs-gen run() CLI dispatch', () => {
     /* eslint-enable no-console */
   }
   test('--full with no src/ exits', () => {
+    // oxlint-disable-next-line node/no-sync
     const dir = mkdtempSync(join(tmpdir(), 'noboil-docs-nosrc-'))
     const cwd = process.cwd()
     try {
@@ -83,15 +86,20 @@ describe('docs-gen run() CLI dispatch', () => {
       expect(exited).toBeGreaterThan(0)
     } finally {
       process.chdir(cwd)
+      // oxlint-disable-next-line node/no-sync
       rmSync(dir, { force: true, recursive: true })
     }
   })
   test('run no flag with full project: prints summary; --markdown prints reference', () => {
+    // oxlint-disable-next-line node/no-sync
     const dir = mkdtempSync(join(tmpdir(), 'noboil-docs-full-'))
     const cwd = process.cwd()
     try {
+      // oxlint-disable-next-line node/no-sync
       mkdirSync(join(dir, 'convex', '_generated'), { recursive: true })
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(join(dir, 'convex', 'todos.ts'), `export const x = crud('todo', schema)`, 'utf8')
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(join(dir, 'schema.ts'), 'const owned = makeOwned({ todo: object({ title: string() }) })', 'utf8')
       process.chdir(dir)
       // eslint-disable-next-line @typescript-eslint/unbound-method
@@ -108,19 +116,23 @@ describe('docs-gen run() CLI dispatch', () => {
       expect(true).toBe(true)
     } finally {
       process.chdir(cwd)
+      // oxlint-disable-next-line node/no-sync
       rmSync(dir, { force: true, recursive: true })
     }
   })
   test('run --full with src/ runs through entry points', () => {
+    // oxlint-disable-next-line node/no-sync
     const dir = mkdtempSync(join(tmpdir(), 'noboil-docs-fullfull-'))
     const cwd = process.cwd()
     try {
+      // oxlint-disable-next-line node/no-sync
       mkdirSync(join(dir, 'src'), { recursive: true })
       process.chdir(dir)
       silenced(() => run(['--full']))
       expect(true).toBe(true)
     } finally {
       process.chdir(cwd)
+      // oxlint-disable-next-line node/no-sync
       rmSync(dir, { force: true, recursive: true })
     }
   })

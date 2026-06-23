@@ -107,20 +107,25 @@ const FACTORIES: FactorySpec[] = [
 ]
 const TEST_BLOCK_RE = /\b(?:test|it)\(\s*['"`][^'"`]+['"`][\s\S]*?^\s*\}\)/gmu
 const walk = (dir: string, out: string[] = []): string[] => {
+  // oxlint-disable-next-line node/no-sync
   if (!statSync(dir, { throwIfNoEntry: false })) return out
+  // oxlint-disable-next-line node/no-sync
   for (const name of readdirSync(dir).toSorted())
     if (!(name.startsWith('.') || name === 'node_modules')) {
       const full = join(dir, name)
+      // oxlint-disable-next-line node/no-sync
       if (statSync(full).isDirectory()) walk(full, out)
       else if (name.endsWith('.test.ts')) out.push(full)
     }
   return out
 }
+// oxlint-disable-next-line node/no-sync
 const lineCount = (path: string): number => (existsSync(path) ? readFileSync(path, 'utf8').split('\n').length : 0)
 const countTestsMentioning = (testRoot: string, patterns: string[]): number => {
   const res = patterns.map(p => new RegExp(p, 'u'))
   let n = 0
   for (const f of walk(testRoot)) {
+    // oxlint-disable-next-line node/no-sync
     const src = readFileSync(f, 'utf8')
     let m: null | RegExpExecArray = TEST_BLOCK_RE.exec(src)
     while (m) {
@@ -147,7 +152,9 @@ const main = () => {
     const cvxHook = lineCount(`${cvxReact}/${f.hookFile}`)
     const stdbHook = lineCount(`${stdbReact}/${f.hookFile}`)
     const docPagePath = `${docsDir}/${f.brand}.mdx`
+    // oxlint-disable-next-line node/no-sync
     const docPage = existsSync(docPagePath) ? lineCount(docPagePath) : 0
+    // oxlint-disable-next-line node/no-sync
     const pageSrc = existsSync(docPagePath) ? readFileSync(docPagePath, 'utf8') : ''
     const cvxTabs = (pageSrc.match(/<Tab value="Convex">/gu) ?? []).length
     const stdbTabs = (pageSrc.match(/<Tab value="SpacetimeDB">/gu) ?? []).length

@@ -1,11 +1,10 @@
-/** biome-ignore-all lint/performance/noAwaitInLoops: sequential by design */
-/** biome-ignore-all lint/suspicious/noControlCharactersInRegex: ANSI color codes */
 /* eslint-disable no-await-in-loop, no-control-regex */
 import { $, sleep } from 'bun'
 import { copyFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { styleText } from 'node:util'
 
+// biome-ignore lint/suspicious/noControlCharactersInRegex: intentional control-char match
 const ANSI_RE = /\u001B\[\d+m/gu
 const root = join(import.meta.dirname, '..')
 const envPath = join(root, '.env')
@@ -50,7 +49,9 @@ const run = async (cmd: string, { quiet = true }: { quiet?: boolean } = {}) => {
 }
 const readEnv = (): Record<string, string> => {
   const current: Record<string, string> = {}
+  // oxlint-disable-next-line node/no-sync
   if (!existsSync(envPath)) return current
+  // oxlint-disable-next-line node/no-sync
   for (const line of readFileSync(envPath, 'utf8').split('\n')) {
     const t = line.trim()
     if (t && !t.startsWith('#')) {
@@ -64,6 +65,7 @@ const writeEnv = (data: Record<string, string>) => {
   const body = Object.entries(data)
     .map(([k, v]) => `${k}=${v}`)
     .join('\n')
+  // oxlint-disable-next-line node/no-sync
   writeFileSync(envPath, `${body}\n`)
 }
 const patchEnv = (entries: [string, string][]) => {
@@ -109,6 +111,7 @@ const composeRunning = async (file: string) => {
 const waitHealthy = async (url: string, timeout = 60_000) => {
   const start = Date.now()
   while (Date.now() - start < timeout) {
+    // biome-ignore lint/performance/noAwaitInLoops: sequential by design
     const r = await fetch(url, { signal: AbortSignal.timeout(2000) }).catch(() => null)
     if (r?.ok) return true
     await sleep(500)
@@ -125,12 +128,15 @@ const STDB_PATCH_MARKER = '/* patched: stdb-sys-stub */'
 /** Run `fn` with the SpacetimeDB SDK temporarily reverted to its unpatched original (so `spacetime publish/generate` see the real syscall imports). Re-patches on exit. */
 const withUnpatchedStdbSdk = async <T>(fn: () => Promise<T>): Promise<T> => {
   const backupPath = `${STDB_SDK_PATH}.orig`
+  // oxlint-disable-next-line node/no-sync
   const patchedContent = existsSync(STDB_SDK_PATH) ? readFileSync(STDB_SDK_PATH, 'utf8') : ''
   const wasPatched = patchedContent.includes(STDB_PATCH_MARKER)
+  // oxlint-disable-next-line node/no-sync
   if (wasPatched && existsSync(backupPath)) copyFileSync(backupPath, STDB_SDK_PATH)
   try {
     return await fn()
   } finally {
+    // oxlint-disable-next-line node/no-sync
     if (wasPatched) writeFileSync(STDB_SDK_PATH, patchedContent)
   }
 }

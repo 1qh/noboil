@@ -17,16 +17,19 @@ describe('stdb docs-gen', () => {
     expect(md).toContain('### Schema Fields')
   })
   test('generateFullReference returns header for empty src dir', () => {
+    // oxlint-disable-next-line node/no-sync
     const dir = mkdtempSync(join(tmpdir(), 'noboil-stdb-fullref-'))
     try {
       const md = generateFullReference(dir)
       expect(md).toContain('# noboil/spacetimedb')
       expect(md).toContain('exports')
     } finally {
+      // oxlint-disable-next-line node/no-sync
       rmSync(dir, { force: true, recursive: true })
     }
   })
   test('run() CLI dispatch covers --full no-src, full project, --markdown', () => {
+    // oxlint-disable-next-line node/no-sync
     const dir = mkdtempSync(join(tmpdir(), 'noboil-stdb-docs-'))
     const cwd = process.cwd()
     /* eslint-disable no-console, @typescript-eslint/unbound-method */
@@ -54,12 +57,15 @@ describe('stdb docs-gen', () => {
       } finally {
         // Continue with files written
       }
+      // oxlint-disable-next-line node/no-sync
       mkdirSync(join(dir, 'module'), { recursive: true })
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(
         join(dir, 'module', 'schema.ts'),
         'export default schema({ tables: { todo: table(t.u64(), { id: t.u64(), title: t.string() }) } })',
         'utf8'
       )
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(join(dir, 'module', 'reducers.ts'), `export const x = makeCrud({ tableName: 'todo' })`, 'utf8')
       try {
         run([])
@@ -67,6 +73,7 @@ describe('stdb docs-gen', () => {
       } catch {
         // Ignore
       }
+      // oxlint-disable-next-line node/no-sync
       mkdirSync(join(dir, 'src'), { recursive: true })
       try {
         run(['--full'])
@@ -78,6 +85,7 @@ describe('stdb docs-gen', () => {
       process.chdir(cwd)
       console.log = origLog
       process.exit = origExit
+      // oxlint-disable-next-line node/no-sync
       rmSync(dir, { force: true, recursive: true })
     }
     /* eslint-enable no-console, @typescript-eslint/unbound-method */

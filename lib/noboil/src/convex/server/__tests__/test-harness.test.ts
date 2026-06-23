@@ -1,4 +1,3 @@
-/** biome-ignore-all lint/suspicious/noUndeclaredEnvVars: test asserts behavior on an undeclared env var */
 import { describe, expect, test } from 'bun:test'
 import { defineSchema, defineTable } from 'convex/server'
 import { v } from 'convex/values'
@@ -11,8 +10,10 @@ import { createTestHarness } from '../test-harness'
 describe('createTestHarness', () => {
   test('returns makeTest factory + envClear deletes vars', () => {
     process.env.NOBOIL_TEST_HARNESS_VAR = 'sentinel'
+    // oxlint-disable-next-line node/no-sync
     const dir = mkdtempSync(join(tmpdir(), 'noboil-harness-'))
     try {
+      // oxlint-disable-next-line unicorn/max-nested-calls
       const schema = defineSchema({ users: defineTable({ name: v.optional(v.string()) }) })
       const { makeTest } = createTestHarness({
         convexDir: dir,
@@ -20,6 +21,7 @@ describe('createTestHarness', () => {
         schema
       })
       expect(typeof makeTest).toBe('function')
+      /** biome-ignore lint/suspicious/noUndeclaredEnvVars: intentional env access */
       expect(process.env.NOBOIL_TEST_HARNESS_VAR).toBeUndefined()
       try {
         const t = makeTest()
@@ -28,6 +30,7 @@ describe('createTestHarness', () => {
         // Empty dir = convexTest may fail; loadModules path still ran
       }
     } finally {
+      // oxlint-disable-next-line node/no-sync
       rmSync(dir, { force: true, recursive: true })
     }
   })

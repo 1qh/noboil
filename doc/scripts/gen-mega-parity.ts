@@ -31,10 +31,13 @@ interface Pair {
 const walkRel = (root: string, rel = ''): string[] => {
   const out: string[] = []
   const dir = join(root, rel)
+  // oxlint-disable-next-line node/no-sync
   if (!statSync(dir, { throwIfNoEntry: false })) return out
+  // oxlint-disable-next-line node/no-sync
   for (const name of readdirSync(dir).toSorted())
     if (!(name.startsWith('.') || SKIP_DIRS.has(name))) {
       const full = join(dir, name)
+      // oxlint-disable-next-line node/no-sync
       const s = statSync(full)
       const r = rel ? `${rel}/${name}` : name
       if (s.isDirectory()) out.push(...walkRel(root, r))
@@ -55,7 +58,9 @@ const walkRel = (root: string, rel = ''): string[] => {
 }
 const collectExports = (path: string): Set<string> => {
   const out = new Set<string>()
+  // oxlint-disable-next-line node/no-sync
   if (!statSync(path, { throwIfNoEntry: false })) return out
+  // oxlint-disable-next-line node/no-sync
   const src = stripStrings(readFileSync(path, 'utf8'))
   collectBraceExports(src, out)
   let dm = EXPORT_DECL_RE.exec(src)
@@ -481,8 +486,10 @@ const auditNamingPair = (
   stdbOnly: string[]
   stdbUnaccounted: string[]
 } => {
+  // oxlint-disable-next-line node/no-sync
   if (!statSync(np.dir, { throwIfNoEntry: false }))
     return { cvxOnly: [], cvxUnaccounted: [], matched: 0, name: np.name, stdbOnly: [], stdbUnaccounted: [] }
+  // oxlint-disable-next-line node/no-sync
   const files = readdirSync(np.dir)
     .toSorted()
     .toSorted()

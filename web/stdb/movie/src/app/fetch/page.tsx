@@ -1,6 +1,6 @@
+/** biome-ignore-all lint/performance/noImgElement: remote image, dimensions unknown */
+/** biome-ignore-all lint/correctness/useImageSize: remote image, dimensions unknown */
 /* eslint-disable @next/next/no-img-element */
-// biome-ignore-all lint/correctness/useImageSize: x
-// biome-ignore-all lint/performance/noImgElement: external images
 'use client'
 import { reducers } from '@a/be-spacetimedb/spacetimedb'
 import { Badge } from '@a/ui/badge'

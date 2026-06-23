@@ -1,5 +1,4 @@
 /* eslint-disable no-bitwise */
-/** biome-ignore-all lint/suspicious/noBitwiseOperators: constantTimeEqual requires bitwise OR/XOR */
 /** Compare two strings in constant time. Use for secret/token comparisons to defeat timing attacks. */
 const constantTimeEqual = (a: string, b: string): boolean => {
   if (typeof a !== 'string' || typeof b !== 'string') return false
@@ -7,7 +6,9 @@ const constantTimeEqual = (a: string, b: string): boolean => {
   const ab = enc.encode(a)
   const bb = enc.encode(b)
   const len = Math.max(ab.length, bb.length)
+  /** biome-ignore lint/suspicious/noBitwiseOperators: intentional bitwise */
   let result = ab.length ^ bb.length
+  /** biome-ignore lint/suspicious/noBitwiseOperators: intentional bitwise */
   for (let i = 0; i < len; i += 1) result |= (ab[i] ?? 0) ^ (bb[i] ?? 0)
   return result === 0
 }

@@ -71,7 +71,9 @@ const extractSignature = (fileContent: string, symbolName: string): string => {
 }
 const processEntryPoint = (ep: { label: string; path: string }, srcDir: string, lines: string[]): number => {
   const indexPath = join(srcDir, ep.path)
+  // oxlint-disable-next-line node/no-sync
   if (!existsSync(indexPath)) return 0
+  // oxlint-disable-next-line node/no-sync
   const indexContent = readFileSync(indexPath, 'utf8')
   const reExports = resolveReExports(indexContent)
   if (reExports.length === 0) return 0
@@ -86,7 +88,9 @@ const processEntryPoint = (ep: { label: string; path: string }, srcDir: string, 
     const sourceFile = join(dirname(indexPath), `${re.sourcePath.replace(tsExtPat, '')}.ts`)
     let doc = ''
     let sig = ''
+    // oxlint-disable-next-line node/no-sync
     if (existsSync(sourceFile)) {
+      // oxlint-disable-next-line node/no-sync
       const src = readFileSync(sourceFile, 'utf8')
       doc = extractJSDoc(src, re.symbol)
       sig = extractSignature(src, re.symbol)

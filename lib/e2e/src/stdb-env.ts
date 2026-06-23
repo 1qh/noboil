@@ -1,4 +1,4 @@
-/** biome-ignore-all lint/style/noProcessEnv: e2e env detection */
+/** biome-ignore-all lint/style/noProcessEnv: env module, intentional process.env */
 import { config } from '@a/config'
 import { wsToHttp } from 'noboil/spacetimedb'
 

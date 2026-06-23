@@ -1,4 +1,3 @@
-/** biome-ignore-all lint/style/noProcessEnv: env detection */
 'use client'
 import type { PaginatedQueryArgs, PaginatedQueryReference } from 'convex/react'
 import type { FunctionReturnType } from 'convex/server'
@@ -38,6 +37,7 @@ const classifyPending = (pending: PendingMutation[]) => {
       })
   return { creates, deleteIds, updates }
 }
+/** biome-ignore lint/style/noProcessEnv: intentional env access */
 const isDev = typeof process !== 'undefined' && process.env.NODE_ENV !== 'production'
 const DEFAULT_PAGE_SIZE = 50
 /** Applies pending optimistic creates, updates, and deletes to a list of items. */
@@ -69,7 +69,7 @@ const useList = <F extends PaginatedQueryReference>(query: F, ...rest: ListRest<
   const { loadMore, results, status } = usePaginatedQuery(query, queryArgs, { initialNumItems: pageSize })
   const pending = usePendingMutations()
   const subIdRef = useRef(0)
-  // biome-ignore lint/correctness/useExhaustiveDependencies: subscribe lifecycle is intentionally one-time
+  /** biome-ignore lint/correctness/useExhaustiveDependencies: subscribe lifecycle is intentionally one-time */
   useEffect(() => {
     if (!isDev) return
     const queryName = typeof query === 'string' ? query : ((query as { _name?: string })._name ?? 'unknown')

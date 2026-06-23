@@ -8,6 +8,7 @@ import { collectBraceExports, DOCS_DIR, LIB_NOBOIL, PKG_JSON_PATH, REPO, STRIP_A
 const EXPORT_DECL_RE = /export\s+(?:const|function|class|interface|type)\s+(?<name>\w+)/gu
 const collectExports = (file: string): Set<string> => {
   const out = new Set<string>()
+  // oxlint-disable-next-line node/no-sync
   const src = readFileSync(file, 'utf8')
   collectBraceExports(src, out)
   let dm = EXPORT_DECL_RE.exec(src)
@@ -36,6 +37,7 @@ const indexSubpath = ({
 }) => {
   const path = typeof target === 'string' ? target : (target.types ?? target.default ?? target.import ?? '')
   const abs = path ? resolve(LIB_NOBOIL, path) : ''
+  // oxlint-disable-next-line node/no-sync
   if (abs && statSync(abs, { throwIfNoEntry: false })) {
     const subpath = sub === '.' ? pkgName : `${pkgName}/${sub.replace('./', '')}`
     for (const sym of collectExports(abs)) {
@@ -46,6 +48,7 @@ const indexSubpath = ({
   }
 }
 const linkDocsFor = (docsDir: string, file: string, symToEntry: Map<string, Entry>) => {
+  // oxlint-disable-next-line node/no-sync
   const src = readFileSync(`${docsDir}/${file}`, 'utf8').replaceAll(STRIP_AUTOGEN_RE, '').replaceAll(STRIP_FENCE_RE, '')
   const slug = basename(file, '.mdx')
   for (const [sym, entry] of symToEntry) {
@@ -61,6 +64,7 @@ const main = () => {
   const symToEntry = new Map<string, Entry>()
   for (const [sub, target] of Object.entries(pkg.exports)) indexSubpath({ pkgName: pkg.name, sub, symToEntry, target })
   const docsDir = DOCS_DIR
+  // oxlint-disable-next-line node/no-sync
   for (const file of readdirSync(docsDir).toSorted())
     if (file.endsWith('.mdx') && file !== 'glossary.mdx') linkDocsFor(docsDir, file, symToEntry)
   const sorted = [...symToEntry.entries()].toSorted(([a], [b]) => a.localeCompare(b))
@@ -84,6 +88,7 @@ const main = () => {
     '|---|---|---|---|',
     ...rows
   ].join('\n')
+  // oxlint-disable-next-line node/no-sync
   writeFileSync(`${docsDir}/glossary.mdx`, `${body}\n`)
   console.log(`Wrote glossary.mdx (${sorted.length} symbols)`)
 }

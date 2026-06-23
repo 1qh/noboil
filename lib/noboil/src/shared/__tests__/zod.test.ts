@@ -42,6 +42,7 @@ describe('unwrapZod', () => {
     expect(unwrapZod(boolean()).type).toBe('boolean')
   })
   test('array(string)', () => {
+    // oxlint-disable-next-line unicorn/max-nested-calls
     expect(unwrapZod(array(string())).type).toBe('array')
   })
   test('enum', () => {
@@ -63,6 +64,7 @@ describe('isOptionalField', () => {
     expect(isOptionalField(string())).toBe(false)
   })
   test('optional string is optional', () => {
+    // oxlint-disable-next-line unicorn/max-nested-calls
     expect(isOptionalField(optional(string()))).toBe(true)
   })
   test('nullable(optional(string)) is optional', () => {
@@ -89,6 +91,7 @@ describe('fileKindOf', () => {
     expect(fileKindOf(file().nullable())).toBe('file')
   })
   test('array(file()) returns files', () => {
+    // oxlint-disable-next-line unicorn/max-nested-calls
     expect(fileKindOf(array(file()))).toBe('files')
   })
   test('regular string returns undefined', () => {
@@ -227,6 +230,7 @@ describe('validateSchemas', () => {
   test('passes for plain types', () => {
     expect(() =>
       validateSchemas({
+        // oxlint-disable-next-line unicorn/max-nested-calls
         blog: object({ published: boolean(), tags: array(string()), title: string() })
       })
     ).not.toThrow()
@@ -240,6 +244,7 @@ describe('validateSchemas', () => {
     expect(() => validateSchemas({ bad: s })).toThrow('Unsupported Zod types')
   })
   test('error message includes field path', () => {
+    // oxlint-disable-next-line unicorn/max-nested-calls
     const s = object({ nested: object({ deep: string().pipe(string()) }) })
     expect(() => validateSchemas({ tbl: s })).toThrow('tbl.nested.deep')
   })
@@ -276,6 +281,7 @@ describe('checkSchema (stderr + exitCode)', () => {
     }
     try {
       process.exitCode = 0
+      // oxlint-disable-next-line unicorn/max-nested-calls
       checkSchema({ bad: object({ val: string().pipe(string()) }) })
       expect(process.exitCode).toBe(1)
       expect(captured).toContain('bad.val')

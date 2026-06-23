@@ -1,5 +1,5 @@
+/** biome-ignore-all lint/performance/noAwaitInLoops: sequential e2e */
 /* eslint-disable no-await-in-loop */
-// biome-ignore-all lint/performance/noAwaitInLoops: e2e sequential
 import type { Locator } from '@playwright/test'
 import BasePage from '@a/e2e/base-page'
 

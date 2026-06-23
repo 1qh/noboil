@@ -25,10 +25,13 @@ const filterSupportedParts = (parts: Record<string, unknown>[]) =>
       return null
     })
     .filter(Boolean) as never
+// oxlint-disable-next-line unicorn/max-nested-calls
 const geocodeSchema = z.object({ results: z.array(z.object({ latitude: z.number(), longitude: z.number() })).optional() })
 const weatherSchema = z.object({
   current: z.object({ temperature_2m: z.number() }).optional(),
+  // oxlint-disable-next-line unicorn/max-nested-calls
   daily: z.object({ sunrise: z.array(z.string()), sunset: z.array(z.string()) }).optional(),
+  // oxlint-disable-next-line unicorn/max-nested-calls
   hourly: z.object({ temperature_2m: z.array(z.number()) }).optional(),
   timezone: z.string().optional()
 })
@@ -77,6 +80,7 @@ const requestSchema = z.object({
   message: z
     .object({
       id: z.string(),
+      // oxlint-disable-next-line unicorn/max-nested-calls
       parts: z.array(z.record(z.string(), z.unknown())),
       role: z.enum(['user', 'assistant', 'system'])
     })
@@ -84,8 +88,11 @@ const requestSchema = z.object({
   messages: z
     .array(
       z.object({
+        // oxlint-disable-next-line unicorn/max-nested-calls
         id: z.string(),
+        // oxlint-disable-next-line unicorn/max-nested-calls
         parts: z.array(z.record(z.string(), z.unknown())),
+        // oxlint-disable-next-line unicorn/max-nested-calls
         role: z.enum(['user', 'assistant', 'system'])
       })
     )

@@ -24,10 +24,13 @@ const parseTables = (src: string): Map<string, string[]> => {
   return result
 }
 const walkSrc = (dir: string, out: string[] = []): string[] => {
+  // oxlint-disable-next-line node/no-sync
   if (!statSync(dir, { throwIfNoEntry: false })) return out
+  // oxlint-disable-next-line node/no-sync
   for (const name of readdirSync(dir).toSorted())
     if (!(name === 'node_modules' || name === '.next' || name === 'module_bindings' || name.startsWith('.'))) {
       const full = join(dir, name)
+      // oxlint-disable-next-line node/no-sync
       const stat = statSync(full)
       if (stat.isDirectory()) walkSrc(full, out)
       else if (name.endsWith('.ts') || name.endsWith('.tsx')) out.push(full)
@@ -37,6 +40,7 @@ const walkSrc = (dir: string, out: string[] = []): string[] => {
 const cvxTablesUsedBy = (root: string): Set<string> => {
   const used = new Set<string>()
   for (const file of walkSrc(root)) {
+    // oxlint-disable-next-line node/no-sync
     const src = readFileSync(file, 'utf8')
     let m = API_RE.exec(src)
     while (m) {
@@ -51,6 +55,7 @@ const cap = (s: string): string => s.charAt(0).toUpperCase() + s.slice(1)
 const stdbTablesUsedBy = (root: string, knownTables: string[]): Set<string> => {
   const used = new Set<string>()
   const sources = walkSrc(root)
+    // oxlint-disable-next-line node/no-sync
     .map(f => readFileSync(f, 'utf8'))
     .join('\n')
   for (const t of knownTables) {
@@ -60,7 +65,9 @@ const stdbTablesUsedBy = (root: string, knownTables: string[]): Set<string> => {
   return used
 }
 const main = () => {
+  // oxlint-disable-next-line node/no-sync
   const cvxLazy = readFileSync(`${REPO}/backend/convex/lazy.ts`, 'utf8')
+  // oxlint-disable-next-line node/no-sync
   const stdbLazy = readFileSync(`${REPO}/backend/spacetimedb/src/index.ts`, 'utf8')
   const cvxTables = parseTables(cvxLazy)
   const stdbTables = parseTables(stdbLazy)

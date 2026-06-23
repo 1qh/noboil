@@ -1,13 +1,15 @@
 #!/usr/bin/env bun
 /* eslint-disable no-console */
-/** biome-ignore-all lint/performance/useTopLevelRegex: per-iteration extraction */
 /* oxlint-disable unicorn/prefer-string-replace-all */
 import { readFileSync } from 'node:fs'
 import { DOCS_DIR, LIB_NOBOIL, replaceBetween } from './lib'
 
 const STDB = `${LIB_NOBOIL}/src/spacetimedb/server`
 const FIELD_RE = /^\s*(?<name>\w+)(?<opt>\??):\s*(?<type>[^/\n]+?)\s*(?:\/\/.*)?$/u
+const LEAD_PAREN_RE = /^\(/u
+const TRAIL_PAREN_RE = /\)$/u
 const extract = (file: string, name: string): { name: string; opt: string; type: string }[] => {
+  // oxlint-disable-next-line node/no-sync
   const src = readFileSync(file, 'utf8')
   const re = new RegExp(`interface ${name}(?:<[^>]*>)?\\s*\\{([^}]+)\\}`, 'u')
   const m = re.exec(src)
@@ -16,7 +18,11 @@ const extract = (file: string, name: string): { name: string; opt: string; type:
   for (const line of m[1].split('\n')) {
     const fm = FIELD_RE.exec(line)
     if (fm?.groups?.name && fm.groups.type) {
-      const cleanType = fm.groups.type.replaceAll('|', String.raw`\|`).trim().replace(/^\(/u, '(').replace(/\)$/u, ')')
+      const cleanType = fm.groups.type
+        .replaceAll('|', String.raw`\|`)
+        .trim()
+        .replace(LEAD_PAREN_RE, '(')
+        .replace(TRAIL_PAREN_RE, ')')
       out.push({ name: fm.groups.name, opt: fm.groups.opt ?? '', type: cleanType })
     }
   }

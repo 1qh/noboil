@@ -1,5 +1,4 @@
 #!/usr/bin/env bun
-/** biome-ignore-all lint/performance/noAwaitInLoops: dashboard session loop */
 /* oxlint-disable promise/prefer-await-to-then */
 /* eslint-disable no-console, no-await-in-loop, @typescript-eslint/no-unnecessary-condition */
 import { bold, dim, red } from './ansi'
@@ -70,6 +69,7 @@ else if (!cmd) {
   let action = await runDashboard()
   while (action !== 'exit') {
     if (action === 'init') {
+      /** biome-ignore lint/performance/noAwaitInLoops: sequential by design */
       const { init } = await import('./init')
       await init([])
     } else if (action === 'doctor') {

@@ -5,6 +5,7 @@ import { DOCS_DIR, replaceBetween, slugify } from './lib'
 
 const RECIPES = `${DOCS_DIR}/recipes.mdx`
 const main = () => {
+  // oxlint-disable-next-line node/no-sync
   const src = readFileSync(RECIPES, 'utf8')
   const headings: { slug: string; text: string }[] = []
   for (const line of src.split('\n'))

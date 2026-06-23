@@ -5,6 +5,7 @@ import { DOCS_DIR, LIB_NOBOIL, replaceBetween } from './lib'
 
 const hooksFor = (kind: 'convex' | 'spacetimedb'): string[] => {
   const dir = `${LIB_NOBOIL}/src/${kind}/react`
+  // oxlint-disable-next-line node/no-sync
   return readdirSync(dir)
     .toSorted()
     .filter(f => f.startsWith('use-') && f.endsWith('.ts') && !f.endsWith('.test.ts'))
@@ -22,6 +23,7 @@ const main = () => {
   })
   const body = ['| Hook | Convex | SpacetimeDB |', '|---|---|---|', ...rows].join('\n')
   const target = `${DOCS_DIR}/api-reference.mdx`
+  // oxlint-disable-next-line node/no-sync
   if (!existsSync(target)) throw new Error(`missing ${target}`)
   const dirty = replaceBetween(target, 'REACT-HOOKS', body)
   console.log(

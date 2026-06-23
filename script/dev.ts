@@ -1,5 +1,3 @@
-/** biome-ignore-all lint/performance/noAwaitInLoops: sequential by design */
-/** biome-ignore-all lint/suspicious/noEmptyBlockStatements: keep process alive */
 /* eslint-disable no-await-in-loop, no-empty */
 import { allAppPorts, config } from '@a/config'
 /* oxlint-disable no-process-exit */
@@ -27,18 +25,22 @@ const appDir = (id: string): string => {
 const all: App[] = Object.entries(allAppPorts())
   .filter(([id]) => (only ? only.has(id) : true))
   .map(([id, port]) => ({ dir: appDir(id), name: id, port }))
+  // oxlint-disable-next-line node/no-sync
   .filter(a => existsSync(join(a.dir, 'package.json')))
 if (all.length === 0) {
   warn('No apps found.')
   process.exit(1)
 }
 const logDir = join(root, '.cache/dev-logs')
+// oxlint-disable-next-line node/no-sync
 mkdirSync(logDir, { recursive: true })
 log(c.bold(`\nStarting ${all.length} app${all.length > 1 ? 's' : ''}\n`))
 const procs: { app: App; proc: ReturnType<typeof spawn> }[] = []
 const occupied: App[] = []
 for (const app of all)
+  // biome-ignore lint/performance/noAwaitInLoops: sequential by design
   if (await portFree(app.port)) {
+    // oxlint-disable-next-line node/no-sync
     const fd = openSync(join(logDir, `${app.name}.log`), 'w')
     const proc = spawn({
       cmd: ['bun', 'run', 'dev'],
@@ -56,7 +58,9 @@ const shutdown = () => {
   for (const { proc } of procs)
     try {
       proc.kill()
-    } catch {}
+    } catch {
+      // ignore kill failures during shutdown
+    }
   process.exit(0)
 }
 process.on('SIGINT', shutdown)
@@ -67,6 +71,7 @@ const results = await Promise.all(
   procs.map(async ({ app }) => {
     const start = Date.now()
     while (Date.now() - start < healthTimeout) {
+      // biome-ignore lint/performance/noAwaitInLoops: sequential by design
       const r = await fetch(`http://localhost:${app.port}/`, { signal: AbortSignal.timeout(1500) }).catch(() => null)
       if (r && r.status < 500) return { app, ok: true }
       await sleep(500)

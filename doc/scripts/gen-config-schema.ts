@@ -68,6 +68,7 @@ const renderTable = (title: string, fields: Field[]): string => {
   return [`**${title}**`, '', '| Field | Type |', '|---|---|', ...rows].join('\n')
 }
 const main = () => {
+  // oxlint-disable-next-line node/no-sync
   const src = readFileSync(`${LIB_NOBOIL}/src/config.ts`, 'utf8')
   const cfg = parseInterface(src, 'NoboilConfig')
   const ctx = parseInterface(src, 'AddContext')

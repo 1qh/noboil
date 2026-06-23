@@ -8,6 +8,7 @@ import { collectBraceExports, DOCS_DIR, LIB_NOBOIL, PKG_JSON_PATH, replaceBetwee
 const EXPORT_DECL_RE = /export\s+(?:const|function|class|interface|type)\s+(?<name>\w+)/gu
 const collectExports = (file: string): Set<string> => {
   const out = new Set<string>()
+  // oxlint-disable-next-line node/no-sync
   const src = readFileSync(file, 'utf8')
   collectBraceExports(src, out)
   let dm = EXPORT_DECL_RE.exec(src)
@@ -22,6 +23,7 @@ const STRIP_RE =
   /\{\/\* AUTO-GENERATED:SYMBOL-COVERAGE:START \*\/\}[\s\S]*?\{\/\* AUTO-GENERATED:SYMBOL-COVERAGE:END \*\/\}/gu
 const collectDocsText = (root: string): string => {
   let combined = ''
+  // oxlint-disable-next-line node/no-sync
   for (const f of readdirSync(root).toSorted()) if (f.endsWith('.mdx')) combined += readFileSync(`${root}/${f}`, 'utf8')
   return combined.replaceAll(STRIP_RE, '')
 }
@@ -34,6 +36,7 @@ const main = () => {
     const path = typeof target === 'string' ? target : (target.types ?? target.default ?? target.import ?? '')
     if (path) {
       const abs = resolve(LIB_NOBOIL, path)
+      // oxlint-disable-next-line node/no-sync
       if (statSync(abs, { throwIfNoEntry: false })) for (const sym of collectExports(abs)) publicExports.add(sym)
     }
   }

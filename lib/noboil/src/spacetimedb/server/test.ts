@@ -1,5 +1,3 @@
-// biome-ignore-all lint/style/noProcessEnv: test env
-// biome-ignore-all lint/suspicious/useAwait: test async
 import { DbConnectionBuilder, DbConnectionImpl } from 'spacetimedb/sdk'
 import { isStdbTestMode } from '../../shared/test-mode'
 import { DEFAULT_HTTP_URI, DEFAULT_WS_URI, wsToHttp } from '../defaults'
@@ -41,6 +39,7 @@ interface TestUser {
 }
 const DEFAULT_HTTP_URL = DEFAULT_HTTP_URI
 const resolveModuleName = (moduleName?: string) =>
+  /** biome-ignore lint/style/noProcessEnv: intentional env access */
   moduleName ?? process.env.SPACETIMEDB_MODULE_NAME ?? process.env.NEXT_PUBLIC_SPACETIMEDB_MODULE_NAME
 const ensureModuleName = (moduleName?: string): string => {
   if (!moduleName) throw new Error('SPACETIMEDB_MODULE_NAME is required in createTestContext options or env')
@@ -88,7 +87,7 @@ const getSchema = async (ctx: Pick<TestContext, 'baseHttpUrl' | 'moduleName'>): 
   return parseJsonResponse<SchemaResponse>(response)
 }
 /** Open a fresh authenticated WebSocket connection to a SpacetimeDB module for use in integration tests. */
-const createConnectedUser = async (ctx: Pick<TestContext, 'baseWsUrl' | 'moduleName'>): Promise<TestUser> => {
+const createConnectedUser = (ctx: Pick<TestContext, 'baseWsUrl' | 'moduleName'>): Promise<TestUser> => {
   const builder = new DbConnectionBuilder(REMOTE_MODULE, config => new DbConnectionImpl(config))
   return new Promise<TestUser>((resolve, reject) => {
     let finished = false
@@ -238,7 +237,7 @@ const createTestUser = async (ctx: TestContext): Promise<TestUser> => {
 }
 const asUser = async <T>(_ctx: TestContext, user: TestUser, fn: (activeUser: TestUser) => Promise<T>): Promise<T> =>
   fn(user)
-const callReducer = async (
+const callReducer = (
   ctx: TestContext,
   name: string,
   ...rest: [args?: unknown, user?: TestUser]

@@ -1,6 +1,3 @@
-/** biome-ignore-all lint/suspicious/useAwait: promise-function-async conflict */
-/** biome-ignore-all lint/performance/useTopLevelRegex: test helper */
-/** biome-ignore-all lint/style/noProcessEnv: test helper */
 import type { api as BeApi } from '@a/be-convex'
 import type { Id } from '@a/be-convex/model'
 import type { FunctionArgs, FunctionReference, FunctionReturnType } from 'convex/server'
@@ -8,7 +5,9 @@ import { ConvexHttpClient } from 'convex/browser'
 import { anyApi } from 'convex/server'
 import { makeExpectError } from './_shared'
 
+const CODE_RE = /\{"code":"(?<code>[^"]+)"[^}]*\}/u
 const api = anyApi as unknown as typeof BeApi
+// biome-ignore lint/style/noProcessEnv: env/CLI module, intentional process.env
 const getClient = () => new ConvexHttpClient(process.env.CONVEX_URL ?? process.env.NEXT_PUBLIC_CONVEX_URL ?? '')
 const ref = (mod: string, fn: string) => {
   const r = (anyApi as Record<string, Record<string, FunctionReference<'action' | 'mutation' | 'query'>>>)[mod]?.[fn]
@@ -17,7 +16,7 @@ const ref = (mod: string, fn: string) => {
 }
 const extractErrorCode = (e: unknown): null | { code: string } => {
   if (e instanceof Error) {
-    const match = /\{"code":"(?<code>[^"]+)"[^}]*\}/u.exec(e.message)
+    const match = CODE_RE.exec(e.message)
     if (match?.groups?.code) return { code: match.groups.code }
     if (e.message.includes('ArgumentValidationError') || e.message.includes('does not match validator'))
       return { code: 'VALIDATION_ERROR' }
@@ -30,17 +29,17 @@ const splitName = (name: string): [string, string] => {
   return [parts[0] ?? '', parts[1] ?? '']
 }
 const raw = {
-  action: async <T>(name: string, args: Record<string, unknown>) => {
+  action: <T>(name: string, args: Record<string, unknown>) => {
     const [mod, fn] = splitName(name)
     return expectError<T>(async () => getClient().action(ref(mod, fn) as FunctionReference<'action'>, args) as Promise<T>)
   },
-  mutation: async <T>(name: string, args: Record<string, unknown>) => {
+  mutation: <T>(name: string, args: Record<string, unknown>) => {
     const [mod, fn] = splitName(name)
     return expectError<T>(
       async () => getClient().mutation(ref(mod, fn) as FunctionReference<'mutation'>, args) as Promise<T>
     )
   },
-  query: async <T>(name: string, args: Record<string, unknown>) => {
+  query: <T>(name: string, args: Record<string, unknown>) => {
     const [mod, fn] = splitName(name)
     return expectError<T>(async () => getClient().query(ref(mod, fn) as FunctionReference<'query'>, args) as Promise<T>)
   }

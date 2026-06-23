@@ -47,9 +47,11 @@ const status = (args: string[]) => {
     console.log(`  ${dim('last sync:')} ${humanizeAge(rc.scaffoldedAt)}${stale ? ` ${yellow('(stale)')}` : ''}`)
     if (stale) console.log(`    ${yellow('!')} consider ${dim('noboil sync')} — scaffold is >30 days old`)
   }
+  // oxlint-disable-next-line node/no-sync
   if (existsSync(join(projectRoot, 'node_modules'))) console.log(`  ${green('✓')} node_modules present`)
   else console.log(`  ${yellow('!')} node_modules missing — run ${dim('bun install')}`)
   if (!rc.ejected && rc.scaffoldedFrom) {
+    // oxlint-disable-next-line node/no-sync
     const r = spawnSync('git', ['ls-remote', 'https://github.com/1qh/noboil.git', 'HEAD'], { encoding: 'utf8' })
     if (r.status === 0) {
       const latest = (r.stdout.split('\n')[0] ?? '').split('\t')[0] ?? ''
@@ -60,7 +62,9 @@ const status = (args: string[]) => {
     }
   }
   const logPath = join(projectRoot, 'package.json')
+  // oxlint-disable-next-line node/no-sync
   if (existsSync(logPath)) {
+    // oxlint-disable-next-line node/no-sync
     const { mtime } = statSync(logPath)
     console.log(`  ${dim('pkg mtime:')} ${humanizeAge(mtime.toISOString())}`)
   }

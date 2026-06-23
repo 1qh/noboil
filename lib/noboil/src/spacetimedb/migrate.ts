@@ -108,7 +108,9 @@ const listTypeScriptFiles = (root: string): string[] => {
   const out: string[] = []
   const skip = new Set(['.git', '.next', '.turbo', 'build', 'dist', 'node_modules'])
   const walk = (dir: string) => {
+    // oxlint-disable-next-line node/no-sync
     if (!existsSync(dir)) return
+    // oxlint-disable-next-line node/no-sync
     for (const entry of readdirSync(dir, { withFileTypes: true })) {
       const full = join(dir, entry.name)
       if (entry.isDirectory()) {
@@ -123,21 +125,25 @@ const listTypeScriptFiles = (root: string): string[] => {
 const findSchemaFile = (root: string): undefined | { content: string; path: string } => {
   const candidates = [join(root, 'module'), join(root, 'src', 'module')]
   for (const dir of candidates)
+    // oxlint-disable-next-line node/no-sync
     if (existsSync(dir)) {
       const files = listTypeScriptFiles(dir)
       for (const full of files) {
+        // oxlint-disable-next-line node/no-sync
         const content = readFileSync(full, 'utf8')
         if (isSchemaFile(content) && content.includes('schema(') && content.includes('table('))
           return { content, path: full }
       }
     }
   for (const full of listTypeScriptFiles(root)) {
+    // oxlint-disable-next-line node/no-sync
     const content = readFileSync(full, 'utf8')
     if (isSchemaFile(content) && content.includes('schema(') && content.includes('table(')) return { content, path: full }
   }
 }
 const getSchemaFromGit = (ref: string, filePath: string): string | undefined => {
   try {
+    // oxlint-disable-next-line node/no-sync
     return execSync(`git show ${ref}:${filePath}`, { encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] })
   } catch {
     return ''

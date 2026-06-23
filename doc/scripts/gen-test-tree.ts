@@ -7,8 +7,10 @@ import { DOCS_DIR, LIB_NOBOIL, replaceBetween } from './lib'
 const DESCRIBE_RE = /describe\(\s*['"`](?<name>[^'"`]+)['"`]/gu
 const TEST_RE = /\b(?:test|it)\(\s*['"`](?<name>[^'"`]+)['"`]/gu
 const walk = (dir: string, out: string[] = []): string[] => {
+  // oxlint-disable-next-line node/no-sync
   for (const name of readdirSync(dir).toSorted()) {
     const full = join(dir, name)
+    // oxlint-disable-next-line node/no-sync
     if (statSync(full).isDirectory()) walk(full, out)
     else if (name.endsWith('.test.ts') || name.endsWith('.test.tsx')) out.push(full)
   }
@@ -31,6 +33,7 @@ const main = () => {
   let totalDescribes = 0
   let totalTests = 0
   for (const file of files) {
+    // oxlint-disable-next-line node/no-sync
     const src = readFileSync(file, 'utf8')
     const describes = countMatches(DESCRIBE_RE, src)
     const tests = countMatches(TEST_RE, src)

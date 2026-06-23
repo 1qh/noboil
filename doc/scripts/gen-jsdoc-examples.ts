@@ -1,18 +1,23 @@
 #!/usr/bin/env bun
 /* eslint-disable no-console */
-/** biome-ignore-all lint/performance/useTopLevelRegex: per-file scan */
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join, relative } from 'node:path'
 import { DOCS_DIR, LIB_NOBOIL, replaceBetween, REPO } from './lib'
 
 const walk = (dir: string, out: string[] = []): string[] => {
+  // oxlint-disable-next-line node/no-sync
   for (const name of readdirSync(dir).toSorted()) {
     const skip =
       name.startsWith('.') || name === 'node_modules' || name === 'dist' || name === '_generated' || name === '__tests__'
     if (!skip) {
       const full = join(dir, name)
+      // oxlint-disable-next-line node/no-sync
       if (statSync(full, { throwIfNoEntry: false }))
-        if (statSync(full).isDirectory()) walk(full, out)
+        // oxlint-disable-next-line node/no-sync
+        if (statSync(full).isDirectory())
+          // oxlint-disable-next-line node/no-sync
+          // oxlint-disable-next-line node/no-sync
+          walk(full, out)
         else if ((name.endsWith('.ts') || name.endsWith('.tsx')) && !name.endsWith('.test.ts')) out.push(full)
     }
   }
@@ -20,6 +25,7 @@ const walk = (dir: string, out: string[] = []): string[] => {
 }
 const SYM_RE = /(?:export\s+)?(?:const|function|class|interface|type)\s+(?<name>\w+)/u
 const JSDOC_EXAMPLE_RE = /^\s*\*\s*@example\b/u
+const JSDOC_STAR_RE = /^\s*\*\s?/u
 interface Example {
   code: string
   file: string
@@ -35,7 +41,7 @@ const extractExamples = (src: string, file: string): Example[] => {
       const codeLines: string[] = []
       let j = i + 1
       while (j < lines.length && !(lines[j] ?? '').includes('*/')) {
-        const cleaned = (lines[j] ?? '').replace(/^\s*\*\s?/u, '')
+        const cleaned = (lines[j] ?? '').replace(JSDOC_STAR_RE, '')
         codeLines.push(cleaned)
         j += 1
       }
@@ -65,6 +71,7 @@ const main = () => {
   const all: Example[] = []
   for (const file of files) {
     const rel = relative(REPO, file)
+    // oxlint-disable-next-line node/no-sync
     for (const ex of extractExamples(readFileSync(file, 'utf8'), rel)) all.push(ex)
   }
   const sections: string[] = [`**${all.length} \`@example\` blocks** harvested from JSDoc across \`lib/noboil/src/\`.`, '']

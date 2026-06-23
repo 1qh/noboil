@@ -1,4 +1,3 @@
-// biome-ignore-all lint/suspicious/useAwait: async without await
 /* eslint-disable max-depth */
 import type { ZodObject, output as ZodOutput, ZodRawShape } from 'zod/v4'
 import { Identity } from 'spacetimedb'
@@ -257,14 +256,14 @@ const toId = (x: unknown): null | string => {
   if (typeof x === 'string') return x
   return null
 }
-const callStorageDelete = async (storage: StorageLike, id: string) => {
+const callStorageDelete = (storage: StorageLike, id: string) => {
   const ext = storage as StorageLike & {
     deleteFile?: (id: string) => Promise<void>
   }
   if (typeof ext.deleteFile === 'function') return ext.deleteFile(id)
   return storage.delete(id)
 }
-const callStorageGetUrl = async (storage: StorageLike, id: string) => {
+const callStorageGetUrl = (storage: StorageLike, id: string) => {
   const ext = storage as StorageLike & {
     getSignedUrl?: (id: string) => Promise<null | string>
     getUploadUrl?: (id: string) => Promise<null | string>
@@ -342,7 +341,8 @@ const addUrls = async <D extends Record<string, unknown>>({
   const o = { ...doc } as Record<string, unknown>
   const getUrl = async (x: unknown) => {
     const id = toId(x)
-    return id ? callStorageGetUrl(storage, id) : null
+    const url = id ? await callStorageGetUrl(storage, id) : null
+    return url
   }
   const tasks: Promise<void>[] = []
   for (const f of fileFields) {
@@ -420,7 +420,7 @@ const checkRateLimit = async (
 ) => {
   const { config, key, table } = opts
   const now = opts.timestamp ?? Date.now()
-  // biome-ignore lint/nursery/noPlaywrightUselessAwait: .first() returns thenable, await needed for cross-package tsc
+  /** biome-ignore lint/nursery/noPlaywrightUselessAwait: .first() returns thenable, await needed for cross-package tsc */
   const existing = await db
     .query('rateLimit')
     .withIndex(

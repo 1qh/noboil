@@ -1,5 +1,4 @@
 #!/usr/bin/env bun
-/** biome-ignore-all lint/style/noProcessEnv: env loader */
 import { spawn } from 'bun'
 import { existsSync, readFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
@@ -7,6 +6,7 @@ import { dirname, resolve } from 'node:path'
 const findRepoRoot = (start: string): string => {
   let cur = start
   while (cur !== '/') {
+    // oxlint-disable-next-line node/no-sync
     if (existsSync(resolve(cur, 'noboil.config.ts'))) return cur
     cur = dirname(cur)
   }
@@ -20,12 +20,14 @@ const loadEnvLine = (line: string) => {
       const k = t.slice(0, i)
       let v = t.slice(i + 1)
       if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) v = v.slice(1, -1)
+      // biome-ignore lint/style/noProcessEnv: env/CLI module, intentional process.env
       if (!(k in process.env)) process.env[k] = v
     }
   }
 }
 const root = findRepoRoot(process.cwd())
 const envPath = resolve(root, '.env')
+// oxlint-disable-next-line node/no-sync
 if (existsSync(envPath)) for (const line of readFileSync(envPath, 'utf8').split('\n')) loadEnvLine(line)
 const args = process.argv.slice(2)
 let cwd = process.cwd()
@@ -38,6 +40,7 @@ if (args.length === 0) {
   process.stderr.write('nb-env: no command provided\n')
   process.exit(1)
 }
+// biome-ignore lint/style/noProcessEnv: env/CLI module, intentional process.env
 const proc = spawn({ cmd: args, cwd, env: process.env, stderr: 'inherit', stdin: 'inherit', stdout: 'inherit' })
 process.on('SIGINT', () => proc.kill('SIGINT'))
 process.on('SIGTERM', () => proc.kill('SIGTERM'))

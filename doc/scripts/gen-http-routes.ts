@@ -5,6 +5,7 @@ import { DOCS_DIR, replaceBetween, REPO } from './lib'
 
 const ROUTE_RE = /http\.route\(\{[\s\S]*?method:\s*'(?<method>[A-Z]+)',\s*path:\s*'(?<path>[^']+)'/gu
 const main = () => {
+  // oxlint-disable-next-line node/no-sync
   const src = readFileSync(`${REPO}/backend/convex/convex/http.ts`, 'utf8')
   const routes: { method: string; path: string }[] = []
   let m = ROUTE_RE.exec(src)

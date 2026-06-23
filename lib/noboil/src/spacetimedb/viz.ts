@@ -11,6 +11,7 @@ const findModuleDir = findStdbModuleDirDeep
 const findSchemaFile = (moduleDir: string): undefined | { content: string; path: string } => {
   const files = listTypeScriptFiles(moduleDir)
   for (const full of files) {
+    // oxlint-disable-next-line node/no-sync
     const content = readFileSync(full, 'utf8')
     if (isSchemaFile(content) && content.includes('schema(') && content.includes('table(')) return { content, path: full }
   }

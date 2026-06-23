@@ -9,6 +9,7 @@ describe('crash-log', () => {
   test('logCrash writes entry without throwing for Error', async () => {
     const path = LOG_PATH()
     try {
+      // oxlint-disable-next-line node/no-sync
       rmSync(path, { force: true })
     } catch {
       // Ignore

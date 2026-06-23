@@ -1,4 +1,3 @@
-/** biome-ignore-all lint/suspicious/noArrayIndexKey: scrolled window */
 /* oxlint-disable promise/prefer-await-to-then */
 /* eslint-disable react/no-array-index-key, @eslint-react/no-array-index-key, complexity */
 import { Box, render, Text, useApp, useInput } from 'ink'
@@ -137,6 +136,7 @@ const SyncApp = ({
           {recent.length > 0 ? (
             <Box flexDirection='column' marginTop={1}>
               {recent.map((a, i) => (
+                /** biome-ignore lint/suspicious/noArrayIndexKey: static list, index stable */
                 <Row action={a} key={`${a.relPath}-${i}`} />
               ))}
             </Box>
@@ -155,6 +155,7 @@ const SyncApp = ({
           {actions.length > 0 ? (
             <Box flexDirection='column' marginTop={1}>
               {actions.map((a, i) => (
+                /** biome-ignore lint/suspicious/noArrayIndexKey: static list, index stable */
                 <Row action={a} key={`${a.relPath}-${i}`} />
               ))}
             </Box>

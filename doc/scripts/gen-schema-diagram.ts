@@ -31,6 +31,7 @@ const tableNames = (body: string): string[] => {
 const PARENT_RE = /(?<table>\w+):\s*child\(\{[^}]*?parent:\s*'(?<parent>\w+)'/gu
 const FK_RE = /(?<table>\w+):\s*\{[^}]*?parent:\s*'(?<parent>\w+)'/gu
 const main = () => {
+  // oxlint-disable-next-line node/no-sync
   const src = readFileSync(`${REPO}/backend/convex/s.ts`, 'utf8')
   const slotMap: Record<string, string[]> = {}
   for (const slot of SLOTS) slotMap[slot] = tableNames(findSlotBody(src, slot))
@@ -57,6 +58,7 @@ const main = () => {
     seen.add(key)
     return true
   })
+  // oxlint-disable-next-line node/no-sync
   const lazySrc = readFileSync(`${REPO}/backend/convex/lazy.ts`, 'utf8')
   const cascadeRe = /(?<table>\w+):\s*table\(s\.\w+,\s*\{[^}]*?cascade:[^}]*?table:\s*s\.(?<target>\w+)\.__name/gu
   let cm = cascadeRe.exec(lazySrc)

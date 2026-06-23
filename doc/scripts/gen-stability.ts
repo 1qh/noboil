@@ -19,6 +19,7 @@ const main = () => {
   let symbols = 0
   const tagged: { file: string; reason: string; symbol: string; tag: Tag }[] = []
   for (const file of files) {
+    // oxlint-disable-next-line node/no-sync
     const lines = readFileSync(file, 'utf8').split('\n')
     for (let i = 0; i < lines.length; i += 1) {
       const line = lines[i] ?? ''

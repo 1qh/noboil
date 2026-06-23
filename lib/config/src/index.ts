@@ -1,2 +1,10 @@
-/** biome-ignore-all lint/performance/noReExportAll: config bridge */
-export * from '../../../noboil.config'
+export {
+  allAppPorts,
+  type AppId,
+  appPort,
+  config,
+  infraVars,
+  portVars,
+  urls,
+  urlVars
+} from '../../../noboil.config'

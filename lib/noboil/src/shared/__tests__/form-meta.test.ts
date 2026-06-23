@@ -18,9 +18,11 @@ describe('getMeta', () => {
     expect(getMeta(date())).toEqual({ kind: 'date' })
   })
   test('array(string) → kind: stringArray', () => {
+    // oxlint-disable-next-line unicorn/max-nested-calls
     expect(getMeta(array(string())).kind).toBe('stringArray')
   })
   test('array(number) → kind: unknown', () => {
+    // oxlint-disable-next-line unicorn/max-nested-calls
     expect(getMeta(array(number())).kind).toBe('unknown')
   })
   test('file() → kind: file', () => {

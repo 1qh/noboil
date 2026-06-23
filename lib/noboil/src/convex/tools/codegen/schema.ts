@@ -1,5 +1,5 @@
-/** biome-ignore-all lint/suspicious/noBitwiseOperators: ts.TypeFlags needs bitwise */
 /* eslint-disable complexity, no-bitwise, @typescript-eslint/no-unnecessary-condition */
+/** biome-ignore-all lint/suspicious/noBitwiseOperators: intentional bitwise */
 import { resolve } from 'node:path'
 import ts from 'typescript'
 

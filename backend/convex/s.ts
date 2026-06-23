@@ -21,6 +21,7 @@ const s = schema({
     movie: object({
       backdrop_path: string().nullable(),
       budget: number().nullable(),
+      // oxlint-disable-next-line unicorn/max-nested-calls
       genres: array(object({ id: number(), name: string() })),
       original_title: string(),
       overview: string(),
@@ -40,8 +41,11 @@ const s = schema({
       foreignKey: 'chatId',
       parent: 'chat',
       schema: object({
+        // oxlint-disable-next-line unicorn/max-nested-calls
         chatId: zid('chat'),
+        // oxlint-disable-next-line unicorn/max-nested-calls
         parts: array(messagePart),
+        // oxlint-disable-next-line unicorn/max-nested-calls
         role: zenum(['user', 'assistant', 'system'])
       })
     })
@@ -65,6 +69,7 @@ const s = schema({
   orgScoped: {
     project: object({
       description: string().optional(),
+      // oxlint-disable-next-line unicorn/max-nested-calls
       editors: array(zid('users')).max(100).optional(),
       name: string().min(1),
       status: zenum(['active', 'archived', 'completed']).optional()
@@ -79,6 +84,7 @@ const s = schema({
     wiki: object({
       content: string().optional(),
       deletedAt: number().optional(),
+      // oxlint-disable-next-line unicorn/max-nested-calls
       editors: array(zid('users')).max(100).optional(),
       slug: string()
         .min(1)
@@ -94,6 +100,7 @@ const s = schema({
       content: string().min(3, 'At least 3 characters'),
       coverImage: file.nullable().optional(),
       published: boolean(),
+      // oxlint-disable-next-line unicorn/max-nested-calls
       tags: array(string()).max(5, 'Max 5 tags').optional(),
       title: string().min(1, 'Required')
     }),
@@ -103,6 +110,7 @@ const s = schema({
     }),
     poll: object({
       closedAt: number().nullable().optional(),
+      // oxlint-disable-next-line unicorn/max-nested-calls
       options: array(string().min(1)).min(2).max(10),
       question: string().min(1)
     })

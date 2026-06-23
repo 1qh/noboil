@@ -1,6 +1,5 @@
 #!/usr/bin/env bun
 /* eslint-disable no-console, @typescript-eslint/require-await */
-/** biome-ignore-all lint/suspicious/useAwait: TUI expects Promise<void> */
 import { env } from 'bun'
 import { spawnSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
@@ -61,6 +60,7 @@ const parseArgs = (args: string[]) => {
 const findProjectRoot = (start: string): string => {
   let dir = start
   for (let i = 0; i < 10; i += 1) {
+    // oxlint-disable-next-line node/no-sync
     if (existsSync(join(dir, '.noboilrc.json'))) return dir
     const parent = join(dir, '..')
     if (parent === dir) break
@@ -71,6 +71,7 @@ const findProjectRoot = (start: string): string => {
 }
 const readManifest = (root: string) => {
   const manifestPath = join(root, '.noboilrc.json')
+  // oxlint-disable-next-line node/no-sync
   if (!existsSync(manifestPath)) die('Not a noboil project. Run `noboil init` first.')
   const parsed = readJson(manifestPath) as Partial<Manifest>
   if (
@@ -84,6 +85,7 @@ const readManifest = (root: string) => {
   return parsed as Manifest
 }
 const runGit = ({ args, cwd, err }: { args: string[]; cwd: string; err: string }) => {
+  // oxlint-disable-next-line node/no-sync
   const result = spawnSync('git', args, { cwd, encoding: 'utf8' })
   if (result.status !== 0) {
     const stderr = result.stderr.trim()
@@ -95,9 +97,11 @@ const prepareUpstream = ({ db, includeDemos, root }: { db: Db; includeDemos: boo
   removeDirs({ db, dir: root, includeDemos })
   patchRootPackageJson({ db, dir: root, includeDemos })
 }
+// oxlint-disable-next-line node/no-sync
 const hashFile = (filePath: string) => createHash('sha256').update(readFileSync(filePath)).digest('hex')
 const listFiles = ({ rel = '', root }: { rel?: string; root: string }) => {
   const full = rel ? join(root, rel) : root
+  // oxlint-disable-next-line node/no-sync
   const entries = readdirSync(full, { withFileTypes: true })
   const out: string[] = []
   for (const entry of entries)
@@ -112,7 +116,9 @@ const listFiles = ({ rel = '', root }: { rel?: string; root: string }) => {
 }
 const isRootConfig = (relPath: string) => !relPath.includes('/') && ROOT_CONFIG_FILES.has(relPath)
 const writeLocalFile = ({ content, path }: { content: Uint8Array; path: string }) => {
+  // oxlint-disable-next-line node/no-sync
   mkdirSync(dirname(path), { recursive: true })
+  // oxlint-disable-next-line node/no-sync
   writeFileSync(path, content)
 }
 const processOneFile = ({
@@ -138,7 +144,9 @@ const processOneFile = ({
 }) => {
   const upstreamPath = join(tmpDir, relPath)
   const localPath = join(cwd, relPath)
+  // oxlint-disable-next-line node/no-sync
   const upstreamContent = readFileSync(upstreamPath)
+  // oxlint-disable-next-line node/no-sync
   if (!existsSync(localPath)) {
     additions.push(relPath)
     if (!dryRun) writeLocalFile({ content: upstreamContent, path: localPath })
@@ -155,11 +163,13 @@ const processOneFile = ({
 const CACHE_REPO_DIR = () => join(homedir(), '.noboil', 'upstream.git')
 const refreshCache = (cwd: string) => {
   const cacheDir = CACHE_REPO_DIR()
+  // oxlint-disable-next-line node/no-sync
   if (existsSync(cacheDir)) {
     runGit({ args: ['fetch', '--depth', '1', 'origin', 'HEAD'], cwd: cacheDir, err: 'git fetch failed during sync' })
     runGit({ args: ['reset', '--hard', 'FETCH_HEAD'], cwd: cacheDir, err: 'git reset failed during sync' })
     return
   }
+  // oxlint-disable-next-line node/no-sync
   mkdirSync(dirname(cacheDir), { recursive: true })
   runGit({
     args: ['clone', '--depth', '1', REPO_GIT_URL, cacheDir],
@@ -214,6 +224,7 @@ const processUpstreamFile = ({
   else if (skipped.length > before.skipped) actions.push({ kind: 'skipped', relPath })
   onProgress({ actions: [...actions], current: relPath })
 }
+/** biome-ignore lint/suspicious/useAwait: typed Promise<void> contract consumed via await by runSyncTui */
 const runSync = async (opts: SyncOpts, onProgress: (p: Record<string, unknown>) => void): Promise<void> => {
   const cwd = findProjectRoot(process.cwd())
   const manifest = readManifest(cwd)
@@ -222,6 +233,7 @@ const runSync = async (opts: SyncOpts, onProgress: (p: Record<string, unknown>) 
   onProgress({ phase: 'cloning' })
   try {
     refreshCache(cwd)
+    // oxlint-disable-next-line node/no-sync
     cpSync(CACHE_REPO_DIR(), tmpDir, { recursive: true })
     const nextHash = runGit({
       args: ['rev-parse', 'HEAD'],

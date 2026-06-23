@@ -1,4 +1,3 @@
-/** biome-ignore-all lint/suspicious/noEmptyBlockStatements: best-effort logger, swallow IO errors */
 /* eslint-disable no-empty */
 import { write } from 'bun'
 import { homedir } from 'node:os'
@@ -11,6 +10,8 @@ const logCrash = async (error: unknown): Promise<void> => {
   const entry = `[${new Date().toISOString()}]\nargv: ${process.argv.slice(2).join(' ')}\ncwd: ${process.cwd()}\n\n${stack}\n`
   try {
     await write(LOG_PATH(), entry)
-  } catch {}
+  } catch {
+    // best-effort: crash logging must never throw over the original error
+  }
 }
 export { LOG_PATH, logCrash }

@@ -65,10 +65,12 @@ const generate = (args: string[] = []) => {
     return
   }
   const outPath = join(process.cwd(), gen.filename)
+  // oxlint-disable-next-line node/no-sync
   if (existsSync(outPath) && !force) {
     console.log(`${yellow('⚠')} ${gen.filename} already exists. Use ${bold('--force')} to overwrite.`)
     return
   }
+  // oxlint-disable-next-line node/no-sync
   writeFileSync(outPath, gen.content)
   console.log(`${green('✓')} Generated ${bold(gen.filename)}`)
   console.log(`  ${dim(outPath)}\n`)

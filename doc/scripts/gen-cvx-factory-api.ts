@@ -1,14 +1,14 @@
 #!/usr/bin/env bun
 /* eslint-disable no-console, prefer-named-capture-group */
-/** biome-ignore-all lint/performance/useTopLevelRegex: per-iteration scan */
-/** biome-ignore-all lint/nursery/useNamedCaptureGroup: simple match */
 import { readFileSync } from 'node:fs'
 import { DOCS_DIR, LIB_NOBOIL, replaceBetween } from './lib'
 
 const CVX = `${LIB_NOBOIL}/src/convex/server`
 const ENDPOINT_RE = /^\s*const\s+(?<name>\w+)\s*=\s*b\.(?<kind>[qm])\(/u
-const RETURN_RE = /return\s+typed\(\{\s*([^}]+)\s*\}\)/u
+const RETURN_RE = /return\s+typed\(\{\s*(?<body>[^}]+)\s*\}\)/u
+const TYPE_ANNOTATION_RE = /:.+$/u
 const extract = (file: string): { kind: 'm' | 'q'; name: string }[] => {
+  // oxlint-disable-next-line node/no-sync
   const src = readFileSync(file, 'utf8')
   const out: { kind: 'm' | 'q'; name: string }[] = []
   for (const line of src.split('\n')) {
@@ -16,10 +16,10 @@ const extract = (file: string): { kind: 'm' | 'q'; name: string }[] => {
     if (m?.groups?.name && m.groups.kind) out.push({ kind: m.groups.kind as 'm' | 'q', name: m.groups.name })
   }
   const rm = RETURN_RE.exec(src)
-  if (!rm?.[1]) return out
+  if (!rm?.groups?.body) return out
   const exported = new Set<string>()
-  for (const part of rm[1].split(',')) {
-    const trimmed = part.trim().replace(/:.+$/u, '').trim()
+  for (const part of rm.groups.body.split(',')) {
+    const trimmed = part.trim().replace(TYPE_ANNOTATION_RE, '').trim()
     if (trimmed) exported.add(trimmed)
   }
   return out.filter(e => exported.has(e.name))

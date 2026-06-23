@@ -1,4 +1,3 @@
-/** biome-ignore-all lint/nursery/noComponentHookFactories: factory returns hook by design */
 'use client'
 import { useCallback } from 'react'
 import type { ToastFn } from './toast'
@@ -13,6 +12,7 @@ interface ErrorToastOptions<D extends { code: string; message?: string }> {
   toast: ToastFn
 }
 const createErrorToastHooks = <D extends { code: string; message?: string }>(helpers: ErrorHelpers<D>) => {
+  /** biome-ignore lint/nursery/noComponentHookFactories: handler map, not a component/hook */
   const useErrorToast = ({ handlers, toast }: ErrorToastOptions<D>) =>
     useCallback(
       (error: unknown) => {

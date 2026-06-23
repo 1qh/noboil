@@ -6,8 +6,8 @@
     "doc",
     "web/stdb/*",
     "lib/*",
-    "readonly/*",
-    "backend/*"
+    "backend/*",
+    "readonly/ui"
   ],
   "scripts": {
     "action": "sh up.sh && bun run test && bun docs:check",

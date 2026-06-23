@@ -168,11 +168,13 @@ const Scaffold = ({
     if (state.status !== 'failed') return
     if (input === 'r' || input === 'R') {
       const fullPath = resolvePath(process.cwd(), dir)
+      // oxlint-disable-next-line node/no-sync
       if (existsSync(fullPath)) rmSync(fullPath, { force: true, recursive: true })
       setState({ currentStep: 0, details: ['  cleaned prior attempt'], status: 'idle' })
       setAttempt(a => a + 1)
     } else if (isDirNotEmptyError && (input === 'o' || input === 'O')) {
       const fullPath = resolvePath(process.cwd(), dir)
+      // oxlint-disable-next-line node/no-sync
       rmSync(fullPath, { force: true, recursive: true })
       setState({ currentStep: 0, details: ['  overwritten existing directory'], status: 'idle' })
       setAttempt(a => a + 1)
@@ -183,6 +185,7 @@ const Scaffold = ({
     const run = async () => {
       await new Promise(r => setTimeout(r, 50))
       const fullPath = resolvePath(process.cwd(), dir)
+      // oxlint-disable-next-line node/no-sync
       if (existsSync(fullPath) && readdirSync(fullPath).length > 0) {
         setState(s => ({ ...s, error: `directory ${dir} is not empty`, status: 'failed' }))
         return
@@ -198,10 +201,14 @@ const Scaffold = ({
       try {
         step(0)
         if (REPO_SPEC.startsWith('/') || REPO_SPEC.startsWith('file://')) {
+          // oxlint-disable-next-line node/no-sync
           spawnSync('git', ['clone', '--depth', '1', REPO_GIT_URL, fullPath], { stdio: 'pipe' })
+          // oxlint-disable-next-line node/no-sync
           rmSync(join(fullPath, '.git'), { force: true, recursive: true })
+          // oxlint-disable-next-line node/no-sync
         } else spawnSync('bunx', ['-y', 'gitpick', REPO_SPEC, fullPath, '--overwrite'], { stdio: 'pipe' })
         step(1)
+        // oxlint-disable-next-line node/no-sync
         const revResult = spawnSync('git', ['ls-remote', REPO_GIT_URL, 'HEAD'], { encoding: 'utf8' })
         const scaffoldedFrom = (revResult.stdout.split('\n')[0] ?? '').split('\t')[0] ?? ''
         step(2)
@@ -220,6 +227,7 @@ const Scaffold = ({
         else {
           const installStart = Date.now()
           setState(s => ({ ...s, details: [...s.details, '  bun install (this may take 30-90s)'] }))
+          // oxlint-disable-next-line node/no-sync
           const installResult = spawnSync('bun', ['install'], { cwd: fullPath, stdio: 'pipe' })
           const elapsedSec = Math.round((Date.now() - installStart) / 1000)
           if (installResult.status === 0)
@@ -234,11 +242,15 @@ const Scaffold = ({
           scaffoldedFrom,
           version: 1
         }
+        // oxlint-disable-next-line node/no-sync
         writeFileSync(join(fullPath, '.noboilrc.json'), `${JSON.stringify(manifest, null, 2)}\n`)
         if (!skipGit) {
+          // oxlint-disable-next-line node/no-sync
           const gitInit = spawnSync('git', ['init', '-q'], { cwd: fullPath })
           if (gitInit.status === 0) {
+            // oxlint-disable-next-line node/no-sync
             spawnSync('git', ['add', '-A'], { cwd: fullPath })
+            // oxlint-disable-next-line node/no-sync
             spawnSync('git', ['commit', '-q', '-m', 'chore: initial noboil scaffold'], { cwd: fullPath })
             setState(s => ({ ...s, details: [...s.details, '  git init + initial commit'] }))
           }

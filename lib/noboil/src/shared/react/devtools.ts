@@ -1,4 +1,3 @@
-/** biome-ignore-all lint/nursery/noComponentHookFactories: factory returns hook by design */
 'use client'
 import { useEffect, useReducer } from 'react'
 
@@ -169,6 +168,7 @@ const createDevtoolsCore = ({ extractErrorData, getErrorDetail, getErrorMessage 
     mutationStore.length = 0
     notify()
   }
+  /** biome-ignore lint/nursery/noComponentHookFactories: handler map, not a component/hook */
   const useDevStore = <TExtra extends object>({ extra }: { deps: unknown[]; extra: () => TExtra }) => {
     const [, bump] = useReducer((n: number) => n + 1, 0)
     useEffect(() => {

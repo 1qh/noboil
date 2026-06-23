@@ -29,11 +29,14 @@ const isSchemaFile = (content: string): boolean => {
   for (const marker of schemaMarkers) if (content.includes(marker)) return true
   return false
 }
+// oxlint-disable-next-line node/no-sync
 const hasGenerated = (dir: string): boolean => existsSync(join(dir, '_generated'))
 const findConvexDir = (root: string): string | undefined => {
   const direct = join(root, 'convex')
   if (hasGenerated(direct)) return direct
+  // oxlint-disable-next-line node/no-sync
   if (!existsSync(root)) return
+  // oxlint-disable-next-line node/no-sync
   for (const sub of readdirSync(root, { withFileTypes: true }))
     if (sub.isDirectory()) {
       const nested = join(root, sub.name, 'convex')
@@ -42,10 +45,13 @@ const findConvexDir = (root: string): string | undefined => {
 }
 const findSchemaFile = (convexDir: string): undefined | { content: string; path: string } => {
   const searchDir = dirname(convexDir)
+  // oxlint-disable-next-line node/no-sync
   if (!existsSync(searchDir)) return
+  // oxlint-disable-next-line node/no-sync
   for (const entry of readdirSync(searchDir))
     if (entry.endsWith('.ts') && !entry.endsWith('.test.ts') && !entry.endsWith('.config.ts')) {
       const full = join(searchDir, entry)
+      // oxlint-disable-next-line node/no-sync
       const content = readFileSync(full, 'utf8')
       if (isSchemaFile(content)) return { content, path: full }
     }
@@ -62,9 +68,11 @@ const extractRemainingOptions = (content: string, startPos: number): string => {
 }
 const extractFactoryCalls = (convexDir: string): FactoryCall[] => {
   const calls: FactoryCall[] = []
+  // oxlint-disable-next-line node/no-sync
   for (const entry of readdirSync(convexDir))
     if (entry.endsWith('.ts') && !entry.startsWith('_') && !entry.includes('.test.') && !entry.includes('.config.')) {
       const full = join(convexDir, entry)
+      // oxlint-disable-next-line node/no-sync
       const content = readFileSync(full, 'utf8')
       let m = factoryPat.exec(content)
       while (m) {
@@ -232,6 +240,7 @@ const doctor = (opts?: { json?: boolean }) => {
     checkRateLimit(calls)
   )
   const lintmaxConfigPath = join(root, 'lintmax.config.ts')
+  // oxlint-disable-next-line node/no-sync
   const eslintContent = existsSync(lintmaxConfigPath) ? readFileSync(lintmaxConfigPath, 'utf8') : undefined
   results.push(checkEslintContent(eslintContent))
   const pkgPath = join(root, 'package.json')

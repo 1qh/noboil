@@ -1,4 +1,3 @@
-/** biome-ignore-all lint/correctness/useUniqueElementIds: StepForm.Step id is a step identifier, not a DOM id */
 'use client'
 import { api } from '@a/be-convex'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@a/ui/card'
@@ -63,6 +62,7 @@ const OnboardingPage = () => {
         </CardHeader>
         <CardContent>
           <StepForm stepper={stepper} submitLabel='Complete'>
+            {/* biome-ignore lint/correctness/useUniqueElementIds: step identifier must match defineSteps schema key */}
             <StepForm.Step
               id='profile'
               render={({ File, Text }) => (
@@ -73,6 +73,7 @@ const OnboardingPage = () => {
                 </FieldGroup>
               )}
             />
+            {/* biome-ignore lint/correctness/useUniqueElementIds: step identifier must match defineSteps schema key */}
             <StepForm.Step
               id='org'
               render={({ Text }) => (
@@ -82,6 +83,7 @@ const OnboardingPage = () => {
                 </FieldGroup>
               )}
             />
+            {/* biome-ignore lint/correctness/useUniqueElementIds: step identifier must match defineSteps schema key */}
             <StepForm.Step
               id='appearance'
               render={({ File }) => (
@@ -90,6 +92,7 @@ const OnboardingPage = () => {
                 </FieldGroup>
               )}
             />
+            {/* biome-ignore lint/correctness/useUniqueElementIds: step identifier must match defineSteps schema key */}
             <StepForm.Step
               id='preferences'
               render={({ Choose, Toggle }) => (

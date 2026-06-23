@@ -1,7 +1,5 @@
 #!/usr/bin/env bun
 /* eslint-disable no-console */
-// biome-ignore-all lint/style/noProcessEnv: intentional process.env access
-// biome-ignore-all lint/suspicious/useAwait: async without await
 import type { ChildProcess, SpawnSyncReturns } from 'node:child_process'
 import type { FSWatcher } from 'node:fs'
 import { spawn, spawnSync } from 'node:child_process'
@@ -23,6 +21,7 @@ const SPACE_PAT = /\s+/u
 const findPackageJsonFile = (from: string): null | string => findAncestorFile(from, 'package.json')
 const parseJsonFile = (path: string): null | Record<string, unknown> => {
   try {
+    // oxlint-disable-next-line node/no-sync
     const raw = readFileSync(path, 'utf8')
     return JSON.parse(raw) as Record<string, unknown>
   } catch {
@@ -61,6 +60,7 @@ const detectModuleDirFromScripts = (pkg: Record<string, unknown>): string => {
   return 'module'
 }
 const parseEnvValue = (envPath: string, key: string): null | string => {
+  // oxlint-disable-next-line node/no-sync
   const raw = readFileSync(envPath, 'utf8')
   const lines = raw.split('\n')
   for (const lineRaw of lines) {
@@ -108,8 +108,10 @@ const runSyncCommand = ({
   cwd: string
   label: string
 }): boolean => {
+  // oxlint-disable-next-line node/no-sync
   const result: SpawnSyncReturns<Buffer> = spawnSync(command, cmdArgs, {
     cwd,
+    /** biome-ignore lint/style/noProcessEnv: intentional env access */
     env: process.env,
     stdio: 'inherit'
   })
@@ -119,6 +121,7 @@ const runSyncCommand = ({
   return false
 }
 const pingSpacetime = async (): Promise<boolean> => {
+  /** biome-ignore lint/style/noProcessEnv: intentional env access */
   const base = process.env.SPACETIMEDB_URI ?? DEFAULT_HTTP_URI
   const urls = [`${base}/v1/ping`, `${base}/database/ping`]
   const checks = urls.map(async url => {
@@ -134,7 +137,7 @@ const pingSpacetime = async (): Promise<boolean> => {
   for (const result of results) if (result) return true
   return false
 }
-const waitForSpacetimeHealth = async (timeoutMs = 120_000, intervalMs = 1000): Promise<boolean> => {
+const waitForSpacetimeHealth = (timeoutMs = 120_000, intervalMs = 1000): Promise<boolean> => {
   const started = Date.now()
   const poll = async (): Promise<boolean> => {
     const isHealthy = await pingSpacetime()
@@ -149,6 +152,7 @@ const findComposeFile = (cwd: string): null | string => {
   const candidates = ['docker-compose.yml', 'docker-compose.yaml', 'compose.yml', 'compose.yaml']
   for (const candidate of candidates) {
     const path = join(cwd, candidate)
+    // oxlint-disable-next-line node/no-sync
     if (existsSync(path)) return path
   }
   return null
@@ -202,6 +206,7 @@ const startDevServer = (cwd: string, pkg: null | Record<string, unknown>): Child
   const cmd = detectDevServerCommand(pkg)
   return spawn(cmd.command, cmd.args, {
     cwd,
+    /** biome-ignore lint/style/noProcessEnv: intentional env access */
     env: process.env,
     stdio: 'inherit'
   })
@@ -228,6 +233,7 @@ const dev = async (args: string[] = []) => {
   }
   const moduleDir = flags.moduleDir ?? detectModuleDirFromScripts(packageJson)
   const moduleDirAbs = resolve(cwd, moduleDir)
+  // oxlint-disable-next-line node/no-sync
   if (!existsSync(moduleDirAbs)) {
     console.log(`${red('Module directory not found:')} ${moduleDir}`)
     process.exit(1)
@@ -242,6 +248,7 @@ const dev = async (args: string[] = []) => {
     process.exit(1)
   }
   const spacetimeBin = 'spacetime'
+  // oxlint-disable-next-line node/no-sync
   const probe = spawnSync(spacetimeBin, ['--version'], { stdio: 'ignore' })
   if (probe.status !== 0) {
     console.log(`${red('Spacetime CLI not found on PATH.')} Install from https://spacetimedb.com/install`)

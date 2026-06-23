@@ -34,7 +34,9 @@ const parse = (src: string): Map<string, Set<Opt>> => {
   return result
 }
 const main = () => {
+  // oxlint-disable-next-line node/no-sync
   const cvx = parse(readFileSync(`${REPO}/backend/convex/lazy.ts`, 'utf8'))
+  // oxlint-disable-next-line node/no-sync
   const stdb = parse(readFileSync(`${REPO}/backend/spacetimedb/src/index.ts`, 'utf8'))
   const counts: Record<Opt, { cvx: string[]; stdb: string[] }> = Object.fromEntries(
     KNOWN_OPTS.map(o => [o, { cvx: [] as string[], stdb: [] as string[] }])

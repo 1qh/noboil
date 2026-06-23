@@ -6,6 +6,7 @@ const REPO = join(import.meta.dir, '..', '..')
 const BIN = join(REPO, 'src', 'index.ts')
 const CONVEX_BIN = join(REPO, 'src', 'convex', 'cli.ts')
 const STDB_BIN = join(REPO, 'src', 'spacetimedb', 'cli.ts')
+// oxlint-disable-next-line node/no-sync
 const run = (bin: string, args: string[]) => spawnSync('bun', [bin, ...args], { encoding: 'utf8', timeout: 10_000 })
 describe('noboil bin smoke', () => {
   test('--help exits 0 and lists commands', () => {

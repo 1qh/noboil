@@ -1,10 +1,10 @@
-// biome-ignore-all lint/performance/useTopLevelRegex: x
 import type { Locator } from '@playwright/test'
 import BaseChatPage from '@a/e2e/base-chat'
 
+const URL_PATTERN = /\/[a-z0-9]+/iu
 class ChatPage extends BaseChatPage {
   protected readonly basePath = '/'
-  protected readonly urlPattern = /\/[a-z0-9]+/iu
+  protected readonly urlPattern = URL_PATTERN
   public async abortStream(): Promise<void> {
     await this.getStopButton().click()
   }

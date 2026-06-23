@@ -1,5 +1,3 @@
-/** biome-ignore-all lint/performance/noAwaitInLoops: sequential Convex DB mutations */
-/** biome-ignore-all lint/suspicious/useAwait: promise-function-async conflict */
 /* eslint-disable no-await-in-loop */
 /* eslint-disable max-depth */
 import type { RegisteredQuery } from 'convex/server'
@@ -248,17 +246,18 @@ const addUrls = async <D extends Record<string, unknown>>({
 }): Promise<WithUrls<D>> => {
   if (fileFields.length === 0) return asWithUrls<D>(doc)
   const o = { ...doc } as Record<string, unknown>
-  const getUrl = async (x: unknown) => {
+  const getUrl = (x: unknown) => {
     const id = toId(x)
     return id ? storage.getUrl(id) : null
   }
-  for (const f of fileFields) {
+  const resolveField = async (f: string): Promise<void> => {
     const fv = doc[f]
     if (fv !== null)
       o[Array.isArray(fv) ? `${f}Urls` : `${f}Url`] = Array.isArray(fv)
         ? await Promise.all(fv.map(getUrl))
         : await getUrl(fv)
   }
+  await Promise.all(fileFields.map(resolveField))
   return o as WithUrls<D>
 }
 const dbInsert = async (db: DbLike, table: string, data: Record<string, unknown>) => db.insert(table, data)

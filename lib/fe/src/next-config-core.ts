@@ -1,4 +1,4 @@
-/** biome-ignore-all lint/style/noProcessEnv: next.config reads env directly to build CSP/runtime config */
+/** biome-ignore-all lint/style/noProcessEnv: env/config module, intentional process.env access */
 import type { NextConfig } from 'next'
 import { resolveAliasFor } from 'noboil'
 import { env as nodeEnv } from 'node:process'

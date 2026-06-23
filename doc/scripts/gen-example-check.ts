@@ -1,6 +1,5 @@
 #!/usr/bin/env bun
 /* eslint-disable no-console */
-/** biome-ignore-all lint/performance/useTopLevelRegex: per-file scan */
 import { Transpiler } from 'bun'
 import { walkFiles } from 'noboil/walk'
 import { readFileSync } from 'node:fs'
@@ -8,6 +7,8 @@ import { relative } from 'node:path'
 import { DOCS_DIR, replaceBetween, REPO } from './lib'
 
 const FENCE_RE = /```(?:ts|tsx|typescript)\n(?<code>[\s\S]*?)```/gu
+const SPREAD_PLACEHOLDER_RE = /\{\s*\.\.\.\s*\}/u
+const OBJECT_LEAD_RE = /^\s*\{\s*\n/u
 const walk = (dir: string): string[] => walkFiles(dir, { accept: name => name.endsWith('.mdx') })
 interface Block {
   code: string
@@ -57,7 +58,7 @@ const SOFT = [
 ]
 const checkBlock = (b: Block): { issue?: string; parseable: boolean } => {
   if (!looksLikeTypeScript(b.code)) return { parseable: true }
-  if (/\{\s*\.\.\.\s*\}/u.test(b.code) || b.code.includes('/* ... */') || /^\s*\{\s*\n/u.test(b.code))
+  if (SPREAD_PLACEHOLDER_RE.test(b.code) || b.code.includes('/* ... */') || OBJECT_LEAD_RE.test(b.code))
     return { parseable: true }
   try {
     new Transpiler({ loader: 'tsx', target: 'browser' }).scan(b.code)
@@ -75,6 +76,7 @@ const main = () => {
   let parseable = 0
   const issues: string[] = []
   for (const file of files) {
+    // oxlint-disable-next-line node/no-sync
     const blocks = extractBlocks(readFileSync(file, 'utf8'), file)
     for (const b of blocks) {
       total += 1

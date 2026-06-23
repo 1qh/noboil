@@ -6,7 +6,9 @@ import { collectBraceExports, DOCS_DIR, LIB_NOBOIL, replaceBetween } from './lib
 const EXPORT_DECL_RE = /export\s+(?:const|function|class|default\s+(?:const|function|class)|default)\s+(?<name>\w+)/gu
 const collectExports = (path: string): Set<string> => {
   const out = new Set<string>()
+  // oxlint-disable-next-line node/no-sync
   if (!statSync(path, { throwIfNoEntry: false })) return out
+  // oxlint-disable-next-line node/no-sync
   const src = readFileSync(path, 'utf8')
   collectBraceExports(src, out)
   let dm = EXPORT_DECL_RE.exec(src)
@@ -23,16 +25,20 @@ interface CompFile {
 }
 const inspect = (root: string, file: string): CompFile => {
   const path = `${root}/${file}`
+  // oxlint-disable-next-line node/no-sync
   if (!statSync(path, { throwIfNoEntry: false })) return { exports: new Set(), lines: 0 }
+  // oxlint-disable-next-line node/no-sync
   return { exports: collectExports(path), lines: readFileSync(path, 'utf8').split('\n').length }
 }
 const main = () => {
   const cvxRoot = `${LIB_NOBOIL}/src/convex/components`
   const stdbRoot = `${LIB_NOBOIL}/src/spacetimedb/components`
+  // oxlint-disable-next-line node/no-sync
   const cvxFiles = readdirSync(cvxRoot)
     .toSorted()
     .filter(f => f.endsWith('.tsx') || f === 'index.ts')
     .toSorted()
+  // oxlint-disable-next-line node/no-sync
   const stdbFiles = readdirSync(stdbRoot)
     .toSorted()
     .filter(f => f.endsWith('.tsx') || f === 'index.ts')

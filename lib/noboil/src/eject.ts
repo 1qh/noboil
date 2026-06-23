@@ -45,8 +45,10 @@ const isIgnoredPath = (filePath: string) => {
   return false
 }
 const collectFiles = (root: string) => {
+  // oxlint-disable-next-line node/no-sync
   if (!existsSync(root)) return []
   const out: string[] = []
+  // oxlint-disable-next-line node/no-sync
   const entries = readdirSync(root, { recursive: true, withFileTypes: true })
   for (const entry of entries)
     if (entry.isFile()) {
@@ -67,10 +69,12 @@ const collectPackageJsonFiles = (root: string) => {
   for (const filePath of allFiles)
     if (filePath.endsWith('/package.json') || filePath.endsWith(String.raw`\package.json`)) out.push(filePath)
   const rootPackage = join(root, 'package.json')
+  // oxlint-disable-next-line node/no-sync
   if (existsSync(rootPackage) && !out.includes(rootPackage)) out.push(rootPackage)
   return out
 }
 const detectInstalledPackage = (rootPackagePath: string) => {
+  // oxlint-disable-next-line node/no-sync
   if (!existsSync(rootPackagePath)) die('No package.json found in current directory.')
   const rootPackageJson = readJson(rootPackagePath) as PackageJson
   const merged: Record<string, string> = {}
@@ -80,6 +84,7 @@ const detectInstalledPackage = (rootPackagePath: string) => {
     for (const [key, value] of Object.entries(rootPackageJson.devDependencies)) merged[key] = value
   if (!('noboil' in merged)) die('noboil not found in dependencies. Nothing to eject.')
   const rcPath = join(dirname(rootPackagePath), '.noboilrc.json')
+  // oxlint-disable-next-line node/no-sync
   if (!existsSync(rcPath))
     die(
       'Missing .noboilrc.json — cannot determine db. Re-run `noboil init` or create .noboilrc.json with { "db": "convex" | "spacetimedb" }.'
@@ -106,13 +111,16 @@ const normalizeRelPath = (fromFilePath: string, toPathNoExt: string) => {
   return raw.startsWith('.') ? raw : `./${raw}`
 }
 const resolveWithExtensions = (pathWithoutExtension: string) => {
+  // oxlint-disable-next-line node/no-sync
   if (existsSync(pathWithoutExtension)) return pathWithoutExtension
   for (const ext of sharedExtensionCandidates) {
     const candidate = `${pathWithoutExtension}${ext}`
+    // oxlint-disable-next-line node/no-sync
     if (existsSync(candidate)) return candidate
   }
   for (const ext of sharedExtensionCandidates) {
     const candidate = join(pathWithoutExtension, `index${ext}`)
+    // oxlint-disable-next-line node/no-sync
     if (existsSync(candidate)) return candidate
   }
 }
@@ -127,6 +135,7 @@ const collectSharedImportsFromFiles = (filePaths: string[]) => {
   const imports = new Set<string>()
   for (const filePath of filePaths)
     if (filePath.endsWith('.ts') || filePath.endsWith('.tsx') || filePath.endsWith('.js') || filePath.endsWith('.jsx')) {
+      // oxlint-disable-next-line node/no-sync
       const content = readFileSync(filePath, 'utf8')
       const specifiers = extractSpecifiers(content)
       for (const specifier of specifiers) if (specifier.startsWith(SHARED_SPECIFIER)) imports.add(specifier)
@@ -149,6 +158,7 @@ const buildSharedDependencySet = (sharedRoot: string, sharedSpecifiers: Set<stri
   while (index < queue.length) {
     const filePath = queue[index]
     if (!filePath) break
+    // oxlint-disable-next-line node/no-sync
     const content = readFileSync(filePath, 'utf8')
     const specifiers = extractSpecifiers(content)
     for (const specifier of specifiers)
@@ -235,6 +245,7 @@ const prepareContext = (cwd: string): EjectContext => {
   const detected = detectInstalledPackage(rootPackagePath)
   const sourceRoot = join(cwd, 'node_modules', 'noboil', 'src', detected.db)
   const sourcePackageJsonPath = join(cwd, 'node_modules', 'noboil', 'package.json')
+  // oxlint-disable-next-line node/no-sync
   if (!(existsSync(sourceRoot) && existsSync(sourcePackageJsonPath))) die('Run `bun install` first.')
   const sourcePackageJson = readJson(sourcePackageJsonPath) as PackageJson
   if (!sourcePackageJson.exports || typeof sourcePackageJson.exports !== 'object')
@@ -245,6 +256,7 @@ const prepareContext = (cwd: string): EjectContext => {
   let sharedFiles: string[] = []
   if (sharedSpecifiers.size > 0) {
     const nodeModulesShared = join(cwd, 'node_modules', 'noboil', 'src', 'shared')
+    // oxlint-disable-next-line node/no-sync
     if (existsSync(nodeModulesShared)) sharedRoot = nodeModulesShared
     else die('Shared source missing in node_modules/noboil/src/shared.')
     if (sharedRoot) sharedFiles = buildSharedDependencySet(sharedRoot, sharedSpecifiers)
@@ -279,7 +291,9 @@ const copyIntoTarget = ({
     const targetPath = join(toRoot, rel)
     copied += 1
     if (!dryRun) {
+      // oxlint-disable-next-line node/no-sync
       mkdirSync(dirname(targetPath), { recursive: true })
+      // oxlint-disable-next-line node/no-sync
       copyFileSync(filePath, targetPath)
     }
   }
@@ -352,26 +366,31 @@ const ejectSync = (dryRun: boolean) => {
     version: '0.0.0'
   }
   if (!dryRun) {
+    // oxlint-disable-next-line node/no-sync
     mkdirSync(localPackageDir, { recursive: true })
     writeJson(join(localPackageDir, 'package.json'), localPackageJson)
   }
   const tsFiles = collectTsFiles(cwd)
   for (const filePath of tsFiles) {
+    // oxlint-disable-next-line node/no-sync
     const content = readFileSync(filePath, 'utf8')
     const rewrites = rewriteNoboilSpecifiers(content, context.installedPackage)
     if (rewrites.changed) {
       rewrittenImportFiles += 1
       rewrittenImportCount += rewrites.replacements
+      // oxlint-disable-next-line node/no-sync
       if (!dryRun) writeFileSync(filePath, rewrites.output)
     }
   }
   const ejectedTsFiles = collectTsFiles(localSourceDir)
   for (const filePath of ejectedTsFiles) {
+    // oxlint-disable-next-line node/no-sync
     const content = readFileSync(filePath, 'utf8')
     const rewrites = rewriteSharedSpecifiers(content, filePath, localSourceDir)
     if (rewrites.changed) {
       rewrittenSharedFiles += 1
       rewrittenSharedCount += rewrites.replacements
+      // oxlint-disable-next-line node/no-sync
       if (!dryRun) writeFileSync(filePath, rewrites.output)
     }
   }
@@ -388,6 +407,7 @@ const ejectSync = (dryRun: boolean) => {
     }
   }
   const noboilRcPath = join(cwd, '.noboilrc.json')
+  // oxlint-disable-next-line node/no-sync
   if (existsSync(noboilRcPath)) {
     const rc = readJson(noboilRcPath) as PackageJson
     if (rc.ejected !== true) {
@@ -418,6 +438,7 @@ const eject = async (args: string[]) => {
   const dryRun = args.includes('--dry-run')
   const assumeYes = args.includes('--yes') || args.includes('-y')
   const { runEjectTui } = await import('./eject-tui')
+  // oxlint-disable-next-line node/no-sync
   const code = await runEjectTui({ assumeYes, dryRun, run: () => ejectSync(dryRun) })
   if (code !== 0) process.exit(code)
 }

@@ -16,6 +16,7 @@ const README_DETAIL: Record<string, string> = {
   upgrade: '`bun add noboil@latest`'
 }
 const main = () => {
+  // oxlint-disable-next-line node/no-sync
   const src = readFileSync(`${LIB_NOBOIL}/src/dashboard-tui.tsx`, 'utf8')
   const rows: string[] = []
   let m = ROW_RE.exec(src)

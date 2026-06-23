@@ -1,4 +1,4 @@
-/** biome-ignore-all lint/style/noProcessEnv: runtime env */
+/** biome-ignore-all lint/style/noProcessEnv: env/config module, intentional process.env access */
 import { config, urls } from '@a/config'
 import { createEnv } from '@t3-oss/env-nextjs'
 import { vercel } from '@t3-oss/env-nextjs/presets-zod'

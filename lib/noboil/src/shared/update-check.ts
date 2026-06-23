@@ -33,7 +33,7 @@ const fetchLatest = async (): Promise<null | string> => {
     return null
   }
 }
-const parseVersion = (v: string): number[] => v.split('.').map(p => Number.parseInt(p, 10) || 0)
+const parseVersion = (v: string): number[] => v.split('.').map(p => Math.trunc(Number(p)) || 0)
 const isNewer = (latest: string, current: string): boolean => {
   const a = parseVersion(latest)
   const b = parseVersion(current)

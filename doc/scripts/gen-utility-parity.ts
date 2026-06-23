@@ -118,7 +118,9 @@ const collectExports = (root: string, files: string[]): Set<string> => {
   const out = new Set<string>()
   for (const f of files) {
     const path = `${root}/${f}`
+    // oxlint-disable-next-line node/no-sync
     if (existsSync(path)) {
+      // oxlint-disable-next-line node/no-sync
       const src = readFileSync(path, 'utf8')
       collectBraceExports(src, out)
       let dm = EXPORT_DECL_RE.exec(src)

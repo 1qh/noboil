@@ -112,9 +112,14 @@ const findTablesInSlot = (src: string, slot: string): string[] => {
 const tableUsedInLazy = (lazy: string, schemaTable: string): boolean =>
   new RegExp(`\\bs\\.${schemaTable}\\b`, 'u').test(lazy)
 const tableUsedInBackend = (backendDir: string, schemaTable: string): boolean => {
+  // oxlint-disable-next-line node/no-sync
   if (!statSync(backendDir, { throwIfNoEntry: false })) return false
   const re = new RegExp(`\\bs\\.${schemaTable}\\b`, 'u')
+  // oxlint-disable-next-line node/no-sync
+  // oxlint-disable-next-line node/no-sync
+  // oxlint-disable-next-line node/no-sync
   for (const f of readdirSync(backendDir).toSorted())
+    // oxlint-disable-next-line node/no-sync
     if (f.endsWith('.ts') && re.test(readFileSync(`${backendDir}/${f}`, 'utf8'))) return true
   return false
 }
@@ -125,19 +130,23 @@ const lazyNameForSchema = (lazy: string, schemaTable: string): string | undefine
 const scanEntry = ({ dir, name, re, stack }: { dir: string; name: string; re: RegExp; stack: string[] }): boolean => {
   if (name.startsWith('.') || name === 'node_modules' || name === '.next' || name === 'module_bindings') return false
   const full = join(dir, name)
+  // oxlint-disable-next-line node/no-sync
   if (statSync(full).isDirectory()) {
     stack.push(full)
     return false
   }
   return (
+    // oxlint-disable-next-line node/no-sync
     (name.endsWith('.ts') || name.endsWith('.tsx')) && !name.endsWith('.test.ts') && re.test(readFileSync(full, 'utf8'))
   )
 }
 const rootMatches = (root: string, re: RegExp): boolean => {
+  // oxlint-disable-next-line node/no-sync
   if (!statSync(root, { throwIfNoEntry: false })) return false
   const stack = [root]
   while (stack.length > 0) {
     const dir = stack.pop()
+    // oxlint-disable-next-line node/no-sync
     if (dir) for (const name of readdirSync(dir).toSorted()) if (scanEntry({ dir, name, re, stack })) return true
   }
   return false
@@ -150,10 +159,13 @@ const tableUsedInDemos = (demoRoots: string[], names: string[]): boolean => {
   return false
 }
 const walkTests = (dir: string, out: string[] = []): string[] => {
+  // oxlint-disable-next-line node/no-sync
   if (!statSync(dir, { throwIfNoEntry: false })) return out
+  // oxlint-disable-next-line node/no-sync
   for (const name of readdirSync(dir).toSorted())
     if (!(name.startsWith('.') || name === 'node_modules')) {
       const full = join(dir, name)
+      // oxlint-disable-next-line node/no-sync
       if (statSync(full).isDirectory()) walkTests(full, out)
       else if (name.endsWith('.test.ts')) out.push(full)
     }
@@ -161,15 +173,20 @@ const walkTests = (dir: string, out: string[] = []): string[] => {
 }
 const factoryAppearsInTests = (testRoot: string, fn: string): boolean => {
   const re = new RegExp(`\\b${fn}\\b`, 'u')
+  // oxlint-disable-next-line node/no-sync
   for (const f of walkTests(testRoot)) if (re.test(readFileSync(f, 'utf8'))) return true
   return false
 }
 const isStr = (n: string | undefined): n is string => typeof n === 'string'
 const DEMOS = ['blog', 'chat', 'movie', 'org', 'poll']
 const main = () => {
+  // oxlint-disable-next-line node/no-sync
   const sSrc = readFileSync(`${REPO}/backend/convex/s.ts`, 'utf8')
+  // oxlint-disable-next-line node/no-sync
   const stdbSSrc = readFileSync(`${REPO}/backend/spacetimedb/s.ts`, 'utf8')
+  // oxlint-disable-next-line node/no-sync
   const cvxLazy = readFileSync(`${REPO}/backend/convex/lazy.ts`, 'utf8')
+  // oxlint-disable-next-line node/no-sync
   const stdbLazy = readFileSync(`${REPO}/backend/spacetimedb/src/index.ts`, 'utf8')
   const docsDir = DOCS_DIR
   const cvxTestRoot = `${LIB_NOBOIL}/src/convex`
@@ -194,13 +211,17 @@ const main = () => {
         const lazyName = lazyNameForSchema(stdbLazy, t)
         return tableUsedInDemos(stdbDemoRoots, [t, lazyName].filter(isStr))
       })
+      // oxlint-disable-next-line node/no-sync
       const cvxSrc = existsSync(`${LIB_NOBOIL}/src/convex/server/${spec.cvxSourceFile}`)
+      // oxlint-disable-next-line node/no-sync
       const stdbSrc = existsSync(`${LIB_NOBOIL}/src/spacetimedb/server/${spec.stdbSourceFile}`)
       const cvxTests = factoryAppearsInTests(cvxTestRoot, spec.cvxFactoryFn)
       const stdbTests = factoryAppearsInTests(stdbTestRoot, spec.stdbFactoryFn)
+      // oxlint-disable-next-line node/no-sync
       const allDocs = readdirSync(docsDir)
         .toSorted()
         .filter(f => f.endsWith('.mdx'))
+        // oxlint-disable-next-line node/no-sync
         .map(f => readFileSync(`${docsDir}/${f}`, 'utf8'))
         .join('\n')
       const docOk =

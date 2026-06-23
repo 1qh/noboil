@@ -1,7 +1,5 @@
-/** biome-ignore-all lint/nursery/noUndeclaredClasses: standard tailwind v4 utilities biome cannot resolve */
+/** biome-ignore-all lint/nursery/noUndeclaredClasses: tailwind-v4 utilities biome cannot resolve */
 /* eslint-disable react/require-optimization, react/sort-comp */
-/** biome-ignore-all lint/nursery/noComponentHookFactories: factory returns hook by design */
-/** biome-ignore-all lint/suspicious/useAwait: render-only class method */
 /* eslint-disable react/no-set-state */
 'use client'
 import type { ErrorInfo, ReactNode } from 'react'
@@ -22,6 +20,7 @@ interface ErrorBoundaryState {
   error: Error | null
 }
 const createErrorBoundary = ({ readErrorCode, readErrorMessage }: CreateErrorBoundaryOptions) => {
+  // biome-ignore lint/nursery/noComponentHookFactories: field/handler factory, not a component/hook
   class SharedErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
     public constructor(props: ErrorBoundaryProps) {
       super(props)
@@ -34,7 +33,7 @@ const createErrorBoundary = ({ readErrorCode, readErrorMessage }: CreateErrorBou
       const { onError } = this.props
       if (onError) onError(error, errorInfo)
     }
-    public override async render() {
+    public override render() {
       const { error } = this.state
       const { children, className, fallback } = this.props
       if (!error) return children

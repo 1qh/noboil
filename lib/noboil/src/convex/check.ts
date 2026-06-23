@@ -40,11 +40,14 @@ const isSchemaFile = (content: string): boolean => {
   for (const marker of schemaMarkers) if (content.includes(marker)) return true
   return false
 }
+// oxlint-disable-next-line node/no-sync
 const hasGenerated = (dir: string): boolean => existsSync(join(dir, '_generated'))
 const findConvexDir = (root: string): string | undefined => {
   const direct = join(root, 'convex')
   if (hasGenerated(direct)) return direct
+  // oxlint-disable-next-line node/no-sync
   if (!existsSync(root)) return
+  // oxlint-disable-next-line node/no-sync
   for (const sub of readdirSync(root, { withFileTypes: true }))
     if (sub.isDirectory()) {
       const nested = join(root, sub.name, 'convex')
@@ -53,10 +56,13 @@ const findConvexDir = (root: string): string | undefined => {
 }
 const findSchemaFile = (convexDir: string): undefined | { content: string; path: string } => {
   const searchDir = dirname(convexDir)
+  // oxlint-disable-next-line node/no-sync
   if (!existsSync(searchDir)) return
+  // oxlint-disable-next-line node/no-sync
   for (const entry of readdirSync(searchDir))
     if (entry.endsWith('.ts') && !entry.endsWith('.test.ts') && !entry.endsWith('.config.ts')) {
       const full = join(searchDir, entry)
+      // oxlint-disable-next-line node/no-sync
       const content = readFileSync(full, 'utf8')
       if (isSchemaFile(content)) return { content, path: full }
     }
@@ -105,9 +111,11 @@ const extractRemainingOptions = (content: string, startPos: number): string => {
 const extractFactoryCalls = (convexDir: string): { calls: FactoryCall[]; files: string[] } => {
   const calls: FactoryCall[] = []
   const files: string[] = []
+  // oxlint-disable-next-line node/no-sync
   for (const entry of readdirSync(convexDir))
     if (entry.endsWith('.ts') && !entry.startsWith('_') && !entry.includes('.test.') && !entry.includes('.config.')) {
       const full = join(convexDir, entry)
+      // oxlint-disable-next-line node/no-sync
       const content = readFileSync(full, 'utf8')
       files.push(entry)
       let m = factoryPat.exec(content)
@@ -249,9 +257,11 @@ const TABLE_HELPER_SRC = [
   'defineTable'
 ].join('|')
 const findSchemaDefFile = (convexDir: string): undefined | { content: string; path: string } => {
+  // oxlint-disable-next-line node/no-sync
   for (const name of readdirSync(convexDir))
     if (name.endsWith('.ts') && !name.includes('.test.') && !name.startsWith('_')) {
       const full = join(convexDir, name)
+      // oxlint-disable-next-line node/no-sync
       const content = readFileSync(full, 'utf8')
       if (content.includes('defineSchema(')) return { content, path: full }
     }
@@ -332,6 +342,7 @@ const scanWhereUsage = (root: string, cvxDir: string): WhereField[] => {
   const schemaPath = join(cvxDir, 'schema.ts')
   const skip = new Set(['.cache', '.git', '.next', '.turbo', '_generated', 'build', 'dist', 'node_modules'])
   const processFile = (filePath: string, fileName: string) => {
+    // oxlint-disable-next-line node/no-sync
     const fileContent = readFileSync(filePath, 'utf8')
     const apiPat = /api\.(?<tbl>\w+)\.(?:list|search)\b/gu
     let am = apiPat.exec(fileContent)
@@ -347,7 +358,9 @@ const scanWhereUsage = (root: string, cvxDir: string): WhereField[] => {
     }
   }
   const scan = (dir: string) => {
+    // oxlint-disable-next-line node/no-sync
     if (!existsSync(dir)) return
+    // oxlint-disable-next-line node/no-sync
     for (const entry of readdirSync(dir, { withFileTypes: true }))
       if (entry.isDirectory()) {
         if (!(skip.has(entry.name) || entry.name.startsWith('.'))) scan(join(dir, entry.name))

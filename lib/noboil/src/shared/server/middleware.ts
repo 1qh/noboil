@@ -1,4 +1,3 @@
-/** biome-ignore-all lint/performance/noAwaitInLoops: sequential middleware chain */
 /* eslint-disable no-await-in-loop */
 import type { Rec } from '../types'
 
@@ -86,34 +85,40 @@ const createComposeMiddleware = <
     hooks.beforeCreate = async (ctx: Ctx, args: CreateBeforeArgs) => {
       let { data } = args
       const mCtx = toMiddlewareCtx(ctx, 'create')
+      // biome-ignore lint/performance/noAwaitInLoops: sequential by design
       for (const mw of middlewares) if (mw.beforeCreate) data = await mw.beforeCreate(mCtx, { ...args, data })
       return data
     }
   if (hasAfterCreate)
     hooks.afterCreate = async (ctx: Ctx, args: CreateAfterArgs) => {
       const mCtx = toMiddlewareCtx(ctx, 'create')
+      // biome-ignore lint/performance/noAwaitInLoops: sequential by design
       for (const mw of middlewares) if (mw.afterCreate) await mw.afterCreate(mCtx, args)
     }
   if (hasBeforeUpdate)
     hooks.beforeUpdate = async (ctx: Ctx, args: UpdateBeforeArgs) => {
       let { patch } = args
       const mCtx = toMiddlewareCtx(ctx, 'update')
+      // biome-ignore lint/performance/noAwaitInLoops: sequential by design
       for (const mw of middlewares) if (mw.beforeUpdate) patch = await mw.beforeUpdate(mCtx, { ...args, patch })
       return patch
     }
   if (hasAfterUpdate)
     hooks.afterUpdate = async (ctx: Ctx, args: UpdateAfterArgs) => {
       const mCtx = toMiddlewareCtx(ctx, 'update')
+      // biome-ignore lint/performance/noAwaitInLoops: sequential by design
       for (const mw of middlewares) if (mw.afterUpdate) await mw.afterUpdate(mCtx, args)
     }
   if (hasBeforeDelete)
     hooks.beforeDelete = async (ctx: Ctx, args: DeleteBeforeArgs) => {
       const mCtx = toMiddlewareCtx(ctx, 'delete')
+      // biome-ignore lint/performance/noAwaitInLoops: sequential by design
       for (const mw of middlewares) if (mw.beforeDelete) await mw.beforeDelete(mCtx, args)
     }
   if (hasAfterDelete)
     hooks.afterDelete = async (ctx: Ctx, args: DeleteAfterArgs) => {
       const mCtx = toMiddlewareCtx(ctx, 'delete')
+      // biome-ignore lint/performance/noAwaitInLoops: sequential by design
       for (const mw of middlewares) if (mw.afterDelete) await mw.afterDelete(mCtx, args)
     }
   return hooks

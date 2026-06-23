@@ -8,6 +8,7 @@ const cvxDir = resolve(import.meta.dir, 'convex')
 const loadModules = () => {
   const out: Record<string, () => Promise<Record<string, unknown>>> = {}
   const glob = new Glob('**/*.ts')
+  // oxlint-disable-next-line node/no-sync
   for (const rel of glob.scanSync({ cwd: cvxDir }))
     out[`../convex/${rel.replace(/\.ts$/u, '.js')}`] = async () =>
       (await import(`${cvxDir}/${rel}`)) as Record<string, unknown>

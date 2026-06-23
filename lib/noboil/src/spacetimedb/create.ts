@@ -131,6 +131,7 @@ const TSCONFIG = JSON.stringify(
 const DEP_LIST = ['noboil/spacetimedb', 'spacetimedb', 'zod']
 const installDeps = (cwd: string) => {
   const missing: string[] = []
+  // oxlint-disable-next-line node/no-sync
   for (const dep of DEP_LIST) if (!existsSync(join(cwd, 'node_modules', dep))) missing.push(dep)
   if (missing.length === 0) {
     console.log(`  ${dim('deps already installed')}`)
@@ -138,6 +139,7 @@ const installDeps = (cwd: string) => {
   }
   console.log(`  installing ${missing.join(', ')}...`)
   try {
+    // oxlint-disable-next-line node/no-sync
     execSync(`bun add ${missing.join(' ')}`, { cwd, stdio: 'pipe' })
     console.log(`  ${green('✓')} installed ${missing.length} package${missing.length > 1 ? 's' : ''}`)
   } catch {
@@ -180,8 +182,10 @@ const printSummary = (created: number, skipped: number) => {
   console.log(`  ${dim('$')} spacetime publish && spacetime generate && bun dev\n`)
 }
 const writeConfigFile = (path: string, name: string, content: string) => {
+  // oxlint-disable-next-line node/no-sync
   if (existsSync(path)) console.log(`  ${yellow('skip')} ${name} ${dim('(exists)')}`)
   else {
+    // oxlint-disable-next-line node/no-sync
     writeFileSync(path, content)
     console.log(`  ${green('✓')} ${name}`)
   }
@@ -199,6 +203,7 @@ const scaffold = (cwd: string, moduleDir: string, appDir: string) => {
   })
   writeConfigFile(join(cwd, '.env.local'), '.env.local', ENV_LOCAL)
   writeConfigFile(join(cwd, 'tsconfig.json'), 'tsconfig.json', TSCONFIG)
+  // oxlint-disable-next-line node/no-sync
   if (existsSync(join(cwd, 'package.json'))) installDeps(cwd)
   else
     console.log(
@@ -208,6 +213,7 @@ const scaffold = (cwd: string, moduleDir: string, appDir: string) => {
 }
 const cmdExists = (cmd: string): boolean => {
   try {
+    // oxlint-disable-next-line node/no-sync
     execSync(`command -v ${cmd}`, { stdio: 'pipe' })
     return true
   } catch {
@@ -221,6 +227,7 @@ const preflight = () => {
   else warnings.push(`spacetime CLI not found — ${dim('curl -sSf https://install.spacetimedb.com | sh')}`)
   if (cmdExists('docker'))
     try {
+      // oxlint-disable-next-line node/no-sync
       execSync('docker info', { stdio: 'pipe' })
       console.log(`  ${green('✓')} Docker running`)
     } catch {

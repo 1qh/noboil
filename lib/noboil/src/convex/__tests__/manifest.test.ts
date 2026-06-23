@@ -128,13 +128,16 @@ describe('manifest helpers', () => {
     expect(out.shape.arr?.type).toBe('array')
   })
   test('checkSchemaConsistency reports duplicate + missing-table + filename-mismatch', () => {
+    // oxlint-disable-next-line node/no-sync
     const dir = mkdtempSync(join(tmpdir(), 'noboil-check-'))
     try {
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(
         join(dir, 'todos.ts'),
         `export const x = crud('todo', schema)\nexport const y = crud('mismatch', schema)`,
         'utf8'
       )
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(join(dir, 'orphan.ts'), `export const z = crud('todo', schema)`, 'utf8')
       const schemaContent = 'defineSchema({ todo: defineTable({}), missingFactory: defineTable({}) })'
       const issues = checkSchemaConsistency(dir, { content: schemaContent, path: join(dir, 'schema.ts') })
@@ -142,6 +145,7 @@ describe('manifest helpers', () => {
       expect(issues.some(i => i.message.includes('no "mismatch" table'))).toBe(true)
       expect(issues.length).toBeGreaterThan(0)
     } finally {
+      // oxlint-disable-next-line node/no-sync
       rmSync(dir, { force: true, recursive: true })
     }
   })
@@ -157,6 +161,7 @@ describe('manifest helpers', () => {
     expect(true).toBe(true)
   })
   test('add --dry-run for each table type generates content + add real run writes files', async () => {
+    // oxlint-disable-next-line node/no-sync
     const dir = mkdtempSync(join(tmpdir(), 'noboil-add-'))
     const origCwd = process.cwd()
     try {
@@ -179,6 +184,7 @@ describe('manifest helpers', () => {
       }
     } finally {
       process.chdir(origCwd)
+      // oxlint-disable-next-line node/no-sync
       rmSync(dir, { force: true, recursive: true })
     }
   })
@@ -220,15 +226,19 @@ describe('manifest helpers', () => {
     }
   })
   test('check run() flag variants (--endpoints, --schema, --health, --access, --indexes)', () => {
+    // oxlint-disable-next-line node/no-sync
     const dir = mkdtempSync(join(tmpdir(), 'noboil-check-run-'))
     const origCwd = process.cwd()
     try {
+      // oxlint-disable-next-line node/no-sync
       mkdirSync(join(dir, 'convex', '_generated'), { recursive: true })
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(
         join(dir, 'convex', 'todos.ts'),
         `export const x = crud('todo', schema, { rateLimit: { max: 1, window: 1000 } })`,
         'utf8'
       )
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(join(dir, 'schema.ts'), 'const owned = makeOwned({ todo: object({ title: string() }) })', 'utf8')
       process.chdir(dir)
       const { log } = console
@@ -254,14 +264,18 @@ describe('manifest helpers', () => {
       expect(true).toBe(true)
     } finally {
       process.chdir(origCwd)
+      // oxlint-disable-next-line node/no-sync
       rmSync(dir, { force: true, recursive: true })
     }
   })
   test('viz run prints summary + --mermaid prints erDiagram', () => {
+    // oxlint-disable-next-line node/no-sync
     const dir = mkdtempSync(join(tmpdir(), 'noboil-viz-'))
     const origCwd = process.cwd()
     try {
+      // oxlint-disable-next-line node/no-sync
       mkdirSync(join(dir, 'convex', '_generated'), { recursive: true })
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(join(dir, 'schema.ts'), 'const owned = makeOwned({ todo: object({ title: string() }) })', 'utf8')
       process.chdir(dir)
       const { log } = console
@@ -289,10 +303,12 @@ describe('manifest helpers', () => {
       expect(true).toBe(true)
     } finally {
       process.chdir(origCwd)
+      // oxlint-disable-next-line node/no-sync
       rmSync(dir, { force: true, recursive: true })
     }
   })
   test('viz run exits when no convex/_generated and no schema file', () => {
+    // oxlint-disable-next-line node/no-sync
     const dir = mkdtempSync(join(tmpdir(), 'noboil-viz-empty-'))
     const origCwd = process.cwd()
     try {
@@ -319,14 +335,18 @@ describe('manifest helpers', () => {
       expect(exited).toBeGreaterThan(0)
     } finally {
       process.chdir(origCwd)
+      // oxlint-disable-next-line node/no-sync
       rmSync(dir, { force: true, recursive: true })
     }
   })
   test('viz run finds convex/ via subdir recursion + exits when schema lacks markers', () => {
+    // oxlint-disable-next-line node/no-sync
     const dir = mkdtempSync(join(tmpdir(), 'noboil-viz-sub-'))
     const origCwd = process.cwd()
     try {
+      // oxlint-disable-next-line node/no-sync
       mkdirSync(join(dir, 'app', 'convex', '_generated'), { recursive: true })
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(join(dir, 'app', 'plain.ts'), 'export const x = 1', 'utf8')
       process.chdir(dir)
       const { log } = console
@@ -351,13 +371,16 @@ describe('manifest helpers', () => {
       expect(exited).toBeGreaterThan(0)
     } finally {
       process.chdir(origCwd)
+      // oxlint-disable-next-line node/no-sync
       rmSync(dir, { force: true, recursive: true })
     }
   })
   test('migrate run --snapshot reads tmp schema', () => {
+    // oxlint-disable-next-line node/no-sync
     const dir = mkdtempSync(join(tmpdir(), 'noboil-migrate-snap-'))
     const origCwd = process.cwd()
     try {
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(
         join(dir, 'schema.ts'),
         'const owned = makeOwned({ todo: object({ title: string(), done: boolean() }) })',
@@ -374,10 +397,12 @@ describe('manifest helpers', () => {
       expect(true).toBe(true)
     } finally {
       process.chdir(origCwd)
+      // oxlint-disable-next-line node/no-sync
       rmSync(dir, { force: true, recursive: true })
     }
   })
   test('check run no convex dir → exits; no schema file → exits', () => {
+    // oxlint-disable-next-line node/no-sync
     const dir = mkdtempSync(join(tmpdir(), 'noboil-check-noconvex-'))
     const origCwd = process.cwd()
     try {
@@ -404,19 +429,24 @@ describe('manifest helpers', () => {
       expect(exited).toBeGreaterThan(0)
     } finally {
       process.chdir(origCwd)
+      // oxlint-disable-next-line node/no-sync
       rmSync(dir, { force: true, recursive: true })
     }
   })
   test('check run --health with errors prints health report errors section', () => {
+    // oxlint-disable-next-line node/no-sync
     const dir = mkdtempSync(join(tmpdir(), 'noboil-check-health-err-'))
     const origCwd = process.cwd()
     try {
+      // oxlint-disable-next-line node/no-sync
       mkdirSync(join(dir, 'convex', '_generated'), { recursive: true })
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(
         join(dir, 'convex', 'todos.ts'),
         `export const a = crud('todo', schema)\nexport const b = crud('todo', schema)`,
         'utf8'
       )
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(
         join(dir, 'schema.ts'),
         'const owned = makeOwned({ todo: object({ title: string() }), unused: object({ x: string() }) })',
@@ -443,20 +473,26 @@ describe('manifest helpers', () => {
       expect(true).toBe(true)
     } finally {
       process.chdir(origCwd)
+      // oxlint-disable-next-line node/no-sync
       rmSync(dir, { force: true, recursive: true })
     }
   })
   test('check run() no flag → runCheck full path with duplicates + warnings', () => {
+    // oxlint-disable-next-line node/no-sync
     const dir = mkdtempSync(join(tmpdir(), 'noboil-check-runfull-'))
     const origCwd = process.cwd()
     try {
+      // oxlint-disable-next-line node/no-sync
       mkdirSync(join(dir, 'convex', '_generated'), { recursive: true })
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(
         join(dir, 'convex', 'todos.ts'),
         `export const a = crud('todo', schema)\nexport const b = crud('mismatch', schema)`,
         'utf8'
       )
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(join(dir, 'convex', 'orphan.ts'), `export const c = crud('todo', schema)`, 'utf8')
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(
         join(dir, 'schema.ts'),
         'const owned = makeOwned({ todo: object({ title: string() }), unused: object({ x: string() }) })',
@@ -483,25 +519,32 @@ describe('manifest helpers', () => {
       expect(true).toBe(true)
     } finally {
       process.chdir(origCwd)
+      // oxlint-disable-next-line node/no-sync
       rmSync(dir, { force: true, recursive: true })
     }
   })
   test('check run --indexes with where filters in client + factory options', () => {
+    // oxlint-disable-next-line node/no-sync
     const dir = mkdtempSync(join(tmpdir(), 'noboil-check-idx-'))
     const origCwd = process.cwd()
     try {
+      // oxlint-disable-next-line node/no-sync
       mkdirSync(join(dir, 'convex', '_generated'), { recursive: true })
+      // oxlint-disable-next-line node/no-sync
       mkdirSync(join(dir, 'app'), { recursive: true })
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(
         join(dir, 'convex', 'todos.ts'),
         `export const x = crud('todo', schema, { where: { done: true } })`,
         'utf8'
       )
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(
         join(dir, 'app', 'page.tsx'),
         'const { data } = useList(api.todo.list, { where: { unindexed: 1 } })',
         'utf8'
       )
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(join(dir, 'schema.ts'), 'const owned = makeOwned({ todo: object({ title: string() }) })', 'utf8')
       process.chdir(dir)
       const { log } = console
@@ -524,10 +567,12 @@ describe('manifest helpers', () => {
       expect(true).toBe(true)
     } finally {
       process.chdir(origCwd)
+      // oxlint-disable-next-line node/no-sync
       rmSync(dir, { force: true, recursive: true })
     }
   })
   test('migrate run no schema → exits; missing git ref → returns warning', () => {
+    // oxlint-disable-next-line node/no-sync
     const dir = mkdtempSync(join(tmpdir(), 'noboil-migrate-edge-'))
     const origCwd = process.cwd()
     try {
@@ -554,25 +599,34 @@ describe('manifest helpers', () => {
       expect(exited).toBeGreaterThan(0)
     } finally {
       process.chdir(origCwd)
+      // oxlint-disable-next-line node/no-sync
       rmSync(dir, { force: true, recursive: true })
     }
   })
   test('migrate run with git history triggers printMigrationPlan branches', async () => {
     const { execSync } = await import('node:child_process')
+    // oxlint-disable-next-line node/no-sync
     const dir = mkdtempSync(join(tmpdir(), 'noboil-migrate-git-'))
     const origCwd = process.cwd()
     try {
       process.chdir(dir)
+      // oxlint-disable-next-line node/no-sync
       execSync('git init -q', { cwd: dir })
+      // oxlint-disable-next-line node/no-sync
       execSync('git config user.email "t@t"', { cwd: dir })
+      // oxlint-disable-next-line node/no-sync
       execSync('git config user.name "t"', { cwd: dir })
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(
         join(dir, 'schema.ts'),
         'const owned = makeOwned({ todo: object({ title: string() }), goneTbl: object({ x: string() }) })',
         'utf8'
       )
+      // oxlint-disable-next-line node/no-sync
       execSync('git add -A', { cwd: dir })
+      // oxlint-disable-next-line node/no-sync
       execSync('git commit -q -m initial', { cwd: dir })
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(
         join(dir, 'schema.ts'),
         'const owned = makeOwned({ todo: object({ title: string(), required: string(), opt: string().optional() }), newTbl: object({ y: number() }) })',
@@ -588,25 +642,34 @@ describe('manifest helpers', () => {
       expect(true).toBe(true)
     } finally {
       process.chdir(origCwd)
+      // oxlint-disable-next-line node/no-sync
       rmSync(dir, { force: true, recursive: true })
     }
   })
   test('migrate run hits field_removed + field_type_changed + factory_changed + table_removed branches', async () => {
     const { execSync } = await import('node:child_process')
+    // oxlint-disable-next-line node/no-sync
     const dir = mkdtempSync(join(tmpdir(), 'noboil-migrate-dangerous-'))
     const origCwd = process.cwd()
     try {
       process.chdir(dir)
+      // oxlint-disable-next-line node/no-sync
       execSync('git init -q', { cwd: dir })
+      // oxlint-disable-next-line node/no-sync
       execSync('git config user.email "t@t"', { cwd: dir })
+      // oxlint-disable-next-line node/no-sync
       execSync('git config user.name "t"', { cwd: dir })
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(
         join(dir, 'schema.ts'),
         'const owned = makeOwned({ todo: object({ title: string(), removed: string(), changed: string() }), gone: object({ x: string() }) })',
         'utf8'
       )
+      // oxlint-disable-next-line node/no-sync
       execSync('git add -A', { cwd: dir })
+      // oxlint-disable-next-line node/no-sync
       execSync('git commit -q -m initial', { cwd: dir })
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(
         join(dir, 'schema.ts'),
         'const project = makeOrgScoped({ todo: object({ title: string(), changed: number(), addedReq: string() }) })',
@@ -622,13 +685,16 @@ describe('manifest helpers', () => {
       expect(true).toBe(true)
     } finally {
       process.chdir(origCwd)
+      // oxlint-disable-next-line node/no-sync
       rmSync(dir, { force: true, recursive: true })
     }
   })
   test('migrate run with schema but no git history returns warning', () => {
+    // oxlint-disable-next-line node/no-sync
     const dir = mkdtempSync(join(tmpdir(), 'noboil-migrate-nogit-'))
     const origCwd = process.cwd()
     try {
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(join(dir, 'schema.ts'), 'const owned = makeOwned({ todo: object({ title: string() }) })', 'utf8')
       process.chdir(dir)
       const { log } = console
@@ -641,6 +707,7 @@ describe('manifest helpers', () => {
       expect(true).toBe(true)
     } finally {
       process.chdir(origCwd)
+      // oxlint-disable-next-line node/no-sync
       rmSync(dir, { force: true, recursive: true })
     }
   })

@@ -1,4 +1,3 @@
-/** biome-ignore-all lint/correctness/useExhaustiveDependencies: queryKey is the stable hash of queries */
 /* eslint-disable @eslint-react/hooks-extra/no-direct-set-state-in-use-effect, react-hooks/exhaustive-deps */
 'use client'
 import { useEffect, useRef, useState } from 'react'
@@ -42,6 +41,7 @@ const useStdbHydrated = (queries: QueryInput | readonly QueryInput[]): boolean =
   const sqls = list.map((q: QueryInput) => (typeof q === 'string' ? q : toSql(q)))
   const queryKey = sqls.join('||')
   const appliedRef = useRef(0)
+  /** biome-ignore lint/correctness/useExhaustiveDependencies: intentional stable deps */
   useEffect(() => {
     setHydrated(false)
     appliedRef.current = 0

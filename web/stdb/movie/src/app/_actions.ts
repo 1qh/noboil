@@ -1,4 +1,3 @@
-/** biome-ignore-all lint/style/noProcessEnv: server-side env read */
 'use server'
 import { TMDB } from '@lorenzopant/tmdb'
 import { isStdbTestMode } from 'noboil/spacetimedb'
@@ -136,6 +135,7 @@ const PLAYWRIGHT_DETAILS = new Map<number, MovieDetailData>([
   ]
 ])
 const requireApiKey = (): string => {
+  // biome-ignore lint/style/noProcessEnv: env/config module, intentional process.env access
   const k = process.env.TMDB_KEY
   if (!k) throw new Error('Missing TMDB_KEY (server-side env var)')
   return k

@@ -1,6 +1,5 @@
 #!/usr/bin/env bun
 /* eslint-disable no-console */
-/** biome-ignore-all lint/performance/useTopLevelRegex: per-file scan */
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join, relative } from 'node:path'
 import { DOCS_DIR, LIB_NOBOIL, replaceBetween, REPO } from './lib'
@@ -11,6 +10,7 @@ interface Hook {
   name: string
 }
 const HOOK_RE = /const (?<name>use[A-Z]\w*)\s*=\s*(?:<[^>]+>\s*)?\(/gu
+const ARG_NAME_RE = /[\s:]/u
 const balancedParens = (src: string, openIdx: number): string => {
   let depth = 1
   let i = openIdx + 1
@@ -22,6 +22,7 @@ const balancedParens = (src: string, openIdx: number): string => {
   return src.slice(openIdx + 1, i - 1)
 }
 const collectHooksFromFile = (root: string, f: string, out: Hook[]) => {
+  // oxlint-disable-next-line node/no-sync
   const src = readFileSync(`${root}/${f}`, 'utf8')
   let m = HOOK_RE.exec(src)
   while (m) {
@@ -36,15 +37,19 @@ const collectHooksFromFile = (root: string, f: string, out: Hook[]) => {
 }
 const collectHooks = (root: string): Hook[] => {
   const out: Hook[] = []
+  // oxlint-disable-next-line node/no-sync
   if (!statSync(root, { throwIfNoEntry: false })) return out
+  // oxlint-disable-next-line node/no-sync
   for (const f of readdirSync(root).toSorted())
     if (f.startsWith('use-') && f.endsWith('.ts') && !f.endsWith('.test.ts')) collectHooksFromFile(root, f, out)
   return out
 }
 const walkDocs = (dir: string, out: string[] = []): string[] => {
+  // oxlint-disable-next-line node/no-sync
   for (const name of readdirSync(dir).toSorted())
     if (!name.startsWith('.')) {
       const full = join(dir, name)
+      // oxlint-disable-next-line node/no-sync
       if (statSync(full).isDirectory()) walkDocs(full, out)
       else if (name.endsWith('.mdx')) out.push(full)
     }
@@ -56,6 +61,7 @@ const main = () => {
     ...collectHooks(`${LIB_NOBOIL}/src/spacetimedb/react`)
   ]
   const docFiles = walkDocs(DOCS_DIR)
+  // oxlint-disable-next-line node/no-sync
   const allDocText = docFiles.map(f => readFileSync(f, 'utf8')).join('\n')
   const issues: string[] = []
   let mentioned = 0
@@ -72,8 +78,8 @@ const main = () => {
         const docArgs = (dm[1] ?? '').trim()
         const docFirst = docArgs.split(',')[0]?.trim() ?? ''
         const srcFirst = hook.args.split(',')[0]?.trim() ?? ''
-        const docName = docFirst.split(/[\s:]/u)[0] ?? ''
-        const srcName = srcFirst.split(/[\s:]/u)[0] ?? ''
+        const docName = docFirst.split(ARG_NAME_RE)[0] ?? ''
+        const srcName = srcFirst.split(ARG_NAME_RE)[0] ?? ''
         if (docName && srcName && docName !== srcName) {
           drift += 1
           issues.push(`\`${hook.name}\`: doc declaration shows first arg \`${docName}\`, source has \`${srcName}\``)

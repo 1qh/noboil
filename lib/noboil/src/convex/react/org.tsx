@@ -115,9 +115,9 @@ const getActiveOrgIdFromCookie = (): null | string => {
 const setActiveOrgCookieClient = ({ orgId, slug }: { orgId: string; slug: string }) => {
   const maxAge = ONE_YEAR_SECONDS
   /* oxlint-disable unicorn/no-document-cookie */
-  // biome-ignore lint/suspicious/noDocumentCookie: cookie management
+  /** biome-ignore lint/suspicious/noDocumentCookie: cookie management */
   document.cookie = `${ACTIVE_ORG_COOKIE}=${orgId}; path=/; max-age=${maxAge}`
-  // biome-ignore lint/suspicious/noDocumentCookie: cookie management
+  /** biome-ignore lint/suspicious/noDocumentCookie: cookie management */
   document.cookie = `${ACTIVE_ORG_SLUG_COOKIE}=${slug}; path=/; max-age=${maxAge}`
   /* oxlint-enable unicorn/no-document-cookie */
 }
@@ -132,9 +132,9 @@ const useActiveOrg = <O extends OrgDoc>(orgGetQuery: FunctionReference<'query'>)
   // oxlint-disable-next-line react-hooks/exhaustive-deps
   const clearActiveOrg = useCallback(() => {
     /* oxlint-disable unicorn/no-document-cookie */
-    // biome-ignore lint/suspicious/noDocumentCookie: cookie management
+    /** biome-ignore lint/suspicious/noDocumentCookie: cookie management */
     document.cookie = `${ACTIVE_ORG_COOKIE}=; path=/; max-age=0`
-    // biome-ignore lint/suspicious/noDocumentCookie: cookie management
+    /** biome-ignore lint/suspicious/noDocumentCookie: cookie management */
     document.cookie = `${ACTIVE_ORG_SLUG_COOKIE}=; path=/; max-age=0`
     setActiveOrgId(null)
   }, [])

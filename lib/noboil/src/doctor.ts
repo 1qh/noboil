@@ -19,6 +19,7 @@ const doctor = async (args: string[] = []) => {
   }
   if (args.includes('--last-error')) {
     const path = LOG_PATH()
+    // oxlint-disable-next-line node/no-sync
     if (existsSync(path)) console.log(readFileSync(path, 'utf8'))
     else console.log('No crash log found.')
     return

@@ -32,7 +32,9 @@ const extract = (src: string): MwInfo[] => {
   return out
 }
 const main = () => {
+  // oxlint-disable-next-line node/no-sync
   const cvx = extract(readFileSync(`${LIB_NOBOIL}/src/convex/server/middleware.ts`, 'utf8'))
+  // oxlint-disable-next-line node/no-sync
   const stdb = extract(readFileSync(`${LIB_NOBOIL}/src/spacetimedb/server/middleware.ts`, 'utf8'))
   const all = [...new Set([...cvx, ...stdb].map(mw => mw.name))].toSorted()
   const infoByName = new Map<string, MwInfo>()

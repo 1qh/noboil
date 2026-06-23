@@ -208,8 +208,10 @@ const init = (args: string[] = []) => {
     label: appDir
   })
   const envPath = join(process.cwd(), '.env.local')
+  // oxlint-disable-next-line node/no-sync
   if (existsSync(envPath)) console.log(`  ${yellow('skip')} .env.local ${dim('(exists)')}`)
   else {
+    // oxlint-disable-next-line node/no-sync
     writeFileSync(envPath, ENV_LOCAL)
     console.log(`  ${green('✓')} .env.local`)
   }

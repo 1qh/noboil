@@ -1,5 +1,4 @@
 /* eslint-disable no-console, @typescript-eslint/max-params, @typescript-eslint/no-unnecessary-condition */
-/** biome-ignore-all lint/complexity/useMaxParams: internal helper */
 import { readFileSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 
@@ -98,7 +97,14 @@ const padMarkdownTables = (text: string): string => {
   }
   return out.join('\n')
 }
-const splice = (mdx: string, startIdx: number, startTagLen: number, endIdx: number, body: string): string => {
+interface SpliceArgs {
+  body: string
+  endIdx: number
+  mdx: string
+  startIdx: number
+  startTagLen: number
+}
+const splice = ({ body, endIdx, mdx, startIdx, startTagLen }: SpliceArgs): string => {
   const before = mdx.slice(0, startIdx + startTagLen)
   const prevBetween = mdx.slice(startIdx + startTagLen, endIdx)
   const hadBlankAfterStart = BLANK_AFTER_START_RE.test(prevBetween)
@@ -112,6 +118,7 @@ const splice = (mdx: string, startIdx: number, startTagLen: number, endIdx: numb
 const replaceBetween = (path: string, name: string, body: string): boolean => {
   const start = `{/* AUTO-GENERATED:${name}:START */}`
   const end = `{/* AUTO-GENERATED:${name}:END */}`
+  // oxlint-disable-next-line node/no-sync
   const mdx = readFileSync(path, 'utf8')
   const startIdx = mdx.indexOf(start)
   const endIdx = mdx.indexOf(end)
@@ -119,15 +126,17 @@ const replaceBetween = (path: string, name: string, body: string): boolean => {
     console.error(`Missing markers ${name} in ${path}. Add:\n${start}\n${end}`)
     return false
   }
-  const next = splice(mdx, startIdx, start.length, endIdx, body)
+  const next = splice({ body, endIdx, mdx, startIdx, startTagLen: start.length })
   if (next === mdx) return false
   if (isCheck()) return true
+  // oxlint-disable-next-line node/no-sync
   writeFileSync(path, next)
   return true
 }
 const replaceLineBetween = (path: string, name: string, body: string): boolean => {
   const tag = `<!-- AUTO-GENERATED:${name} -->`
   const endTag = `<!-- /AUTO-GENERATED:${name} -->`
+  // oxlint-disable-next-line node/no-sync
   const mdx = readFileSync(path, 'utf8')
   const startIdx = mdx.indexOf(tag)
   const endIdx = mdx.indexOf(endTag)
@@ -135,9 +144,10 @@ const replaceLineBetween = (path: string, name: string, body: string): boolean =
     console.error(`Missing tags ${tag}/${endTag} in ${path}.`)
     return false
   }
-  const next = splice(mdx, startIdx, tag.length, endIdx, body)
+  const next = splice({ body, endIdx, mdx, startIdx, startTagLen: tag.length })
   if (next === mdx) return false
   if (isCheck()) return true
+  // oxlint-disable-next-line node/no-sync
   writeFileSync(path, next)
   return true
 }

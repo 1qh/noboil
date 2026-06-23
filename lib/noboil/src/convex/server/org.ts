@@ -1,4 +1,3 @@
-/** biome-ignore-all lint/performance/noAwaitInLoops: sequential Convex DB mutations */
 /* eslint-disable no-await-in-loop */
 import type { GenericDataModel, GenericMutationCtx, GenericQueryCtx, MutationBuilder, QueryBuilder } from 'convex/server'
 import type { GenericId } from 'convex/values'
@@ -215,6 +214,7 @@ const makeOrg = <DM extends GenericDataModel, S extends ZodRawShape>({
       if (orgDoc.userId !== (c.user as Rec)._id) return err('FORBIDDEN')
       if (cascadeTables)
         for (const { fileFields, table } of cascadeTables) {
+          /** biome-ignore lint/performance/noAwaitInLoops: sequential by design */
           const docs = await db
             .query(table)
             .withIndex(
@@ -223,6 +223,7 @@ const makeOrg = <DM extends GenericDataModel, S extends ZodRawShape>({
             )
             .collect()
           for (const d of docs) {
+            /** biome-ignore lint/performance/noAwaitInLoops: sequential by design */
             if (fileFields && fileFields.length > 0 && storage) await cleanFiles({ doc: d, fileFields, storage })
             await db.delete(d._id as string)
           }

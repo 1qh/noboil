@@ -1,9 +1,7 @@
-/** biome-ignore-all lint/performance/noAwaitInLoops: sequential Convex DB mutations */
-/** biome-ignore-all lint/suspicious/useAwait: promise-function-async conflict */
-/** biome-ignore-all lint/complexity/useMaxParams: test helpers */
 /* eslint-disable no-await-in-loop */
 /* eslint-disable @typescript-eslint/max-params */
 /* eslint-disable max-depth */
+/** biome-ignore-all lint/performance/noAwaitInLoops: sequential by design */
 import type { GenericDataModel, MutationBuilder, QueryBuilder } from 'convex/server'
 import { v } from 'convex/values'
 import type { DbLike, Rec } from './types'
@@ -176,6 +174,7 @@ const makeTestAuth = <DM extends GenericDataModel>(config: TestAuthConfig<DM>) =
     }
   })
   const cleanupOrgTestData = mutation({
+    // oxlint-disable-next-line unicorn/max-nested-calls
     args: { slugPrefix: v.string(), tables: v.optional(v.array(v.string())) },
     handler: async (ctx: { db: DbLike }, { slugPrefix, tables }: { slugPrefix: string; tables?: string[] }) => {
       if (!isTestMode()) return { count: 0, done: true }
@@ -356,6 +355,7 @@ const makeTestAuth = <DM extends GenericDataModel>(config: TestAuthConfig<DM>) =
   })
   const updateOrgAsUser = mutation({
     args: {
+      // oxlint-disable-next-line unicorn/max-nested-calls
       data: v.object({ name: v.optional(v.string()), slug: v.optional(v.string()) }),
       orgId: v.id('org'),
       userId: v.id('users')
@@ -383,6 +383,7 @@ const makeTestAuth = <DM extends GenericDataModel>(config: TestAuthConfig<DM>) =
     }
   })
   const deleteOrgAsUser = mutation({
+    // oxlint-disable-next-line unicorn/max-nested-calls
     args: { cascadeTables: v.optional(v.array(v.string())), orgId: v.id('org'), userId: v.id('users') },
     handler: async (
       ctx: { db: DbLike },
@@ -595,7 +596,8 @@ const makeTestAuth = <DM extends GenericDataModel>(config: TestAuthConfig<DM>) =
     args: { requestId: v.id('orgJoinRequest') },
     handler: async (ctx: { db: DbLike }, { requestId }: { requestId: string }) => {
       if (!isTestMode()) return null
-      return ctx.db.get(requestId)
+      const doc = await ctx.db.get(requestId)
+      return doc
     }
   })
   return {
@@ -643,13 +645,19 @@ const checkAclPermission = (doc: Rec, userId: string, membership: { isAdmin: boo
   const isEditor = editors.includes(userId)
   return isCreator || membership.isAdmin || isEditor
 }
-const checkChildAclPermission = async (
-  db: DbLike,
-  doc: Rec,
-  parentField: string,
-  userId: string,
+const checkChildAclPermission = async ({
+  db,
+  doc,
+  membership,
+  parentField,
+  userId
+}: {
+  db: DbLike
+  doc: Rec
   membership: { isAdmin: boolean }
-) => {
+  parentField: string
+  userId: string
+}) => {
   const isCreator = doc.userId === userId
   if (isCreator || membership.isAdmin) return true
   const parentId = doc[parentField] as string
@@ -703,7 +711,7 @@ const makeOrgTestCrud = <DM extends GenericDataModel>(config: OrgTestCrudConfig<
       if (!membership) return { code: 'NOT_ORG_MEMBER' }
       if (hasAcl) {
         const permitted = aclFrom
-          ? await checkChildAclPermission(ctx.db, doc, aclFrom.field, userId, membership)
+          ? await checkChildAclPermission({ db: ctx.db, doc, membership, parentField: aclFrom.field, userId })
           : checkAclPermission(doc, userId, membership)
         if (!permitted) return { code: 'FORBIDDEN' }
       }
@@ -721,7 +729,7 @@ const makeOrgTestCrud = <DM extends GenericDataModel>(config: OrgTestCrudConfig<
       if (!membership) return { code: 'NOT_ORG_MEMBER' }
       if (hasAcl) {
         const permitted = aclFrom
-          ? await checkChildAclPermission(ctx.db, doc, aclFrom.field, userId, membership)
+          ? await checkChildAclPermission({ db: ctx.db, doc, membership, parentField: aclFrom.field, userId })
           : checkAclPermission(doc, userId, membership)
         if (!permitted) return { code: 'FORBIDDEN' }
       }

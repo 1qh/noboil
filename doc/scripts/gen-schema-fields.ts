@@ -1,6 +1,5 @@
 #!/usr/bin/env bun
 /* eslint-disable no-console, complexity */
-/** biome-ignore-all lint/performance/useTopLevelRegex: parsed once */
 import { readFileSync } from 'node:fs'
 import { DOCS_DIR, replaceBetween, REPO } from './lib'
 
@@ -12,6 +11,10 @@ const escapeMd = (s: string): string =>
     .replaceAll('}', String.raw`\}`)
     .replaceAll('<', '&lt;')
     .replaceAll('>', '&gt;')
+const SLOT_RE = /^\s{2}(?<slot>\w+):\s*\{/u
+const TABLE_RE = /^(?<indent>\s+)(?<name>\w+):\s*(?:object\(\{|child\(\{|\{|orgSchema)/u
+const FIELD_RE = /^\s+(?<fname>\w+):\s*(?<ftype>.+?)[,]?$/u
+const TRAILING_PUNCT_RE = /[,;]+$/u
 const SKIP_KEYS = new Set([
   'durationMs',
   'foreignKey',
@@ -46,13 +49,13 @@ const scanLine = (st: ScanState, raw: string): void => {
     st.inSchema = false
     return
   }
-  const slotMatch = /^\s{2}(?<slot>\w+):\s*\{/u.exec(raw)
+  const slotMatch = SLOT_RE.exec(raw)
   if (slotMatch?.groups?.slot && SLOTS.includes(slotMatch.groups.slot as (typeof SLOTS)[number])) {
     st.currentSlot = slotMatch.groups.slot
     st.currentTable = ''
     return
   }
-  const tableMatch = /^(?<indent>\s+)(?<name>\w+):\s*(?:object\(\{|child\(\{|\{|orgSchema)/u.exec(raw)
+  const tableMatch = TABLE_RE.exec(raw)
   if (tableMatch?.groups?.indent && tableMatch.groups.name && tableMatch.groups.indent.length === 4 && st.currentSlot) {
     st.currentTable = tableMatch.groups.name
     st.tableIndent = tableMatch.groups.indent.length
@@ -65,9 +68,9 @@ const scanLine = (st: ScanState, raw: string): void => {
       st.currentTable = ''
       return
     }
-    const fieldMatch = /^\s+(?<fname>\w+):\s*(?<ftype>.+?)[,]?$/u.exec(raw)
+    const fieldMatch = FIELD_RE.exec(raw)
     if (fieldMatch?.groups?.fname && fieldMatch.groups.ftype && !SKIP_KEYS.has(fieldMatch.groups.fname)) {
-      const t = fieldMatch.groups.ftype.trim().replace(/[,;]+$/u, '')
+      const t = fieldMatch.groups.ftype.trim().replace(TRAILING_PUNCT_RE, '')
       if (t && !t.startsWith('//') && !t.startsWith('object('))
         st.tableFields.get(st.currentTable)?.fields.push({ name: fieldMatch.groups.fname, type: t })
     }
@@ -84,6 +87,7 @@ const renderTable = (name: string, fields: { name: string; type: string }[]): st
   return out
 }
 const main = () => {
+  // oxlint-disable-next-line node/no-sync
   const lines = readFileSync(`${REPO}/backend/convex/s.ts`, 'utf8').split('\n')
   const st: ScanState = {
     currentSlot: '',

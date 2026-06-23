@@ -20,6 +20,7 @@ const runFullCount = async (cwd: string): Promise<number> => {
 }
 const walkE2E = (root: string): string[] => walkFiles(root, { accept: name => name.endsWith('.test.ts') })
 const countE2EFile = (path: string): number => {
+  // oxlint-disable-next-line node/no-sync
   const src = stripComments(readFileSync(path, 'utf8'))
   return [...src.matchAll(TEST_CALL_RE)].length
 }
@@ -35,7 +36,9 @@ const main = async () => {
   const e2eApps: string[] = []
   for (const kind of ['cvx', 'stdb']) {
     const root = join(REPO, 'web', kind)
+    // oxlint-disable-next-line node/no-sync
     if (statSync(root, { throwIfNoEntry: false })?.isDirectory())
+      // oxlint-disable-next-line node/no-sync
       for (const app of readdirSync(root).toSorted()) e2eApps.push(join(root, app))
   }
   const e2eCounts = e2eApps

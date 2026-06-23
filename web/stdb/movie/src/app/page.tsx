@@ -1,6 +1,6 @@
+/** biome-ignore-all lint/performance/noImgElement: remote image, dimensions unknown */
+/** biome-ignore-all lint/correctness/useImageSize: remote image, dimensions unknown */
 /* eslint-disable @next/next/no-img-element */
-// biome-ignore-all lint/performance/noImgElement: x
-// biome-ignore-all lint/correctness/useImageSize: dynamic images
 'use client'
 import { Input } from '@a/ui/input'
 import Link from 'next/link'

@@ -32,6 +32,7 @@ const parseInterface = (src: string, name: string): { name: string; opt: boolean
   return fields
 }
 const main = () => {
+  // oxlint-disable-next-line node/no-sync
   const src = readFileSync(`${LIB_NOBOIL}/src/convex/server/types.ts`, 'utf8')
   const fields = parseInterface(src, 'SetupConfig')
   const rows = fields

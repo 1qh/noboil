@@ -1,6 +1,6 @@
-/** biome-ignore-all lint/nursery/noUndeclaredClasses: standard tailwind v4 utilities biome cannot resolve */
+/** biome-ignore-all lint/nursery/noUndeclaredClasses: tailwind-v4 utilities biome cannot resolve */
+/** biome-ignore-all lint/nursery/noComponentHookFactories: field/handler factory, not a component/hook */
 /* eslint-disable @typescript-eslint/no-unnecessary-condition */
-/** biome-ignore-all lint/nursery/noComponentHookFactories: factory returns hook by design */
 /* oxlint-disable jsx-no-jsx-as-prop */
 // oxlint-disable promise/prefer-await-to-then
 'use client'

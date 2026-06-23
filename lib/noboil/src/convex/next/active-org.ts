@@ -1,4 +1,4 @@
-/** biome-ignore-all lint/style/noProcessEnv: env detection */
+/** biome-ignore-all lint/style/noProcessEnv: intentional env access */
 'use server'
 import type { FunctionReference } from 'convex/server'
 import { convexAuthNextjsToken } from '@convex-dev/auth/nextjs/server'

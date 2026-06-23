@@ -1,5 +1,3 @@
-/** biome-ignore-all lint/performance/noAwaitInLoops: sequential diagnostic steps */
-/** biome-ignore-all lint/suspicious/noArrayIndexKey: stable per-run */
 /* oxlint-disable promise/param-names, promise/prefer-await-to-then */
 /* eslint-disable @typescript-eslint/strict-void-return, no-promise-executor-return, no-await-in-loop, @eslint-react/web-api/no-leaked-timeout, @eslint-react/no-array-index-key, react/no-array-index-key, @typescript-eslint/no-unnecessary-condition */
 import { Box, render, Text, useApp, useInput } from 'ink'
@@ -19,6 +17,7 @@ type CheckStatus = 'fail' | 'pass' | 'running' | 'warn'
 const check = (title: string, fn: () => Omit<CheckResult, 'title'>): CheckResult => ({ ...fn(), title })
 const checkPackageJson = (cwd: string): CheckResult =>
   check('package.json', () => {
+    // oxlint-disable-next-line node/no-sync
     if (!existsSync(join(cwd, 'package.json'))) return { detail: 'not found in cwd', status: 'fail' }
     return { status: 'pass' }
   })
@@ -35,17 +34,20 @@ const checkNoboilDep = (cwd: string): CheckResult =>
   })
 const checkBun = (): CheckResult =>
   check('bun', () => {
+    // oxlint-disable-next-line node/no-sync
     const r = spawnSync('bun', ['--version'], { encoding: 'utf8' })
     if (r.status === 0) return { detail: r.stdout.trim(), status: 'pass' }
     return { detail: 'not on PATH', status: 'fail' }
   })
 const checkNodeModules = (cwd: string): CheckResult =>
   check('node_modules', () => {
+    // oxlint-disable-next-line node/no-sync
     if (existsSync(join(cwd, 'node_modules'))) return { status: 'pass' }
     return { detail: "missing — run 'bun install'", status: 'warn' }
   })
 const checkTsconfig = (cwd: string): CheckResult =>
   check('tsconfig.json', () => {
+    // oxlint-disable-next-line node/no-sync
     if (existsSync(join(cwd, 'tsconfig.json'))) return { status: 'pass' }
     return { detail: 'missing', status: 'warn' }
   })
@@ -53,6 +55,7 @@ const readRc = (cwd: string) => {
   let dir = cwd
   for (let i = 0; i < 10; i += 1) {
     const rcPath = join(dir, '.noboilrc.json')
+    // oxlint-disable-next-line node/no-sync
     if (existsSync(rcPath))
       return readJsonSafe(rcPath) as null | { db?: 'convex' | 'spacetimedb'; scaffoldedFrom?: string }
     const parent = join(dir, '..')
@@ -72,6 +75,7 @@ const checkSyncStatus = (cwd: string): CheckResult =>
   check('upstream sync', () => {
     const rc = readRc(cwd)
     if (!rc?.scaffoldedFrom) return { detail: 'skipped — no manifest', status: 'warn' }
+    // oxlint-disable-next-line node/no-sync
     const r = spawnSync('git', ['ls-remote', 'https://github.com/1qh/noboil.git', 'HEAD'], { encoding: 'utf8' })
     if (r.status !== 0) return { detail: 'remote unreachable', status: 'warn' }
     const latestHash = (r.stdout.split('\n')[0] ?? '').split('\t')[0] ?? ''
@@ -80,11 +84,13 @@ const checkSyncStatus = (cwd: string): CheckResult =>
   })
 const checkConvexDir = (cwd: string): CheckResult =>
   check('convex/', () => {
+    // oxlint-disable-next-line node/no-sync
     if (existsSync(join(cwd, 'convex'))) return { status: 'pass' }
     return { detail: 'missing', status: 'warn' }
   })
 const checkDocker = (cwd: string): CheckResult =>
   check('docker-compose', () => {
+    // oxlint-disable-next-line node/no-sync
     if (existsSync(join(cwd, 'docker-compose.yml')) || existsSync(join(cwd, 'compose.yml'))) return { status: 'pass' }
     return { detail: 'missing — needed for SpacetimeDB', status: 'warn' }
   })
@@ -149,6 +155,7 @@ const applyFixes = (cwd: string, results: CheckResult[]): string[] => {
   const actions: string[] = []
   for (const r of results) {
     if (r.title === 'node_modules' && r.status === 'warn') {
+      // oxlint-disable-next-line node/no-sync
       const install = spawnSync('bun', ['install'], { cwd, stdio: 'pipe' })
       actions.push(install.status === 0 ? '✔ bun install' : '✘ bun install failed')
     }
@@ -184,6 +191,7 @@ const DoctorApp = ({ fix, onExit }: { fix: boolean; onExit: (code: number) => vo
         const placeholder = { status: 'running' as const, title: '…' }
         setCurrent(placeholder.title)
         setResults([...accumulator, placeholder])
+        /** biome-ignore lint/performance/noAwaitInLoops: sequential by design */
         await new Promise(r => setTimeout(r, 40))
         const res = fn()
         accumulator.push(res)
@@ -224,6 +232,7 @@ const DoctorApp = ({ fix, onExit }: { fix: boolean; onExit: (code: number) => vo
       </Box>
       <Box flexDirection='column'>
         {results.map((r, i) => (
+          /** biome-ignore lint/suspicious/noArrayIndexKey: static list, index stable */
           <Row key={`${r.title}-${i}`} result={r} />
         ))}
       </Box>

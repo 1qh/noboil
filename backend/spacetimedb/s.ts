@@ -21,6 +21,7 @@ const s = schema({
     movie: object({
       backdropPath: string().optional(),
       budget: number().optional(),
+      // oxlint-disable-next-line unicorn/max-nested-calls
       genres: array(object({ id: number(), name: string() })),
       originalTitle: string(),
       overview: string(),
@@ -39,7 +40,9 @@ const s = schema({
     message: child(
       'chat',
       object({
+        // oxlint-disable-next-line unicorn/max-nested-calls
         parts: array(messagePart),
+        // oxlint-disable-next-line unicorn/max-nested-calls
         role: zenum(['user', 'assistant', 'system'])
       })
     )
@@ -95,6 +98,7 @@ const s = schema({
       content: string().min(3, 'At least 3 characters'),
       coverImage: file.nullable().optional(),
       published: boolean(),
+      // oxlint-disable-next-line unicorn/max-nested-calls
       tags: array(string()).max(5, 'Max 5 tags').optional(),
       title: string().min(1, 'Required')
     }),
@@ -103,6 +107,7 @@ const s = schema({
       title: string().min(1)
     }),
     poll: object({
+      // oxlint-disable-next-line unicorn/max-nested-calls
       options: array(string().min(1)).min(2).max(10),
       question: string().min(1)
     })

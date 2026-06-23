@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
-/** biome-ignore-all lint/style/noProcessEnv: env detection in test setup */
 /* eslint-disable no-await-in-loop */
+/** biome-ignore-all lint/style/noProcessEnv: env/CLI module, intentional process.env */
 import type { FunctionReference } from 'convex/server'
 import { config } from '@a/config'
 import { $, file } from 'bun'
@@ -14,6 +14,7 @@ const REPO_ROOT = resolve(import.meta.dirname, '../../..')
 const BACKEND_CWD = join(REPO_ROOT, config.paths.backendConvex)
 const loadRootEnv = async () => {
   const envPath = join(REPO_ROOT, '.env')
+  // oxlint-disable-next-line node/no-sync
   if (!existsSync(envPath)) return
   const text = await file(envPath).text()
   for (const line of text.split('\n')) {

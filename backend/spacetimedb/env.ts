@@ -1,4 +1,4 @@
-// biome-ignore-all lint/style/noProcessEnv: x
+/** biome-ignore-all lint/style/noProcessEnv: env/config module, intentional process.env access */
 import { createEnv } from '@t3-oss/env-core'
 import { string } from 'zod/v4'
 

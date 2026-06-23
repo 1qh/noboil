@@ -5,17 +5,21 @@ import { DOCS_DIR, replaceBetween, REPO } from './lib'
 
 const main = () => {
   const root = `${REPO}/readonly/ui/src/components`
+  // oxlint-disable-next-line node/no-sync
   const top = readdirSync(root)
     .toSorted()
     .filter(f => f.endsWith('.tsx'))
     .map(f => f.slice(0, -'.tsx'.length))
     .toSorted()
+  // oxlint-disable-next-line node/no-sync
   const subdirs = readdirSync(root)
     .toSorted()
+    // oxlint-disable-next-line node/no-sync
     .filter(f => statSync(`${root}/${f}`).isDirectory())
     .toSorted()
   const subLines: string[] = []
   for (const sub of subdirs) {
+    // oxlint-disable-next-line node/no-sync
     const items = readdirSync(`${root}/${sub}`)
       .toSorted()
       .filter(f => f.endsWith('.tsx'))

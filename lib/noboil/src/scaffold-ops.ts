@@ -13,6 +13,7 @@ interface PackageJson {
 }
 const REMOVE_ALWAYS = ['.github', 'AGENTS.md', 'doc', 'script/prep-publish.ts']
 const rmSafe = (path: string) => {
+  // oxlint-disable-next-line node/no-sync
   if (existsSync(path)) rmSync(path, { force: true, recursive: true })
 }
 const removeDirs = ({ db, dir, includeDemos }: { db: Db; dir: string; includeDemos: boolean }): string[] => {
@@ -24,6 +25,7 @@ const removeDirs = ({ db, dir, includeDemos }: { db: Db; dir: string; includeDem
   const removed: string[] = []
   for (const p of toRemove) {
     const full = join(dir, p)
+    // oxlint-disable-next-line node/no-sync
     if (existsSync(full)) {
       rmSafe(full)
       removed.push(p)
@@ -65,16 +67,21 @@ const patchRootPackageJson = ({ db, dir, includeDemos }: { db: Db; dir: string; 
 }
 const pruneLibFe = ({ db, dir }: { db: Db; dir: string }) => {
   const feSrc = join(dir, 'lib', 'fe', 'src')
+  // oxlint-disable-next-line node/no-sync
   if (!existsSync(feSrc)) return
   const otherPrefix = db === 'convex' ? 'spacetimedb-' : 'convex-'
+  // oxlint-disable-next-line node/no-sync
   for (const entry of readdirSync(feSrc)) if (entry.startsWith(otherPrefix)) rmSync(join(feSrc, entry))
 }
 const listChildPackages = (root: string): string[] => {
+  // oxlint-disable-next-line node/no-sync
   if (!existsSync(root)) return []
   const out: string[] = []
+  // oxlint-disable-next-line node/no-sync
   for (const entry of readdirSync(root, { withFileTypes: true }))
     if (entry.isDirectory()) {
       const pkg = join(root, entry.name, 'package.json')
+      // oxlint-disable-next-line node/no-sync
       if (existsSync(pkg)) out.push(pkg)
     }
   return out
@@ -122,6 +129,7 @@ const patchWorkspacePackageJsons = ({ db, dir }: { db: Db; dir: string }) => {
 const patchTsconfig = ({ db, dir }: { db: Db; dir: string }) => {
   if (db === 'convex') return
   const tsconfigPath = join(dir, 'tsconfig.json')
+  // oxlint-disable-next-line node/no-sync
   if (!existsSync(tsconfigPath)) return
   const tsconfig = readJson(tsconfigPath) as {
     compilerOptions?: { customConditions?: string[] }

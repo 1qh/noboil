@@ -1,4 +1,4 @@
-/** biome-ignore-all lint/nursery/noComponentHookFactories: test fixtures */
+/** biome-ignore-all lint/nursery/noComponentHookFactories: test fixture, not a component/hook */
 import { GlobalRegistrator } from '@happy-dom/global-registrator'
 
 if (typeof document === 'undefined') GlobalRegistrator.register()

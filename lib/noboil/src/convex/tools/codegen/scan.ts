@@ -1,4 +1,3 @@
-/** biome-ignore-all lint/performance/useTopLevelRegex: codegen script */
 /* oxlint-disable unicorn/prefer-spread */
 import { Glob } from 'bun'
 import { readFile } from 'node:fs/promises'
@@ -7,6 +6,8 @@ import { resolve } from 'node:path'
 const TIER_ADMIN_PREFIX = '_admin'
 const SKIP_DIRS = new Set(['_app', '_lib', 'generated'])
 const CAMEL_RE = /[A-Z]/gu
+const TS_EXT_RE = /\.ts$/u
+const LEADING_UNDERSCORE_RE = /^_/u
 const camelToKebab = (s: string): string => s.replace(CAMEL_RE, m => `-${m.toLowerCase()}`)
 interface ToolFile {
   absPath: string
@@ -45,9 +46,9 @@ const buildToolFile = async ({
   segments: string[]
   toolsRoot: string
 }): Promise<null | ToolFile> => {
-  const baseName = filename.replace(/\.ts$/u, '')
+  const baseName = filename.replace(TS_EXT_RE, '')
   const moduleSegs = segments.slice(0, -1).concat(baseName)
-  const cliSegs = moduleSegs.map((s, i) => (i === 0 ? camelToKebab(s.replace(/^_/u, '')) : camelToKebab(s)))
+  const cliSegs = moduleSegs.map((s, i) => (i === 0 ? camelToKebab(s.replace(LEADING_UNDERSCORE_RE, '')) : camelToKebab(s)))
   const tier = provider.startsWith(TIER_ADMIN_PREFIX) ? 'admin' : 'user'
   const importPath = `../${moduleSegs.join('/')}`
   const importVar = `${moduleSegs.map((s, i) => (i === 0 ? s : s.charAt(0).toUpperCase() + s.slice(1))).join('')}_mod`

@@ -40,8 +40,10 @@ const extractHookSigs = (src: string): { args: string; name: string }[] => {
 const collect = (kind: 'convex' | 'spacetimedb'): { args: string; name: string }[] => {
   const dir = `${LIB_NOBOIL}/src/${kind}/react`
   const out: { args: string; name: string }[] = []
+  // oxlint-disable-next-line node/no-sync
   for (const f of readdirSync(dir).toSorted())
     if (f.startsWith('use-') && f.endsWith('.ts') && !f.endsWith('.test.ts'))
+      // oxlint-disable-next-line node/no-sync
       for (const sig of extractHookSigs(readFileSync(`${dir}/${f}`, 'utf8'))) out.push(sig)
   return out.toSorted((a, b) => a.name.localeCompare(b.name))
 }

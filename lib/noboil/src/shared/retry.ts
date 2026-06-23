@@ -1,4 +1,3 @@
-// biome-ignore-all lint/performance/noAwaitInLoops: x
 /* eslint-disable no-await-in-loop */
 interface RetryFactoryOptions {
   sleep: (ms: number) => Promise<void>
@@ -36,6 +35,7 @@ const createRetryUtils = ({ sleep, validateOptions, wrapFinalError }: RetryFacto
     let lastError: Error = new Error('Retry failed')
     for (let attempt = 0; attempt < opts.maxAttempts; attempt += 1)
       try {
+        /** biome-ignore lint/performance/noAwaitInLoops: sequential by design */
         return await fn()
       } catch (error) {
         lastError = error instanceof Error ? error : new Error(String(error))
@@ -49,6 +49,7 @@ const createRetryUtils = ({ sleep, validateOptions, wrapFinalError }: RetryFacto
     const mergedOpts = { ...DEFAULT_OPTIONS, ...retry }
     let attempt = 0
     for (;;) {
+      /** biome-ignore lint/performance/noAwaitInLoops: sequential by design */
       const response = await fetch(url, fetchOptions)
       const SERVER_ERROR = 500
       const TOO_MANY = 429

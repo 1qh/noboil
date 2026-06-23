@@ -1,5 +1,5 @@
+/** biome-ignore-all lint/nursery/noComponentHookFactories: test fixture, not a component/hook */
 /* eslint-disable @typescript-eslint/naming-convention, no-console */
-/** biome-ignore-all lint/nursery/noComponentHookFactories: factory returns hook by design */
 import type { GenericTableInfo, RegisteredQuery } from 'convex/server'
 import { describe, expect, test } from 'bun:test'
 import { ConvexError } from 'convex/values'
@@ -769,6 +769,7 @@ describe('branded schema type enforcement', () => {
         foreignKey: 'chatId',
         parent: 'chat',
         parentSchema: makeOwned({
+          // oxlint-disable-next-line unicorn/max-nested-calls
           chat: object({ isPublic: boolean(), title: string() })
         }).chat,
         schema: object({ chatId: string(), text: string() })
@@ -1568,18 +1569,22 @@ describe('getMeta', () => {
     expect(getMeta(files().max(5))).toEqual({ kind: 'files', max: 5 })
   })
   test('array(string) returns kind stringArray', () => {
+    // oxlint-disable-next-line unicorn/max-nested-calls
     expect(getMeta(array(string()))).toEqual({ kind: 'stringArray' })
   })
   test('array(string).max(10) returns stringArray with max', () => {
+    // oxlint-disable-next-line unicorn/max-nested-calls
     expect(getMeta(array(string()).max(10))).toEqual({
       kind: 'stringArray',
       max: 10
     })
   })
   test('array(number) returns kind unknown', () => {
+    // oxlint-disable-next-line unicorn/max-nested-calls
     expect(getMeta(array(number()))).toEqual({ kind: 'unknown' })
   })
   test('optional string returns kind string', () => {
+    // oxlint-disable-next-line unicorn/max-nested-calls
     expect(getMeta(optional(string()))).toEqual({ kind: 'string' })
   })
   test('nullable file returns kind file', () => {
@@ -3325,6 +3330,7 @@ describe('bundle verification', () => {
   })
   test('noboil/convex/schema has no React imports', async () => {
     const { readFileSync } = await import('node:fs')
+    // oxlint-disable-next-line node/no-sync
     const content = readFileSync(join(import.meta.dir, '..', 'schema.ts'), 'utf8')
     expect(content.includes("from 'react'")).toBe(false)
     expect(content.includes('useState')).toBe(false)
@@ -3332,17 +3338,20 @@ describe('bundle verification', () => {
   })
   test('noboil/convex/schema has no node:fs imports', async () => {
     const { readFileSync } = await import('node:fs')
+    // oxlint-disable-next-line node/no-sync
     const content = readFileSync(join(import.meta.dir, '..', 'schema.ts'), 'utf8')
     expect(content.includes("from 'node:fs'")).toBe(false)
   })
   test('noboil/convex/retry has no React or server imports', async () => {
     const { readFileSync } = await import('node:fs')
+    // oxlint-disable-next-line node/no-sync
     const content = readFileSync(join(import.meta.dir, '..', 'retry.ts'), 'utf8')
     expect(content.includes("from 'react'")).toBe(false)
     expect(content.includes("from 'node:fs'")).toBe(false)
   })
   test('entry point count matches package.json exports', async () => {
     const { readFileSync } = await import('node:fs')
+    // oxlint-disable-next-line node/no-sync
     const content = readFileSync(join(import.meta.dir, '..', '..', '..', 'package.json'), 'utf8')
     const pkg = JSON.parse(content) as { exports: Record<string, string> }
     const exportKeys = Object.keys(pkg.exports)
@@ -6052,7 +6061,9 @@ describe('health check', () => {
       const { mkdirSync, writeFileSync } = await import('node:fs')
       const { tmpdir } = await import('node:os')
       const tmpDir = `${tmpdir()}/noboil-convex-test-health-${Date.now()}`
+      // oxlint-disable-next-line node/no-sync
       mkdirSync(`${tmpDir}/convex/_generated`, { recursive: true })
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(`${tmpDir}/convex/blog.ts`, "crud('blog', owned.blog)")
       const schemaFile = {
         content: 'const owned = makeOwned({ blog: object({ title: string() }) })',
@@ -6069,7 +6080,9 @@ describe('health check', () => {
       const { tmpdir } = await import('node:os')
       const calls: FactoryCall[] = [{ factory: 'crud', file: 'blog.ts', options: '', table: 'blog' }]
       const tmpDir = `${tmpdir()}/noboil-convex-test-idx-${Date.now()}`
+      // oxlint-disable-next-line node/no-sync
       mkdirSync(`${tmpDir}/convex/_generated`, { recursive: true })
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(`${tmpDir}/convex/schema.ts`, 'export default defineSchema({})')
       const issues = checkIndexCoverage(`${tmpDir}/convex`, calls)
       expect(issues).toHaveLength(0)

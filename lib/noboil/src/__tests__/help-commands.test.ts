@@ -30,10 +30,12 @@ describe('root --help commands', () => {
   test('status with .noboilrc.json reports scaffold age + node_modules presence', async () => {
     const { mkdtempSync, rmSync, writeFileSync, mkdirSync } = await import('node:fs')
     const { tmpdir } = await import('node:os')
+    // oxlint-disable-next-line node/no-sync
     const dir = mkdtempSync(join(tmpdir(), 'noboil-status-full-'))
     const orig = process.cwd()
     try {
       const oldDate = new Date(Date.now() - 60 * 86_400_000).toISOString()
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(
         join(dir, '.noboilrc.json'),
         JSON.stringify({
@@ -45,12 +47,15 @@ describe('root --help commands', () => {
         }),
         'utf8'
       )
+      // oxlint-disable-next-line node/no-sync
       mkdirSync(join(dir, 'node_modules'), { recursive: true })
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(join(dir, 'package.json'), '{"name":"x"}', 'utf8')
       process.chdir(dir)
       silenced(() => status([]))
     } finally {
       process.chdir(orig)
+      // oxlint-disable-next-line node/no-sync
       rmSync(dir, { force: true, recursive: true })
     }
     expect(true).toBe(true)
@@ -68,9 +73,11 @@ describe('root --help commands', () => {
       new Date(Date.now() - 5 * 86_400_000).toISOString()
     ]
     for (const date of cases) {
+      // oxlint-disable-next-line node/no-sync
       const dir = mkdtempSync(join(tmpdir(), 'noboil-status-age-'))
       const orig = process.cwd()
       try {
+        // oxlint-disable-next-line node/no-sync
         writeFileSync(
           join(dir, '.noboilrc.json'),
           JSON.stringify({ db: 'spacetimedb', ejected: true, scaffoldedAt: date, scaffoldedFrom: 'b'.repeat(40) }),
@@ -80,6 +87,7 @@ describe('root --help commands', () => {
         silenced(() => status([]))
       } finally {
         process.chdir(orig)
+        // oxlint-disable-next-line node/no-sync
         rmSync(dir, { force: true, recursive: true })
       }
     }
@@ -89,6 +97,7 @@ describe('root --help commands', () => {
     const { mkdtempSync, rmSync, writeFileSync } = await import('node:fs')
     const { tmpdir } = await import('node:os')
     const { homedir } = await import('node:os')
+    // oxlint-disable-next-line node/no-sync
     const fakeHome = mkdtempSync(join(tmpdir(), 'noboil-fake-home-'))
     const origHome = process.env.HOME
     try {
@@ -96,17 +105,21 @@ describe('root --help commands', () => {
       const home = homedir()
       const noboilDir = join(home, '.noboil')
       const { mkdirSync } = await import('node:fs')
+      // oxlint-disable-next-line node/no-sync
       mkdirSync(noboilDir, { recursive: true })
+      // oxlint-disable-next-line node/no-sync
       writeFileSync(join(noboilDir, 'last-error.log'), 'previous crash content', 'utf8')
       await silenced(async () => {
         await doctor(['--last-error'])
       })
+      // oxlint-disable-next-line node/no-sync
       rmSync(join(noboilDir, 'last-error.log'), { force: true })
       await silenced(async () => {
         await doctor(['--last-error'])
       })
     } finally {
       process.env.HOME = origHome
+      // oxlint-disable-next-line node/no-sync
       rmSync(fakeHome, { force: true, recursive: true })
     }
     expect(true).toBe(true)
@@ -114,6 +127,7 @@ describe('root --help commands', () => {
   test('status outside a noboil project prints message', async () => {
     const { mkdtempSync, rmSync } = await import('node:fs')
     const { tmpdir } = await import('node:os')
+    // oxlint-disable-next-line node/no-sync
     const dir = mkdtempSync(join(tmpdir(), 'noboil-status-'))
     const orig = process.cwd()
     try {
@@ -121,6 +135,7 @@ describe('root --help commands', () => {
       silenced(() => status([]))
     } finally {
       process.chdir(orig)
+      // oxlint-disable-next-line node/no-sync
       rmSync(dir, { force: true, recursive: true })
     }
     expect(true).toBe(true)

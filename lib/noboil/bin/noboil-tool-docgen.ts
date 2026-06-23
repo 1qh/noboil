@@ -1,7 +1,5 @@
 #!/usr/bin/env bun
 /* eslint-disable no-console */
-/** biome-ignore-all lint/style/noProcessEnv: CLI script */
-/** biome-ignore-all lint/suspicious/noUndeclaredEnvVars: CLI reads optional runtime env vars */
 import { mkdir, writeFile } from 'node:fs/promises'
 import { dirname, resolve } from 'node:path'
 import type { ExtractedMeta } from '../src/convex/tools/codegen/extract-meta'
@@ -27,7 +25,11 @@ const detailLines = (t: { cliPath: string[]; meta: ExtractedMeta }): string[] =>
   return out
 }
 const run = async (): Promise<void> => {
+  /** biome-ignore lint/style/noProcessEnv: intentional env access */
+  /** biome-ignore lint/suspicious/noUndeclaredEnvVars: intentional env access */
   const TOOLS_ROOT = resolve(process.cwd(), process.env.TOOLS_ROOT ?? 'convex/tools')
+  /** biome-ignore lint/style/noProcessEnv: intentional env access */
+  /** biome-ignore lint/suspicious/noUndeclaredEnvVars: intentional env access */
   const OUT = resolve(process.cwd(), process.env.DOCS_OUT ?? 'convex/tools/INVENTORY.md')
   const data = await collect(TOOLS_ROOT)
   const metas = extractMeta(data.tools.map(t => t.absPath))

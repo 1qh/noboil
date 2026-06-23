@@ -1,4 +1,4 @@
-/** biome-ignore-all lint/nursery/noUndeclaredClasses: standard tailwind v4 utilities biome cannot resolve */
+/** biome-ignore-all lint/nursery/noUndeclaredClasses: tailwind-v4 utilities biome cannot resolve */
 /* oxlint-disable jsx-no-new-object-as-prop */
 'use client'
 import { cn } from '@a/ui'

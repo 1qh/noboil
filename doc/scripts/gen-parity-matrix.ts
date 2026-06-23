@@ -21,10 +21,13 @@ const FEATURES = [
   { file: 'middleware.ts', name: 'middleware (audit, sanitize, slow-warn)' }
 ]
 const has = (kind: 'convex' | 'spacetimedb', file: string): boolean =>
+  // oxlint-disable-next-line node/no-sync
   existsSync(`${LIB_NOBOIL}/src/${kind}/server/${file}`)
 const sloc = (kind: 'convex' | 'spacetimedb', file: string): number => {
   const path = `${LIB_NOBOIL}/src/${kind}/server/${file}`
+  // oxlint-disable-next-line node/no-sync
   if (!existsSync(path)) return 0
+  // oxlint-disable-next-line node/no-sync
   return readFileSync(path, 'utf8')
     .split('\n')
     .filter(l => l.trim() && !l.trim().startsWith('//')).length

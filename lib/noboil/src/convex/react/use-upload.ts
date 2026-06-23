@@ -1,6 +1,5 @@
 // oxlint-disable unicorn/prefer-add-event-listener
 /* eslint-disable no-await-in-loop */
-/** biome-ignore-all lint/performance/noAwaitInLoops: retry logic */
 'use client'
 import type { FunctionReference } from 'convex/server'
 import { useMutation } from 'convex/react'
@@ -71,6 +70,7 @@ const useUpload = (uploadMutation: FunctionReference<'mutation'>, options?: Uplo
     try {
       for (let i = 0; i < retries; i += 1) {
         setAttempt(i + 1)
+        /** biome-ignore lint/performance/noAwaitInLoops: sequential by design */
         const result = await uploadOnce(file)
         if (result.ok || result.code === 'ABORTED') return result
         if (i < retries - 1) await sleep(retryDelay * (i + 1))

@@ -12,8 +12,10 @@ const PATTERNS = [
   /throwConvexError\(\s*'(?<code>[A-Z][A-Z_0-9]+)'/gu
 ]
 const walk = (dir: string, out: string[] = []): string[] => {
+  // oxlint-disable-next-line node/no-sync
   for (const name of readdirSync(dir).toSorted()) {
     const full = join(dir, name)
+    // oxlint-disable-next-line node/no-sync
     if (statSync(full).isDirectory()) walk(full, out)
     else if (name.endsWith('.ts') && !name.endsWith('.test.ts')) out.push(full)
   }
@@ -27,6 +29,7 @@ const main = () => {
   ]
   const codes = new Set<string>()
   for (const file of files) {
+    // oxlint-disable-next-line node/no-sync
     const src = readFileSync(file, 'utf8')
     for (const re of PATTERNS) {
       let m = re.exec(src)

@@ -1,5 +1,4 @@
 /* eslint-disable @eslint-react/hooks-extra/no-direct-set-state-in-use-effect */
-/** biome-ignore-all lint/style/noProcessEnv: env detection */
 'use client'
 import type { FunctionReference, OptionalRestArgs } from 'convex/server'
 import { useAction, useQuery } from 'convex/react'
@@ -14,6 +13,7 @@ interface FireLoadCtx {
   setIsLoading: (v: boolean) => void
 }
 type QueryRef = FunctionReference<'query'>
+/** biome-ignore lint/style/noProcessEnv: intentional env access */
 const isDev = typeof process !== 'undefined' && process.env.NODE_ENV !== 'production'
 const fireLoad = async ({ args, load, loadingRef, setIsLoading }: FireLoadCtx) => {
   try {

@@ -1,4 +1,3 @@
-/** biome-ignore-all lint/performance/noAwaitInLoops: sequential slug checks */
 /* eslint-disable no-await-in-loop */
 import { ConvexError } from 'convex/values'
 import type { MutationCtx } from './_generated/server'
@@ -41,6 +40,7 @@ const MAX_SLUG_ATTEMPTS = 100
 const findUniqueSlug = async (ctx: MutationCtx, base: string): Promise<string> => {
   for (let attempt = 0; attempt < MAX_SLUG_ATTEMPTS; attempt += 1) {
     const candidate = attempt === 0 ? base : `${base}-${String(attempt)}`
+    // biome-ignore lint/performance/noAwaitInLoops: sequential slug probing — each attempt depends on the prior being taken
     if (!(await slugTaken(ctx, candidate))) return candidate
   }
   throw new ConvexError({ code: 'SLUG_GENERATION_FAILED' })

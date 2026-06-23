@@ -1,4 +1,3 @@
-/** biome-ignore-all lint/style/noProcessEnv: env loader is the single allowed site */
 import type { ZodObject, ZodRawShape, ZodType } from 'zod/v4'
 /**
  * Strict env reader: parses `process.env` against a Zod schema once, lazily, and returns
@@ -13,6 +12,7 @@ const createEnv = <T extends ZodRawShape>(
     {},
     {
       get: (_, key: string) => {
+        /** biome-ignore lint/style/noProcessEnv: intentional env access */
         cached ??= schema.parse(process.env) as Record<string, unknown>
         return cached[key]
       }
@@ -35,6 +35,7 @@ const createOptionalEnv = <T extends ZodRawShape>(
       get: (_, key: string) => {
         if (typeof key !== 'string') return
         if (!keys.has(key)) throw new Error(`env: unknown optional key '${key}'`)
+        /** biome-ignore lint/style/noProcessEnv: intentional env access */
         const raw = process.env[key]
         if (raw === undefined) return (defaults as Record<string, unknown>)[key]
         const shape = (
