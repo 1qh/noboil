@@ -4,6 +4,7 @@
 'use client'
 import type { ErrorInfo, ReactNode } from 'react'
 import { cn } from '@a/ui'
+import { Button } from '@a/ui/button'
 import { Component } from 'react'
 
 interface CreateErrorBoundaryOptions {
@@ -53,12 +54,9 @@ const createErrorBoundary = ({ readErrorCode, readErrorMessage }: CreateErrorBou
             ) : null}
             <h2 className='text-lg font-semibold text-foreground dark:text-foreground'>Something went wrong</h2>
             <p className='text-sm text-muted-foreground dark:text-muted-foreground'>{message}</p>
-            <button
-              className='rounded-md bg-background px-4 py-2 text-sm text-foreground hover:bg-muted dark:bg-background dark:text-foreground dark:hover:bg-muted'
-              onClick={() => this.setState({ error: null })}
-              type='button'>
+            <Button onClick={() => this.setState({ error: null })} type='button' variant='outline'>
               Try again
-            </button>
+            </Button>
           </div>
         </div>
       )
