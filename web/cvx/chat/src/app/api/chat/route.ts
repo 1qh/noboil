@@ -138,7 +138,7 @@ const POST = async (request: Request) => {
         system: 'You are a helpful assistant.',
         tools: { getWeather }
       })
-      dataStream.merge(toUIMessageStream({ sendReasoning: true, stream: result.fullStream }))
+      dataStream.merge(toUIMessageStream({ sendReasoning: true, stream: result.stream }))
     },
     generateId,
     onFinish: async ({ messages: finishedMessages }) => {
