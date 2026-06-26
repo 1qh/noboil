@@ -10,7 +10,8 @@ import {
   createUIMessageStreamResponse,
   generateId,
   streamText,
-  tool
+  tool,
+  toUIMessageStream
 } from 'ai'
 import { fetchMutation, fetchQuery } from 'convex/nextjs'
 import { getToken, isAuthenticated } from 'noboil/convex/next'
@@ -137,7 +138,7 @@ const POST = async (request: Request) => {
         system: 'You are a helpful assistant.',
         tools: { getWeather }
       })
-      dataStream.merge(result.toUIMessageStream({ sendReasoning: true }))
+      dataStream.merge(toUIMessageStream({ sendReasoning: true, stream: result.fullStream }))
     },
     generateId,
     onFinish: async ({ messages: finishedMessages }) => {
