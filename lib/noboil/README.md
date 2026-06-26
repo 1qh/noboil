@@ -4,7 +4,7 @@
 
 <!-- AUTO-GENERATED:PACKAGE-INFO -->
 
-**v0.0.1** · Schema-first, zero-boilerplate fullstack. Pick your database.
+**v0.0.2** · Schema-first, zero-boilerplate fullstack. Pick your database.
 
 **Peer deps:** `@auth/core`, `@convex-dev/auth`, `convex`, `convex-helpers`, `next`, `react`, `react-dom`, `spacetimedb`, `zod`
 
