@@ -131,7 +131,7 @@ const POST = async (request: Request) => {
   const stream = createUIMessageStream({
     execute: async ({ writer: dataStream }) => {
       const result = streamText({
-        experimental_activeTools: ['getWeather'],
+        activeTools: ['getWeather'],
         messages: modelMessages,
         model: await getModel(),
         system: 'You are a helpful assistant.',
