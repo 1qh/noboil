@@ -1,7 +1,7 @@
 /** biome-ignore-all lint/nursery/noUndeclaredClasses: tailwind-v4 utilities biome cannot resolve */
 /** biome-ignore-all lint/nursery/noComponentHookFactories: field/handler factory, not a component/hook */
 /* oxlint-disable jsx-no-new-object-as-prop, react/jsx-handler-names */
-/* eslint-disable @eslint-react/refs, complexity, react-hooks/refs */
+/* eslint-disable @eslint-react/refs, react-hooks/refs */
 'use client'
 import type { Stepper as CoreStepper, Step } from '@stepperize/core'
 import type { StandardSchemaV1 } from '@tanstack/form-core'
@@ -95,6 +95,16 @@ interface UseStepperOpts<Defs extends readonly StepDef[]> {
   onSubmit: (data: StepDataMap<Defs>) => Promise<void> | void
   onSuccess?: () => void
   values?: Partial<{ [D in Defs[number] as D['id']]?: output<D['schema']> }>
+}
+/** Pick out the `<Step id render>` children as `id -> render`, so the form can look one up by the stepper's current id. */
+const collectStepRenders = (children: ReactNode): Record<string, unknown> => {
+  const renders: Record<string, unknown> = {}
+  for (const c of Array.isArray(children) ? children : [children])
+    if (c && typeof c === 'object' && 'props' in c) {
+      const p = (c as { props: { id?: string; render?: unknown } }).props
+      if (p.id && p.render) renders[p.id] = p.render
+    }
+  return renders
 }
 const StepIndicator = ({
   classNames,
@@ -274,14 +284,7 @@ const createDefineSteps = <TFields,>(adapters: DefineStepsAdapters<TFields>) => 
       const currentIsFirst = s.inner.isFirst
       const currentIsLast = s.inner.isLast
       const currentId = currentStep.id
-      const stepRenders: Record<string, (f: TFields) => ReactNode> = {}
-      const childArr = Array.isArray(children) ? children : [children]
-      for (const c of childArr)
-        if (c && typeof c === 'object' && 'props' in c) {
-          const p = (c as { props: { id?: string; render?: (f: TFields) => ReactNode } }).props
-          if (p.id && p.render) stepRenders[p.id] = p.render
-        }
-      const currentRender = stepRenders[currentId]
+      const currentRender = collectStepRenders(children)[currentId] as ((f: TFields) => ReactNode) | undefined
       const saved = stepDataRef.current[currentId]
       const currentValues = saved ? { ...s.values, [currentId]: saved } : s.values
       const handleSubmitForm = useCallback(

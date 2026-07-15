@@ -1,6 +1,6 @@
 /** biome-ignore-all lint/nursery/noComponentHookFactories: handler map, not a component/hook */
 /** biome-ignore-all lint/style/noProcessEnv: intentional env access */
-/* eslint-disable @eslint-react/immutability, complexity */
+/* eslint-disable @eslint-react/immutability -- `store` is an external store bridged by useSyncExternalStore (./optimistic-store); mutating it from an async callback IS its API, and the rule's "use state instead" would defeat optimistic updates */
 'use client'
 import type { FunctionReference, FunctionReturnType, OptionalRestArgs } from 'convex/server'
 import { useMutation } from 'convex/react'
@@ -106,6 +106,38 @@ const detectMutationType = (ref: MutationRef): MutationType => {
   if (name.endsWith(':update') || name.endsWith('.update') || name.includes('patch')) return 'update'
   return 'create'
 }
+/** Runs the mutation and reports the outcome — shared by the optimistic and non-optimistic paths so they cannot drift. */
+const runSettled = async <A, R>({
+  args,
+  devId,
+  errorHandler,
+  exec,
+  onSettled,
+  successHandler
+}: {
+  args: A
+  devId: number
+  errorHandler: ((error: unknown) => void) | undefined
+  exec: () => Promise<R>
+  onSettled: ((args: A, error: unknown, result?: R) => void) | undefined
+  successHandler: ((result: R, args: A) => void) | undefined
+}): Promise<R> => {
+  try {
+    const result = await exec()
+    if (isDev && devId) completeMutation(devId, 'success')
+    successHandler?.(result, args)
+    onSettled?.(args, undefined, result)
+    return result
+  } catch (error) {
+    if (isDev) {
+      if (devId) completeMutation(devId, 'error')
+      pushError(error)
+    }
+    errorHandler?.(error)
+    onSettled?.(args, error)
+    throw error
+  }
+}
 /**
  * Wraps a Convex mutation with optimistic store tracking, devtools integration, and default error toasting.
  *
@@ -145,22 +177,8 @@ const useMutate = <T extends MutationRef>(
               typeof retryOptions === 'number' ? { maxAttempts: retryOptions } : retryOptions
             )
         : async () => (mutate as (a: OptionalRestArgs<T>[0]) => Promise<FunctionReturnType<T>>)(args)
-      if (!(store && isOptimistic))
-        try {
-          const result = await exec()
-          if (isDev && devId) completeMutation(devId, 'success')
-          successHandler?.(result, args)
-          onSettled?.(args, undefined, result)
-          return result
-        } catch (error) {
-          if (isDev) {
-            if (devId) completeMutation(devId, 'error')
-            pushError(error)
-          }
-          if (errorHandler) errorHandler(error)
-          onSettled?.(args, error)
-          throw error
-        }
+      const settle = async () => runSettled({ args, devId, errorHandler, exec, onSettled, successHandler })
+      if (!(store && isOptimistic)) return settle()
       const tempId = makeTempId()
       const id = resolveId?.(args) ?? (argsRecord.id as string | undefined)
       store.add({
@@ -171,19 +189,8 @@ const useMutate = <T extends MutationRef>(
         type: mutationType
       })
       try {
-        const result = await exec()
-        if (isDev && devId) completeMutation(devId, 'success')
-        successHandler?.(result, args)
-        onSettled?.(args, undefined, result)
+        const result = await settle()
         return result
-      } catch (error) {
-        if (isDev) {
-          if (devId) completeMutation(devId, 'error')
-          pushError(error)
-        }
-        if (errorHandler) errorHandler(error)
-        onSettled?.(args, error)
-        throw error
       } finally {
         store.remove(tempId)
       }
