@@ -1,3 +1,4 @@
+/* eslint-disable @eslint-react/immutability */
 'use client'
 import { useEffect, useReducer } from 'react'
 

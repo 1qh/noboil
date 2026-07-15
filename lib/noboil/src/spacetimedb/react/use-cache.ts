@@ -1,4 +1,4 @@
-/* eslint-disable @eslint-react/hooks-extra/no-direct-set-state-in-use-effect */
+/* eslint-disable @eslint-react/set-state-in-effect */
 /* eslint-disable no-console */
 'use client'
 import { useCallback, useEffect, useRef, useState } from 'react'

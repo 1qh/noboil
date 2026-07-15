@@ -77,7 +77,7 @@ const useList = <F extends PaginatedQueryReference>(query: F, ...rest: ListRest<
     const id = subIdRef.current
     return () => untrackSubscription(id)
     // oxlint-disable-next-line react-hooks/exhaustive-deps
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line @eslint-react/exhaustive-deps, react-hooks/exhaustive-deps
   }, [])
   useEffect(() => {
     if (!(isDev && subIdRef.current)) return

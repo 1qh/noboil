@@ -1,4 +1,4 @@
-/* eslint-disable @eslint-react/hooks-extra/no-direct-set-state-in-use-effect, react-hooks/exhaustive-deps */
+/* eslint-disable @eslint-react/exhaustive-deps, @eslint-react/set-state-in-effect, react-hooks/exhaustive-deps */
 'use client'
 import { useEffect, useRef, useState } from 'react'
 import { toSql } from 'spacetimedb'

@@ -72,7 +72,7 @@ describe('root --help commands', () => {
       new Date(Date.now() - 86_400_000).toISOString(),
       new Date(Date.now() - 5 * 86_400_000).toISOString()
     ]
-    for (const date of cases) {
+    const statusInTempDirWithScaffoldDate = (date: string) => {
       // oxlint-disable-next-line node/no-sync
       const dir = mkdtempSync(join(tmpdir(), 'noboil-status-age-'))
       const orig = process.cwd()
@@ -91,6 +91,7 @@ describe('root --help commands', () => {
         rmSync(dir, { force: true, recursive: true })
       }
     }
+    for (const date of cases) statusInTempDirWithScaffoldDate(date)
     expect(true).toBe(true)
   })
   test('doctor --last-error reads crash log when exists, else falls back', async () => {

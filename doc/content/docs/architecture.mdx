@@ -803,7 +803,7 @@ Per-demo parity audit. Each of the 5 demos compared across both backends: route 
 | `chat`  | 5/5 ✓             | 26 / 26 ✓            | 496 / 410 ✓           | 🟢     |
 | `movie` | 2/2 ✓             | 14 / 14 ✓            | 303 / 524 ✓           | 🟢     |
 | `org`   | 18/18 ✓           | 128 / 128 ✓          | 2372 / 2611 ✓         | 🟢     |
-| `poll`  | 6/7 ✓             | 82 / 82 ✓            | 852 / 888 ✓           | 🟢     |
+| `poll`  | 6/7 ✓             | 82 / 82 ✓            | 853 / 889 ✓           | 🟢     |
 ### Backend-specific routes (intentional)
 
 - **`stdb/dev`** — SpacetimeDB SchemaPlayground dev tool (cvx has no equivalent component)
@@ -896,18 +896,19 @@ Per-file React component audit (form, fields, file upload, step form, error boun
 {/* AUTO-GENERATED:COMPONENT-PARITY:START */}
 Per-file React component parity. Each `*.tsx` in `lib/noboil/src/{convex,spacetimedb}/components/` cross-checked. Shared = symbol present in both files; -only = symbol present in only one.
 
-**7/9 component files at full parity.**
+**8/10 component files at full parity.**
 
 | File                   | cvx    | stdb   | shared exports | cvx-only | stdb-only                                    | status |
 | ---------------------- | ------ | ------ | -------------: | -------- | -------------------------------------------- | ------ |
 | `editors-section.tsx`  | ✓ 2L   | ✓ 2L   | 1              | —        | —                                            | 🟢     |
 | `error-boundary.tsx`   | ✓ 10L  | ✓ 10L  | 1              | —        | —                                            | 🟢     |
 | `fields.tsx`           | ✓ 20L  | ✓ 26L  | 5              | —        | —                                            | 🟢     |
-| `file-field.tsx`       | ✓ 244L | ✓ 393L | 3              | —        | `FileApi`, `UploadOptions`, `UploadResponse` | 🟡     |
+| `file-field.tsx`       | ✓ 245L | ✓ 394L | 3              | —        | `FileApi`, `UploadOptions`, `UploadResponse` | 🟡     |
 | `form.tsx`             | ✓ 168L | ✓ 194L | 7              | —        | —                                            | 🟢     |
-| `index.ts`             | ✓ 11L  | ✓ 12L  | 21             | —        | `UploadOptions`, `UploadResponse`            | 🟡     |
+| `index.ts`             | ✓ 13L  | ✓ 14L  | 23             | —        | `UploadOptions`, `UploadResponse`            | 🟡     |
 | `misc.tsx`             | ✓ 12L  | ✓ 16L  | 3              | —        | —                                            | 🟢     |
 | `permission-guard.tsx` | ✓ 25L  | ✓ 25L  | 1              | —        | —                                            | 🟢     |
+| `relative-time.tsx`    | ✓ 3L   | ✓ 3L   | 2              | —        | —                                            | 🟢     |
 | `step-form.tsx`        | ✓ 75L  | ✓ 79L  | 1              | —        | —                                            | 🟢     |
 {/* AUTO-GENERATED:COMPONENT-PARITY:END */}
 
@@ -918,11 +919,11 @@ Whole-repo audit of `lib/noboil/src/{convex,spacetimedb}/` cross-backend. Walks 
 {/* AUTO-GENERATED:MEGA-PARITY:START */}
 Whole-repo audit. Walks every `*.ts/.tsx/.json/.sh/.toml/.md/.yml/.yaml` (excl. tests/codegen output via SKIP_DIRS) in 7 parallel cvx/stdb directory pairs (lib + backend + 5 demos). 150 file-level + 207 symbol-level architectural exemptions registered. Test files (`*.test.ts`) ARE included in file-presence check (symbol parity skipped for tests).
 
-**244 shared files · 86 cvx-only · 65 stdb-only · 31 files with cross-backend symbol divergence.** Status: 🔴 104 unaccounted-for gap(s).
+**245 shared files · 86 cvx-only · 65 stdb-only · 31 files with cross-backend symbol divergence.** Status: 🔴 104 unaccounted-for gap(s).
 
 | Pair                     | shared    | cvx-only            | stdb-only           | symbol gaps | status |
 | ------------------------ | --------: | ------------------- | ------------------- | ----------: | ------ |
-| **lib/noboil/src**       | 84        | 47 (43 unaccounted) | 50 (28 unaccounted) | 31          | 🔴     |
+| **lib/noboil/src**       | 85        | 47 (43 unaccounted) | 50 (28 unaccounted) | 31          | 🔴     |
 | **backend**              | 4         | 31 (0 unaccounted)  | 6 (0 unaccounted)   | 0           | 🟢     |
 | **web/blog**             | 32        | 1 (0 unaccounted)   | 0 (0 unaccounted)   | 0           | 🟢     |
 | **web/chat**             | 23        | 1 (0 unaccounted)   | 1 (0 unaccounted)   | 0           | 🟢     |

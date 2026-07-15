@@ -1,7 +1,7 @@
 /** biome-ignore-all lint/nursery/noUndeclaredClasses: tailwind-v4 utilities biome cannot resolve */
 /** biome-ignore-all lint/nursery/noComponentHookFactories: field/handler factory, not a component/hook */
 /* oxlint-disable jsx-no-new-object-as-prop, react/jsx-handler-names */
-/* eslint-disable complexity, react-hooks/refs */
+/* eslint-disable @eslint-react/refs, complexity, react-hooks/refs */
 'use client'
 import type { Stepper as CoreStepper, Step } from '@stepperize/core'
 import type { StandardSchemaV1 } from '@tanstack/form-core'

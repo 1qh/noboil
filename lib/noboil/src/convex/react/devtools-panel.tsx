@@ -1,5 +1,5 @@
 /** biome-ignore-all lint/nursery/noUndeclaredClasses: tailwind-v4 utilities biome cannot resolve */
-/* eslint-disable @eslint-react/hooks-extra/no-direct-set-state-in-use-effect, react-hooks/refs */
+/* eslint-disable @eslint-react/refs, @eslint-react/set-state-in-effect, react-hooks/refs */
 /* eslint-disable complexity */
 'use client'
 import { cn } from '@a/ui'

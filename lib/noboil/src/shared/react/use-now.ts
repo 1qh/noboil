@@ -1,6 +1,5 @@
 /* oxlint-disable promise/prefer-await-to-callbacks */
-/* eslint-disable react-hooks/globals */
-import { useSyncExternalStore } from 'react'
+import { useCallback, useSyncExternalStore } from 'react'
 
 const DEFAULT_TICK_MS = 300_000
 const subscribers = new Set<() => void>()
@@ -25,7 +24,13 @@ const subscribe = (cb: () => void): (() => void) => {
 const getSnapshot = (): number => snapshot
 const getServerSnapshot = (): number => 0
 const useNow = (tickMs?: number): number => {
-  if (tickMs && tickMs !== currentTickMs && timer === null) currentTickMs = tickMs
-  return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
+  const subscribeWithTick = useCallback(
+    (cb: () => void): (() => void) => {
+      if (tickMs && tickMs !== currentTickMs && timer === null) currentTickMs = tickMs
+      return subscribe(cb)
+    },
+    [tickMs]
+  )
+  return useSyncExternalStore(subscribeWithTick, getSnapshot, getServerSnapshot)
 }
 export { useNow }

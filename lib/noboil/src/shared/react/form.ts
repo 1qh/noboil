@@ -210,7 +210,9 @@ const createUseForm = (deps: UseFormDeps) => {
     const [lastSaved, setLastSaved] = useState<null | number>(null)
     const vRef = useRef(resolved)
     const autoSaveTimerRef = useRef<null | ReturnType<typeof setTimeout>>(null)
-    vRef.current = resolved
+    useEffect(() => {
+      vRef.current = resolved
+    }, [resolved])
     ensureKnownValueKeys(resolved, schema)
     const meta = useMemo(() => buildMeta(schema), [schema])
     const instance = useTanStackForm({

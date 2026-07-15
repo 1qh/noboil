@@ -28,6 +28,7 @@ interface OrgDoc {
   slug: string
 }
 const OrgContext = createContext<null | OrgContextValue>(null)
+OrgContext.displayName = 'OrgContext'
 /** Props for the OrgProvider component. */
 interface OrgProviderProps<O extends OrgDoc, M> {
   children: ReactNode
@@ -119,7 +120,6 @@ const setActiveOrgCookieClient = ({ orgId, slug }: { orgId: string; slug: string
   document.cookie = `${ACTIVE_ORG_COOKIE}=${orgId}; path=/; max-age=${maxAge}`
   /** biome-ignore lint/suspicious/noDocumentCookie: cookie management */
   document.cookie = `${ACTIVE_ORG_SLUG_COOKIE}=${slug}; path=/; max-age=${maxAge}`
-  /* oxlint-enable unicorn/no-document-cookie */
 }
 const useActiveOrg = <O extends OrgDoc>(orgGetQuery: FunctionReference<'query'>) => {
   const [activeOrgId, setActiveOrgId] = useState<null | string>(getActiveOrgIdFromCookie)

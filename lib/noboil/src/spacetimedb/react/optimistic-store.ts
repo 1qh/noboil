@@ -158,6 +158,7 @@ const createOptimisticStore = (): OptimisticStore => {
   }
 }
 const OptimisticContext = createContext<null | OptimisticStore>(null)
+OptimisticContext.displayName = 'OptimisticContext'
 /**
  * Reads the optimistic store from context.
  * @returns The optimistic store when available, otherwise `null`.

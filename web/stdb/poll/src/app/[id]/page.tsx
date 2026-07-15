@@ -2,10 +2,11 @@
 import { tables } from '@a/be-spacetimedb/spacetimedb'
 import { Badge } from '@a/ui/badge'
 import { Button } from '@a/ui/button'
-import { format, formatDistance } from 'date-fns'
+import { format } from 'date-fns'
 import { Pencil } from 'lucide-react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
+import { RelativeTime } from 'noboil/spacetimedb/components'
 import { useTable } from 'spacetimedb/react'
 
 const Page = () => {
@@ -48,7 +49,7 @@ const Page = () => {
       </div>
       {createdDate ? (
         <p className='text-sm text-muted-foreground' data-testid='poll-detail-time' title={format(createdDate, 'PPPPpp')}>
-          Created {formatDistance(createdDate, new Date(), { addSuffix: true })}
+          Created <RelativeTime date={createdDate} />
         </p>
       ) : null}
       <ul className='space-y-2' data-testid='poll-detail-options'>

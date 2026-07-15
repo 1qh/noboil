@@ -88,6 +88,5 @@ describe('stdb docs-gen', () => {
       // oxlint-disable-next-line node/no-sync
       rmSync(dir, { force: true, recursive: true })
     }
-    /* eslint-enable no-console, @typescript-eslint/unbound-method */
   })
 })

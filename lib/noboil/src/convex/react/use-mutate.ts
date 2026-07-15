@@ -1,6 +1,6 @@
 /** biome-ignore-all lint/nursery/noComponentHookFactories: handler map, not a component/hook */
 /** biome-ignore-all lint/style/noProcessEnv: intentional env access */
-/* eslint-disable complexity */
+/* eslint-disable @eslint-react/immutability, complexity */
 'use client'
 import type { FunctionReference, FunctionReturnType, OptionalRestArgs } from 'convex/server'
 import { useMutation } from 'convex/react'

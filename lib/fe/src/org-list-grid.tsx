@@ -45,15 +45,12 @@ const OrgListGrid = <TRole extends string>({
         }}
         type='button'
         variant='ghost'>
-        {/* eslint-disable-next-line @eslint-react/no-unnecessary-key */}
-        <span key='avatar'>{renderAvatar(o)}</span>
-        {/* eslint-disable-next-line @eslint-react/no-unnecessary-key */}
-        <div className='flex-1' key='info'>
+        <span>{renderAvatar(o)}</span>
+        <div className='flex-1'>
           <div className='font-medium'>{o.name}</div>
           <div className='text-sm text-muted-foreground'>/{o.slug}</div>
         </div>
-        {/* eslint-disable-next-line @eslint-react/no-unnecessary-key */}
-        <span key='role'>{renderRole(o.role)}</span>
+        <span>{renderRole(o.role)}</span>
       </Button>
     ))}
   </div>

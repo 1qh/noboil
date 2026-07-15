@@ -1,3 +1,4 @@
+/* eslint-disable @eslint-react/immutability -- `store` is an external store bridged by useSyncExternalStore (./optimistic-store); mutating it from an async callback IS its API, and the rule's "use state instead" would defeat optimistic updates */
 /* eslint-disable complexity */
 'use client'
 import { useCallback } from 'react'

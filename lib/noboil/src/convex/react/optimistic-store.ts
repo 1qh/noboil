@@ -50,6 +50,7 @@ const createOptimisticStore = (): OptimisticStore => {
 }
 /** React context that holds the optimistic mutation store. */
 const OptimisticContext = createContext<null | OptimisticStore>(null)
+OptimisticContext.displayName = 'OptimisticContext'
 const useOptimisticStore = (): null | OptimisticStore => use(OptimisticContext)
 /** Returns all pending optimistic mutations from the store, or an empty array if no provider exists. */
 const usePendingMutations = (): PendingMutation[] => {

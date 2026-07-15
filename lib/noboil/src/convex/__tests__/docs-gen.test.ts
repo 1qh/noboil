@@ -51,15 +51,16 @@ describe('generateFullReference', () => {
 })
 describe('docs-gen run() CLI dispatch', () => {
   const silenced = (fn: () => unknown) => {
-    /* eslint-disable no-console */
+    // eslint-disable-next-line no-console
     const origLog = console.log
+    // eslint-disable-next-line no-console
     console.log = () => undefined
     try {
       return fn()
     } finally {
+      // eslint-disable-next-line no-console
       console.log = origLog
     }
-    /* eslint-enable no-console */
   }
   test('--full with no src/ exits', () => {
     // oxlint-disable-next-line node/no-sync

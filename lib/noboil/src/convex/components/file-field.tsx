@@ -22,6 +22,7 @@ interface FileApi {
   upload: FunctionReference<'mutation'>
 }
 const FileApiContext = createContext<FileApi | null>(null)
+FileApiContext.displayName = 'FileApiContext'
 const FileApiProvider = ({ children, value }: { children: ReactNode; value: FileApi }) => (
   <FileApiContext value={value}>{children}</FileApiContext>
 )

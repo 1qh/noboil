@@ -50,6 +50,7 @@ interface SpacetimeClient {
   callReducer: (name: string, input: Record<string, unknown>) => Promise<void>
 }
 const clientContext = createContext<null | SpacetimeClient>(null)
+clientContext.displayName = 'clientContext'
 const useSpacetime = (): SpacetimeClient => {
   const client = useContext(clientContext)
   if (!client) throw new Error('Spacetime client not configured')

@@ -20,11 +20,11 @@ import { Dialog, DialogContent, DialogTrigger } from '@a/ui/dialog'
 import { FieldGroup } from '@a/ui/field'
 import { Separator } from '@a/ui/separator'
 import { Spinner } from '@a/ui/spinner'
-import { format, formatDistance } from 'date-fns'
+import { format } from 'date-fns'
 import { Pencil, Plus, Send, Trash, UserRound } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { Form, useFormMutation } from 'noboil/spacetimedb/components'
+import { Form, RelativeTime, useFormMutation } from 'noboil/spacetimedb/components'
 import { useMut, useOptimisticMutation, useResolveFileUrl } from 'noboil/spacetimedb/react'
 import { useState } from 'react'
 import { toast } from 'sonner'
@@ -207,7 +207,7 @@ const Author = ({
       <div className='mx-2'>
         <p className='text-sm'>{authorName}</p>
         <div className='flex items-center gap-1 text-xs text-muted-foreground' title={format(updatedAtDate, 'PPPPpp')}>
-          {formatDistance(updatedAtDate, new Date(), { addSuffix: true })}
+          <RelativeTime date={updatedAtDate} />
           <p>•</p>
           <p className='rounded-full bg-muted-foreground px-1.5 text-background capitalize'>{category}</p>
           {tags && tags.length > 0 ? (

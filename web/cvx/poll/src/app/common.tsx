@@ -25,10 +25,10 @@ import { FieldGroup } from '@a/ui/field'
 import { Input } from '@a/ui/input'
 import { Progress } from '@a/ui/progress'
 import { useMutation } from 'convex/react'
-import { format, formatDistance } from 'date-fns'
+import { format } from 'date-fns'
 import { ChevronDown, Pencil, Plus, Send, Trash } from 'lucide-react'
 import Link from 'next/link'
-import { Form, useForm } from 'noboil/convex/components'
+import { Form, RelativeTime, useForm } from 'noboil/convex/components'
 import { useKv, useLog, useOptimisticMutation, useQuota } from 'noboil/convex/react'
 import { createElement, useState } from 'react'
 import { toast } from 'sonner'
@@ -282,7 +282,7 @@ const PollCard = ({ onOptimisticRemove, p }: { onOptimisticRemove?: () => void; 
                 {p.question}
               </p>
               <p className='text-xs text-muted-foreground' data-testid='poll-card-time' title={format(created, 'PPPPpp')}>
-                {formatDistance(created, new Date(), { addSuffix: true })}
+                <RelativeTime date={created} />
               </p>
             </button>
           )}

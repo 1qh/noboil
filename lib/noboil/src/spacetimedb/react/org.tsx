@@ -48,7 +48,9 @@ interface OrgProviderProps<O extends OrgDoc, M> {
 }
 const EMPTY_ORGS: OrgMembership[] = []
 const OrgContext = createContext<null | OrgContextValue>(null)
+OrgContext.displayName = 'OrgContext'
 const ActiveOrgContext = createContext<ActiveOrgState | null>(null)
+ActiveOrgContext.displayName = 'ActiveOrgContext'
 const COOKIE_PREFIX = `${ACTIVE_ORG_COOKIE}=`
 const getActiveOrgIdFromCookie = (): null | string => {
   if (typeof document === 'undefined') return null

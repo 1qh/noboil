@@ -1,4 +1,3 @@
-/* eslint-disable @eslint-react/no-unnecessary-use-callback */
 'use client'
 import type { PaginatedQueryArgs, PaginatedQueryReference } from 'convex/react'
 import type { FunctionReturnType } from 'convex/server'

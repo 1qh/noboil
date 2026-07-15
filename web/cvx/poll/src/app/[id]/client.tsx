@@ -4,9 +4,10 @@ import type { Preloaded } from 'convex/react'
 import { Badge } from '@a/ui/badge'
 import { Button } from '@a/ui/button'
 import { usePreloadedQuery } from 'convex/react'
-import { format, formatDistance } from 'date-fns'
+import { format } from 'date-fns'
 import { Pencil } from 'lucide-react'
 import Link from 'next/link'
+import { RelativeTime } from 'noboil/convex/components'
 
 const Client = ({ preloaded }: { preloaded: Preloaded<typeof api.poll.read> }) => {
   const p = usePreloadedQuery(preloaded)
@@ -38,7 +39,7 @@ const Client = ({ preloaded }: { preloaded: Preloaded<typeof api.poll.read> }) =
         className='text-sm text-muted-foreground'
         data-testid='poll-detail-time'
         title={format(p._creationTime, 'PPPPpp')}>
-        Created {formatDistance(p._creationTime, new Date(), { addSuffix: true })}
+        Created <RelativeTime date={p._creationTime} />
       </p>
       <ul className='space-y-2' data-testid='poll-detail-options'>
         {p.options.map(opt => (

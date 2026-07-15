@@ -23,10 +23,10 @@ import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '@a/ui/dialog'
 import { FieldGroup } from '@a/ui/field'
 import { Input } from '@a/ui/input'
 import { Progress } from '@a/ui/progress'
-import { format, formatDistance } from 'date-fns'
+import { format } from 'date-fns'
 import { ChevronDown, Pencil, Plus, Send, Trash } from 'lucide-react'
 import Link from 'next/link'
-import { Form, useFormMutation } from 'noboil/spacetimedb/components'
+import { Form, RelativeTime, useFormMutation } from 'noboil/spacetimedb/components'
 import { useKv, useLog, useMut, useOptimisticMutation, useQuota } from 'noboil/spacetimedb/react'
 import { createElement, useState } from 'react'
 import { toast } from 'sonner'
@@ -297,7 +297,7 @@ const PollCard = ({ onOptimisticRemove, p }: { onOptimisticRemove?: () => void; 
                   className='text-xs text-muted-foreground'
                   data-testid='poll-card-time'
                   title={format(createdDate, 'PPPPpp')}>
-                  {formatDistance(createdDate, new Date(), { addSuffix: true })}
+                  <RelativeTime date={createdDate} />
                 </p>
               ) : null}
             </button>

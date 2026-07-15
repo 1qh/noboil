@@ -1,5 +1,5 @@
 /** biome-ignore-all lint/security/noDangerouslySetInnerHtml: intentional HTML injection — trusted client-side redirect with encodeURIComponent-escaped values */
-/* eslint-disable @eslint-react/dom/no-dangerously-set-innerhtml, react/no-danger, @eslint-react/hooks-extra/no-direct-set-state-in-use-effect */
+/* eslint-disable @eslint-react/dom-no-dangerously-set-innerhtml, react/no-danger, @eslint-react/set-state-in-effect */
 /* oxlint-disable jsx-no-new-array-as-prop */
 'use client'
 import type { Org, OrgMember } from '@a/be-spacetimedb/spacetimedb/types'

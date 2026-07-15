@@ -3,7 +3,9 @@
 import { Box, render, Text, useApp, useInput } from 'ink'
 import Spinner from 'ink-spinner'
 import { useEffect, useMemo, useState } from 'react'
-
+import { useNow } from './shared/react/use-now'
+/** The elapsed/ETA readout ticks once a second so it advances between progress events. */
+const ELAPSED_TICK_MS = 1000
 interface SyncAction {
   kind: 'added' | 'review' | 'skipped' | 'updated'
   relPath: string
@@ -90,9 +92,10 @@ const SyncApp = ({
   const review = actions.filter(a => a.kind === 'review').length
   const recent = actions.slice(-12)
   const startTime = useMemo(() => Date.now(), [])
+  const now = useNow(ELAPSED_TICK_MS)
   const processed = actions.length
   const pct = progress.total > 0 ? Math.floor((processed / progress.total) * 100) : 0
-  const elapsedMs = Date.now() - startTime
+  const elapsedMs = now - startTime
   const etaMs = processed > 0 && progress.total > processed ? ((progress.total - processed) * elapsedMs) / processed : 0
   const etaSec = Math.ceil(etaMs / 1000)
   return (

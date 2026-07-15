@@ -95,6 +95,7 @@ const createFieldsModule = ({
     schema: ZodObject
     serverErrors: Record<string, string>
   }>(null)
+  FormContext.displayName = 'FormContext'
   const useFCtx = () => {
     const c = use(FormContext)
     if (!c) throw new Error(errors?.fieldOutsideForm ?? 'Field must be inside <Form>')
