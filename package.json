@@ -24,7 +24,7 @@
     "doctor": "bun script/doctor.ts",
     "fix": "bun run build && bun doc/scripts/gen-all.ts && lintmax fix",
     "gha:run-ci-full": "bash -lc 'b=$(git branch --show-current); gh workflow run CI --ref \"$b\" -f force_full=true && gh run list --workflow CI --branch \"$b\" --limit 3'",
-    "postinstall": "sherif && bun script/patch-stdb-sdk.ts",
+    "postinstall": "sherif -i typescript && bun script/patch-stdb-sdk.ts",
     "prepare": "bunx simple-git-hooks",
     "publish": "bun run --cwd lib/noboil publish",
     "publish:dry": "bun run --cwd lib/noboil publish:dry",
@@ -67,7 +67,7 @@
     "ts-unused-exports": "latest",
     "tsdown": "latest",
     "turbo": "latest",
-    "typescript": "latest",
+    "typescript": "~6.0.3",
     "unrun": "latest"
   },
   "packageManager": "bun@1.3.14",
