@@ -1,4 +1,7 @@
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
+import { mkdtemp, rm } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { checkForUpdate, isNewer } from '../update-check'
 
 describe('isNewer', () => {
@@ -30,7 +33,11 @@ describe('isNewer', () => {
 })
 describe('checkForUpdate', () => {
   const origFetch = globalThis.fetch
-  beforeAll(() => {
+  /** The cache is read before the fetch, so a real one on this machine would answer instead of the stub. */
+  let home = ''
+  beforeAll(async () => {
+    home = await mkdtemp(join(tmpdir(), 'noboil-update-check-'))
+    process.env.NOBOIL_CACHE_DIR = home
     globalThis.fetch = (async () =>
       Response.json(
         { version: '99.0.0' },
@@ -40,8 +47,10 @@ describe('checkForUpdate', () => {
         }
       )) as never
   })
-  afterAll(() => {
+  afterAll(async () => {
     globalThis.fetch = origFetch
+    process.env.NOBOIL_CACHE_DIR = undefined
+    await rm(home, { force: true, recursive: true })
   })
   test('returns latest version when fetch succeeds + newer', async () => {
     const result = await checkForUpdate('0.0.1')
