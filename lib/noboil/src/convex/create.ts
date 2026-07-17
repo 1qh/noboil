@@ -75,7 +75,12 @@ import { ConvexAuthProvider } from '@convex-dev/auth/react'
 import { ConvexReactClient } from 'convex/react'
 import { ErrorBoundary, FileApiProvider } from './components'
 import { api } from '../convex/_generated/api'
-const convex = new ConvexReactClient(process.env.NEXT_PUBLIC_CONVEX_URL ?? '')
+// Next inlines this at build time, so an absent variable becomes an empty string the client
+// accepts — the app then ships pointing at nothing and fails per-request instead of at the build
+// that omitted the value. Failing here names the cause while someone is still in a position to fix it.
+const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL
+if (!convexUrl) throw new Error('NEXT_PUBLIC_CONVEX_URL not set — the Convex client has no deployment to reach')
+const convex = new ConvexReactClient(convexUrl)
 const FILE_API = { info: api.file.info, upload: api.file.upload }
 const ConvexProvider = ({ children }: { children: ReactNode }) => (
   <ErrorBoundary>

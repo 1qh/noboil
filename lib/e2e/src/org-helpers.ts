@@ -7,8 +7,12 @@ import { makeExpectError } from './_shared'
 
 const CODE_RE = /\{"code":"(?<code>[^"]+)"[^}]*\}/u
 const api = anyApi as unknown as typeof BeApi
-// biome-ignore lint/style/noProcessEnv: env/CLI module, intentional process.env
-const getClient = () => new ConvexHttpClient(process.env.CONVEX_URL ?? process.env.NEXT_PUBLIC_CONVEX_URL ?? '')
+const getClient = () => {
+  // biome-ignore lint/style/noProcessEnv: env/CLI module, intentional process.env
+  const url = process.env.CONVEX_URL ?? process.env.NEXT_PUBLIC_CONVEX_URL
+  if (!url) throw new Error('CONVEX_URL or NEXT_PUBLIC_CONVEX_URL not set')
+  return new ConvexHttpClient(url)
+}
 const ref = (mod: string, fn: string) => {
   const r = (anyApi as Record<string, Record<string, FunctionReference<'action' | 'mutation' | 'query'>>>)[mod]?.[fn]
   if (!r) throw new Error(`API not found: ${mod}:${fn}`)
