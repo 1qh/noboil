@@ -1,31 +1,23 @@
-/* eslint-disable no-console */
 import { describe, expect, test } from 'bun:test'
 import { join } from 'node:path'
 import { doctor } from '../doctor'
 import { eject } from '../eject'
+import { captured, capturedAsync } from '../shared/test'
 import { status } from '../status'
 import { sync } from '../sync'
 import { upgrade } from '../upgrade'
 
-const silenced = (fn: () => unknown) => {
-  const orig = console.log
-  console.log = () => undefined
-  try {
-    return fn()
-  } finally {
-    console.log = orig
-  }
-}
 describe('root --help commands', () => {
-  test('doctor --help', async () => {
-    await silenced(async () => {
-      await doctor(['--help'])
-    })
-    expect(true).toBe(true)
+  test('doctor --help prints its usage and options', async () => {
+    const { out } = await capturedAsync(async () => doctor(['--help']))
+    expect(out).toContain('noboil doctor')
+    expect(out).toContain('Usage:')
+    expect(out).toContain('--last-error')
   })
-  test('upgrade --help', () => {
-    silenced(() => upgrade(['--help']))
-    expect(true).toBe(true)
+  test('upgrade --help prints its usage', () => {
+    const { out } = captured(() => upgrade(['--help']))
+    expect(out).toContain('noboil upgrade')
+    expect(out).toContain('Usage:')
   })
   test('status with .noboilrc.json reports scaffold age + node_modules presence', async () => {
     const { mkdtempSync, rmSync, writeFileSync, mkdirSync } = await import('node:fs')
@@ -52,19 +44,21 @@ describe('root --help commands', () => {
       // oxlint-disable-next-line node/no-sync
       writeFileSync(join(dir, 'package.json'), '{"name":"x"}', 'utf8')
       process.chdir(dir)
-      silenced(() => status([]))
+      const { out } = captured(() => status([]))
+      expect(out).toContain('convex')
+      expect(out).toContain('aaaaaaa')
     } finally {
       process.chdir(orig)
       // oxlint-disable-next-line node/no-sync
       rmSync(dir, { force: true, recursive: true })
     }
-    expect(true).toBe(true)
   })
-  test('status --help shows help', () => {
-    silenced(() => status(['--help']))
-    expect(true).toBe(true)
+  test('status --help prints its usage', () => {
+    const { out } = captured(() => status(['--help']))
+    expect(out).toContain('noboil status')
+    expect(out).toContain('Usage:')
   })
-  test('humanizeAge edge cases via status with various dates', async () => {
+  test('status reports each scaffold age it is given', async () => {
     const { mkdtempSync, rmSync, writeFileSync } = await import('node:fs')
     const { tmpdir } = await import('node:os')
     const cases = [
@@ -72,7 +66,7 @@ describe('root --help commands', () => {
       new Date(Date.now() - 86_400_000).toISOString(),
       new Date(Date.now() - 5 * 86_400_000).toISOString()
     ]
-    const statusInTempDirWithScaffoldDate = (date: string) => {
+    const statusInTempDirWithScaffoldDate = (date: string): string => {
       // oxlint-disable-next-line node/no-sync
       const dir = mkdtempSync(join(tmpdir(), 'noboil-status-age-'))
       const orig = process.cwd()
@@ -84,17 +78,16 @@ describe('root --help commands', () => {
           'utf8'
         )
         process.chdir(dir)
-        silenced(() => status([]))
+        return captured(() => status([])).out
       } finally {
         process.chdir(orig)
         // oxlint-disable-next-line node/no-sync
         rmSync(dir, { force: true, recursive: true })
       }
     }
-    for (const date of cases) statusInTempDirWithScaffoldDate(date)
-    expect(true).toBe(true)
+    for (const date of cases) expect(statusInTempDirWithScaffoldDate(date)).toContain('spacetimedb')
   })
-  test('doctor --last-error reads crash log when exists, else falls back', async () => {
+  test('doctor --last-error prints the crash log, and says so when there is none', async () => {
     const { mkdtempSync, rmSync, writeFileSync } = await import('node:fs')
     const { tmpdir } = await import('node:os')
     const { homedir } = await import('node:os')
@@ -103,29 +96,26 @@ describe('root --help commands', () => {
     const origHome = process.env.HOME
     try {
       process.env.HOME = fakeHome
-      const home = homedir()
-      const noboilDir = join(home, '.noboil')
+      const noboilDir = join(homedir(), '.noboil')
       const { mkdirSync } = await import('node:fs')
       // oxlint-disable-next-line node/no-sync
       mkdirSync(noboilDir, { recursive: true })
       // oxlint-disable-next-line node/no-sync
       writeFileSync(join(noboilDir, 'last-error.log'), 'previous crash content', 'utf8')
-      await silenced(async () => {
-        await doctor(['--last-error'])
-      })
+      const withLog = await capturedAsync(async () => doctor(['--last-error']))
+      expect(withLog.out).toContain('previous crash content')
       // oxlint-disable-next-line node/no-sync
       rmSync(join(noboilDir, 'last-error.log'), { force: true })
-      await silenced(async () => {
-        await doctor(['--last-error'])
-      })
+      const withoutLog = await capturedAsync(async () => doctor(['--last-error']))
+      expect(withoutLog.out).not.toContain('previous crash content')
+      expect(withoutLog.out.length).toBeGreaterThan(0)
     } finally {
       process.env.HOME = origHome
       // oxlint-disable-next-line node/no-sync
       rmSync(fakeHome, { force: true, recursive: true })
     }
-    expect(true).toBe(true)
   })
-  test('status outside a noboil project prints message', async () => {
+  test('status outside a noboil project prints a message', async () => {
     const { mkdtempSync, rmSync } = await import('node:fs')
     const { tmpdir } = await import('node:os')
     // oxlint-disable-next-line node/no-sync
@@ -133,15 +123,15 @@ describe('root --help commands', () => {
     const orig = process.cwd()
     try {
       process.chdir(dir)
-      silenced(() => status([]))
+      const { out } = captured(() => status([]))
+      expect(out.length).toBeGreaterThan(0)
     } finally {
       process.chdir(orig)
       // oxlint-disable-next-line node/no-sync
       rmSync(dir, { force: true, recursive: true })
     }
-    expect(true).toBe(true)
   })
-  test('sync + status + eject --help (with process.exit guard)', async () => {
+  test('sync + eject --help print their usage (with process.exit guard)', async () => {
     // eslint-disable-next-line @typescript-eslint/unbound-method
     const origExit = process.exit
     process.exit = () => {
@@ -155,12 +145,12 @@ describe('root --help commands', () => {
       }
     }
     try {
-      await silenced(safe(async () => sync(['--help'])))
-      await silenced(safe(() => status(['--help'])))
-      await silenced(safe(async () => eject(['--help'])))
+      const syncOut = await capturedAsync(safe(async () => sync(['--help'])))
+      expect(syncOut.out).toContain('Usage:')
+      const ejectOut = await capturedAsync(safe(async () => eject(['--help'])))
+      expect(ejectOut.out).toContain('Usage:')
     } finally {
       process.exit = origExit
     }
-    expect(true).toBe(true)
   })
 })

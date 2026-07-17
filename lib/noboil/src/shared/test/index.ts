@@ -1,3 +1,4 @@
+export { captured, capturedAsync } from './captured'
 export { advanceNow, restoreNow, setNow, withFakeNow } from './clock'
 export type { FixtureMap, FixtureRule } from './fixtures'
 export { loadHermeticFixtures } from './fixtures'

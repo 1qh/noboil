@@ -3,6 +3,7 @@ import { describe, expect, test } from 'bun:test'
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { captured } from '../../shared/test'
 import { doctor } from '../doctor'
 
 const silenced = (fn: () => unknown) => {
@@ -38,7 +39,7 @@ const runDoctor = (dir: string) => {
   }
 }
 describe('stdb doctor()', () => {
-  test('runs full doctor with schema warnings + index issues hits warn branches', () => {
+  test('reports its index-coverage and dependency sections for a schema + reducers project', () => {
     // oxlint-disable-next-line node/no-sync
     const dir = mkdtempSync(join(tmpdir(), 'noboil-stdb-doc-warn-'))
     const orig = process.cwd()
@@ -67,16 +68,18 @@ describe('stdb doctor()', () => {
       process.exit = (c?: number) => {
         throw new Error(`__exit__${String(c)}`)
       }
+      let out = ''
       try {
         try {
-          silenced(() => doctor())
+          ;({ out } = captured(() => doctor()))
         } catch (error) {
           if (!(error instanceof Error && error.message.startsWith('__exit__'))) throw error
         }
       } finally {
         process.exit = origExit
       }
-      expect(true).toBe(true)
+      expect(out).toContain('Index Coverage')
+      expect(out).toContain('Dependenc')
     } finally {
       process.chdir(orig)
       // oxlint-disable-next-line node/no-sync
