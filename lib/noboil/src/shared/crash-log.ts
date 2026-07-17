@@ -1,8 +1,7 @@
 import { write } from 'bun'
-import { homedir } from 'node:os'
-import { join } from 'node:path'
+import { noboilPath } from './noboil-dir'
 
-const LOG_PATH = () => join(homedir(), '.noboil', 'last-error.log')
+const LOG_PATH = () => noboilPath('last-error.log')
 /** Best-effort write of an unhandled-error stack + argv + cwd to `~/.noboil/last-error.log`. Swallows IO errors. */
 const logCrash = async (error: unknown): Promise<void> => {
   const stack = error instanceof Error ? (error.stack ?? error.message) : String(error)

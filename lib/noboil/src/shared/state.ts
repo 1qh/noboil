@@ -1,6 +1,5 @@
 import { file, write } from 'bun'
-import { homedir } from 'node:os'
-import { join } from 'node:path'
+import { noboilPath } from './noboil-dir'
 
 interface NoboilState {
   lastAppDir?: string
@@ -11,7 +10,7 @@ interface NoboilState {
   lastTableName?: string
   lastTableType?: string
 }
-const statePath = () => join(homedir(), '.noboil', 'state.json')
+const statePath = () => noboilPath('state.json')
 const readState = async (): Promise<NoboilState> => {
   try {
     const f = file(statePath())

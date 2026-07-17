@@ -1,15 +1,11 @@
 import { file, write } from 'bun'
-import { homedir } from 'node:os'
-import { join } from 'node:path'
+import { noboilPath } from './noboil-dir'
 
 interface Cache {
   checkedAt: number
   version: string
 }
-/** Overridable so a caller — or a test — can point the cache somewhere other than the real home. */
-// biome-ignore lint/style/noProcessEnv: the cache dir is deliberately configurable
-const cacheRoot = () => process.env.NOBOIL_CACHE_DIR ?? homedir()
-const CACHE_PATH = () => join(cacheRoot(), '.noboil', 'update-check.json')
+const CACHE_PATH = () => noboilPath('update-check.json')
 const TTL_MS = 24 * 60 * 60 * 1000
 const readCache = async (): Promise<Cache | null> => {
   try {
