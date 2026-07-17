@@ -68,6 +68,7 @@ const generate = (args: string[] = []) => {
   // oxlint-disable-next-line node/no-sync
   if (existsSync(outPath) && !force) {
     console.log(`${yellow('⚠')} ${gen.filename} already exists. Use ${bold('--force')} to overwrite.`)
+    process.exitCode = 1
     return
   }
   // oxlint-disable-next-line node/no-sync

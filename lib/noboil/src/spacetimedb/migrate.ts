@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /* eslint-disable no-console */
-import { execSync } from 'node:child_process'
+import { spawnSync } from 'node:child_process'
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import type { FieldInfo } from '../shared/schema-types'
@@ -144,12 +144,9 @@ const findSchemaFile = (root: string): undefined | { content: string; path: stri
   }
 }
 const getSchemaFromGit = (ref: string, filePath: string): string | undefined => {
-  try {
-    // oxlint-disable-next-line node/no-sync
-    return execSync(`git show ${ref}:${filePath}`, { encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] })
-  } catch {
-    return ''
-  }
+  // oxlint-disable-next-line node/no-sync
+  const result = spawnSync('git', ['show', `${ref}:${filePath}`], { encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] })
+  return result.status === 0 ? result.stdout : undefined
 }
 const printMigrationPlan = (actions: MigrationAction[]) => {
   if (actions.length === 0) {
@@ -258,6 +255,7 @@ Examples:
     console.log(yellow(`⚠ Could not read schema from ${fromRef}`))
     console.log(dim('  File may not exist at that commit'))
     console.log(dim(`  Tried: git show ${fromRef}:${relativePath}\n`))
+    process.exitCode = 1
     return
   }
   const before = parseSchemaContent(oldContent)
