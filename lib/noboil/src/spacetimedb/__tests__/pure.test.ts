@@ -4658,10 +4658,11 @@ describe('devtools cache tracking', () => {
     ).not.toThrow()
   })
   test('trackCacheAccess increments counts on repeated calls', () => {
-    trackCacheAccess({ hit: true, key: 'tmdb_count', table: 'movie' })
-    trackCacheAccess({ hit: true, key: 'tmdb_count', table: 'movie' })
-    trackCacheAccess({ hit: false, key: 'tmdb_count', table: 'movie' })
-    expect(true).toBe(true)
+    expect(() => {
+      trackCacheAccess({ hit: true, key: 'tmdb_count', table: 'movie' })
+      trackCacheAccess({ hit: true, key: 'tmdb_count', table: 'movie' })
+      trackCacheAccess({ hit: false, key: 'tmdb_count', table: 'movie' })
+    }).not.toThrow()
   })
 })
 describe('extractCustomIndexes', () => {

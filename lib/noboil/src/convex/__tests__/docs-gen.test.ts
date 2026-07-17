@@ -2,6 +2,7 @@ import { describe, expect, test } from 'bun:test'
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { captured } from '../../shared/test'
 import { generateFullReference, generateMarkdown, run } from '../docs-gen'
 
 describe('generateMarkdown', () => {
@@ -109,12 +110,14 @@ describe('docs-gen run() CLI dispatch', () => {
         throw new Error(`__exit__${String(c)}`)
       }
       try {
-        silenced(() => run([]))
-        silenced(() => run(['--markdown']))
+        const plain = captured(() => run([]))
+        const markdown = captured(() => run(['--markdown']))
+        expect(plain.out).toContain('endpoints')
+        expect(plain.out).toContain('todo')
+        expect(markdown.out).toContain('# API Reference')
       } finally {
         process.exit = origExit
       }
-      expect(true).toBe(true)
     } finally {
       process.chdir(cwd)
       // oxlint-disable-next-line node/no-sync
@@ -129,8 +132,8 @@ describe('docs-gen run() CLI dispatch', () => {
       // oxlint-disable-next-line node/no-sync
       mkdirSync(join(dir, 'src'), { recursive: true })
       process.chdir(dir)
-      silenced(() => run(['--full']))
-      expect(true).toBe(true)
+      const { out } = captured(() => run(['--full']))
+      expect(out).toContain('exports')
     } finally {
       process.chdir(cwd)
       // oxlint-disable-next-line node/no-sync

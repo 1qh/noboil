@@ -41,8 +41,9 @@ describe('stdb react devtools', () => {
     clearMutations()
   })
   test('trackCacheAccess records hit/miss', () => {
-    trackCacheAccess({ hit: true, key: 'k', table: 't' })
-    trackCacheAccess({ hit: false, key: 'k2', stale: false, table: 't' })
-    expect(true).toBe(true)
+    expect(() => {
+      trackCacheAccess({ hit: true, key: 'k', table: 't' })
+      trackCacheAccess({ hit: false, key: 'k2', stale: false, table: 't' })
+    }).not.toThrow()
   })
 })

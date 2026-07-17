@@ -38,9 +38,10 @@ describe('convex devtools', () => {
     trackCacheAccess({ hit: false, key: 'tmdb_id', stale: true, table: 'todo' })
   })
   test('pushError + clear*', () => {
-    pushError(new Error('boom'))
-    clearErrors()
-    clearMutations()
-    expect(true).toBe(true)
+    expect(() => {
+      pushError(new Error('boom'))
+      clearErrors()
+      clearMutations()
+    }).not.toThrow()
   })
 })

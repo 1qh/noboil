@@ -123,13 +123,14 @@ describe('scaffold-ops', () => {
     try {
       // oxlint-disable-next-line node/no-sync
       writeFileSync(join(dir, 'tsconfig.json'), JSON.stringify({ compilerOptions: { paths: { '@a/x': ['lib/x'] } } }))
-      patchTsconfig({ db: 'convex', dir })
-      patchWorkspacePackageJsons({ db: 'convex', dir })
+      expect(() => {
+        patchTsconfig({ db: 'convex', dir })
+        patchWorkspacePackageJsons({ db: 'convex', dir })
+      }).not.toThrow()
     } finally {
       // oxlint-disable-next-line node/no-sync
       rmSync(dir, { force: true, recursive: true })
     }
-    expect(true).toBe(true)
   })
   test('patchWorkspacePackageJsons strips other-db backend dep + lifts noboil workspace ref', () => {
     // oxlint-disable-next-line node/no-sync

@@ -567,7 +567,9 @@ describe('buildRules', () => {
     if (!dRule) throw new Error('expected rule')
     const visitor = dRule.create(ctx) as { Program?: (n: unknown) => void }
     if (visitor.Program) visitor.Program({ type: 'Program' })
-    expect(true).toBe(true)
+    // Empty schema + no modules → discovery fails and the rule reports discoveryFailed.
+    expect(reports).toHaveLength(1)
+    expect(reports[0]?.messageId).toBe('discoveryFailed')
   })
   test('no-duplicate-crud detects duplicate cacheCrud table via getCacheCrudTable', () => {
     const reports: { messageId: string }[] = []

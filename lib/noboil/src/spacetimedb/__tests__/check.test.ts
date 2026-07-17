@@ -14,6 +14,7 @@ import {
 import { run as doctorRun } from '../doctor'
 import { run as migrateRun } from '../migrate'
 import { run as vizRun } from '../viz'
+import { captured } from '../../shared/test'
 
 const silenced = (fn: () => unknown) => {
   const orig = console.log
@@ -50,18 +51,21 @@ describe('stdb check helpers', () => {
         })
       `
       const issues = checkSchemaConsistency(dir, { content: schemaContent, path: join(dir, 'schema.ts') })
-      expect(Array.isArray(issues)).toBe(true)
+      expect(issues.length).toBeGreaterThan(0)
+      expect(issues.some(i => i.level === 'error' && i.message.includes('mismatch'))).toBe(true)
+      expect(issues.some(i => i.level === 'error' && i.message.includes('missing in schema'))).toBe(true)
     } finally {
       // oxlint-disable-next-line node/no-sync
       rmSync(dir, { force: true, recursive: true })
     }
   })
   test('doctor + migrate run --help prints usage and returns', () => {
-    silenced(() => {
+    const { out } = captured(() => {
       doctorRun(['--help'])
       migrateRun(['--help'])
     })
-    expect(true).toBe(true)
+    expect(out).toContain('Usage: noboil stdb doctor')
+    expect(out).toContain('Usage: noboil stdb migrate')
   })
   test('viz run prints summary + --mermaid', () => {
     // oxlint-disable-next-line node/no-sync
@@ -80,8 +84,9 @@ describe('stdb check helpers', () => {
       process.exit = () => {
         throw new Error('__exit__')
       }
+      let out = ''
       try {
-        silenced(() => {
+        out = captured(() => {
           try {
             vizRun([])
           } catch (error) {
@@ -92,11 +97,12 @@ describe('stdb check helpers', () => {
           } catch (error) {
             if (!(error instanceof Error) || error.message !== '__exit__') throw error
           }
-        })
+        }).out
       } finally {
         process.exit = origExit
       }
-      expect(true).toBe(true)
+      expect(out).toContain('Schema Summary')
+      expect(out).toContain('erDiagram')
     } finally {
       process.chdir(orig)
       // oxlint-disable-next-line node/no-sync
@@ -135,15 +141,20 @@ describe('stdb check helpers', () => {
           if (!(error instanceof Error) || error.message !== '__exit__') throw error
         }
       }
+      let out = ''
       try {
-        silenced(() => {
+        out = captured(() => {
           for (const flag of ['--endpoints', '--schema', '--access', '--indexes', '--health', ''])
             tryRun(flag ? [flag] : [])
-        })
+        }).out
       } finally {
         process.exit = origExit
       }
-      expect(true).toBe(true)
+      expect(out).toContain('Registered Reducers')
+      expect(out).toContain('Schema Preview')
+      expect(out).toContain('Access Control Matrix')
+      expect(out).toContain('Index Analysis')
+      expect(out).toContain('Project Health Report')
     } finally {
       process.chdir(orig)
       // oxlint-disable-next-line node/no-sync
@@ -162,8 +173,10 @@ describe('stdb check helpers', () => {
         'utf8'
       )
       process.chdir(dir)
-      silenced(() => migrateRun(['--snapshot']))
-      expect(true).toBe(true)
+      const { out } = captured(() => migrateRun(['--snapshot']))
+      expect(out).toContain('1 table(s)')
+      expect(out).toContain('todo')
+      expect(out).toContain('id: number')
     } finally {
       process.chdir(orig)
       // oxlint-disable-next-line node/no-sync
@@ -193,8 +206,8 @@ describe('stdb check helpers', () => {
       execSync('git add -A', { cwd: dir })
       // oxlint-disable-next-line node/no-sync
       execSync('git commit -q -m initial', { cwd: dir })
-      silenced(() => migrateRun([]))
-      expect(true).toBe(true)
+      const { out } = captured(() => migrateRun([]))
+      expect(out).toContain('No schema changes detected')
     } finally {
       process.chdir(orig)
       // oxlint-disable-next-line node/no-sync
@@ -230,8 +243,10 @@ describe('stdb check helpers', () => {
         'export default schema({ tables: { todo: table(t.u64(), { id: t.u64(), changed: t.f64(), addedReq: t.string() }) } })',
         'utf8'
       )
-      silenced(() => migrateRun([]))
-      expect(true).toBe(true)
+      const { out } = captured(() => migrateRun([]))
+      expect(out).toContain('change(s) detected')
+      expect(out).toContain('Requires staged publish plan')
+      expect(out).toContain('Remove table')
     } finally {
       process.chdir(orig)
       // oxlint-disable-next-line node/no-sync
@@ -267,8 +282,8 @@ describe('stdb check helpers', () => {
         'export default schema({ tables: { todo: table(t.u64(), { id: t.u64(), title: t.string(), bio: t.option(t.string()) }) } })',
         'utf8'
       )
-      silenced(() => migrateRun([]))
-      expect(true).toBe(true)
+      const { out } = captured(() => migrateRun([]))
+      expect(out).toContain('No schema changes detected')
     } finally {
       process.chdir(orig)
       // oxlint-disable-next-line node/no-sync
@@ -310,16 +325,20 @@ describe('stdb check helpers', () => {
       process.exit = (c?: number) => {
         throw new Error(`__exit__${String(c)}`)
       }
+      let out = ''
       try {
-        try {
-          silenced(() => checkRun([]))
-        } catch (error) {
-          if (!(error instanceof Error && error.message.startsWith('__exit__'))) throw error
-        }
+        out = captured(() => {
+          try {
+            checkRun([])
+          } catch (error) {
+            if (!(error instanceof Error && error.message.startsWith('__exit__'))) throw error
+          }
+        }).out
       } finally {
         process.exit = origExit
       }
-      expect(true).toBe(true)
+      expect(out).toContain('no table named "gone"')
+      expect(out).toContain('unused')
     } finally {
       process.chdir(orig)
       // oxlint-disable-next-line node/no-sync
@@ -349,16 +368,19 @@ describe('stdb check helpers', () => {
       process.exit = (c?: number) => {
         throw new Error(`__exit__${String(c)}`)
       }
+      let out = ''
       try {
-        try {
-          silenced(() => checkRun([]))
-        } catch (error) {
-          if (!(error instanceof Error && error.message.startsWith('__exit__'))) throw error
-        }
+        out = captured(() => {
+          try {
+            checkRun([])
+          } catch (error) {
+            if (!(error instanceof Error && error.message.startsWith('__exit__'))) throw error
+          }
+        }).out
       } finally {
         process.exit = origExit
       }
-      expect(true).toBe(true)
+      expect(out).toContain('All checks passed')
     } finally {
       process.chdir(orig)
       // oxlint-disable-next-line node/no-sync
@@ -426,15 +448,20 @@ describe('stdb check helpers', () => {
           if (!(error instanceof Error && error.message.startsWith('__exit__'))) throw error
         }
       }
+      let out = ''
       try {
-        silenced(() => {
+        out = captured(() => {
           for (const flag of ['--indexes', '--access', '--health', '--schema', '--endpoints', ''])
             tryRun(flag ? [flag] : [])
-        })
+        }).out
       } finally {
         process.exit = origExit
       }
-      expect(true).toBe(true)
+      expect(out).toContain('Index Analysis')
+      expect(out).toContain('Access Control Matrix')
+      expect(out).toContain('Project Health Report')
+      expect(out).toContain('100/100')
+      expect(out).toContain('No unindexed where clauses detected')
     } finally {
       process.chdir(orig)
       // oxlint-disable-next-line node/no-sync
@@ -463,16 +490,20 @@ describe('stdb check helpers', () => {
       process.exit = (c?: number) => {
         throw new Error(`__exit__${String(c)}`)
       }
+      let out = ''
       try {
-        try {
-          silenced(() => checkRun([]))
-        } catch (error) {
-          if (!(error instanceof Error && error.message.startsWith('__exit__'))) throw error
-        }
+        out = captured(() => {
+          try {
+            checkRun([])
+          } catch (error) {
+            if (!(error instanceof Error && error.message.startsWith('__exit__'))) throw error
+          }
+        }).out
       } finally {
         process.exit = origExit
       }
-      expect(true).toBe(true)
+      expect(out).toContain('tables in schema:')
+      expect(out).toContain('todo')
     } finally {
       process.chdir(orig)
       // oxlint-disable-next-line node/no-sync
@@ -494,8 +525,9 @@ describe('stdb check helpers', () => {
         'utf8'
       )
       process.chdir(dir)
-      silenced(() => migrateRun(['--snapshot']))
-      expect(true).toBe(true)
+      const { out } = captured(() => migrateRun(['--snapshot']))
+      expect(out).toContain('table(s):')
+      expect(out).toContain('todo')
     } finally {
       process.chdir(orig)
       // oxlint-disable-next-line node/no-sync
@@ -531,8 +563,10 @@ describe('stdb check helpers', () => {
         'export default schema({ tables: { todo: table(t.u64(), { id: t.u64(), title: t.string(), changed: t.f64(), addedReq: t.string() }), brandNew: table(t.u64(), { id: t.u64() }) } })',
         'utf8'
       )
-      silenced(() => migrateRun([]))
-      expect(true).toBe(true)
+      const { out } = captured(() => migrateRun([]))
+      expect(out).toContain('Likely safe with republish')
+      expect(out).toContain('brandNew')
+      expect(out).toContain('Requires staged publish plan')
     } finally {
       process.chdir(orig)
       // oxlint-disable-next-line node/no-sync
@@ -681,16 +715,17 @@ describe('stdb check helpers', () => {
     try {
       // oxlint-disable-next-line node/no-sync
       writeFileSync(join(dir, 'schema.ts'), 'export default schema({ tables: {} })', 'utf8')
-      silenced(() => {
-        printAccessReport([])
-        printSchemaPreview('', [])
-        printIndexReport(dir, [])
-        printHealthReport(dir, { content: 'export default schema({ tables: {} })', path: join(dir, 'schema.ts') })
-      })
+      expect(() =>
+        silenced(() => {
+          printAccessReport([])
+          printSchemaPreview('', [])
+          printIndexReport(dir, [])
+          printHealthReport(dir, { content: 'export default schema({ tables: {} })', path: join(dir, 'schema.ts') })
+        })
+      ).not.toThrow()
     } finally {
       // oxlint-disable-next-line node/no-sync
       rmSync(dir, { force: true, recursive: true })
     }
-    expect(true).toBe(true)
   })
 })

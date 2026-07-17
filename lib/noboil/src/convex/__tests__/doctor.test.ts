@@ -3,6 +3,7 @@ import { describe, expect, test } from 'bun:test'
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { captured } from '../../shared/test'
 import { doctor } from '../doctor'
 
 const silenced = (fn: () => unknown) => {
@@ -37,6 +38,27 @@ const runDoctorExpectExit = (dir: string) => {
     process.chdir(orig)
   }
 }
+const runDoctorCaptured = (dir: string): string => {
+  const orig = process.cwd()
+  try {
+    process.chdir(dir)
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    const origExit = process.exit
+    process.exit = () => {
+      throw new Error('__exit__')
+    }
+    try {
+      return captured(() => doctor()).out
+    } catch (error) {
+      if (error instanceof Error && error.message === '__exit__') return ''
+      throw error
+    } finally {
+      process.exit = origExit
+    }
+  } finally {
+    process.chdir(orig)
+  }
+}
 describe('convex doctor()', () => {
   test('clean project hits all-matched + indexes warn branches', () => {
     // oxlint-disable-next-line node/no-sync
@@ -62,8 +84,9 @@ describe('convex doctor()', () => {
         JSON.stringify({ dependencies: { convex: '1', noboil: '1', zod: '4' } }),
         'utf8'
       )
-      runDoctorExpectExit(dir)
-      expect(true).toBe(true)
+      const out = runDoctorCaptured(dir)
+      expect(out).toContain('Summary:')
+      expect(out).toContain('Health Score:')
     } finally {
       // oxlint-disable-next-line node/no-sync
       rmSync(dir, { force: true, recursive: true })
@@ -117,8 +140,9 @@ describe('convex doctor()', () => {
         JSON.stringify({ dependencies: { convex: '1', noboil: '1', zod: '4' } }),
         'utf8'
       )
-      runDoctorExpectExit(dir)
-      expect(true).toBe(true)
+      const out = runDoctorCaptured(dir)
+      expect(out).toContain('Summary:')
+      expect(out).toContain('Health Score:')
     } finally {
       // oxlint-disable-next-line node/no-sync
       rmSync(dir, { force: true, recursive: true })

@@ -45,8 +45,8 @@ describe('spacetimedb eslint plugin export', () => {
         report: () => undefined,
         sourceCode: { getAncestors: () => [] }
       }) as { Program?: (n: unknown) => void }
-      if (visitor.Program) visitor.Program({ type: 'Program' })
-      expect(true).toBe(true)
+      expect(visitor.Program).toBeTypeOf('function')
+      expect(() => visitor.Program?.({ type: 'Program' })).not.toThrow()
     } finally {
       // oxlint-disable-next-line node/no-sync
       rmSync(dir, { force: true, recursive: true })

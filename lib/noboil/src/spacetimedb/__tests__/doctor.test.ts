@@ -122,19 +122,20 @@ describe('stdb doctor()', () => {
       process.chdir(dir)
       // eslint-disable-next-line @typescript-eslint/unbound-method
       const origExit = process.exit
-      let exitCode: number | undefined
       process.exit = (c?: number) => {
-        exitCode = c
-        throw new Error('__exit__')
+        throw new Error(`__exit__${String(c)}`)
       }
+      let out = ''
       try {
-        silenced(() => doctor())
+        ;({ out } = captured(() => doctor()))
       } catch (error) {
-        if (!(error instanceof Error) || error.message !== '__exit__') throw error
+        if (!(error instanceof Error && error.message.startsWith('__exit__'))) throw error
       } finally {
         process.exit = origExit
       }
-      expect(exitCode === undefined || exitCode === 1).toBe(true)
+      expect(out).toContain('Reducer Coverage')
+      expect(out).toContain('Summary:')
+      expect(out).toContain('Health Score:')
     } finally {
       process.chdir(orig)
       // oxlint-disable-next-line node/no-sync

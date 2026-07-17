@@ -7,6 +7,7 @@ import { add as addCmd } from '../add'
 import { run as checkRun, checkSchemaConsistency, printAccessReport, printSchemaPreview } from '../check'
 import { run as doctorRun } from '../doctor'
 import { run as migrateRun } from '../migrate'
+import { captured } from '../../shared/test'
 import { buildArgs, buildTree, findCommand, findValidPath } from '../tools/manifest'
 import { run as vizRun } from '../viz'
 
@@ -150,15 +151,10 @@ describe('manifest helpers', () => {
     }
   })
   test('doctor + migrate run --help prints usage and returns', () => {
-    const orig = console.log
-    console.log = () => undefined
-    try {
-      doctorRun(['--help'])
-      migrateRun(['--help'])
-    } finally {
-      console.log = orig
-    }
-    expect(true).toBe(true)
+    const { out: doctorOut } = captured(() => doctorRun(['--help']))
+    expect(doctorOut).toContain('Usage: noboil convex doctor')
+    const { out: migrateOut } = captured(() => migrateRun(['--help']))
+    expect(migrateOut).toContain('Usage: noboil convex migrate')
   })
   test('add --dry-run for each table type generates content + add real run writes files', async () => {
     // oxlint-disable-next-line node/no-sync
@@ -241,8 +237,6 @@ describe('manifest helpers', () => {
       // oxlint-disable-next-line node/no-sync
       writeFileSync(join(dir, 'schema.ts'), 'const owned = makeOwned({ todo: object({ title: string() }) })', 'utf8')
       process.chdir(dir)
-      const { log } = console
-      console.log = () => undefined
       // eslint-disable-next-line @typescript-eslint/unbound-method
       const origExit = process.exit
       process.exit = () => {
@@ -255,13 +249,17 @@ describe('manifest helpers', () => {
           if (!(error instanceof Error) || error.message !== '__exit__') throw error
         }
       }
+      let out = ''
       try {
-        for (const flag of ['--endpoints', '--schema', '--access', '--indexes', '--health', '']) tryRun(flag ? [flag] : [])
+        ;({ out } = captured(() => {
+          for (const flag of ['--endpoints', '--schema', '--access', '--indexes', '--health', '']) tryRun(flag ? [flag] : [])
+        }))
       } finally {
-        console.log = log
         process.exit = origExit
       }
-      expect(true).toBe(true)
+      expect(out).toContain('Schema Preview')
+      expect(out).toContain('Generated Endpoints')
+      expect(out).toContain('Index Analysis')
     } finally {
       process.chdir(origCwd)
       // oxlint-disable-next-line node/no-sync
@@ -278,29 +276,33 @@ describe('manifest helpers', () => {
       // oxlint-disable-next-line node/no-sync
       writeFileSync(join(dir, 'schema.ts'), 'const owned = makeOwned({ todo: object({ title: string() }) })', 'utf8')
       process.chdir(dir)
-      const { log } = console
-      console.log = () => undefined
       // eslint-disable-next-line @typescript-eslint/unbound-method
       const origExit = process.exit
       process.exit = () => {
         throw new Error('__exit__')
       }
+      let summaryOut = ''
+      let mermaidOut = ''
       try {
-        try {
-          vizRun([])
-        } catch (error) {
-          if (!(error instanceof Error) || error.message !== '__exit__') throw error
-        }
-        try {
-          vizRun(['--mermaid'])
-        } catch (error) {
-          if (!(error instanceof Error) || error.message !== '__exit__') throw error
-        }
+        ;({ out: summaryOut } = captured(() => {
+          try {
+            vizRun([])
+          } catch (error) {
+            if (!(error instanceof Error) || error.message !== '__exit__') throw error
+          }
+        }))
+        ;({ out: mermaidOut } = captured(() => {
+          try {
+            vizRun(['--mermaid'])
+          } catch (error) {
+            if (!(error instanceof Error) || error.message !== '__exit__') throw error
+          }
+        }))
       } finally {
-        console.log = log
         process.exit = origExit
       }
-      expect(true).toBe(true)
+      expect(summaryOut).toContain('noboil/convex viz')
+      expect(mermaidOut).toContain('erDiagram')
     } finally {
       process.chdir(origCwd)
       // oxlint-disable-next-line node/no-sync
@@ -387,14 +389,10 @@ describe('manifest helpers', () => {
         'utf8'
       )
       process.chdir(dir)
-      const { log } = console
-      console.log = () => undefined
-      try {
-        migrateRun(['--snapshot'])
-      } finally {
-        console.log = log
-      }
-      expect(true).toBe(true)
+      const { out } = captured(() => migrateRun(['--snapshot']))
+      expect(out).toContain('table(s)')
+      expect(out).toContain('todo')
+      expect(out).toContain('title')
     } finally {
       process.chdir(origCwd)
       // oxlint-disable-next-line node/no-sync
@@ -453,24 +451,25 @@ describe('manifest helpers', () => {
         'utf8'
       )
       process.chdir(dir)
-      const { log } = console
-      console.log = () => undefined
       // eslint-disable-next-line @typescript-eslint/unbound-method
       const origExit = process.exit
       process.exit = () => {
         throw new Error('__exit__')
       }
+      let out = ''
       try {
-        try {
-          checkRun(['--health'])
-        } catch (error) {
-          if (!(error instanceof Error) || error.message !== '__exit__') throw error
-        }
+        ;({ out } = captured(() => {
+          try {
+            checkRun(['--health'])
+          } catch (error) {
+            if (!(error instanceof Error) || error.message !== '__exit__') throw error
+          }
+        }))
       } finally {
-        console.log = log
         process.exit = origExit
       }
-      expect(true).toBe(true)
+      expect(out).toContain('Project Health Report')
+      expect(out).toContain('Errors')
     } finally {
       process.chdir(origCwd)
       // oxlint-disable-next-line node/no-sync
@@ -499,24 +498,24 @@ describe('manifest helpers', () => {
         'utf8'
       )
       process.chdir(dir)
-      const { log } = console
-      console.log = () => undefined
       // eslint-disable-next-line @typescript-eslint/unbound-method
       const origExit = process.exit
       process.exit = () => {
         throw new Error('__exit__')
       }
+      let out = ''
       try {
-        try {
-          checkRun([])
-        } catch (error) {
-          if (!(error instanceof Error) || error.message !== '__exit__') throw error
-        }
+        ;({ out } = captured(() => {
+          try {
+            checkRun([])
+          } catch (error) {
+            if (!(error instanceof Error) || error.message !== '__exit__') throw error
+          }
+        }))
       } finally {
-        console.log = log
         process.exit = origExit
       }
-      expect(true).toBe(true)
+      expect(out).toContain('error(s)')
     } finally {
       process.chdir(origCwd)
       // oxlint-disable-next-line node/no-sync
@@ -547,24 +546,25 @@ describe('manifest helpers', () => {
       // oxlint-disable-next-line node/no-sync
       writeFileSync(join(dir, 'schema.ts'), 'const owned = makeOwned({ todo: object({ title: string() }) })', 'utf8')
       process.chdir(dir)
-      const { log } = console
-      console.log = () => undefined
       // eslint-disable-next-line @typescript-eslint/unbound-method
       const origExit = process.exit
       process.exit = () => {
         throw new Error('__exit__')
       }
+      let out = ''
       try {
-        try {
-          checkRun(['--indexes'])
-        } catch (error) {
-          if (!(error instanceof Error) || error.message !== '__exit__') throw error
-        }
+        ;({ out } = captured(() => {
+          try {
+            checkRun(['--indexes'])
+          } catch (error) {
+            if (!(error instanceof Error) || error.message !== '__exit__') throw error
+          }
+        }))
       } finally {
-        console.log = log
         process.exit = origExit
       }
-      expect(true).toBe(true)
+      expect(out).toContain('Index Analysis')
+      expect(out).toContain('where filter')
     } finally {
       process.chdir(origCwd)
       // oxlint-disable-next-line node/no-sync
@@ -632,14 +632,8 @@ describe('manifest helpers', () => {
         'const owned = makeOwned({ todo: object({ title: string(), required: string(), opt: string().optional() }), newTbl: object({ y: number() }) })',
         'utf8'
       )
-      const { log } = console
-      console.log = () => undefined
-      try {
-        migrateRun([])
-      } finally {
-        console.log = log
-      }
-      expect(true).toBe(true)
+      const { out } = captured(() => migrateRun([]))
+      expect(out).toContain('change(s) detected')
     } finally {
       process.chdir(origCwd)
       // oxlint-disable-next-line node/no-sync
@@ -675,14 +669,8 @@ describe('manifest helpers', () => {
         'const project = makeOrgScoped({ todo: object({ title: string(), changed: number(), addedReq: string() }) })',
         'utf8'
       )
-      const { log } = console
-      console.log = () => undefined
-      try {
-        migrateRun([])
-      } finally {
-        console.log = log
-      }
-      expect(true).toBe(true)
+      const { out } = captured(() => migrateRun([]))
+      expect(out).toContain('Requires migration')
     } finally {
       process.chdir(origCwd)
       // oxlint-disable-next-line node/no-sync
@@ -697,14 +685,8 @@ describe('manifest helpers', () => {
       // oxlint-disable-next-line node/no-sync
       writeFileSync(join(dir, 'schema.ts'), 'const owned = makeOwned({ todo: object({ title: string() }) })', 'utf8')
       process.chdir(dir)
-      const { log } = console
-      console.log = () => undefined
-      try {
-        migrateRun([])
-      } finally {
-        console.log = log
-      }
-      expect(true).toBe(true)
+      const { out } = captured(() => migrateRun([]))
+      expect(out).toContain('Could not read schema')
     } finally {
       process.chdir(origCwd)
       // oxlint-disable-next-line node/no-sync
@@ -712,15 +694,10 @@ describe('manifest helpers', () => {
     }
   })
   test('printAccessReport + printSchemaPreview do not throw on empty input', () => {
-    const orig = console.log
-    console.log = () => undefined
-    try {
-      printAccessReport([])
-      printSchemaPreview('schema content', [])
-    } finally {
-      console.log = orig
-    }
-    expect(true).toBe(true)
+    const { out: accessOut } = captured(() => printAccessReport([]))
+    expect(accessOut).toContain('Access Control Matrix')
+    const { out: previewOut } = captured(() => printSchemaPreview('schema content', []))
+    expect(previewOut).toContain('Schema Preview')
   })
   test('findValidPath returns the longest matching prefix and child names', () => {
     const reg = {
