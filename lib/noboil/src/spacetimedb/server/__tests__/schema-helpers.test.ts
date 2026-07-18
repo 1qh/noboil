@@ -96,6 +96,6 @@ describe('stdb schema-helpers', () => {
     // oxlint-disable-next-line unicorn/max-nested-calls
     checkSchema({ todo: z.object({ tag: z.string().pipe(z.string()) }) })
     expect(process.exitCode).toBe(1)
-    process.exitCode = prev
+    process.exitCode = prev ?? 0
   })
 })

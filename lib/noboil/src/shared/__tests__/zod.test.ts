@@ -269,7 +269,7 @@ describe('checkSchema (stderr + exitCode)', () => {
     process.exitCode = 0
     checkSchema({ todo: object({ title: string() }) })
     expect(process.exitCode).toBe(0)
-    process.exitCode = prev
+    process.exitCode = prev ?? 0
   })
   test('bad schemas write to stderr and set exitCode=1', () => {
     const prev = process.exitCode
@@ -288,7 +288,7 @@ describe('checkSchema (stderr + exitCode)', () => {
       expect(captured).toContain('unsupported')
     } finally {
       process.stderr.write = realWrite
-      process.exitCode = prev
+      process.exitCode = prev ?? 0
     }
   })
 })

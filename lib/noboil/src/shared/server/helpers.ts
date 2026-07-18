@@ -67,6 +67,7 @@ const isComparisonOp = (val: unknown): val is ComparisonOp<unknown> =>
   ('$gt' in val || '$gte' in val || '$lt' in val || '$lte' in val || '$between' in val)
 const matchField = (docVal: unknown, filterVal: unknown): boolean => {
   if (!isComparisonOp(filterVal)) return Object.is(docVal, filterVal)
+  if (docVal === undefined || docVal === null) return false
   const dv = docVal as number
   if (filterVal.$gt !== undefined && dv <= (filterVal.$gt as number)) return false
   if (filterVal.$gte !== undefined && dv < (filterVal.$gte as number)) return false

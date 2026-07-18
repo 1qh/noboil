@@ -25,7 +25,7 @@ describe('convex schema-helpers', () => {
     const schema = z.object({ tag: z.string().pipe(z.string()) })
     checkSchema({ todo: schema })
     expect(process.exitCode).toBe(1)
-    process.exitCode = prevExit
+    process.exitCode = prevExit ?? 0
   })
   test('checkSchema does nothing on allowed schemas', () => {
     const prevExit = process.exitCode
@@ -33,6 +33,6 @@ describe('convex schema-helpers', () => {
     // oxlint-disable-next-line unicorn/max-nested-calls
     checkSchema({ todo: z.object({ name: z.string(), nested: z.object({ id: z.number() }) }) })
     expect(process.exitCode).toBe(0)
-    process.exitCode = prevExit
+    process.exitCode = prevExit ?? 0
   })
 })
