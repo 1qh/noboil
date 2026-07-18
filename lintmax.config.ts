@@ -1,11 +1,5 @@
 import { defineConfig, eslintImport } from 'lintmax'
 
-const backendLintIgnoreFiles = [
-  'backend/agent/convex/f.test.ts',
-  'backend/convex/convex/edge.test.ts',
-  'backend/convex/convex/f.test.ts',
-  'backend/convex/convex/org-api.test.ts'
-]
 const tailwindUnknownClassIgnore = [
   'group',
   'peer',
@@ -85,8 +79,7 @@ export default defineConfig({
           '@typescript-eslint/require-await': 'off'
         }
       }
-    ],
-    ignores: [...backendLintIgnoreFiles]
+    ]
   },
   oxlint: {
     overrides: [

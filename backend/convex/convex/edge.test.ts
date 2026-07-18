@@ -1,41 +1,40 @@
-/* eslint-disable no-await-in-loop */
-import { createTestContext } from 'noboil/convex/test'
-import { discoverModules } from 'noboil/convex/test/discover'
 import { describe, expect, test } from 'bun:test'
 import { convexTest } from 'convex-test'
+import { createTestContext } from 'noboil/convex/test'
+import { discoverModules } from 'noboil/convex/test/discover'
 import { api } from './_generated/api'
 import schema from './schema'
 
 const modules = discoverModules(import.meta.dir, {
-    './_generated/api.js': async () => import('./_generated/api'),
-    './_generated/server.js': async () => import('./_generated/server')
-  }),
-  t = () => convexTest(schema, modules),
-  movieData = {
-    backdrop_path: '/backdrop.jpg',
-    budget: 200_000_000,
-    genres: [{ id: 28, name: 'Action' }],
-    original_title: 'Test Movie',
-    overview: 'A test movie',
-    poster_path: '/poster.jpg',
-    release_date: '2025-01-01',
-    revenue: 500_000_000,
-    runtime: 120,
-    tagline: 'Just testing',
-    title: 'Test Movie',
-    tmdb_id: 12_345,
-    vote_average: 7.5,
-    vote_count: 1000
-  }
+  './_generated/api.js': async () => import('./_generated/api'),
+  './_generated/server.js': async () => import('./_generated/server')
+})
+const t = () => convexTest(schema, modules)
+const movieData = {
+  backdrop_path: '/backdrop.jpg',
+  budget: 200_000_000,
+  genres: [{ id: 28, name: 'Action' }],
+  original_title: 'Test Movie',
+  overview: 'A test movie',
+  poster_path: '/poster.jpg',
+  release_date: '2025-01-01',
+  revenue: 500_000_000,
+  runtime: 120,
+  tagline: 'Just testing',
+  title: 'Test Movie',
+  tmdb_id: 12_345,
+  vote_average: 7.5,
+  vote_count: 1000
+}
 describe('public child endpoints', () => {
   describe('message.pubList', () => {
     test('returns messages when parent chat is public', async () => {
-      const ctx = t(),
-        { userIds } = await createTestContext(ctx),
-        [userId] = userIds,
-        chatId = await ctx.run(async c =>
-          c.db.insert('chat', { isPublic: true, title: 'Public Chat', updatedAt: Date.now(), userId })
-        )
+      const ctx = t()
+      const { userIds } = await createTestContext(ctx)
+      const [userId] = userIds
+      const chatId = await ctx.run(async c =>
+        c.db.insert('chat', { isPublic: true, title: 'Public Chat', updatedAt: Date.now(), userId })
+      )
       await ctx.run(async c => {
         await c.db.insert('message', {
           chatId,
@@ -51,15 +50,15 @@ describe('public child endpoints', () => {
         })
       })
       const result = await ctx.query(api.message.pubList, { chatId })
-      expect((result as unknown[]).length).toBe(2)
+      expect(result as unknown[]).toHaveLength(2)
     })
     test('returns empty when parent chat is not public', async () => {
-      const ctx = t(),
-        { userIds } = await createTestContext(ctx),
-        [userId] = userIds,
-        chatId = await ctx.run(async c =>
-          c.db.insert('chat', { isPublic: false, title: 'Private Chat', updatedAt: Date.now(), userId })
-        )
+      const ctx = t()
+      const { userIds } = await createTestContext(ctx)
+      const [userId] = userIds
+      const chatId = await ctx.run(async c =>
+        c.db.insert('chat', { isPublic: false, title: 'Private Chat', updatedAt: Date.now(), userId })
+      )
       await ctx.run(async c => {
         await c.db.insert('message', {
           chatId,
@@ -80,38 +79,38 @@ describe('public child endpoints', () => {
   })
   describe('message.pubGet', () => {
     test('returns message when parent chat is public', async () => {
-      const ctx = t(),
-        { userIds } = await createTestContext(ctx),
-        [userId] = userIds,
-        chatId = await ctx.run(async c =>
-          c.db.insert('chat', { isPublic: true, title: 'Public Get', updatedAt: Date.now(), userId })
-        ),
-        messageId = await ctx.run(async c =>
-          c.db.insert('message', {
-            chatId,
-            parts: [{ text: 'Visible', type: 'text' }],
-            role: 'user',
-            updatedAt: Date.now()
-          })
-        ),
-        result = await ctx.query(api.message.pubGet, { id: messageId })
+      const ctx = t()
+      const { userIds } = await createTestContext(ctx)
+      const [userId] = userIds
+      const chatId = await ctx.run(async c =>
+        c.db.insert('chat', { isPublic: true, title: 'Public Get', updatedAt: Date.now(), userId })
+      )
+      const messageId = await ctx.run(async c =>
+        c.db.insert('message', {
+          chatId,
+          parts: [{ text: 'Visible', type: 'text' }],
+          role: 'user',
+          updatedAt: Date.now()
+        })
+      )
+      const result = await ctx.query(api.message.pubGet, { id: messageId })
       expect(result).not.toBeNull()
     })
     test('throws NOT_FOUND when parent chat is not public', async () => {
-      const ctx = t(),
-        { userIds } = await createTestContext(ctx),
-        [userId] = userIds,
-        chatId = await ctx.run(async c =>
-          c.db.insert('chat', { isPublic: false, title: 'Private Get', updatedAt: Date.now(), userId })
-        ),
-        messageId = await ctx.run(async c =>
-          c.db.insert('message', {
-            chatId,
-            parts: [{ text: 'Hidden', type: 'text' }],
-            role: 'user',
-            updatedAt: Date.now()
-          })
-        )
+      const ctx = t()
+      const { userIds } = await createTestContext(ctx)
+      const [userId] = userIds
+      const chatId = await ctx.run(async c =>
+        c.db.insert('chat', { isPublic: false, title: 'Private Get', updatedAt: Date.now(), userId })
+      )
+      const messageId = await ctx.run(async c =>
+        c.db.insert('message', {
+          chatId,
+          parts: [{ text: 'Hidden', type: 'text' }],
+          role: 'user',
+          updatedAt: Date.now()
+        })
+      )
       let threw = false
       try {
         await ctx.query(api.message.pubGet, { id: messageId })
@@ -126,8 +125,8 @@ describe('public child endpoints', () => {
 describe('cache CRUD (movie)', () => {
   describe('movie.create', () => {
     test('creates a movie entry', async () => {
-      const ctx = t(),
-        id = await ctx.mutation(api.movie.create, movieData)
+      const ctx = t()
+      const id = await ctx.mutation(api.movie.create, movieData)
       expect(id).toBeDefined()
       const doc = await ctx.run(async c => c.db.get(id as never))
       expect(doc).not.toBeNull()
@@ -145,8 +144,8 @@ describe('cache CRUD (movie)', () => {
       expect((result as Record<string, unknown>).cacheHit).toBe(true)
     })
     test('returns null for non-existent key', async () => {
-      const ctx = t(),
-        result = await ctx.query(api.movie.get, { tmdb_id: 99_999 })
+      const ctx = t()
+      const result = await ctx.query(api.movie.get, { tmdb_id: 99_999 })
       expect(result).toBeNull()
     })
     test('returns null for expired entry', async () => {
@@ -161,15 +160,15 @@ describe('cache CRUD (movie)', () => {
   })
   describe('movie.update', () => {
     test('updates existing movie', async () => {
-      const ctx = t(),
-        id = await ctx.mutation(api.movie.create, movieData),
-        updated = await ctx.mutation(api.movie.update, { id, title: 'Updated Movie' })
+      const ctx = t()
+      const id = await ctx.mutation(api.movie.create, movieData)
+      const updated = await ctx.mutation(api.movie.update, { id, title: 'Updated Movie' })
       expect((updated as Record<string, unknown>).title).toBe('Updated Movie')
       expect((updated as Record<string, unknown>).tmdb_id).toBe(12_345)
     })
     test('rejects update for non-existent id', async () => {
-      const ctx = t(),
-        id = await ctx.mutation(api.movie.create, movieData)
+      const ctx = t()
+      const id = await ctx.mutation(api.movie.create, movieData)
       await ctx.mutation(api.movie.rm, { id })
       let threw = false
       try {
@@ -183,8 +182,8 @@ describe('cache CRUD (movie)', () => {
   })
   describe('movie.rm', () => {
     test('removes existing movie', async () => {
-      const ctx = t(),
-        id = await ctx.mutation(api.movie.create, movieData)
+      const ctx = t()
+      const id = await ctx.mutation(api.movie.create, movieData)
       await ctx.mutation(api.movie.rm, { id })
       const doc = await ctx.run(async c => c.db.get(id as never))
       expect(doc).toBeNull()
@@ -204,7 +203,7 @@ describe('cache CRUD (movie)', () => {
       await ctx.mutation(api.movie.create, { ...movieData, tmdb_id: 1 })
       await ctx.mutation(api.movie.create, { ...movieData, tmdb_id: 2 })
       const results = await ctx.query(api.movie.all, {})
-      expect(results.length).toBe(2)
+      expect(results).toHaveLength(2)
     })
     test('excludes expired without includeExpired', async () => {
       const ctx = t()
@@ -214,7 +213,7 @@ describe('cache CRUD (movie)', () => {
         await c.db.insert('movie', { ...movieData, tmdb_id: 2, updatedAt: old })
       })
       const results = await ctx.query(api.movie.all, {})
-      expect(results.length).toBe(1)
+      expect(results).toHaveLength(1)
     })
     test('includes expired with includeExpired: true', async () => {
       const ctx = t()
@@ -224,7 +223,7 @@ describe('cache CRUD (movie)', () => {
         await c.db.insert('movie', { ...movieData, tmdb_id: 2, updatedAt: old })
       })
       const results = await ctx.query(api.movie.all, { includeExpired: true })
-      expect(results.length).toBe(2)
+      expect(results).toHaveLength(2)
     })
   })
   describe('movie.list', () => {
@@ -244,12 +243,12 @@ describe('cache CRUD (movie)', () => {
         await c.db.insert('movie', { ...movieData, tmdb_id: 2, updatedAt: old })
       })
       const withExpired = await ctx.query(api.movie.list, {
-          includeExpired: true,
-          paginationOpts: { cursor: null, numItems: 10 }
-        }),
-        withoutExpired = await ctx.query(api.movie.list, {
-          paginationOpts: { cursor: null, numItems: 10 }
-        })
+        includeExpired: true,
+        paginationOpts: { cursor: null, numItems: 10 }
+      })
+      const withoutExpired = await ctx.query(api.movie.list, {
+        paginationOpts: { cursor: null, numItems: 10 }
+      })
       expect(withExpired.page.length).toBeGreaterThanOrEqual(withoutExpired.page.length)
     })
   })
@@ -264,8 +263,8 @@ describe('cache CRUD (movie)', () => {
       expect(after).toBeNull()
     })
     test('invalidate non-existent key does nothing', async () => {
-      const ctx = t(),
-        result = await ctx.mutation(api.movie.invalidate, { tmdb_id: 99_999 })
+      const ctx = t()
+      const result = await ctx.mutation(api.movie.invalidate, { tmdb_id: 99_999 })
       expect(result).toBeNull()
     })
   })
@@ -277,9 +276,9 @@ describe('cache CRUD (movie)', () => {
       expect(purged).toBe(0)
     })
     test('purge is callable and returns a number', async () => {
-      const ctx = t(),
-        purged = await ctx.mutation(api.movie.purge, {})
-      expect(typeof purged).toBe('number')
+      const ctx = t()
+      const purged = await ctx.mutation(api.movie.purge, {})
+      expect(purged).toBeTypeOf('number')
     })
   })
   describe('movie upsert behavior', () => {
@@ -288,33 +287,33 @@ describe('cache CRUD (movie)', () => {
       await ctx.mutation(api.movie.create, movieData)
       await ctx.mutation(api.movie.create, { ...movieData, title: 'Updated Title' })
       const all = await ctx.query(api.movie.all, {})
-      expect(all.length).toBe(1)
+      expect(all).toHaveLength(1)
       expect((all[0] as Record<string, unknown>).title).toBe('Updated Title')
     })
   })
 })
 describe('child CRUD auth', () => {
   test('message.create requires authenticated user who owns parent', async () => {
-    const ctx = t(),
-      { asUser, userIds } = await createTestContext(ctx),
-      [userId] = userIds,
-      chatId = await ctx.run(async c =>
-        c.db.insert('chat', { isPublic: false, title: 'Auth Chat', updatedAt: Date.now(), userId })
-      ),
-      messageId = await asUser(0).mutation(api.message.create, {
-        chatId,
-        parts: [{ text: 'Auth message', type: 'text' }],
-        role: 'user'
-      })
+    const ctx = t()
+    const { asUser, userIds } = await createTestContext(ctx)
+    const [userId] = userIds
+    const chatId = await ctx.run(async c =>
+      c.db.insert('chat', { isPublic: false, title: 'Auth Chat', updatedAt: Date.now(), userId })
+    )
+    const messageId = await asUser(0).mutation(api.message.create, {
+      chatId,
+      parts: [{ text: 'Auth message', type: 'text' }],
+      role: 'user'
+    })
     expect(messageId).toBeDefined()
   })
   test('message.list requires authenticated user who owns parent', async () => {
-    const ctx = t(),
-      { asUser, userIds } = await createTestContext(ctx),
-      [userId] = userIds,
-      chatId = await ctx.run(async c =>
-        c.db.insert('chat', { isPublic: false, title: 'Auth List', updatedAt: Date.now(), userId })
-      )
+    const ctx = t()
+    const { asUser, userIds } = await createTestContext(ctx)
+    const [userId] = userIds
+    const chatId = await ctx.run(async c =>
+      c.db.insert('chat', { isPublic: false, title: 'Auth List', updatedAt: Date.now(), userId })
+    )
     await ctx.run(async c => {
       await c.db.insert('message', {
         chatId,
@@ -324,36 +323,36 @@ describe('child CRUD auth', () => {
       })
     })
     const result = await asUser(0).query(api.message.list, { chatId })
-    expect((result as unknown[]).length).toBe(1)
+    expect(result as unknown[]).toHaveLength(1)
   })
 })
 describe('blog CRUD edge cases', () => {
   test('delete with empty array', async () => {
-    const ctx = t(),
-      { asUser } = await createTestContext(ctx),
-      result = await asUser(0).mutation(api.blog.rm, { ids: [] })
+    const ctx = t()
+    const { asUser } = await createTestContext(ctx)
+    const result = await asUser(0).mutation(api.blog.rm, { ids: [] })
     expect(result).toBeDefined()
   })
   test('update with empty array', async () => {
-    const ctx = t(),
-      { asUser } = await createTestContext(ctx),
-      result = await asUser(0).mutation(api.blog.update, { items: [] })
+    const ctx = t()
+    const { asUser } = await createTestContext(ctx)
+    const result = await asUser(0).mutation(api.blog.update, { items: [] })
     expect(result).toBeDefined()
   })
   test('conflict detection on blog update', async () => {
-    const ctx = t(),
-      { asUser, userIds } = await createTestContext(ctx),
-      [userId] = userIds,
-      postId = await ctx.run(async c =>
-        c.db.insert('blog', {
-          category: 'tech',
-          content: 'Conflict test',
-          published: false,
-          title: 'Conflict Post',
-          updatedAt: Date.now(),
-          userId
-        })
-      )
+    const ctx = t()
+    const { asUser, userIds } = await createTestContext(ctx)
+    const [userId] = userIds
+    const postId = await ctx.run(async c =>
+      c.db.insert('blog', {
+        category: 'tech',
+        content: 'Conflict test',
+        published: false,
+        title: 'Conflict Post',
+        updatedAt: Date.now(),
+        userId
+      })
+    )
     await asUser(0).mutation(api.blog.update, { id: postId, title: 'First Update' })
     let threw = false
     try {
@@ -365,9 +364,9 @@ describe('blog CRUD edge cases', () => {
     expect(threw).toBe(true)
   })
   test('search returns matching results', async () => {
-    const ctx = t(),
-      { asUser, userIds } = await createTestContext(ctx),
-      [userId] = userIds
+    const ctx = t()
+    const { asUser, userIds } = await createTestContext(ctx)
+    const [userId] = userIds
     await ctx.run(async c => {
       await c.db.insert('blog', {
         category: 'tech',
@@ -387,24 +386,24 @@ describe('blog CRUD edge cases', () => {
 })
 describe('concurrent edit conflict detection', () => {
   test('stale expectedUpdatedAt from tab A rejected after tab B saves', async () => {
-    const ctx = t(),
-      { asUser, userIds } = await createTestContext(ctx),
-      [userId] = userIds,
-      postId = await ctx.run(async c =>
-        c.db.insert('blog', {
-          category: 'tech',
-          content: 'Shared content',
-          published: false,
-          title: 'Shared Post',
-          updatedAt: 1000,
-          userId
-        })
-      ),
-      tabBResult = await asUser(0).mutation(api.blog.update, {
-        expectedUpdatedAt: 1000,
-        id: postId,
-        title: 'Tab B Edit'
+    const ctx = t()
+    const { asUser, userIds } = await createTestContext(ctx)
+    const [userId] = userIds
+    const postId = await ctx.run(async c =>
+      c.db.insert('blog', {
+        category: 'tech',
+        content: 'Shared content',
+        published: false,
+        title: 'Shared Post',
+        updatedAt: 1000,
+        userId
       })
+    )
+    const tabBResult = await asUser(0).mutation(api.blog.update, {
+      expectedUpdatedAt: 1000,
+      id: postId,
+      title: 'Tab B Edit'
+    })
     expect(tabBResult.title).toBe('Tab B Edit')
     let threw = false
     try {
@@ -420,45 +419,45 @@ describe('concurrent edit conflict detection', () => {
     expect(threw).toBe(true)
   })
   test('fresh expectedUpdatedAt succeeds after prior edit', async () => {
-    const ctx = t(),
-      { asUser, userIds } = await createTestContext(ctx),
-      [userId] = userIds,
-      postId = await ctx.run(async c =>
-        c.db.insert('blog', {
-          category: 'tech',
-          content: 'Fresh content',
-          published: false,
-          title: 'Fresh Post',
-          updatedAt: 1000,
-          userId
-        })
-      ),
-      firstEdit = await asUser(0).mutation(api.blog.update, {
-        expectedUpdatedAt: 1000,
-        id: postId,
-        title: 'First Edit'
-      }),
-      secondEdit = await asUser(0).mutation(api.blog.update, {
-        expectedUpdatedAt: firstEdit.updatedAt,
-        id: postId,
-        title: 'Second Edit'
+    const ctx = t()
+    const { asUser, userIds } = await createTestContext(ctx)
+    const [userId] = userIds
+    const postId = await ctx.run(async c =>
+      c.db.insert('blog', {
+        category: 'tech',
+        content: 'Fresh content',
+        published: false,
+        title: 'Fresh Post',
+        updatedAt: 1000,
+        userId
       })
+    )
+    const firstEdit = await asUser(0).mutation(api.blog.update, {
+      expectedUpdatedAt: 1000,
+      id: postId,
+      title: 'First Edit'
+    })
+    const secondEdit = await asUser(0).mutation(api.blog.update, {
+      expectedUpdatedAt: firstEdit.updatedAt,
+      id: postId,
+      title: 'Second Edit'
+    })
     expect(secondEdit.title).toBe('Second Edit')
   })
   test('update without expectedUpdatedAt always succeeds', async () => {
-    const ctx = t(),
-      { asUser, userIds } = await createTestContext(ctx),
-      [userId] = userIds,
-      postId = await ctx.run(async c =>
-        c.db.insert('blog', {
-          category: 'tech',
-          content: 'No conflict check',
-          published: false,
-          title: 'No Check Post',
-          updatedAt: 1000,
-          userId
-        })
-      )
+    const ctx = t()
+    const { asUser, userIds } = await createTestContext(ctx)
+    const [userId] = userIds
+    const postId = await ctx.run(async c =>
+      c.db.insert('blog', {
+        category: 'tech',
+        content: 'No conflict check',
+        published: false,
+        title: 'No Check Post',
+        updatedAt: 1000,
+        userId
+      })
+    )
     await asUser(0).mutation(api.blog.update, { id: postId, title: 'Edit 1' })
     const result = await asUser(0).mutation(api.blog.update, { id: postId, title: 'Edit 2' })
     expect(result.title).toBe('Edit 2')
@@ -466,17 +465,17 @@ describe('concurrent edit conflict detection', () => {
 })
 describe('getOrCreate org', () => {
   test('creates org for user on first call', async () => {
-    const ctx = t(),
-      { asUser } = await createTestContext(ctx),
-      result = await asUser(0).mutation(api.org.getOrCreate, {})
+    const ctx = t()
+    const { asUser } = await createTestContext(ctx)
+    const result = await asUser(0).mutation(api.org.getOrCreate, {})
     expect(result.created).toBe(true)
     expect(result.orgId).toBeDefined()
   })
   test('returns existing org on second call', async () => {
-    const ctx = t(),
-      { asUser } = await createTestContext(ctx),
-      first = await asUser(0).mutation(api.org.getOrCreate, {}),
-      second = await asUser(0).mutation(api.org.getOrCreate, {})
+    const ctx = t()
+    const { asUser } = await createTestContext(ctx)
+    const first = await asUser(0).mutation(api.org.getOrCreate, {})
+    const second = await asUser(0).mutation(api.org.getOrCreate, {})
     expect(second.created).toBe(false)
     expect(second.orgId).toBe(first.orgId)
   })
