@@ -16,11 +16,22 @@ const DEFAULT_OPTIONS: Required<RetryOptions> = {
   maxAttempts: 3,
   maxDelayMs: 10_000
 }
+const HTTP_TOO_MANY = 429
+const HTTP_SERVER_ERROR = 500
 const calculateDelay = (attempt: number, opts: Required<RetryOptions>) => {
   const JITTER_RANGE = 0.3
   const JITTER_BASE = 0.85
+  // eslint-disable-next-line sonarjs/pseudo-random -- non-security jitter for retry backoff spread
   const jitter = Math.random() * JITTER_RANGE + JITTER_BASE
   return Math.min(opts.initialDelayMs * opts.base ** attempt * jitter, opts.maxDelayMs)
+}
+const nextRetryDelay = (response: Response, attempt: number, opts: Required<RetryOptions>): number => {
+  if (response.status === HTTP_TOO_MANY) {
+    const retryAfter = response.headers.get('Retry-After')
+    const retryMs = retryAfter ? Number(retryAfter) * 1000 : undefined
+    if (retryMs && retryMs > 0 && Number.isFinite(retryMs)) return Math.min(retryMs, opts.maxDelayMs)
+  }
+  return calculateDelay(attempt, opts)
 }
 /**
  * Build a `withRetry` helper bound to a runtime (Convex action / SpacetimeDB / Node).
@@ -51,21 +62,11 @@ const createRetryUtils = ({ sleep, validateOptions, wrapFinalError }: RetryFacto
     for (;;) {
       /** biome-ignore lint/performance/noAwaitInLoops: sequential by design */
       const response = await fetch(url, fetchOptions)
-      const SERVER_ERROR = 500
-      const TOO_MANY = 429
-      const isRetryable = (response.status >= SERVER_ERROR || response.status === TOO_MANY) && !response.ok
+      const isRetryable = (response.status >= HTTP_SERVER_ERROR || response.status === HTTP_TOO_MANY) && !response.ok
       if (!isRetryable) return response
       attempt += 1
       if (attempt >= mergedOpts.maxAttempts) throw new Error(`HTTP ${response.status}: ${response.statusText}`)
-      if (response.status === TOO_MANY) {
-        const retryAfter = response.headers.get('Retry-After')
-        const retryMs = retryAfter ? Number(retryAfter) * 1000 : undefined
-        await sleep(
-          retryMs && retryMs > 0 && Number.isFinite(retryMs)
-            ? Math.min(retryMs, mergedOpts.maxDelayMs)
-            : calculateDelay(attempt, mergedOpts)
-        )
-      } else await sleep(calculateDelay(attempt, mergedOpts))
+      await sleep(nextRetryDelay(response, attempt, mergedOpts))
     }
   }
   return { fetchWithRetry, withRetry }

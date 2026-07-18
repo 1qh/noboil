@@ -72,6 +72,18 @@ const AvatarUpload = () => {
 const Page = () => {
   const profile = useQuery(api.pollProfile.get, {})
   const upsert = useMutation(api.pollProfile.upsert)
+  const resolveValues = () => {
+    if (profile === undefined) return
+    if (profile)
+      return {
+        avatar: profile.avatar ?? null,
+        bio: profile.bio,
+        displayName: profile.displayName,
+        notifications: profile.notifications,
+        theme: profile.theme
+      }
+    return { displayName: '', notifications: true, theme: 'system' as const }
+  }
   const form = useForm({
     onSubmit: async d => {
       await upsert(d)
@@ -81,18 +93,7 @@ const Page = () => {
       toast.success('Profile saved')
     },
     schema: profileSchema,
-    values:
-      profile === undefined
-        ? undefined
-        : profile
-          ? {
-              avatar: profile.avatar ?? null,
-              bio: profile.bio,
-              displayName: profile.displayName,
-              notifications: profile.notifications,
-              theme: profile.theme
-            }
-          : { displayName: '', notifications: true, theme: 'system' as const }
+    values: resolveValues()
   })
   if (profile === undefined)
     return (

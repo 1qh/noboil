@@ -1,6 +1,7 @@
 {
   "name": "@a/config",
   "private": true,
+  "description": "noboil shared config presets",
   "type": "module",
   "exports": {
     ".": {

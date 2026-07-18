@@ -4,9 +4,9 @@ import { readFileSync } from 'node:fs'
 import type { ChildInfo, TableInfo } from '../shared/viz'
 import { bold, dim, isSchemaFile, red } from '../shared/viz'
 import { findStdbModuleDirDeep, listTypeScriptFiles } from '../shared/walk'
-
+// eslint-disable-next-line sonarjs/super-linear-regex -- linear: exclusion-class quantifier cannot overlap the following literal comma
 const tablePat = /(?<tname>\w+)\s*:\s*table\([^,]+,\s*\{/gu
-const fieldLinePat = /^\s*(?<fname>\w+)\s*:\s*(?<ftype>.+?)\s*,?$/u
+const fieldLinePat = /^\s*(?<fname>\w+)\s*:\s*(?<ftype>\S.*)$/u
 const findModuleDir = findStdbModuleDirDeep
 const findSchemaFile = (moduleDir: string): undefined | { content: string; path: string } => {
   const files = listTypeScriptFiles(moduleDir)
@@ -83,14 +83,17 @@ const generateMermaid = (tables: TableInfo[], children: ChildInfo[]): string => 
 const printSummary = (tables: TableInfo[], children: ChildInfo[]) => {
   console.log(bold('\nSchema Summary\n'))
   for (const t of tables) {
-    console.log(`  ${bold(t.name)} ${dim(`[${t.tableType}]`)}`)
+    const typeBadge = dim(`[${t.tableType}]`)
+    console.log(`  ${bold(t.name)} ${typeBadge}`)
     for (const f of t.fields) console.log(`    ${dim('│')} ${f.name}: ${dim(f.type)}`)
     console.log('')
   }
   if (children.length > 0) {
     console.log(bold('Relationships\n'))
-    for (const child of children)
-      console.log(`  ${bold(child.parent)} -> ${bold(child.name)} ${dim(`(${child.foreignKey})`)}`)
+    for (const child of children) {
+      const fkBadge = dim(`(${child.foreignKey})`)
+      console.log(`  ${bold(child.parent)} -> ${bold(child.name)} ${fkBadge}`)
+    }
     console.log('')
   }
 }

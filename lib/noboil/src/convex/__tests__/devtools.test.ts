@@ -29,13 +29,18 @@ describe('convex devtools', () => {
   })
   test('trackSubscription/update/untrack lifecycle', () => {
     const id = trackSubscription('list', {})
-    updateSubscription(id, 'loaded')
-    updateSubscriptionData(id, [{ x: 1 }], 'preview')
-    untrackSubscription(id)
+    expect(typeof id).toBe('number')
+    expect(() => {
+      updateSubscription(id, 'loaded')
+      updateSubscriptionData(id, [{ x: 1 }], 'preview')
+      untrackSubscription(id)
+    }).not.toThrow()
   })
   test('trackCacheAccess records hit/miss', () => {
-    trackCacheAccess({ hit: true, key: 'tmdb_id', table: 'todo' })
-    trackCacheAccess({ hit: false, key: 'tmdb_id', stale: true, table: 'todo' })
+    expect(() => {
+      trackCacheAccess({ hit: true, key: 'tmdb_id', table: 'todo' })
+      trackCacheAccess({ hit: false, key: 'tmdb_id', stale: true, table: 'todo' })
+    }).not.toThrow()
   })
   test('pushError + clear*', () => {
     expect(() => {

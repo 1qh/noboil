@@ -10,7 +10,7 @@ const walk = (dir: string, out: string[] = []): string[] => {
   // oxlint-disable-next-line node/no-sync
   if (!statSync(dir, { throwIfNoEntry: false })) return out
   // oxlint-disable-next-line node/no-sync
-  for (const name of readdirSync(dir).toSorted())
+  for (const name of readdirSync(dir).toSorted((a, b) => (a < b ? -1 : Number(a > b))))
     if (!(name.startsWith('.') || name === 'node_modules' || name === '.next')) {
       const full = join(dir, name)
       // oxlint-disable-next-line node/no-sync
@@ -24,7 +24,7 @@ const collectRoutes = (root: string, base = ''): string[] => {
   if (!statSync(root, { throwIfNoEntry: false })) return []
   const out: string[] = []
   // oxlint-disable-next-line node/no-sync
-  for (const name of readdirSync(root).toSorted())
+  for (const name of readdirSync(root).toSorted((a, b) => (a < b ? -1 : Number(a > b))))
     if (!(name.startsWith('.') || name === 'node_modules' || name === 'api')) {
       const full = join(root, name)
       // oxlint-disable-next-line node/no-sync
@@ -32,14 +32,14 @@ const collectRoutes = (root: string, base = ''): string[] => {
       if (s.isDirectory()) out.push(...collectRoutes(full, `${base}/${name}`))
       else if (name === 'page.tsx') out.push(base || '/')
     }
-  return out.toSorted()
+  return out.toSorted((a, b) => (a < b ? -1 : Number(a > b)))
 }
 const countTests = (dir: string): number => {
   let n = 0
   // oxlint-disable-next-line node/no-sync
   if (!statSync(dir, { throwIfNoEntry: false })) return 0
   // oxlint-disable-next-line node/no-sync
-  for (const f of readdirSync(dir).toSorted())
+  for (const f of readdirSync(dir).toSorted((a, b) => (a < b ? -1 : Number(a > b))))
     if (f.endsWith('.test.ts')) {
       // oxlint-disable-next-line node/no-sync
       const src = readFileSync(`${dir}/${f}`, 'utf8')
@@ -70,34 +70,37 @@ const SRC_LOC_EXEMPT: Record<string, string> = {
   movie:
     'stdb-movie does TMDB fetching client-side (no server-side action available); cvx delegates to action — architectural difference, see base.fetcher in option-parity above'
 }
+const buildDemoRow = (demo: string): { ok: boolean; row: string } => {
+  const cvxRoot = `${REPO}/web/cvx/${demo}`
+  const stdbRoot = `${REPO}/web/stdb/${demo}`
+  const cvxRoutes = collectRoutes(`${cvxRoot}/src/app`)
+  const stdbRoutes = collectRoutes(`${stdbRoot}/src/app`)
+  const cvxOnly = cvxRoutes.filter(r => !(stdbRoutes.includes(r) || KNOWN_BACKEND_ONLY.cvx.has(r)))
+  const stdbOnly = stdbRoutes.filter(r => !(cvxRoutes.includes(r) || KNOWN_BACKEND_ONLY.stdb.has(r)))
+  const cvxTests = countTests(`${cvxRoot}/e2e`)
+  const stdbTests = countTests(`${stdbRoot}/e2e`)
+  const cvxSrc = countSrcLines(`${cvxRoot}/src`)
+  const stdbSrc = countSrcLines(`${stdbRoot}/src`)
+  const routesOk = cvxOnly.length === 0 && stdbOnly.length === 0
+  const testsOk = cvxTests === stdbTests
+  const srcDiffPct = Math.abs(cvxSrc - stdbSrc) / Math.max(cvxSrc, stdbSrc)
+  const srcExempt = Boolean(SRC_LOC_EXEMPT[demo])
+  const srcOk = srcDiffPct < 0.4 || srcExempt
+  const allOk = routesOk && testsOk && srcOk
+  const status = allOk ? '🟢' : '🟡'
+  const routesCol = routesOk
+    ? `${cvxRoutes.length}/${stdbRoutes.length} ✓`
+    : `${cvxRoutes.length}/${stdbRoutes.length} (cvx-only: ${cvxOnly.join(', ') || '—'}, stdb-only: ${stdbOnly.join(', ') || '—'})`
+  const row = `| \`${demo}\` | ${routesCol} | ${cvxTests} / ${stdbTests} ${testsOk ? '✓' : '⚠'} | ${cvxSrc} / ${stdbSrc} ${srcOk ? '✓' : '⚠'} | ${status} |`
+  return { ok: allOk, row }
+}
 const main = () => {
   const rows: string[] = []
   let perfectCount = 0
   for (const demo of DEMOS) {
-    const cvxRoot = `${REPO}/web/cvx/${demo}`
-    const stdbRoot = `${REPO}/web/stdb/${demo}`
-    const cvxRoutes = collectRoutes(`${cvxRoot}/src/app`)
-    const stdbRoutes = collectRoutes(`${stdbRoot}/src/app`)
-    const cvxOnly = cvxRoutes.filter(r => !(stdbRoutes.includes(r) || KNOWN_BACKEND_ONLY.cvx.has(r)))
-    const stdbOnly = stdbRoutes.filter(r => !(cvxRoutes.includes(r) || KNOWN_BACKEND_ONLY.stdb.has(r)))
-    const cvxTests = countTests(`${cvxRoot}/e2e`)
-    const stdbTests = countTests(`${stdbRoot}/e2e`)
-    const cvxSrc = countSrcLines(`${cvxRoot}/src`)
-    const stdbSrc = countSrcLines(`${stdbRoot}/src`)
-    const routesOk = cvxOnly.length === 0 && stdbOnly.length === 0
-    const testsOk = cvxTests === stdbTests
-    const srcDiffPct = Math.abs(cvxSrc - stdbSrc) / Math.max(cvxSrc, stdbSrc)
-    const srcExempt = Boolean(SRC_LOC_EXEMPT[demo])
-    const srcOk = srcDiffPct < 0.4 || srcExempt
-    const allOk = routesOk && testsOk && srcOk
-    if (allOk) perfectCount += 1
-    const status = allOk ? '🟢' : '🟡'
-    const routesCol = routesOk
-      ? `${cvxRoutes.length}/${stdbRoutes.length} ✓`
-      : `${cvxRoutes.length}/${stdbRoutes.length} (cvx-only: ${cvxOnly.join(', ') || '—'}, stdb-only: ${stdbOnly.join(', ') || '—'})`
-    rows.push(
-      `| \`${demo}\` | ${routesCol} | ${cvxTests} / ${stdbTests} ${testsOk ? '✓' : '⚠'} | ${cvxSrc} / ${stdbSrc} ${srcOk ? '✓' : '⚠'} | ${status} |`
-    )
+    const { ok, row } = buildDemoRow(demo)
+    if (ok) perfectCount += 1
+    rows.push(row)
   }
   const intentional: string[] = []
   for (const r of KNOWN_BACKEND_ONLY.stdb)

@@ -15,11 +15,16 @@ interface App {
 const arg = (name: string) => process.argv.find(a => a.startsWith(`--${name}=`))?.split('=')[1]
 const onlyArg = arg('apps')
 const only = onlyArg ? new Set(onlyArg.split(',').map(s => s.trim())) : null
+const parentPathFor = (kind: string | undefined): string => {
+  if (kind === 'cvx') return config.paths.webCvx
+  if (kind === 'stdb') return config.paths.webStdb
+  return ''
+}
 const appDir = (id: string): string => {
   if (id === 'doc') return join(root, config.paths.doc)
   const [kind, name] = id.split('-')
   if (!name) throw new Error(`Bad app id: ${id}`)
-  const parentPath = kind === 'cvx' ? config.paths.webCvx : kind === 'stdb' ? config.paths.webStdb : ''
+  const parentPath = parentPathFor(kind)
   if (!parentPath) throw new Error(`Unknown app kind: ${kind}`)
   return join(root, parentPath, name)
 }
@@ -50,9 +55,13 @@ for (const app of all)
       stdout: fd
     })
     procs.push({ app, proc })
-    log(`  ${c.dim('→')} ${app.name.padEnd(12)} :${app.port} ${c.dim(`(pid ${proc.pid})`)}`)
+    const pidLabel = c.dim(`(pid ${proc.pid})`)
+    log(`  ${c.dim('→')} ${app.name.padEnd(12)} :${app.port} ${pidLabel}`)
   } else occupied.push(app)
-if (occupied.length > 0) warn(`Skipped (port busy): ${occupied.map(a => `${a.name}:${a.port}`).join(', ')}`)
+if (occupied.length > 0) {
+  const busyList = occupied.map(a => `${a.name}:${a.port}`).join(', ')
+  warn(`Skipped (port busy): ${busyList}`)
+}
 const shutdown = () => {
   log(c.dim('\nShutting down…'))
   for (const { proc } of procs)

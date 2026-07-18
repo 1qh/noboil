@@ -57,8 +57,8 @@ describe('spacetimedb eslint plugin export', () => {
     const cast = (rules as Record<string, { create: (ctx: unknown) => Record<string, unknown> }>)['no-unsafe-api-cast']
     if (!cast) throw new Error('expected rule')
     const visitor = cast.create({
-      cwd: '/tmp',
-      filename: '/tmp/x.ts',
+      cwd: '/repo',
+      filename: '/repo/x.ts',
       report: (d: { messageId: string }) => reports.push(d)
     }) as { TSAsExpression: (n: unknown) => void }
     visitor.TSAsExpression({

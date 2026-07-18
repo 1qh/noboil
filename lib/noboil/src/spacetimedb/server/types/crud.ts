@@ -7,6 +7,7 @@ interface CascadeOption {
   table: string
 }
 type CrudBuilder = ColumnBuilder<unknown, AlgebraicTypeType> | TypeBuilder<unknown, AlgebraicTypeType>
+// eslint-disable-next-line sonarjs/redundant-type-aliases -- exported named public-API type asserting crud has no builder variants
 type CrudBuilders = never
 /** Configuration for `makeCrud` (stdb).
  *
@@ -21,11 +22,11 @@ type CrudBuilders = never
  * @example
  * ```ts
  * makeCrud(spacetimedb, {
- *   tableName: 'todo',
+ *   tableName: 'post',
  *   fields: { done: t.boolean(), title: t.string() },
  *   idField: t.u32(),
  *   pk: tbl => tbl.id,
- *   table: db => db.todo,
+ *   table: db => db.post,
  *   options: { rateLimit: { max: 30, window: 60_000 }, softDelete: true }
  * })
  * ```
@@ -125,6 +126,7 @@ interface CrudPkLike<Row, Id> {
   find: (id: Id) => null | Row
   update: (row: Row) => Row
 }
+// eslint-disable-next-line sonarjs/redundant-type-aliases -- exported named public-API type asserting crud exposes no read-api surface
 type CrudReadApi = never
 type CrudResult = CrudExports
 interface CrudTableLike<Row> {

@@ -10,11 +10,11 @@ interface FileRow {
   id: number
 }
 const cache = new Map<string, string>()
-const toBytes = (data: unknown): ArrayLike<number> | null | Uint8Array => {
+const toBytes = (data: unknown): null | Uint8Array => {
   if (data instanceof Uint8Array) return data
   if (ArrayBuffer.isView(data)) return new Uint8Array(data.buffer as ArrayBuffer, data.byteOffset, data.byteLength)
-  if (Array.isArray(data)) return data as number[]
-  if (typeof data === 'object' && data !== null && 'length' in data) return data as ArrayLike<number>
+  if (Array.isArray(data)) return Uint8Array.from(data as number[])
+  if (typeof data === 'object' && data !== null && 'length' in data) return Uint8Array.from(data as ArrayLike<number>)
   return null
 }
 /** Resolve a `locator` (filename or id) to a blob URL for an inline-stored file row, with cache. Pass-through for http/data URLs. */

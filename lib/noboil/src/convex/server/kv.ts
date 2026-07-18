@@ -94,6 +94,7 @@ const makeKv = <S extends ZodRawShape>({
       async (
         c: MutCtx,
         { expectedUpdatedAt, key, payload }: { expectedUpdatedAt?: number; key: string; payload: Rec }
+        // eslint-disable-next-line sonarjs/cognitive-complexity -- kv set with optimistic-concurrency + write-gate branches; refactoring risks the untestable runtime write path
       ) => {
         const gate = await assertWrite(c)
         if (gate) return gate

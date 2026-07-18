@@ -3,6 +3,13 @@ import { z } from 'zod/v4'
 import { noboil, setup, setupCrud } from '../setup'
 import { captureReducers } from './_helpers'
 
+const tryCall = (fn: () => unknown) => {
+  try {
+    return fn()
+  } catch {
+    return null
+  }
+}
 const mkPkTable = () => {
   const rows: { id: number }[] = []
   let nextId = 1
@@ -414,13 +421,6 @@ describe('stdb setup wires factories with global hooks', () => {
     }) as Record<string, unknown>
     const tbl = mkPkTable()
     const memberTbl = mkPkTable()
-    const tryCall = (fn: () => unknown) => {
-      try {
-        return fn()
-      } catch {
-        return null
-      }
-    }
     const oc = wired.orgCrud as (cfg: unknown) => unknown
     expect(
       tryCall(() =>
@@ -499,13 +499,6 @@ describe('stdb setup wires factories with global hooks', () => {
     expect(typeof wired.cacheCrud).toBe('function')
     expect(typeof wired.singletonCrud).toBe('function')
     expect(typeof wired.orgCrud).toBe('function')
-    const tryCall = (fn: () => unknown) => {
-      try {
-        return fn()
-      } catch {
-        return null
-      }
-    }
     const schema = z.object({ title: z.string() })
     const crud = wired.crud as (n: string, fields: unknown) => unknown
     expect(tryCall(() => crud('todo', schema))).not.toBeUndefined()

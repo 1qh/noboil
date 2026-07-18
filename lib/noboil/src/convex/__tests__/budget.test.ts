@@ -40,7 +40,14 @@ describe('makeBudget shape', () => {
       cap: 2500,
       table: 'budget'
     })
-    expect(Object.keys(result).toSorted()).toEqual(['add', 'auditInvariants', 'check', 'pruneStale', 'reserve', 'settle'])
+    expect(Object.keys(result).toSorted((a, b) => a.localeCompare(b))).toEqual([
+      'add',
+      'auditInvariants',
+      'check',
+      'pruneStale',
+      'reserve',
+      'settle'
+    ])
   })
   test('respects custom periodMs', () => {
     const result = makeBudget({

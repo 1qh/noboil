@@ -131,7 +131,8 @@ describe('makeLog integration', () => {
     const id = before.page[0]?._id
     await tt.run(async ctx => ctx.db.delete(id as never))
     await callMutate(tt, api.votes.rm, { ids: [id] })
-    expect(true).toBe(true)
+    const after = (await callQuery(tt, api.votes.list, { paginationOpts, parent: 'rm-na' })) as ListResult
+    expect(after.page).toHaveLength(0)
   })
   test('update mutates row + rm by id removes single', async () => {
     const tt = await seedUser(t())
@@ -160,7 +161,7 @@ describe('makeLog integration', () => {
       key: 'parent',
       value: 'ai-1'
     })) as VoteDoc[]
-    expect(r.length).toBe(2)
+    expect(r).toHaveLength(2)
   })
   test('append with idempotencyKey dedupes second insert', async () => {
     const tt = await seedUser(t())

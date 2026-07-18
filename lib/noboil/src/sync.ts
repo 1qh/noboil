@@ -85,8 +85,8 @@ const readManifest = (root: string) => {
   return parsed as Manifest
 }
 const runGit = ({ args, cwd, err }: { args: string[]; cwd: string; err: string }) => {
-  // oxlint-disable-next-line node/no-sync
-  const result = spawnSync('git', args, { cwd, encoding: 'utf8' })
+  // oxlint-disable-next-line node/no-sync -- CLI tool: synchronous spawn by design
+  const result = spawnSync('git', args, { cwd, encoding: 'utf8' }) // eslint-disable-line sonarjs/no-os-command-from-path -- dev tooling, trusted PATH
   if (result.status !== 0) {
     const stderr = result.stderr.trim()
     die(stderr ? `${err}\n${dim(stderr)}` : err)
@@ -107,10 +107,8 @@ const listFiles = ({ rel = '', root }: { rel?: string; root: string }) => {
   for (const entry of entries)
     if (entry.name !== '.git' && entry.name !== 'node_modules') {
       const nextRel = rel ? join(rel, entry.name) : entry.name
-      if (entry.isDirectory()) {
-        const child = listFiles({ rel: nextRel, root })
-        for (const file of child) out.push(file)
-      } else out.push(nextRel)
+      if (entry.isDirectory()) out.push(...listFiles({ rel: nextRel, root }))
+      else out.push(nextRel)
     }
   return out
 }

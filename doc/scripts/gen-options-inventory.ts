@@ -2,7 +2,7 @@
 /* eslint-disable no-console */
 import { readFileSync } from 'node:fs'
 import { DOCS_DIR, replaceBetween, REPO } from './lib'
-
+// eslint-disable-next-line sonarjs/super-linear-regex -- scans trusted repo backend source; bounded non-adversarial input
 const TABLE_RE = /(?<name>\w+):\s*table\(s\.\w+(?:,\s*\{(?<opts>[\s\S]*?)\}\s*\))?/gu
 const KNOWN_OPTS = [
   'rateLimit',
@@ -44,9 +44,11 @@ const main = () => {
   for (const [name, set] of cvx) for (const o of set) counts[o].cvx.push(name)
   for (const [name, set] of stdb) for (const o of set) counts[o].stdb.push(name)
   const rows = KNOWN_OPTS.map(o => {
-    const c = counts[o].cvx.toSorted()
-    const s = counts[o].stdb.toSorted()
-    return `| \`${o}\` | ${c.length} | ${s.length} | ${c.length === 0 ? '—' : c.map(t => `\`${t}\``).join(', ')} | ${s.length === 0 ? '—' : s.map(t => `\`${t}\``).join(', ')} |`
+    const c = counts[o].cvx.toSorted((a, b) => (a < b ? -1 : Number(a > b)))
+    const s = counts[o].stdb.toSorted((a, b) => (a < b ? -1 : Number(a > b)))
+    const cWhere = c.length === 0 ? '—' : c.map(t => `\`${t}\``).join(', ')
+    const sWhere = s.length === 0 ? '—' : s.map(t => `\`${t}\``).join(', ')
+    return `| \`${o}\` | ${c.length} | ${s.length} | ${cWhere} | ${sWhere} |`
   })
   const body = [
     `**${KNOWN_OPTS.length} known table options** scanned across both backend lazy.ts files. Numbers are how many tables enable each option.`,

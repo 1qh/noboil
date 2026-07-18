@@ -23,7 +23,7 @@ describe('loadConfig', () => {
   })
   test('returns null when no config file exists', async () => {
     const result = await loadConfig(dir)
-    expect(result).toBe(null)
+    expect(result).toBeNull()
   })
   test('loads config.ts and exposes hooks', async () => {
     await write(
@@ -31,7 +31,7 @@ describe('loadConfig', () => {
       'export default { hooks: { afterAdd: (c) => { globalThis.__lastCtx = c } } }\n'
     )
     const result = await loadConfig(dir)
-    expect(result).not.toBe(null)
+    expect(result).not.toBeNull()
     expect(typeof result?.hooks?.afterAdd).toBe('function')
   })
   test('checks file existence (smoke)', async () => {

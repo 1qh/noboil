@@ -116,7 +116,7 @@ const tableUsedInBackend = (backendDir: string, schemaTable: string): boolean =>
   if (!statSync(backendDir, { throwIfNoEntry: false })) return false
   const re = new RegExp(`\\bs\\.${schemaTable}\\b`, 'u')
   // oxlint-disable-next-line node/no-sync
-  for (const f of readdirSync(backendDir).toSorted())
+  for (const f of readdirSync(backendDir).toSorted((a, b) => (a < b ? -1 : Number(a > b))))
     if (f.endsWith('.ts')) {
       // oxlint-disable-next-line node/no-sync
       const content = readFileSync(`${backendDir}/${f}`, 'utf8')
@@ -148,7 +148,8 @@ const rootMatches = (root: string, re: RegExp): boolean => {
     const dir = stack.pop()
     if (dir)
       // oxlint-disable-next-line node/no-sync
-      for (const name of readdirSync(dir).toSorted()) if (scanEntry({ dir, name, re, stack })) return true
+      for (const name of readdirSync(dir).toSorted((a, b) => (a < b ? -1 : Number(a > b))))
+        if (scanEntry({ dir, name, re, stack })) return true
   }
   return false
 }
@@ -163,7 +164,7 @@ const walkTests = (dir: string, out: string[] = []): string[] => {
   // oxlint-disable-next-line node/no-sync
   if (!statSync(dir, { throwIfNoEntry: false })) return out
   // oxlint-disable-next-line node/no-sync
-  for (const name of readdirSync(dir).toSorted())
+  for (const name of readdirSync(dir).toSorted((a, b) => (a < b ? -1 : Number(a > b))))
     if (!(name.startsWith('.') || name === 'node_modules')) {
       const full = join(dir, name)
       // oxlint-disable-next-line node/no-sync
@@ -180,6 +181,57 @@ const factoryAppearsInTests = (testRoot: string, fn: string): boolean => {
 }
 const isStr = (n: string | undefined): n is string => typeof n === 'string'
 const DEMOS = ['blog', 'chat', 'movie', 'org', 'poll']
+interface ParityCtx {
+  cvxDemoRoots: string[]
+  cvxLazy: string
+  cvxTestRoot: string
+  docsDir: string
+  sSrc: string
+  stdbDemoRoots: string[]
+  stdbLazy: string
+  stdbSSrc: string
+  stdbTestRoot: string
+}
+const buildParityRow = (spec: FactorySpec, ctx: ParityCtx): { ok: boolean; row: string } => {
+  const cvxTables = findTablesInSlot(ctx.sSrc, spec.slot)
+  const stdbTables = findTablesInSlot(ctx.stdbSSrc, spec.slot)
+  const cvxRegistered = cvxTables.filter(
+    t => tableUsedInLazy(ctx.cvxLazy, t) || tableUsedInBackend(`${REPO}/backend/convex/convex`, t)
+  )
+  const stdbRegistered = stdbTables.filter(t => tableUsedInLazy(ctx.stdbLazy, t))
+  const cvxDemoUsed = cvxTables.filter(t => {
+    const lazyName = lazyNameForSchema(ctx.cvxLazy, t)
+    return tableUsedInDemos(ctx.cvxDemoRoots, [t, lazyName].filter(isStr))
+  })
+  const stdbDemoUsed = stdbTables.filter(t => {
+    const lazyName = lazyNameForSchema(ctx.stdbLazy, t)
+    return tableUsedInDemos(ctx.stdbDemoRoots, [t, lazyName].filter(isStr))
+  })
+  // oxlint-disable-next-line node/no-sync
+  const cvxSrc = existsSync(`${LIB_NOBOIL}/src/convex/server/${spec.cvxSourceFile}`)
+  // oxlint-disable-next-line node/no-sync
+  const stdbSrc = existsSync(`${LIB_NOBOIL}/src/spacetimedb/server/${spec.stdbSourceFile}`)
+  const cvxTests = factoryAppearsInTests(ctx.cvxTestRoot, spec.cvxFactoryFn)
+  const stdbTests = factoryAppearsInTests(ctx.stdbTestRoot, spec.stdbFactoryFn)
+  // oxlint-disable-next-line node/no-sync
+  const allDocs = readdirSync(ctx.docsDir)
+    .toSorted((a, b) => (a < b ? -1 : Number(a > b)))
+    .filter(f => f.endsWith('.mdx'))
+    // oxlint-disable-next-line node/no-sync
+    .map(f => readFileSync(`${ctx.docsDir}/${f}`, 'utf8'))
+    .join('\n')
+  const docOk =
+    new RegExp(`\\b${spec.cvxFactoryFn}\\b`, 'u').test(allDocs) ||
+    new RegExp(`\\b${spec.stdbFactoryFn}\\b`, 'u').test(allDocs)
+  const cvxOk = cvxSrc && cvxRegistered.length > 0 && cvxDemoUsed.length > 0 && cvxTests
+  const stdbOk = stdbSrc && stdbRegistered.length > 0 && stdbDemoUsed.length > 0 && stdbTests
+  const allOk = cvxOk && stdbOk && docOk
+  const cvxCell = `${cvxSrc ? '✓' : '✗'} src · ${cvxRegistered.length}/${cvxTables.length} reg · ${cvxDemoUsed.length} demos · ${cvxTests ? '✓' : '✗'} tests`
+  const stdbCell = `${stdbSrc ? '✓' : '✗'} src · ${stdbRegistered.length}/${stdbTables.length} reg · ${stdbDemoUsed.length} demos · ${stdbTests ? '✓' : '✗'} tests`
+  const tableCount = Math.max(cvxTables.length, stdbTables.length)
+  const row = `| \`${spec.slot}\` (\`${spec.brand}\`) | ${tableCount} | ${cvxCell} | ${stdbCell} | ${docOk ? '✓' : '✗'} | ${allOk ? '🟢' : '🟡'} |`
+  return { ok: allOk, row }
+}
 const main = () => {
   // oxlint-disable-next-line node/no-sync
   const sSrc = readFileSync(`${REPO}/backend/convex/s.ts`, 'utf8')
@@ -189,55 +241,24 @@ const main = () => {
   const cvxLazy = readFileSync(`${REPO}/backend/convex/lazy.ts`, 'utf8')
   // oxlint-disable-next-line node/no-sync
   const stdbLazy = readFileSync(`${REPO}/backend/spacetimedb/src/index.ts`, 'utf8')
-  const docsDir = DOCS_DIR
-  const cvxTestRoot = `${LIB_NOBOIL}/src/convex`
-  const stdbTestRoot = `${LIB_NOBOIL}/src/spacetimedb`
-  const cvxDemoRoots = DEMOS.map(d => `${REPO}/web/cvx/${d}`)
-  const stdbDemoRoots = DEMOS.map(d => `${REPO}/web/stdb/${d}`)
+  const ctx: ParityCtx = {
+    cvxDemoRoots: DEMOS.map(d => `${REPO}/web/cvx/${d}`),
+    cvxLazy,
+    cvxTestRoot: `${LIB_NOBOIL}/src/convex`,
+    docsDir: DOCS_DIR,
+    sSrc,
+    stdbDemoRoots: DEMOS.map(d => `${REPO}/web/stdb/${d}`),
+    stdbLazy,
+    stdbSSrc,
+    stdbTestRoot: `${LIB_NOBOIL}/src/spacetimedb`
+  }
   const rows: string[] = []
   let perfect = 0
   for (const spec of SPECS)
     if (FACTORY_META[spec.brand]) {
-      const cvxTables = findTablesInSlot(sSrc, spec.slot)
-      const stdbTables = findTablesInSlot(stdbSSrc, spec.slot)
-      const cvxRegistered = cvxTables.filter(
-        t => tableUsedInLazy(cvxLazy, t) || tableUsedInBackend(`${REPO}/backend/convex/convex`, t)
-      )
-      const stdbRegistered = stdbTables.filter(t => tableUsedInLazy(stdbLazy, t))
-      const cvxDemoUsed = cvxTables.filter(t => {
-        const lazyName = lazyNameForSchema(cvxLazy, t)
-        return tableUsedInDemos(cvxDemoRoots, [t, lazyName].filter(isStr))
-      })
-      const stdbDemoUsed = stdbTables.filter(t => {
-        const lazyName = lazyNameForSchema(stdbLazy, t)
-        return tableUsedInDemos(stdbDemoRoots, [t, lazyName].filter(isStr))
-      })
-      // oxlint-disable-next-line node/no-sync
-      const cvxSrc = existsSync(`${LIB_NOBOIL}/src/convex/server/${spec.cvxSourceFile}`)
-      // oxlint-disable-next-line node/no-sync
-      const stdbSrc = existsSync(`${LIB_NOBOIL}/src/spacetimedb/server/${spec.stdbSourceFile}`)
-      const cvxTests = factoryAppearsInTests(cvxTestRoot, spec.cvxFactoryFn)
-      const stdbTests = factoryAppearsInTests(stdbTestRoot, spec.stdbFactoryFn)
-      // oxlint-disable-next-line node/no-sync
-      const allDocs = readdirSync(docsDir)
-        .toSorted()
-        .filter(f => f.endsWith('.mdx'))
-        // oxlint-disable-next-line node/no-sync
-        .map(f => readFileSync(`${docsDir}/${f}`, 'utf8'))
-        .join('\n')
-      const docOk =
-        new RegExp(`\\b${spec.cvxFactoryFn}\\b`, 'u').test(allDocs) ||
-        new RegExp(`\\b${spec.stdbFactoryFn}\\b`, 'u').test(allDocs)
-      const cvxOk = cvxSrc && cvxRegistered.length > 0 && cvxDemoUsed.length > 0 && cvxTests
-      const stdbOk = stdbSrc && stdbRegistered.length > 0 && stdbDemoUsed.length > 0 && stdbTests
-      const allOk = cvxOk && stdbOk && docOk
-      if (allOk) perfect += 1
-      const cvxCell = `${cvxSrc ? '✓' : '✗'} src · ${cvxRegistered.length}/${cvxTables.length} reg · ${cvxDemoUsed.length} demos · ${cvxTests ? '✓' : '✗'} tests`
-      const stdbCell = `${stdbSrc ? '✓' : '✗'} src · ${stdbRegistered.length}/${stdbTables.length} reg · ${stdbDemoUsed.length} demos · ${stdbTests ? '✓' : '✗'} tests`
-      const tableCount = Math.max(cvxTables.length, stdbTables.length)
-      rows.push(
-        `| \`${spec.slot}\` (\`${spec.brand}\`) | ${tableCount} | ${cvxCell} | ${stdbCell} | ${docOk ? '✓' : '✗'} | ${allOk ? '🟢' : '🟡'} |`
-      )
+      const { ok, row } = buildParityRow(spec, ctx)
+      if (ok) perfect += 1
+      rows.push(row)
     }
   const body = [
     'Per-factory parity. Each factory checked: source file present, at least one demo table registered in the entry point, table referenced by ≥1 demo app, factory name referenced in tests, and dedicated doc page.',

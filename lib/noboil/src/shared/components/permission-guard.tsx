@@ -11,6 +11,7 @@ interface PermissionGuardProps extends ComponentProps<'div'> {
   children: ReactNode
   resource: string
 }
+// eslint-disable-next-line sonarjs/function-return-type -- guard returns children passthrough or the view-only fallback UI — both valid ReactNode
 const PermissionGuard = (props: PermissionGuardProps): ReactNode => {
   const { backHref, backLabel, canAccess, children, className, resource, ...rest } = props
   if (canAccess) return children

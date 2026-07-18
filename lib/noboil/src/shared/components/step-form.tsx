@@ -2,6 +2,7 @@
 /** biome-ignore-all lint/nursery/noComponentHookFactories: field/handler factory, not a component/hook */
 /* oxlint-disable jsx-no-new-object-as-prop, react/jsx-handler-names */
 /* eslint-disable @eslint-react/refs, react-hooks/refs */
+/* eslint-disable sonarjs/no-nested-functions -- step-form factory: render-prop + map JSX inherently nests handlers one level past the threshold */
 'use client'
 import type { Stepper as CoreStepper, Step } from '@stepperize/core'
 import type { StandardSchemaV1 } from '@tanstack/form-core'
@@ -18,6 +19,11 @@ import { Check } from 'lucide-react'
 import { useNavigationGuard } from 'next-navigation-guard'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
+const stepStatus = (isActive: boolean, isCompleted: boolean): string => {
+  if (isActive) return 'active'
+  if (isCompleted) return 'completed'
+  return 'inactive'
+}
 interface DefineStepsAdapters<TFields> {
   buildMeta: (schema: ZodObject) => unknown
   coerceOptionals: (schema: ZodObject, values: Record<string, unknown>) => Record<string, unknown>
@@ -121,7 +127,7 @@ const StepIndicator = ({
     {steps.map((step, i) => {
       const isActive = i === currentIndex
       const isCompleted = i < currentIndex
-      const status = isActive ? 'active' : isCompleted ? 'completed' : 'inactive'
+      const status = stepStatus(isActive, isCompleted)
       return (
         <div
           className={cn('flex flex-1 items-center gap-2', classNames?.step)}

@@ -116,8 +116,10 @@ const runSyncCommand = ({
     stdio: 'inherit'
   })
   if (result.status === 0) return true
-  if (typeof result.status === 'number') console.log(`${red('Failed:')} ${label} ${dim(`(exit ${result.status})`)}`)
-  else console.log(`${red('Failed:')} ${label}`)
+  if (typeof result.status === 'number') {
+    const exitBadge = dim(`(exit ${result.status})`)
+    console.log(`${red('Failed:')} ${label} ${exitBadge}`)
+  } else console.log(`${red('Failed:')} ${label}`)
   return false
 }
 const pingSpacetime = async (): Promise<boolean> => {
@@ -128,8 +130,7 @@ const pingSpacetime = async (): Promise<boolean> => {
     try {
       const response = await fetch(url)
       return response.ok
-    } catch (error) {
-      if (error instanceof Error) return false
+    } catch {
       return false
     }
   })
@@ -215,6 +216,7 @@ const startDevServer = (cwd: string, pkg: null | Record<string, unknown>): Child
 /**
  * Starts the integrated noboil development workflow.
  */
+// eslint-disable-next-line sonarjs/cognitive-complexity -- sequential dev-environment bootstrap with per-precondition guards
 const dev = async (args: string[] = []) => {
   const flags = parseDevFlags(args)
   if (flags.help) {
@@ -249,8 +251,8 @@ const dev = async (args: string[] = []) => {
     process.exit(1)
   }
   const spacetimeBin = 'spacetime'
-  // oxlint-disable-next-line node/no-sync
-  const probe = spawnSync(spacetimeBin, ['--version'], { stdio: 'ignore' })
+  // oxlint-disable-next-line node/no-sync -- CLI tool: synchronous spawn by design
+  const probe = spawnSync(spacetimeBin, ['--version'], { stdio: 'ignore' }) // eslint-disable-line sonarjs/no-os-command-from-path -- dev tooling, trusted PATH
   if (probe.status !== 0) {
     console.log(`${red('Spacetime CLI not found on PATH.')} Install from https://spacetimedb.com/install`)
     process.exit(1)

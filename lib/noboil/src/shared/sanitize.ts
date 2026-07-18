@@ -1,12 +1,15 @@
+// eslint-disable-next-line regexp/control-character-escape -- explicit \u code points document the exact control-char range
 const CONTROL_ASCII = String.raw`[\u0000-\u0009\u000B\u000C\u000E-\u001F\u007F]`
 const NEWLINES = String.raw`[\n\r\u0085\u2028\u2029]`
 const UNICODE_CONTROL = String.raw`[\u200B-\u200F\u202A-\u202E\u2060-\u2069\uFEFF]`
 const RE_CONTROL_ASCII = new RegExp(CONTROL_ASCII, 'gu')
 const RE_NEWLINES = new RegExp(NEWLINES, 'gu')
 const RE_UNICODE_CONTROL = new RegExp(UNICODE_CONTROL, 'gu')
+// eslint-disable-next-line sonarjs/super-linear-regex -- linear: single bounded negated class, no ambiguous overlap
 const RE_HTML_TAGS = /<[^>]*>/gu
+// eslint-disable-next-line sonarjs/super-linear-regex -- linear: independent bounded negated classes, no ambiguous overlap
 const RE_MD_LINK = /\[(?<text>[^\]]*)\]\([^)]*\)/gu
-const RE_MD_IMAGE = /!\[(?<alt>[^\]]*)\]\([^)]*\)/gu
+const RE_MD_IMAGE = /!\[[^\]]*\]\([^)]*\)/gu
 const RE_CODE_BLOCK = /```[\s\S]*?```/gu
 const RE_INLINE_CODE = /`[^`]*`/gu
 const RE_HEADING = /#{1,6}\s/gu
@@ -63,7 +66,7 @@ const canonicalizeEmail = (email: string): string => {
 }
 const WHITESPACE_RE = /\s+/gu
 const SENTENCE_SPLIT_RE = /[.!?]\s+/u
-const QUESTION_WORD_RE = /\b(?<q>what|how|why|when|which|who|where|should|can|does|do|is|are)\b/iu
+const QUESTION_WORD_RE = /\b(?:what|how|why|when|which|who|where|should|can|does|do|is|are)\b/iu
 /** Trim/collapse whitespace, take first sentence, strip leading question words; fall back to `fallback` if empty. */
 const sanitizeTitle = (s: string, maxLen = 80, fallback = 'Untitled'): string => {
   const cleaned = sanitizeExternal(s).replaceAll(WHITESPACE_RE, ' ').trim()

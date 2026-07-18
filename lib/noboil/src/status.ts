@@ -1,4 +1,4 @@
-/* eslint-disable no-console, complexity */
+/* eslint-disable no-console */
 import { spawnSync } from 'node:child_process'
 import { existsSync, statSync } from 'node:fs'
 import { dirname, join } from 'node:path'
@@ -18,6 +18,38 @@ const humanizeAge = (isoDate: string): string => {
   if (days === 1) return '1 day ago'
   if (days < 30) return `${days} days ago`
   return `${Math.floor(days / 30)} months ago`
+}
+type Manifest = NonNullable<ReturnType<typeof readManifestFrom>>['manifest']
+const printSyncAge = (rc: Manifest): void => {
+  if (!rc.scaffoldedAt) return
+  const stale = (Date.now() - new Date(rc.scaffoldedAt).getTime()) / 86_400_000 > 30
+  const staleTag = stale ? ` ${yellow('(stale)')}` : ''
+  console.log(`  ${dim('last sync:')} ${humanizeAge(rc.scaffoldedAt)}${staleTag}`)
+  if (stale) console.log(`    ${yellow('!')} consider ${dim('noboil sync')} — scaffold is >30 days old`)
+}
+const printInstallHealth = (projectRoot: string): void => {
+  // oxlint-disable-next-line node/no-sync
+  if (existsSync(join(projectRoot, 'node_modules'))) console.log(`  ${green('✓')} node_modules present`)
+  else console.log(`  ${yellow('!')} node_modules missing — run ${dim('bun install')}`)
+}
+const printUpstreamStatus = (rc: Manifest): void => {
+  if (rc.ejected || !rc.scaffoldedFrom) return
+  // oxlint-disable-next-line node/no-sync -- CLI tool: synchronous spawn by design
+  const r = spawnSync('git', ['ls-remote', 'https://github.com/1qh/noboil.git', 'HEAD'], { encoding: 'utf8' }) // eslint-disable-line sonarjs/no-os-command-from-path -- dev tooling, trusted PATH
+  if (r.status !== 0) return
+  const latest = (r.stdout.split('\n')[0] ?? '').split('\t')[0] ?? ''
+  if (latest && latest !== rc.scaffoldedFrom) {
+    console.log(`  ${yellow('!')} upstream ahead: ${rc.scaffoldedFrom.slice(0, 7)} → ${latest.slice(0, 7)}`)
+    console.log(`    run ${dim('noboil sync')} to pull updates`)
+  } else console.log(`  ${green('✓')} up to date with upstream`)
+}
+const printPkgMtime = (projectRoot: string): void => {
+  const logPath = join(projectRoot, 'package.json')
+  // oxlint-disable-next-line node/no-sync
+  if (!existsSync(logPath)) return
+  // oxlint-disable-next-line node/no-sync
+  const { mtime } = statSync(logPath)
+  console.log(`  ${dim('pkg mtime:')} ${humanizeAge(mtime.toISOString())}`)
 }
 const status = (args: string[]) => {
   if (args.includes('--help') || args.includes('-h')) {
@@ -40,34 +72,10 @@ const status = (args: string[]) => {
   console.log(`  ${dim('demos:')}    ${rc.includeDemos ? 'included' : 'excluded'}`)
   if (rc.ejected) console.log(`  ${yellow('!')} ejected — sync disabled`)
   if (rc.scaffoldedFrom) console.log(`  ${dim('from:')}     ${rc.scaffoldedFrom.slice(0, 7)}`)
-  if (rc.scaffoldedAt) {
-    const age = Date.now() - new Date(rc.scaffoldedAt).getTime()
-    const days = age / 86_400_000
-    const stale = days > 30
-    console.log(`  ${dim('last sync:')} ${humanizeAge(rc.scaffoldedAt)}${stale ? ` ${yellow('(stale)')}` : ''}`)
-    if (stale) console.log(`    ${yellow('!')} consider ${dim('noboil sync')} — scaffold is >30 days old`)
-  }
-  // oxlint-disable-next-line node/no-sync
-  if (existsSync(join(projectRoot, 'node_modules'))) console.log(`  ${green('✓')} node_modules present`)
-  else console.log(`  ${yellow('!')} node_modules missing — run ${dim('bun install')}`)
-  if (!rc.ejected && rc.scaffoldedFrom) {
-    // oxlint-disable-next-line node/no-sync
-    const r = spawnSync('git', ['ls-remote', 'https://github.com/1qh/noboil.git', 'HEAD'], { encoding: 'utf8' })
-    if (r.status === 0) {
-      const latest = (r.stdout.split('\n')[0] ?? '').split('\t')[0] ?? ''
-      if (latest && latest !== rc.scaffoldedFrom) {
-        console.log(`  ${yellow('!')} upstream ahead: ${rc.scaffoldedFrom.slice(0, 7)} → ${latest.slice(0, 7)}`)
-        console.log(`    run ${dim('noboil sync')} to pull updates`)
-      } else console.log(`  ${green('✓')} up to date with upstream`)
-    }
-  }
-  const logPath = join(projectRoot, 'package.json')
-  // oxlint-disable-next-line node/no-sync
-  if (existsSync(logPath)) {
-    // oxlint-disable-next-line node/no-sync
-    const { mtime } = statSync(logPath)
-    console.log(`  ${dim('pkg mtime:')} ${humanizeAge(mtime.toISOString())}`)
-  }
+  printSyncAge(rc)
+  printInstallHealth(projectRoot)
+  printUpstreamStatus(rc)
+  printPkgMtime(projectRoot)
   console.log('')
 }
 export { status }

@@ -130,7 +130,8 @@ const TaskRow = ({
             ))}
           </SelectContent>
         </Select>
-      ) : assignee ? (
+      ) : null}
+      {!canAssign && assignee ? (
         <div className='flex items-center gap-1'>
           <Avatar className='size-5'>
             <AvatarImage src={undefined} />

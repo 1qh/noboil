@@ -11,7 +11,7 @@ describe('jsonErr', () => {
 })
 describe('parseHttpBody', () => {
   test('parses valid JSON', async () => {
-    const req = new Request('http://x', {
+    const req = new Request('https://x', {
       body: JSON.stringify({ x: 1 }),
       headers: { 'Content-Type': 'application/json' },
       method: 'POST'
@@ -20,7 +20,7 @@ describe('parseHttpBody', () => {
     expect(r).toEqual({ x: 1 })
   })
   test('rejects non-JSON content type', async () => {
-    const req = new Request('http://x', {
+    const req = new Request('https://x', {
       body: 'plain',
       headers: { 'Content-Type': 'text/plain' },
       method: 'POST'
@@ -31,7 +31,7 @@ describe('parseHttpBody', () => {
   })
   test('rejects oversize via body length', async () => {
     const big = 'x'.repeat(2000)
-    const req = new Request('http://x', {
+    const req = new Request('https://x', {
       body: big,
       headers: { 'Content-Type': 'application/json' },
       method: 'POST'
@@ -41,7 +41,7 @@ describe('parseHttpBody', () => {
     expect((r as Response).status).toBe(413)
   })
   test('rejects invalid JSON', async () => {
-    const req = new Request('http://x', {
+    const req = new Request('https://x', {
       body: '{not json}',
       headers: { 'Content-Type': 'application/json' },
       method: 'POST'
@@ -52,7 +52,7 @@ describe('parseHttpBody', () => {
   })
   test('respects custom max', async () => {
     const big = JSON.stringify({ x: 'y'.repeat(2000) })
-    const req = new Request('http://x', {
+    const req = new Request('https://x', {
       body: big,
       headers: { 'Content-Type': 'application/json' },
       method: 'POST'

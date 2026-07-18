@@ -8,7 +8,7 @@ const DESCRIBE_RE = /describe\(\s*['"`](?<name>[^'"`]+)['"`]/gu
 const TEST_RE = /\b(?:test|it)\(\s*['"`](?<name>[^'"`]+)['"`]/gu
 const walk = (dir: string, out: string[] = []): string[] => {
   // oxlint-disable-next-line node/no-sync
-  for (const name of readdirSync(dir).toSorted()) {
+  for (const name of readdirSync(dir).toSorted((a, b) => (a < b ? -1 : Number(a > b)))) {
     const full = join(dir, name)
     // oxlint-disable-next-line node/no-sync
     if (statSync(full).isDirectory()) walk(full, out)
@@ -28,7 +28,7 @@ const countMatches = (re: RegExp, src: string): number => {
 }
 const main = () => {
   const root = `${LIB_NOBOIL}/src`
-  const files = walk(root).toSorted()
+  const files = walk(root).toSorted((a, b) => (a < b ? -1 : Number(a > b)))
   const rows: string[] = []
   let totalDescribes = 0
   let totalTests = 0

@@ -105,12 +105,13 @@ const FACTORIES: FactorySpec[] = [
     stdbTestPatterns: ['makeSingleton', 'singletonTable', 'upsert_']
   }
 ]
+// eslint-disable-next-line regexp/no-contradiction-with-assertion, regexp/no-super-linear-backtracking, sonarjs/super-linear-regex -- matches one test block in trusted repo test source; bounded non-adversarial input
 const TEST_BLOCK_RE = /\b(?:test|it)\(\s*['"`][^'"`]+['"`][\s\S]*?^\s*\}\)/gmu
 const walk = (dir: string, out: string[] = []): string[] => {
   // oxlint-disable-next-line node/no-sync
   if (!statSync(dir, { throwIfNoEntry: false })) return out
   // oxlint-disable-next-line node/no-sync
-  for (const name of readdirSync(dir).toSorted())
+  for (const name of readdirSync(dir).toSorted((a, b) => (a < b ? -1 : Number(a > b))))
     if (!(name.startsWith('.') || name === 'node_modules')) {
       const full = join(dir, name)
       // oxlint-disable-next-line node/no-sync
@@ -158,8 +159,10 @@ const main = () => {
     const pageSrc = existsSync(docPagePath) ? readFileSync(docPagePath, 'utf8') : ''
     const cvxTabs = (pageSrc.match(/<Tab value="Convex">/gu) ?? []).length
     const stdbTabs = (pageSrc.match(/<Tab value="SpacetimeDB">/gu) ?? []).length
+    const docCell = docPage > 0 ? `${docPage}L` : '—'
+    const tabsMark = cvxTabs === stdbTabs && cvxTabs > 0 ? '✓' : '⚠'
     rows.push(
-      `| \`${f.brand}\` | ${cvxLines} / ${stdbLines} | ${cvxHook} / ${stdbHook} | ${cvxTests} / ${stdbTests} | ${docPage > 0 ? `${docPage}L` : '—'} | ${cvxTabs} / ${stdbTabs} ${cvxTabs === stdbTabs && cvxTabs > 0 ? '✓' : '⚠'} |`
+      `| \`${f.brand}\` | ${cvxLines} / ${stdbLines} | ${cvxHook} / ${stdbHook} | ${cvxTests} / ${stdbTests} | ${docCell} | ${cvxTabs} / ${stdbTabs} ${tabsMark} |`
     )
   }
   const body = [

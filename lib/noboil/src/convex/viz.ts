@@ -51,7 +51,7 @@ const extractFieldType = (raw: string): string => {
   if (t.includes('files()')) return 'file[]'
   if (t.includes('zid(')) {
     const m = ZID_PAT.exec(t)
-    return m ? `id<${m[1]}>` : 'id'
+    return m ? `id<${m.groups?.zname ?? ''}>` : 'id'
   }
   if (t.includes('array(')) return 'array'
   if (t.includes('boolean()') || t.startsWith('boolean')) return 'boolean'
@@ -68,7 +68,7 @@ const extractFieldsFromBlock = (block: string): { name: string; type: string }[]
     const m = FIELD_PAT.exec(line)
     if (m) {
       const rest = line.slice(line.indexOf(':') + 1)
-      fields.push({ name: m.groups?.fname ?? m[1] ?? '', type: extractFieldType(rest) })
+      fields.push({ name: m.groups?.fname ?? '', type: extractFieldType(rest) })
     }
   }
   return fields
@@ -81,6 +81,7 @@ const extractWrapperTables = (content: string): TableInfo[] => {
     while (fm !== null) {
       const endPos = findBracketEnd(content, fm.index + fm[0].length)
       const outerBlock = content.slice(fm.index + fm[0].length, endPos)
+      // eslint-disable-next-line sonarjs/super-linear-regex -- linear: \w and \s match disjoint character classes, so adjacent quantifiers cannot overlap-backtrack
       const propPat = /(?<tname>\w+)\s*:\s*object\(\{/gu
       let pm = propPat.exec(outerBlock)
       while (pm !== null) {
@@ -89,7 +90,7 @@ const extractWrapperTables = (content: string): TableInfo[] => {
         const fieldBlock = outerBlock.slice(start, fieldEnd)
         tables.push({
           fields: extractFieldsFromBlock(fieldBlock),
-          name: pm.groups?.tname ?? pm[1] ?? '',
+          name: pm.groups?.tname ?? '',
           tableType: TYPE_LABELS[factory] ?? factory
         })
         pm = propPat.exec(outerBlock)
@@ -100,40 +101,25 @@ const extractWrapperTables = (content: string): TableInfo[] => {
   for (const factory of wrapperFactories) processFactory(factory)
   return tables
 }
+const extractChildFields = (block: string): { name: string; type: string }[] => {
+  const schemaMatch = SCHEMA_OBJ_PAT.exec(block)
+  if (!schemaMatch) return []
+  const sStart = block.indexOf('{', schemaMatch.index + schemaMatch[0].length - 1) + 1
+  return extractFieldsFromBlock(block.slice(sStart, findBracketEnd(block, sStart)))
+}
 const extractChildren = (content: string): ChildInfo[] => {
   const children: ChildInfo[] = []
+  // eslint-disable-next-line sonarjs/super-linear-regex -- linear: \w and \s match disjoint character classes, so adjacent quantifiers cannot overlap-backtrack
   const pat = /(?<cname>\w+)\s*:\s*child\(\{/gu
   let m = pat.exec(content)
   while (m) {
     const start = m.index + m[0].length
-    let depth = 1
-    let pos = start
-    while (pos < content.length && depth > 0) {
-      if (content[pos] === '{') depth += 1
-      else if (content[pos] === '}') depth -= 1
-      pos += 1
-    }
-    const block = content.slice(start, pos - 1)
-    const fkMatch = FK_PAT.exec(block)
-    const parentMatch = PARENT_PAT.exec(block)
-    const schemaMatch = SCHEMA_OBJ_PAT.exec(block)
-    let fields: { name: string; type: string }[] = []
-    if (schemaMatch) {
-      const sStart = block.indexOf('{', schemaMatch.index + schemaMatch[0].length - 1) + 1
-      let d = 1
-      let p = sStart
-      while (p < block.length && d > 0) {
-        if (block[p] === '{') d += 1
-        else if (block[p] === '}') d -= 1
-        p += 1
-      }
-      fields = extractFieldsFromBlock(block.slice(sStart, p - 1))
-    }
+    const block = content.slice(start, findBracketEnd(content, start))
     children.push({
-      fields,
-      foreignKey: fkMatch?.[1] ?? '',
-      name: m.groups?.cname ?? m[1] ?? '',
-      parent: parentMatch?.[1] ?? '',
+      fields: extractChildFields(block),
+      foreignKey: FK_PAT.exec(block)?.groups?.fk ?? '',
+      name: m.groups?.cname ?? '',
+      parent: PARENT_PAT.exec(block)?.groups?.pn ?? '',
       tableType: 'child'
     })
     m = pat.exec(content)
@@ -141,26 +127,31 @@ const extractChildren = (content: string): ChildInfo[] => {
   return children
 }
 const escapeField = (name: string) => name.replaceAll('_', '_')
-const generateMermaid = (tables: TableInfo[], children: ChildInfo[]): string => {
-  const lines: string[] = ['erDiagram']
-  for (const t of tables) {
-    lines.push(`    ${t.name} {`)
-    for (const f of t.fields) lines.push(`        ${f.type} ${escapeField(f.name)}`)
-    lines.push('    }')
-  }
-  for (const c of children) {
-    lines.push(`    ${c.name} {`)
-    for (const f of c.fields) lines.push(`        ${f.type} ${escapeField(f.name)}`)
-    lines.push('    }')
-    if (c.parent) lines.push(`    ${c.parent} ||--o{ ${c.name} : "${c.foreignKey}"`)
-  }
+const entityBlock = (name: string, fields: { name: string; type: string }[]): string[] => {
+  const lines = [`    ${name} {`]
+  for (const f of fields) lines.push(`        ${f.type} ${escapeField(f.name)}`)
+  lines.push('    }')
+  return lines
+}
+const foreignKeyEdges = (tables: TableInfo[], children: ChildInfo[]): string[] => {
+  const lines: string[] = []
+  const allNames = new Set([...tables.map(x => x.name), ...children.map(x => x.name)])
   for (const t of tables)
     for (const f of t.fields)
       if (f.type.startsWith('id<') && f.type !== 'id<_storage>') {
         const target = f.type.slice(3, -1)
-        const allNames = [...tables.map(x => x.name), ...children.map(x => x.name)]
-        if (allNames.includes(target)) lines.push(`    ${target} ||--o{ ${t.name} : "${f.name}"`)
+        if (allNames.has(target)) lines.push(`    ${target} ||--o{ ${t.name} : "${f.name}"`)
       }
+  return lines
+}
+const generateMermaid = (tables: TableInfo[], children: ChildInfo[]): string => {
+  const lines: string[] = ['erDiagram']
+  for (const t of tables) lines.push(...entityBlock(t.name, t.fields))
+  for (const c of children) {
+    lines.push(...entityBlock(c.name, c.fields))
+    if (c.parent) lines.push(`    ${c.parent} ||--o{ ${c.name} : "${c.foreignKey}"`)
+  }
+  lines.push(...foreignKeyEdges(tables, children))
   return lines.join('\n')
 }
 const run = (argv: string[] = process.argv.slice(2)) => {

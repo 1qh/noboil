@@ -142,17 +142,44 @@ const collectSharedImportsFromFiles = (filePaths: string[]) => {
     }
   return imports
 }
+const enqueueResolved = (resolved: string | undefined, visited: Set<string>, queue: string[]): void => {
+  if (resolved && !visited.has(resolved)) {
+    visited.add(resolved)
+    queue.push(resolved)
+  }
+}
+const processDependencySpecifier = ({
+  filePath,
+  queue,
+  sharedRoot,
+  specifier,
+  visited
+}: {
+  filePath: string
+  queue: string[]
+  sharedRoot: string
+  specifier: string
+  visited: Set<string>
+}): void => {
+  if (specifier.startsWith('.')) {
+    const base = resolvePath(dirname(filePath), specifier)
+    const resolved = resolveWithExtensions(base)
+    if (resolved?.startsWith(sharedRoot)) enqueueResolved(resolved, visited, queue)
+    return
+  }
+  if (specifier.startsWith(SHARED_SPECIFIER)) {
+    const resolved = resolveSharedImportToSourceFile(sharedRoot, specifier)
+    if (resolved) enqueueResolved(resolved, visited, queue)
+    else die(`Unable to resolve ${specifier} from shared source.`)
+  }
+}
 const buildSharedDependencySet = (sharedRoot: string, sharedSpecifiers: Set<string>) => {
   const queue: string[] = []
   const visited = new Set<string>()
   for (const specifier of sharedSpecifiers) {
     const resolved = resolveSharedImportToSourceFile(sharedRoot, specifier)
-    if (resolved) {
-      if (!visited.has(resolved)) {
-        visited.add(resolved)
-        queue.push(resolved)
-      }
-    } else die(`Unable to resolve ${specifier} from shared source.`)
+    if (resolved) enqueueResolved(resolved, visited, queue)
+    else die(`Unable to resolve ${specifier} from shared source.`)
   }
   let index = 0
   while (index < queue.length) {
@@ -160,28 +187,15 @@ const buildSharedDependencySet = (sharedRoot: string, sharedSpecifiers: Set<stri
     if (!filePath) break
     // oxlint-disable-next-line node/no-sync
     const content = readFileSync(filePath, 'utf8')
-    const specifiers = extractSpecifiers(content)
-    for (const specifier of specifiers)
-      if (specifier.startsWith('.')) {
-        const base = resolvePath(dirname(filePath), specifier)
-        const resolved = resolveWithExtensions(base)
-        if (resolved?.startsWith(sharedRoot) && !visited.has(resolved)) {
-          visited.add(resolved)
-          queue.push(resolved)
-        }
-      } else if (specifier.startsWith(SHARED_SPECIFIER)) {
-        const resolved = resolveSharedImportToSourceFile(sharedRoot, specifier)
-        if (resolved && !visited.has(resolved)) {
-          visited.add(resolved)
-          queue.push(resolved)
-        } else if (!resolved) die(`Unable to resolve ${specifier} from shared source.`)
-      }
+    for (const specifier of extractSpecifiers(content))
+      processDependencySpecifier({ filePath, queue, sharedRoot, specifier, visited })
     index += 1
   }
   return queue
 }
 const rewriteNoboilSpecifiers = (content: string, installedPackage: string): RewriteResult => {
-  const pattern = new RegExp(`(['"])${installedPackage.replace('/', String.raw`\/`)}(\\/[^'"\\n]*)?\\1`, 'gu')
+  const escapedPackage = installedPackage.replace('/', String.raw`\/`)
+  const pattern = new RegExp(`(['"])${escapedPackage}(\\/[^'"\\n]*)?\\1`, 'gu')
   let replacements = 0
   const output = content.replaceAll(pattern, (_m: string, quote: string, suffix?: string) => {
     replacements += 1
@@ -320,45 +334,106 @@ const printSummary = ({
   rewrittenSharedCount: number
   rewrittenSharedFiles: number
 }) => {
-  console.log(`\n${bold(`noboil eject${dryRun ? ' (dry-run)' : ''}`)}\n`)
+  const heading = bold(`noboil eject${dryRun ? ' (dry-run)' : ''}`)
+  const importReplNote = dim(`(${rewrittenImportCount} replacements)`)
+  const sharedReplNote = dim(`(${rewrittenSharedCount} replacements)`)
+  console.log(`\n${heading}\n`)
   console.log(`  ${green('+')} Library files copied: ${copiedLibraryFiles}`)
   console.log(`  ${green('+')} Shared files copied: ${copiedSharedFiles}`)
-  console.log(
-    `  ${green('+')} TS/TSX files with @noboil rewrites: ${rewrittenImportFiles} ${dim(`(${rewrittenImportCount} replacements)`)}`
-  )
-  console.log(
-    `  ${green('+')} Ejected files with shared rewrites: ${rewrittenSharedFiles} ${dim(`(${rewrittenSharedCount} replacements)`)}`
-  )
+  console.log(`  ${green('+')} TS/TSX files with @noboil rewrites: ${rewrittenImportFiles} ${importReplNote}`)
+  console.log(`  ${green('+')} Ejected files with shared rewrites: ${rewrittenSharedFiles} ${sharedReplNote}`)
   console.log(`  ${green('+')} package.json files updated: ${packageJsonFilesUpdated}`)
   console.log(`  ${green('+')} .noboilrc.json updated: ${markedEjected ? 'yes' : 'no'}`)
   console.log(`\n  ${yellow('!')} Sync and doctor commands will be disabled for ejected projects.`)
   console.log(`  ${dim('Next step:')} Run ${bold('bun install')} to link the local package.\n`)
+}
+const rewriteImportFilesInPlace = (
+  files: string[],
+  installedPackage: string,
+  dryRun: boolean
+): { count: number; files: number } => {
+  let fileCount = 0
+  let count = 0
+  for (const filePath of files) {
+    // oxlint-disable-next-line node/no-sync
+    const content = readFileSync(filePath, 'utf8')
+    const rewrites = rewriteNoboilSpecifiers(content, installedPackage)
+    if (rewrites.changed) {
+      fileCount += 1
+      count += rewrites.replacements
+      // oxlint-disable-next-line node/no-sync
+      if (!dryRun) writeFileSync(filePath, rewrites.output)
+    }
+  }
+  return { count, files: fileCount }
+}
+const rewriteSharedFilesInPlace = (
+  files: string[],
+  localSourceDir: string,
+  dryRun: boolean
+): { count: number; files: number } => {
+  let fileCount = 0
+  let count = 0
+  for (const filePath of files) {
+    // oxlint-disable-next-line node/no-sync
+    const content = readFileSync(filePath, 'utf8')
+    const rewrites = rewriteSharedSpecifiers(content, filePath, localSourceDir)
+    if (rewrites.changed) {
+      fileCount += 1
+      count += rewrites.replacements
+      // oxlint-disable-next-line node/no-sync
+      if (!dryRun) writeFileSync(filePath, rewrites.output)
+    }
+  }
+  return { count, files: fileCount }
+}
+const updatePackageJsonFiles = (files: string[], context: ReturnType<typeof prepareContext>, dryRun: boolean): number => {
+  let updated = 0
+  for (const filePath of files) {
+    const pkg = readJson(filePath) as PackageJson
+    let changed = false
+    if (filePath === context.rootPackagePath && ensureWorkspacePackages(pkg)) changed = true
+    if (replaceDependencyInSection(pkg.dependencies, context.installedPackage)) changed = true
+    if (replaceDependencyInSection(pkg.devDependencies, context.installedPackage)) changed = true
+    if (changed) {
+      updated += 1
+      if (!dryRun) writeJson(filePath, pkg)
+    }
+  }
+  return updated
+}
+const markProjectEjected = (cwd: string, dryRun: boolean): boolean => {
+  const noboilRcPath = join(cwd, '.noboilrc.json')
+  // oxlint-disable-next-line node/no-sync
+  if (!existsSync(noboilRcPath)) return false
+  const rc = readJson(noboilRcPath) as PackageJson
+  if (rc.ejected === true) return false
+  if (!dryRun) {
+    rc.ejected = true
+    writeJson(noboilRcPath, rc)
+  }
+  return true
 }
 const ejectSync = (dryRun: boolean) => {
   const cwd = process.cwd()
   const context = prepareContext(cwd)
   const localPackageDir = join(cwd, 'lib', 'noboil')
   const localSourceDir = join(localPackageDir, 'src')
-  let copiedSharedFiles = 0
-  let rewrittenImportFiles = 0
-  let rewrittenImportCount = 0
-  let rewrittenSharedFiles = 0
-  let rewrittenSharedCount = 0
-  let packageJsonFilesUpdated = 0
-  let markedEjected = false
   const copiedLibraryFiles = copyIntoTarget({
     dryRun,
     files: context.sourceFiles,
     fromRoot: context.sourceRoot,
     toRoot: localSourceDir
   })
-  if (context.sharedRoot && context.sharedFiles.length > 0)
-    copiedSharedFiles = copyIntoTarget({
-      dryRun,
-      files: context.sharedFiles,
-      fromRoot: context.sharedRoot,
-      toRoot: join(localSourceDir, 'shared')
-    })
+  const copiedSharedFiles =
+    context.sharedRoot && context.sharedFiles.length > 0
+      ? copyIntoTarget({
+          dryRun,
+          files: context.sharedFiles,
+          fromRoot: context.sharedRoot,
+          toRoot: join(localSourceDir, 'shared')
+        })
+      : 0
   const localPackageJson: PackageJson = {
     exports: context.sourcePackageJson.exports,
     name: LOCAL_PACKAGE,
@@ -370,64 +445,20 @@ const ejectSync = (dryRun: boolean) => {
     mkdirSync(localPackageDir, { recursive: true })
     writeJson(join(localPackageDir, 'package.json'), localPackageJson)
   }
-  const tsFiles = collectTsFiles(cwd)
-  for (const filePath of tsFiles) {
-    // oxlint-disable-next-line node/no-sync
-    const content = readFileSync(filePath, 'utf8')
-    const rewrites = rewriteNoboilSpecifiers(content, context.installedPackage)
-    if (rewrites.changed) {
-      rewrittenImportFiles += 1
-      rewrittenImportCount += rewrites.replacements
-      // oxlint-disable-next-line node/no-sync
-      if (!dryRun) writeFileSync(filePath, rewrites.output)
-    }
-  }
-  const ejectedTsFiles = collectTsFiles(localSourceDir)
-  for (const filePath of ejectedTsFiles) {
-    // oxlint-disable-next-line node/no-sync
-    const content = readFileSync(filePath, 'utf8')
-    const rewrites = rewriteSharedSpecifiers(content, filePath, localSourceDir)
-    if (rewrites.changed) {
-      rewrittenSharedFiles += 1
-      rewrittenSharedCount += rewrites.replacements
-      // oxlint-disable-next-line node/no-sync
-      if (!dryRun) writeFileSync(filePath, rewrites.output)
-    }
-  }
-  const packageJsonFiles = collectPackageJsonFiles(cwd)
-  for (const filePath of packageJsonFiles) {
-    const pkg = readJson(filePath) as PackageJson
-    let changed = false
-    if (filePath === context.rootPackagePath && ensureWorkspacePackages(pkg)) changed = true
-    if (replaceDependencyInSection(pkg.dependencies, context.installedPackage)) changed = true
-    if (replaceDependencyInSection(pkg.devDependencies, context.installedPackage)) changed = true
-    if (changed) {
-      packageJsonFilesUpdated += 1
-      if (!dryRun) writeJson(filePath, pkg)
-    }
-  }
-  const noboilRcPath = join(cwd, '.noboilrc.json')
-  // oxlint-disable-next-line node/no-sync
-  if (existsSync(noboilRcPath)) {
-    const rc = readJson(noboilRcPath) as PackageJson
-    if (rc.ejected !== true) {
-      markedEjected = true
-      if (!dryRun) {
-        rc.ejected = true
-        writeJson(noboilRcPath, rc)
-      }
-    }
-  }
+  const imports = rewriteImportFilesInPlace(collectTsFiles(cwd), context.installedPackage, dryRun)
+  const shared = rewriteSharedFilesInPlace(collectTsFiles(localSourceDir), localSourceDir, dryRun)
+  const packageJsonFilesUpdated = updatePackageJsonFiles(collectPackageJsonFiles(cwd), context, dryRun)
+  const markedEjected = markProjectEjected(cwd, dryRun)
   printSummary({
     copiedLibraryFiles,
     copiedSharedFiles,
     dryRun,
     markedEjected,
     packageJsonFilesUpdated,
-    rewrittenImportCount,
-    rewrittenImportFiles,
-    rewrittenSharedCount,
-    rewrittenSharedFiles
+    rewrittenImportCount: imports.count,
+    rewrittenImportFiles: imports.files,
+    rewrittenSharedCount: shared.count,
+    rewrittenSharedFiles: shared.files
   })
 }
 const eject = async (args: string[]) => {

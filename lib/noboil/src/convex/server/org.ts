@@ -95,6 +95,7 @@ const makeOrg = <DM extends GenericDataModel, S extends ZodRawShape>({
   })
   const update = m({
     args: { data: orgSchema.partial(), orgId: zid('org') },
+    // eslint-disable-next-line sonarjs/cognitive-complexity -- org update with slug-uniqueness + role-gate + hook branches; refactoring risks the untestable runtime write path
     handler: async (c: Rec, { data, orgId }: { data: Rec; orgId: string }) => {
       await requireOrgRole({ db: c.db, minRole: 'admin', orgId, userId: (c.user as Rec)._id as string })
       const newSlug = data.slug as string | undefined
@@ -206,6 +207,7 @@ const makeOrg = <DM extends GenericDataModel, S extends ZodRawShape>({
   })
   const remove = m({
     args: { orgId: zid('org') },
+    // eslint-disable-next-line sonarjs/cognitive-complexity -- org delete cascades across member/child tables + storage; refactoring risks the untestable runtime delete path
     handler: async (c: Rec, { orgId }: { orgId: string }) => {
       const db = c.db as DbLike
       const { storage } = c as { storage?: StorageLike }

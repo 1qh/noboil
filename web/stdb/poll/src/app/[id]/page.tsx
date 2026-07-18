@@ -27,7 +27,9 @@ const Page = () => {
       </p>
     )
   const created = (p as { createdAt?: number | { toDate?: () => Date } }).createdAt
-  const createdDate = typeof created === 'number' ? new Date(created) : created?.toDate ? created.toDate() : null
+  let createdDate: Date | null = null
+  if (typeof created === 'number') createdDate = new Date(created)
+  else if (created?.toDate) createdDate = created.toDate()
   return (
     <div className='mx-auto max-w-2xl space-y-4 p-6' data-testid='poll-detail-page'>
       <Link className='inline-block text-sm text-muted-foreground hover:text-primary' data-testid='detail-back' href='/'>

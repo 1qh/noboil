@@ -1,13 +1,14 @@
 {
   "name": "@a/fe",
   "private": true,
+  "description": "noboil shared frontend components",
   "exports": {
     "./*": "./src/*.tsx",
-    "./env": "./src/env.ts",
     "./convex-image-route": "./src/convex-image-route.ts",
     "./convex-logout-action": "./src/convex-logout-action.ts",
     "./convex-next-config": "./src/convex-next-config.ts",
     "./convex-proxy": "./src/convex-proxy.ts",
+    "./env": "./src/env.ts",
     "./public-paths": "./src/public-paths.ts",
     "./spacetimedb-next-config": "./src/spacetimedb-next-config.ts",
     "./test-mode": "./src/test-mode.ts",

@@ -90,7 +90,7 @@ test.describe
           await expect(transferButton).not.toBeVisible({ timeout: 5000 })
         }
       }
-      expect(true).toBe(true)
+      await expect(page).toHaveURL(/\/settings/u)
     })
   })
 test.describe

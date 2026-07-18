@@ -74,6 +74,7 @@ const throwSenderError = (code: string, opts?: Record<string, unknown> | string 
       : ({ code, debug: opts } as ErrorData)
   throw new SenderError(serializeError(data))
 }
+// eslint-disable-next-line sonarjs/cognitive-complexity -- structured error-message parser branching per delimiter and field
 const parseSenderMessage = (message: string): ErrorData | undefined => {
   const sep = message.indexOf(':')
   if (sep <= 0) return
@@ -100,6 +101,7 @@ const parseSenderMessage = (message: string): ErrorData | undefined => {
     }
   return { ...data, message: rest }
 }
+// eslint-disable-next-line sonarjs/cognitive-complexity -- error-shape normalizer probing multiple possible error payload layouts
 const extractErrorData = (e: unknown): ErrorData | undefined => {
   if (isRecord(e)) {
     const { data } = e as { data?: unknown }
@@ -306,6 +308,7 @@ const cleanFiles = async (opts: {
   fileFields: string[]
   next?: Record<string, unknown>
   storage: StorageLike
+  // eslint-disable-next-line sonarjs/cognitive-complexity -- file-diff cleanup walking prev/next field values to collect deletions
 }) => {
   const { doc, fileFields, next, storage } = opts
   if (fileFields.length === 0) return
@@ -321,7 +324,10 @@ const cleanFiles = async (opts: {
         }
       else if (Object.hasOwn(next, f)) {
         const nv = next[f]
-        const keep = new Set(Array.isArray(nv) ? nv : nv ? [nv] : [])
+        let keepVals: unknown[] = []
+        if (Array.isArray(nv)) keepVals = nv
+        else if (nv) keepVals = [nv]
+        const keep = new Set(keepVals)
         for (const p of pArr)
           if (!keep.has(p as FID)) {
             const id = toId(p)

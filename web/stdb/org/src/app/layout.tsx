@@ -40,8 +40,8 @@ const readActiveOrgId = () => {
   return null
 }
 const toLegacyOrg = (org: Org) => ({ ...org, _id: toOrgId(org.id) })
-// eslint-disable-next-line @typescript-eslint/promise-function-async
-const OrgLayoutInner = ({ children }: { children: ReactNode }) => {
+// eslint-disable-next-line sonarjs/function-return-type -- conditional-render layout returns children passthrough, null gate, or the org UI — all valid ReactNode
+const OrgLayoutInner = ({ children }: { children: ReactNode }): ReactNode => {
   const pathname = usePathname()
   const router = useRouter()
   const { identity } = useSpacetimeDB()
@@ -69,7 +69,9 @@ const OrgLayoutInner = ({ children }: { children: ReactNode }) => {
         .map((m: OrgMember) => {
           const org = orgs.find((o: Org) => o.id === m.orgId)
           if (!org) return null
-          const role: OrgRole = sameIdentity(org.userId, identity) ? 'owner' : m.isAdmin ? 'admin' : 'member'
+          let role: OrgRole = 'member'
+          if (sameIdentity(org.userId, identity)) role = 'owner'
+          else if (m.isAdmin) role = 'admin'
           return { org: toLegacyOrg(org), role }
         })
         .filter(item => item !== null)

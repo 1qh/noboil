@@ -10,7 +10,7 @@ const main = () => {
   let totalEndpoints = 0
   let tableCount = 0
   // oxlint-disable-next-line node/no-sync
-  for (const f of readdirSync(dir).toSorted()) {
+  for (const f of readdirSync(dir).toSorted((a, b) => (a < b ? -1 : Number(a > b)))) {
     const skip = !f.endsWith('.ts') || f.startsWith('_') || f === 'schema.ts' || f === 'http.ts' || f === 'auth.ts'
     if (!skip) {
       // oxlint-disable-next-line node/no-sync
@@ -21,12 +21,13 @@ const main = () => {
           ?.split(',')
           .map(s => s.trim())
           .filter(s => s && s !== 'type')
-          .toSorted() ?? []
+          .toSorted((a, b) => (a < b ? -1 : Number(a > b))) ?? []
       if (names.length > 0) {
         tableCount += 1
         totalEndpoints += names.length
         const table = f.slice(0, -'.ts'.length)
-        rows.push(`| \`${table}\` | ${names.length} | ${names.map(n => `\`${n}\``).join(', ')} |`)
+        const endpoints = names.map(n => `\`${n}\``).join(', ')
+        rows.push(`| \`${table}\` | ${names.length} | ${endpoints} |`)
       }
     }
   }

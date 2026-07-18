@@ -1,6 +1,7 @@
 {
   "name": "@a/convex-movie",
   "private": true,
+  "description": "noboil cvx movie demo app",
   "type": "module",
   "scripts": {
     "build": "next build --turbo",

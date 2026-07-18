@@ -1,6 +1,7 @@
 {
   "name": "@a/convex-blog",
   "private": true,
+  "description": "noboil cvx blog demo app",
   "type": "module",
   "scripts": {
     "build": "next build --turbo",

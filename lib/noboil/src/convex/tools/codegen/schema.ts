@@ -1,4 +1,4 @@
-/* eslint-disable complexity, no-bitwise, @typescript-eslint/no-unnecessary-condition */
+/* eslint-disable no-bitwise, @typescript-eslint/no-unnecessary-condition */
 /** biome-ignore-all lint/suspicious/noBitwiseOperators: intentional bitwise */
 import { resolve } from 'node:path'
 import ts from 'typescript'
@@ -8,6 +8,7 @@ interface Extracted {
   jsdoc: null | string
   schema: SchemaNode
 }
+type ObjectShape = Record<string, { optional: boolean; schema: SchemaNode }>
 type SchemaNode =
   | { element: SchemaNode; kind: 'array' }
   | { kind: 'boolean' }
@@ -18,6 +19,76 @@ type SchemaNode =
   | { kind: 'string' }
   | { kind: 'union'; members: SchemaNode[] }
   | { kind: 'unknown'; text?: string }
+const mergeEnumValues = (parts: SchemaNode[]): string[] =>
+  [...new Set(parts.flatMap(p => (p.kind === 'enum' ? p.values : [])))].toSorted((a, b) => a.localeCompare(b))
+const dedupeSchemas = (schemas: SchemaNode[]): SchemaNode[] => [
+  ...new Map(schemas.map(s => [JSON.stringify(s), s])).values()
+]
+const mergeUniqueSchemas = (unique: SchemaNode[]): SchemaNode => {
+  const [first] = unique
+  if (unique.length === 1 && first) return first
+  if (unique.length > 1) return { kind: 'union', members: unique }
+  return { kind: 'unknown' }
+}
+const mergeObjectParts = (parts: SchemaNode[]): SchemaNode => {
+  const merged: ObjectShape = {}
+  const allKeys = new Set(parts.flatMap(p => (p.kind === 'object' ? Object.keys(p.shape) : [])))
+  for (const k of allKeys) {
+    const present = parts.filter(p => p.kind === 'object' && k in p.shape)
+    const optional =
+      present.length < parts.length || present.some(p => p.kind === 'object' && p.shape[k]?.optional === true)
+    const schemas = present.map(p =>
+      p.kind === 'object' ? (p.shape[k]?.schema ?? { kind: 'unknown' as const }) : { kind: 'unknown' as const }
+    )
+    merged[k] =
+      schemas.length > 0 && schemas.every(s => s.kind === 'enum')
+        ? { optional, schema: { kind: 'enum', values: mergeEnumValues(schemas) } }
+        : { optional, schema: mergeUniqueSchemas(dedupeSchemas(schemas)) }
+  }
+  return { kind: 'object', shape: merged }
+}
+const primitiveSchema = (type: ts.Type): SchemaNode | undefined => {
+  const { flags } = type
+  if (flags & ts.TypeFlags.StringLiteral) return { kind: 'enum', values: [(type as ts.StringLiteralType).value] }
+  if (flags & ts.TypeFlags.String) return { kind: 'string' }
+  if (flags & ts.TypeFlags.Number || flags & ts.TypeFlags.NumberLiteral) return { kind: 'number' }
+  if (flags & ts.TypeFlags.Boolean || flags & ts.TypeFlags.BooleanLike) return { kind: 'boolean' }
+  if (flags & ts.TypeFlags.Null) return { kind: 'null' }
+  if (flags & ts.TypeFlags.Undefined) return { kind: 'unknown', text: 'undefined' }
+}
+const unionSchema = (
+  types: readonly ts.Type[],
+  depth: number,
+  recurse: (t: ts.Type, d: number) => SchemaNode
+): SchemaNode => {
+  const nonUndef = types.filter(t => !(t.flags & ts.TypeFlags.Undefined))
+  const [onlyMember] = nonUndef
+  if (nonUndef.length === 1 && onlyMember) return recurse(onlyMember, depth + 1)
+  const parts = nonUndef.map(t => recurse(t, depth + 1))
+  if (parts.every(p => p.kind === 'enum')) return { kind: 'enum', values: mergeEnumValues(parts) }
+  if (parts.every(p => p.kind === 'object')) return mergeObjectParts(parts)
+  return { kind: 'union', members: parts }
+}
+const objectSchema = (opts: {
+  checker: ts.TypeChecker
+  depth: number
+  recurse: (t: ts.Type, d: number) => SchemaNode
+  type: ts.Type
+}): SchemaNode => {
+  const { checker, depth, recurse, type } = opts
+  const shape: Record<string, { optional: boolean; schema: SchemaNode }> = {}
+  const props = type.getProperties().toSorted((a, b) => a.name.localeCompare(b.name))
+  for (const prop of props) {
+    const decl = prop.valueDeclaration ?? prop.declarations?.[0]
+    if (decl) {
+      const propType = checker.getTypeOfSymbolAtLocation(prop, decl)
+      const hasUndef = propType.isUnion() && propType.types.some(t => Boolean(t.flags & ts.TypeFlags.Undefined))
+      const optional = (prop.flags & ts.SymbolFlags.Optional) !== 0 || hasUndef
+      shape[prop.name] = { optional, schema: recurse(propType, depth + 1) }
+    }
+  }
+  return { kind: 'object', shape }
+}
 const extractSchemas = (toolFiles: string[]): Map<string, Extracted> => {
   const cfgPath = ts.findConfigFile(process.cwd(), ts.sys.fileExists.bind(ts.sys), 'tsconfig.json')
   if (!cfgPath) throw new Error('tsconfig.json not found')
@@ -30,75 +101,15 @@ const extractSchemas = (toolFiles: string[]): Map<string, Extracted> => {
   const checker = program.getTypeChecker()
   const typeToSchema = (type: ts.Type, depth = 0): SchemaNode => {
     if (depth > 12) return { kind: 'unknown', text: '<too deep>' }
-    const { flags } = type
-    if (flags & ts.TypeFlags.StringLiteral) return { kind: 'enum', values: [(type as ts.StringLiteralType).value] }
-    if (flags & ts.TypeFlags.String) return { kind: 'string' }
-    if (flags & ts.TypeFlags.Number || flags & ts.TypeFlags.NumberLiteral) return { kind: 'number' }
-    if (flags & ts.TypeFlags.Boolean || flags & ts.TypeFlags.BooleanLike) return { kind: 'boolean' }
-    if (flags & ts.TypeFlags.Null) return { kind: 'null' }
-    if (flags & ts.TypeFlags.Undefined) return { kind: 'unknown', text: 'undefined' }
-    if (type.isUnion()) {
-      const nonUndef = type.types.filter(t => !(t.flags & ts.TypeFlags.Undefined))
-      const [onlyMember] = nonUndef
-      if (nonUndef.length === 1 && onlyMember) return typeToSchema(onlyMember, depth + 1)
-      const parts = nonUndef.map(t => typeToSchema(t, depth + 1))
-      if (parts.every(p => p.kind === 'enum'))
-        return { kind: 'enum', values: [...new Set(parts.flatMap(p => (p.kind === 'enum' ? p.values : [])))].toSorted() }
-      if (parts.every(p => p.kind === 'object')) {
-        const merged: Record<string, { optional: boolean; schema: SchemaNode }> = {}
-        const allKeys = new Set(parts.flatMap(p => (p.kind === 'object' ? Object.keys(p.shape) : [])))
-        for (const k of allKeys) {
-          const present = parts.filter(p => p.kind === 'object' && k in p.shape)
-          const optional =
-            present.length < parts.length || present.some(p => p.kind === 'object' && p.shape[k]?.optional === true)
-          const schemas = present.map(p =>
-            p.kind === 'object' ? (p.shape[k]?.schema ?? { kind: 'unknown' as const }) : { kind: 'unknown' as const }
-          )
-          if (schemas.length > 0 && schemas.every(s => s.kind === 'enum'))
-            merged[k] = {
-              optional,
-              schema: {
-                kind: 'enum',
-                values: [...new Set(schemas.flatMap(s => (s.kind === 'enum' ? s.values : [])))].toSorted()
-              }
-            }
-          else {
-            const unique = [...new Map(schemas.map(s => [JSON.stringify(s), s])).values()]
-            const [first] = unique
-            merged[k] = {
-              optional,
-              schema:
-                unique.length === 1 && first
-                  ? first
-                  : unique.length > 1
-                    ? { kind: 'union', members: unique }
-                    : { kind: 'unknown' }
-            }
-          }
-        }
-        return { kind: 'object', shape: merged }
-      }
-      return { kind: 'union', members: parts }
-    }
+    const prim = primitiveSchema(type)
+    if (prim) return prim
+    if (type.isUnion()) return unionSchema(type.types, depth, typeToSchema)
     const typeArguments = checker.getTypeArguments(type as ts.TypeReference)
     const symbol = type.getSymbol()
     const [firstTypeArg] = typeArguments
     if ((symbol?.name === 'Array' || symbol?.name === 'ReadonlyArray') && typeArguments.length === 1 && firstTypeArg)
       return { element: typeToSchema(firstTypeArg, depth + 1), kind: 'array' }
-    if (flags & ts.TypeFlags.Object) {
-      const shape: Record<string, { optional: boolean; schema: SchemaNode }> = {}
-      const props = type.getProperties().toSorted((a, b) => a.name.localeCompare(b.name))
-      for (const prop of props) {
-        const decl = prop.valueDeclaration ?? prop.declarations?.[0]
-        if (decl) {
-          const propType = checker.getTypeOfSymbolAtLocation(prop, decl)
-          const hasUndef = propType.isUnion() && propType.types.some(t => Boolean(t.flags & ts.TypeFlags.Undefined))
-          const optional = (prop.flags & ts.SymbolFlags.Optional) !== 0 || hasUndef
-          shape[prop.name] = { optional, schema: typeToSchema(propType, depth + 1) }
-        }
-      }
-      return { kind: 'object', shape }
-    }
+    if (type.flags & ts.TypeFlags.Object) return objectSchema({ checker, depth, recurse: typeToSchema, type })
     return { kind: 'unknown', text: checker.typeToString(type) }
   }
   const processDecl = (node: ts.VariableStatement, decl: ts.VariableDeclaration): Extracted | null => {

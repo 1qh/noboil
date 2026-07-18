@@ -34,8 +34,8 @@ const checkNoboilDep = (cwd: string): CheckResult =>
   })
 const checkBun = (): CheckResult =>
   check('bun', () => {
-    // oxlint-disable-next-line node/no-sync
-    const r = spawnSync('bun', ['--version'], { encoding: 'utf8' })
+    // oxlint-disable-next-line node/no-sync -- CLI tool: synchronous spawn by design
+    const r = spawnSync('bun', ['--version'], { encoding: 'utf8' }) // eslint-disable-line sonarjs/no-os-command-from-path -- dev tooling, trusted PATH
     if (r.status === 0) return { detail: r.stdout.trim(), status: 'pass' }
     return { detail: 'not on PATH', status: 'fail' }
   })
@@ -75,8 +75,8 @@ const checkSyncStatus = (cwd: string): CheckResult =>
   check('upstream sync', () => {
     const rc = readRc(cwd)
     if (!rc?.scaffoldedFrom) return { detail: 'skipped — no manifest', status: 'warn' }
-    // oxlint-disable-next-line node/no-sync
-    const r = spawnSync('git', ['ls-remote', 'https://github.com/1qh/noboil.git', 'HEAD'], { encoding: 'utf8' })
+    // oxlint-disable-next-line node/no-sync -- CLI tool: synchronous spawn by design
+    const r = spawnSync('git', ['ls-remote', 'https://github.com/1qh/noboil.git', 'HEAD'], { encoding: 'utf8' }) // eslint-disable-line sonarjs/no-os-command-from-path -- dev tooling, trusted PATH
     if (r.status !== 0) return { detail: 'remote unreachable', status: 'warn' }
     const latestHash = (r.stdout.split('\n')[0] ?? '').split('\t')[0] ?? ''
     if (latestHash && latestHash !== rc.scaffoldedFrom) return { detail: "outdated — run 'noboil sync'", status: 'warn' }
@@ -130,49 +130,53 @@ const Icon = ({ status }: { status: CheckStatus }) => {
   if (status === 'warn') return <Text color='yellow'>!</Text>
   return <Text color='red'>✘</Text>
 }
+const statusColor = (status: CheckStatus): string => {
+  if (status === 'pass') return 'green'
+  if (status === 'warn') return 'yellow'
+  if (status === 'fail') return 'red'
+  return 'cyan'
+}
+const summaryLine = (failCount: number, warnCount: number): string => {
+  if (failCount === 0 && warnCount === 0) return 'All good.'
+  if (failCount > 0) return 'Fix failures before proceeding.'
+  return 'Warnings are non-blocking.'
+}
 const Row = ({ result }: { result: CheckResult }) => (
   <Box>
     <Box marginRight={1} width={2}>
       <Icon status={result.status} />
     </Box>
-    <Text
-      bold={result.status === 'running'}
-      color={
-        result.status === 'pass'
-          ? 'green'
-          : result.status === 'warn'
-            ? 'yellow'
-            : result.status === 'fail'
-              ? 'red'
-              : 'cyan'
-      }>
+    <Text bold={result.status === 'running'} color={statusColor(result.status)}>
       {result.title.padEnd(26)}
     </Text>
     {result.detail ? <Text dimColor>{result.detail}</Text> : null}
   </Box>
 )
+const applyNodeModulesFix = (cwd: string): string => {
+  // oxlint-disable-next-line node/no-sync -- CLI tool: synchronous spawn by design
+  const install = spawnSync('bun', ['install'], { cwd, stdio: 'pipe' }) // eslint-disable-line sonarjs/no-os-command-from-path -- dev tooling, trusted PATH
+  return install.status === 0 ? '✔ bun install' : '✘ bun install failed'
+}
+const applyTsconfigFix = (cwd: string): string => {
+  try {
+    const p = join(cwd, 'tsconfig.json')
+    const cfg = readJson(p) as { compilerOptions?: { customConditions?: string[] } }
+    cfg.compilerOptions ??= {}
+    const existing = cfg.compilerOptions.customConditions ?? []
+    cfg.compilerOptions.customConditions = existing.includes('noboil-spacetimedb')
+      ? existing
+      : [...existing, 'noboil-spacetimedb']
+    writeJson(p, cfg)
+    return "✔ tsconfig: added 'noboil-spacetimedb'"
+  } catch {
+    return '✘ tsconfig patch failed'
+  }
+}
 const applyFixes = (cwd: string, results: CheckResult[]): string[] => {
   const actions: string[] = []
   for (const r of results) {
-    if (r.title === 'node_modules' && r.status === 'warn') {
-      // oxlint-disable-next-line node/no-sync
-      const install = spawnSync('bun', ['install'], { cwd, stdio: 'pipe' })
-      actions.push(install.status === 0 ? '✔ bun install' : '✘ bun install failed')
-    }
-    if (r.title === 'tsconfig customConditions' && r.status === 'warn')
-      try {
-        const p = join(cwd, 'tsconfig.json')
-        const cfg = readJson(p) as { compilerOptions?: { customConditions?: string[] } }
-        cfg.compilerOptions ??= {}
-        const existing = cfg.compilerOptions.customConditions ?? []
-        cfg.compilerOptions.customConditions = existing.includes('noboil-spacetimedb')
-          ? existing
-          : [...existing, 'noboil-spacetimedb']
-        writeJson(p, cfg)
-        actions.push("✔ tsconfig: added 'noboil-spacetimedb'")
-      } catch {
-        actions.push('✘ tsconfig patch failed')
-      }
+    if (r.title === 'node_modules' && r.status === 'warn') actions.push(applyNodeModulesFix(cwd))
+    if (r.title === 'tsconfig customConditions' && r.status === 'warn') actions.push(applyTsconfigFix(cwd))
   }
   return actions
 }
@@ -243,13 +247,7 @@ const DoctorApp = ({ fix, onExit }: { fix: boolean; onExit: (code: number) => vo
             {warnCount > 0 ? <Text color='yellow'>{warnCount} warn</Text> : null}
             {failCount > 0 ? <Text color='red'>{failCount} fail</Text> : null}
           </Box>
-          <Text dimColor>
-            {failCount === 0 && warnCount === 0
-              ? 'All good.'
-              : failCount > 0
-                ? 'Fix failures before proceeding.'
-                : 'Warnings are non-blocking.'}
-          </Text>
+          <Text dimColor>{summaryLine(failCount, warnCount)}</Text>
         </Box>
       ) : (
         <Box marginTop={1}>

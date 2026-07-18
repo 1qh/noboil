@@ -12,18 +12,18 @@ const collect = (kind: 'cvx' | 'stdb'): string[] => {
   const root = join(REPO, 'web', kind)
   const entries: string[] = []
   // oxlint-disable-next-line node/no-sync
-  for (const name of readdirSync(root).toSorted()) {
+  for (const name of readdirSync(root).toSorted((a, b) => (a < b ? -1 : Number(a > b)))) {
     const dir = join(root, name)
     // oxlint-disable-next-line node/no-sync
     if (statSync(dir).isDirectory() && readFileSync(join(dir, 'package.json'), 'utf8').includes('"name"'))
       entries.push(name)
   }
-  return entries.toSorted()
+  return entries.toSorted((a, b) => (a < b ? -1 : Number(a > b)))
 }
 const main = () => {
   const cvx = collect('cvx')
   const stdb = collect('stdb')
-  const both = [...new Set([...cvx, ...stdb])].toSorted()
+  const both = [...new Set([...cvx, ...stdb])].toSorted((a, b) => (a < b ? -1 : Number(a > b)))
   const list = both.join(', ')
   const tagline = `${both.length} vertical demos (${list})`
   const tree = `    cvx/              ${cvx.length} ${dbDescription.cvx} demo web apps (${cvx.join(', ')})\n    stdb/             ${stdb.length} ${dbDescription.stdb} demo web apps (${stdb.join(', ')})`

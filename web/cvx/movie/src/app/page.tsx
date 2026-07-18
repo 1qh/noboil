@@ -93,7 +93,8 @@ const Page = () => {
             <MovieCard key={m.tmdb_id} movie={m} />
           ))}
         </div>
-      ) : query.trim() && !pending && !searchError ? (
+      ) : null}
+      {results.length === 0 && query.trim() && !pending && !searchError ? (
         <p className='text-sm text-muted-foreground' data-testid='no-results'>
           No results found
         </p>

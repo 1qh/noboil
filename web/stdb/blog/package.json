@@ -1,6 +1,7 @@
 {
   "name": "@a/stdb-blog",
   "private": true,
+  "description": "noboil stdb blog demo app",
   "type": "module",
   "scripts": {
     "build": "next build --turbo",

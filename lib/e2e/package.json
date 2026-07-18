@@ -1,21 +1,22 @@
 {
   "name": "@a/e2e",
   "private": true,
+  "description": "noboil end-to-end test helpers",
   "type": "module",
   "exports": {
+    "./auth-proxy": "./src/auth-proxy.ts",
     "./base-chat": "./src/base-chat.ts",
-    "./base-test": "./src/base-test.ts",
     "./base-page": "./src/base-page.ts",
+    "./base-test": "./src/base-test.ts",
     "./global-setup": "./src/global-setup.ts",
     "./global-teardown": "./src/global-teardown.ts",
+    "./helpers": "./src/helpers.ts",
+    "./org-helpers": "./src/org-helpers.ts",
+    "./playwright-config": "./src/playwright-config.ts",
     "./stdb-global-setup": "./src/stdb-global-setup.ts",
     "./stdb-global-teardown": "./src/stdb-global-teardown.ts",
     "./stdb-helpers": "./src/stdb-helpers.ts",
-    "./helpers": "./src/helpers.ts",
-    "./org-helpers": "./src/org-helpers.ts",
-    "./stdb-org-helpers": "./src/stdb-org-helpers.ts",
-    "./auth-proxy": "./src/auth-proxy.ts",
-    "./playwright-config": "./src/playwright-config.ts"
+    "./stdb-org-helpers": "./src/stdb-org-helpers.ts"
   },
   "bin": {
     "nb-env": "./src/bin/nb-env.ts"

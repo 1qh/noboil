@@ -47,10 +47,10 @@ const renderCompact = (entry: RegistryEntry, opts: ToolListOpts): string[] => {
   const base = `- ${entry.path.join(' ')} — ${desc}`
   const annotations: string[] = []
   if (entry.meta.deprecated) annotations.push(`DEPRECATED → ${entry.meta.deprecated.replacedBy}`)
-  if (opts.includeExclusive && entry.meta.exclusive.length > 0)
-    annotations.push(
-      `one-of: ${entry.meta.exclusive.map(g => g.map(f => `--${f.replaceAll('_', '-')}`).join('|')).join(' ; ')}`
-    )
+  if (opts.includeExclusive && entry.meta.exclusive.length > 0) {
+    const exclusiveStr = entry.meta.exclusive.map(g => g.map(f => `--${f.replaceAll('_', '-')}`).join('|')).join(' ; ')
+    annotations.push(`one-of: ${exclusiveStr}`)
+  }
   const head = annotations.length > 0 ? `${base}  (${annotations.join('; ')})` : base
   lines.push(head)
   if (opts.includeExamples) for (const ex of entry.meta.examples) lines.push(`    e.g. ${ex}`)

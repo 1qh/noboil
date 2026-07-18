@@ -5,7 +5,7 @@ import { join } from 'node:path'
 import { collectBraceExports, DOCS_DIR, LIB_NOBOIL, replaceBetween, REPO, stripStrings } from './lib'
 
 const EXPORT_DECL_RE =
-  /export\s+(?:const|function|class|interface|type|default\s+(?:const|function|class)?)\s+(?<name>\w+)/gu
+  /export\s+(?:(?:const|function|class|interface|type|default\s+(?:const|function|class))\s+|default\s{2,})(?<name>\w+)/gu
 const SKIP_DIRS = new Set([
   '.cache',
   '.next',
@@ -34,7 +34,7 @@ const walkRel = (root: string, rel = ''): string[] => {
   // oxlint-disable-next-line node/no-sync
   if (!statSync(dir, { throwIfNoEntry: false })) return out
   // oxlint-disable-next-line node/no-sync
-  for (const name of readdirSync(dir).toSorted())
+  for (const name of readdirSync(dir).toSorted((a, b) => (a < b ? -1 : Number(a > b))))
     if (!(name.startsWith('.') || SKIP_DIRS.has(name))) {
       const full = join(dir, name)
       // oxlint-disable-next-line node/no-sync
@@ -412,7 +412,7 @@ const auditPair = (p: Pair): PairResult => {
   const stdbUnaccounted = stdbOnly.filter(f => !p.exemptFiles?.[`stdb:${f}`])
   let symbolGaps = 0
   const symbolGapDetails: string[] = []
-  for (const f of shared.toSorted()) {
+  for (const f of shared.toSorted((a, b) => (a < b ? -1 : Number(a > b)))) {
     const cvxExports = collectExports(`${p.cvxRoot}/${f}`)
     const stdbExports = collectExports(`${p.stdbRoot}/${f}`)
     const cvxOnlyExports = [...cvxExports].filter(e => !(stdbExports.has(e) || p.exemptSymbols?.has(`cvx:${f}:${e}`)))
@@ -424,14 +424,14 @@ const auditPair = (p: Pair): PairResult => {
           cvxOnlyExports.length === 0
             ? '—'
             : cvxOnlyExports
-                .toSorted()
+                .toSorted((a, b) => (a < b ? -1 : Number(a > b)))
                 .map(e => `\`${e}\``)
                 .join(', ')
         } · stdb-only: ${
           stdbOnlyExports.length === 0
             ? '—'
             : stdbOnlyExports
-                .toSorted()
+                .toSorted((a, b) => (a < b ? -1 : Number(a > b)))
                 .map(e => `\`${e}\``)
                 .join(', ')
         }`
@@ -449,6 +449,7 @@ const auditPair = (p: Pair): PairResult => {
     symbolGaps
   }
 }
+// eslint-disable-next-line sonarjs/super-linear-regex -- anchored alternation of single character-class quantifiers, no overlap; linear
 const namingStem = (f: string, prefix: string): string => f.replace(prefix, '').replaceAll(/^[-_]+|[-_]+$/gu, '')
 interface NamingPair {
   cvxPrefix: string
@@ -491,8 +492,8 @@ const auditNamingPair = (
     return { cvxOnly: [], cvxUnaccounted: [], matched: 0, name: np.name, stdbOnly: [], stdbUnaccounted: [] }
   // oxlint-disable-next-line node/no-sync
   const files = readdirSync(np.dir)
-    .toSorted()
-    .toSorted()
+    .toSorted((a, b) => (a < b ? -1 : Number(a > b)))
+    .toSorted((a, b) => (a < b ? -1 : Number(a > b)))
     .filter(f => (f.endsWith('.ts') || f.endsWith('.sh')) && !f.endsWith('.test.ts'))
   const cvxFiles = files.filter(f => f.includes(np.cvxPrefix))
   const stdbFiles = files.filter(f => f.includes(np.stdbPrefix))
@@ -504,6 +505,31 @@ const auditNamingPair = (
   const stdbUnaccounted = stdbOnly.filter(f => !np.exemptFiles?.[`stdb:${f}`])
   const matched = cvxFiles.length + stdbFiles.length - cvxOnly.length - stdbOnly.length
   return { cvxOnly, cvxUnaccounted, matched, name: np.name, stdbOnly, stdbUnaccounted }
+}
+interface NamingResult {
+  cvxOnly: string[]
+  cvxUnaccounted: string[]
+  matched: number
+  name: string
+  stdbOnly: string[]
+  stdbUnaccounted: string[]
+}
+const summarizePair = (r: PairResult): { detail: string[]; row: string } => {
+  const status = r.cvxUnaccounted.length === 0 && r.stdbUnaccounted.length === 0 && r.symbolGaps === 0 ? '🟢' : '🔴'
+  const row = `| **${r.name}** | ${r.shared} | ${r.cvxOnly.length} (${r.cvxUnaccounted.length} unaccounted) | ${r.stdbOnly.length} (${r.stdbUnaccounted.length} unaccounted) | ${r.symbolGaps} | ${status} |`
+  const detail: string[] = []
+  if (r.cvxUnaccounted.length > 0) detail.push(`- **${r.name}**: cvx-only file \`${r.cvxUnaccounted.join('`, `')}\``)
+  if (r.stdbUnaccounted.length > 0) detail.push(`- **${r.name}**: stdb-only file \`${r.stdbUnaccounted.join('`, `')}\``)
+  detail.push(...r.symbolGapDetails)
+  return { detail, row }
+}
+const summarizeNaming = (r: NamingResult): { detail: string[]; row: string } => {
+  const status = r.cvxUnaccounted.length === 0 && r.stdbUnaccounted.length === 0 ? '🟢' : '🔴'
+  const row = `| **${r.name}** | ${r.matched} matched | ${r.cvxOnly.length} (${r.cvxUnaccounted.length} unaccounted) | ${r.stdbOnly.length} (${r.stdbUnaccounted.length} unaccounted) | — | ${status} |`
+  const detail: string[] = []
+  if (r.cvxUnaccounted.length > 0) detail.push(`- **${r.name}**: cvx-only file \`${r.cvxUnaccounted.join('`, `')}\``)
+  if (r.stdbUnaccounted.length > 0) detail.push(`- **${r.name}**: stdb-only file \`${r.stdbUnaccounted.join('`, `')}\``)
+  return { detail, row }
 }
 const main = () => {
   const results = PAIRS.map(auditPair)
@@ -521,26 +547,15 @@ const main = () => {
     totalStdbOnly += r.stdbOnly.length
     totalUnaccounted += r.cvxUnaccounted.length + r.stdbUnaccounted.length + r.symbolGaps
     totalSymbolGaps += r.symbolGaps
-    const status = r.cvxUnaccounted.length === 0 && r.stdbUnaccounted.length === 0 && r.symbolGaps === 0 ? '🟢' : '🔴'
-    summary.push(
-      `| **${r.name}** | ${r.shared} | ${r.cvxOnly.length} (${r.cvxUnaccounted.length} unaccounted) | ${r.stdbOnly.length} (${r.stdbUnaccounted.length} unaccounted) | ${r.symbolGaps} | ${status} |`
-    )
-    if (r.cvxUnaccounted.length > 0)
-      allGapDetails.push(`- **${r.name}**: cvx-only file \`${r.cvxUnaccounted.join('`, `')}\``)
-    if (r.stdbUnaccounted.length > 0)
-      allGapDetails.push(`- **${r.name}**: stdb-only file \`${r.stdbUnaccounted.join('`, `')}\``)
-    allGapDetails.push(...r.symbolGapDetails)
+    const { detail, row } = summarizePair(r)
+    summary.push(row)
+    allGapDetails.push(...detail)
   }
   for (const r of namingResults) {
     totalUnaccounted += r.cvxUnaccounted.length + r.stdbUnaccounted.length
-    const status = r.cvxUnaccounted.length === 0 && r.stdbUnaccounted.length === 0 ? '🟢' : '🔴'
-    summary.push(
-      `| **${r.name}** | ${r.matched} matched | ${r.cvxOnly.length} (${r.cvxUnaccounted.length} unaccounted) | ${r.stdbOnly.length} (${r.stdbUnaccounted.length} unaccounted) | — | ${status} |`
-    )
-    if (r.cvxUnaccounted.length > 0)
-      allGapDetails.push(`- **${r.name}**: cvx-only file \`${r.cvxUnaccounted.join('`, `')}\``)
-    if (r.stdbUnaccounted.length > 0)
-      allGapDetails.push(`- **${r.name}**: stdb-only file \`${r.stdbUnaccounted.join('`, `')}\``)
+    const { detail, row } = summarizeNaming(r)
+    summary.push(row)
+    allGapDetails.push(...detail)
   }
   const overall =
     totalUnaccounted === 0

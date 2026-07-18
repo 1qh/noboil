@@ -119,10 +119,12 @@ const getPropertyName = (node: BaseNode): string | undefined =>
   node.type === 'MemberExpression' && node.property?.type === 'Identifier' ? node.property.name : undefined
 const parseFields = (fieldsStr: string): Map<string, string> => {
   const fields = new Map<string, string>()
+  // eslint-disable-next-line sonarjs/super-linear-regex -- disjoint classes: \w+ cannot match ':', so no ambiguous backtracking
   const fieldPattern = /(?<fname>\w+):\s*(?<ftype>[\w.]+)\(/gu
   let fieldMatch = fieldPattern.exec(fieldsStr)
   while (fieldMatch) {
-    const { fname, ftype } = fieldMatch.groups as { fname: string; ftype: string }
+    const fname = fieldMatch.groups?.fname
+    const ftype = fieldMatch.groups?.ftype
     if (fname && ftype) {
       const kind = zodFieldKinds[ftype]
       if (kind) fields.set(fname, kind)
@@ -134,7 +136,8 @@ const parseFields = (fieldsStr: string): Map<string, string> => {
 const extractTables = (content: string): Map<string, Map<string, string>> => {
   const tables = new Map<string, Map<string, string>>()
   if (!content) return tables
-  const pat = /(?<tname>\w+):\s*object\(\{(?<tbody>[^}]*(?:\{[^}]*\}[^}]*)*)\}\)/gu
+  // eslint-disable-next-line sonarjs/super-linear-regex -- Friedl unrolled loop: `[^{}]*` and the `\{…\}` branch start with disjoint chars, so each char is consumed once — linear
+  const pat = /(?<tname>\w+):\s*object\(\{(?<tbody>[^{}]*(?:\{[^{}]*\}[^{}]*)*)\}\)/gu
   let m = pat.exec(content)
   while (m) {
     if (m.groups) {
@@ -270,16 +273,35 @@ const getHandlerBody = (node: CallNode): BaseNode[] | undefined => {
       if (fn.body?.type === 'BlockStatement' && fn.body.body) return fn.body.body
     }
 }
-const bodyContainsIdent = (nodes: BaseNode[], target: string): boolean => {
-  for (const n of nodes) {
-    if (n.type === 'Identifier' && n.name === target) return true
-    if (n.body?.body && bodyContainsIdent(n.body.body, target)) return true
-    if (n.argument && bodyContainsIdent([n.argument], target)) return true
-    if (n.expression && bodyContainsIdent([n.expression], target)) return true
-    if (n.callee && bodyContainsIdent([n.callee], target)) return true
-    if (n.properties) for (const p of n.properties) if (bodyContainsIdent([p], target)) return true
-  }
-  return false
+const identChildGroups = (n: BaseNode): (BaseNode[] | undefined)[] => [
+  n.body?.body,
+  n.argument ? [n.argument] : undefined,
+  n.expression ? [n.expression] : undefined,
+  n.callee ? [n.callee] : undefined,
+  n.properties
+]
+const bodyContainsIdent = (nodes: BaseNode[], target: string): boolean =>
+  nodes.some(
+    n =>
+      (n.type === 'Identifier' && n.name === target) ||
+      identChildGroups(n).some(group => group !== undefined && bodyContainsIdent(group, target))
+  )
+const reportEmptySearch = (
+  context: EslintContext,
+  opts: BaseNode & { properties: (BaseNode & { key: BaseNode; value: BaseNode })[] }
+): void => {
+  for (const p of opts.properties)
+    if (p.type === 'Property' && getIdentName(p.key) === 'search') {
+      const val = p.value
+      if (val.type === 'Literal' && val.value === true) {
+        context.report({ messageId: 'searchTrue', node: val })
+        return
+      }
+      if (val.type === 'ObjectExpression') {
+        const obj = val as BaseNode & { properties: BaseNode[] }
+        if (obj.properties.length === 0) context.report({ messageId: 'searchEmpty', node: val })
+      }
+    }
 }
 const isRouteHandler = (filename: string): boolean => routeFilePattern.test(filename)
 const readSchemaContentFrom = (dir: string): string => {
@@ -661,16 +683,7 @@ const buildRules = (config: DbConfig) => {
         const callee = getIdentName(node.callee)
         if (!(callee && config.crud.factories.has(callee))) return
         const opts = getOptionsObject(node)
-        if (!opts) return
-        for (const p of opts.properties)
-          if (p.type === 'Property' && getIdentName(p.key) === 'search') {
-            const val = p.value
-            if (val.type === 'Literal' && val.value === true) return context.report({ messageId: 'searchTrue', node: val })
-            if (val.type === 'ObjectExpression') {
-              const obj = val as BaseNode & { properties: BaseNode[] }
-              if (obj.properties.length === 0) return context.report({ messageId: 'searchEmpty', node: val })
-            }
-          }
+        if (opts) reportEmptySearch(context, opts)
       }
     }),
     meta: {

@@ -7,7 +7,7 @@ import { DOCS_DIR, LIB_NOBOIL, replaceBetween, REPO } from './lib'
 const ENV_RE = /process\.env\.(?<name>[A-Z][A-Z0-9_]+)/gu
 const walk = (dir: string, out: string[] = []): string[] => {
   // oxlint-disable-next-line node/no-sync
-  for (const name of readdirSync(dir).toSorted()) {
+  for (const name of readdirSync(dir).toSorted((a, b) => (a < b ? -1 : Number(a > b)))) {
     const skip =
       name.startsWith('.') ||
       name === 'node_modules' ||
@@ -44,10 +44,11 @@ const main = () => {
     }
     ENV_RE.lastIndex = 0
   }
-  const names = [...usage.keys()].toSorted()
+  const names = [...usage.keys()].toSorted((a, b) => (a < b ? -1 : Number(a > b)))
   const rows = names.map(n => {
-    const files2 = [...(usage.get(n) ?? [])].toSorted()
-    return `| \`${n}\` | ${files2.length} | ${files2.map(f => `\`${f}\``).join(', ')} |`
+    const files2 = [...(usage.get(n) ?? [])].toSorted((a, b) => (a < b ? -1 : Number(a > b)))
+    const where = files2.map(f => `\`${f}\``).join(', ')
+    return `| \`${n}\` | ${files2.length} | ${where} |`
   })
   const body = [
     `**${names.length} environment variables read** by \`lib/noboil/src/\` (excluding tests). Set these in your project's \`.env\` / runtime config.`,

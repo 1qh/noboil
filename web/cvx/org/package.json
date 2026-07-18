@@ -1,6 +1,7 @@
 {
   "name": "@a/convex-org",
   "private": true,
+  "description": "noboil cvx org demo app",
   "type": "module",
   "scripts": {
     "build": "next build --turbo",

@@ -2,6 +2,7 @@
   "name": "@a/docs",
   "version": "0.0.0",
   "private": true,
+  "description": "noboil documentation site",
   "scripts": {
     "build": "bun scripts/gen-api-imports.ts && bun scripts/gen-cli-help.ts && bunx --bun fumadocs-mdx && bunx --bun next build",
     "dev": "bun dev.ts",

@@ -29,12 +29,12 @@ const DBS = [
 ] as const satisfies readonly DbChoice[]
 const DEFAULT_REPO_URL = 'https://github.com/1qh/noboil'
 const REPO_SPEC = env.NOBOIL_REPO ?? DEFAULT_REPO_URL
-const REPO_GIT_URL =
-  REPO_SPEC.startsWith('/') || REPO_SPEC.startsWith('file://')
-    ? REPO_SPEC
-    : REPO_SPEC.endsWith('.git')
-      ? REPO_SPEC
-      : `${REPO_SPEC}.git`
+const resolveRepoGitUrl = (spec: string): string => {
+  if (spec.startsWith('/') || spec.startsWith('file://')) return spec
+  if (spec.endsWith('.git')) return spec
+  return `${spec}.git`
+}
+const REPO_GIT_URL = resolveRepoGitUrl(REPO_SPEC)
 const SCAFFOLD_STEPS = [
   'downloading repo',
   'reading commit hash',
@@ -47,6 +47,7 @@ const SCAFFOLD_STEPS = [
   'writing manifest'
 ] as const
 type Phase = 'confirm' | 'demos' | 'dir' | 'pick-db' | 'scaffold'
+type ScaffoldSetter = (updater: (s: ScaffoldState) => ScaffoldState) => void
 interface ScaffoldState {
   currentStep: number
   details: string[]
@@ -54,6 +55,32 @@ interface ScaffoldState {
   status: StepStatus
 }
 type StepStatus = 'done' | 'failed' | 'idle' | 'running'
+const makeStepUpdater =
+  (setState: ScaffoldSetter) =>
+  (n: number, msg?: string): void => {
+    setState(s => ({
+      ...s,
+      currentStep: n,
+      details: msg ? [...s.details, msg] : s.details,
+      status: 'running'
+    }))
+  }
+const StepIcon = ({ isCurrent, isDone, isFailed }: { isCurrent: boolean; isDone: boolean; isFailed: boolean }) => {
+  if (isFailed) return <Text color='red'>✘</Text>
+  if (isDone) return <Text color='green'>✔</Text>
+  if (isCurrent)
+    return (
+      <Text color='cyan'>
+        <Spinner type='dots' />
+      </Text>
+    )
+  return <Text dimColor>·</Text>
+}
+const stepTextColor = (isCurrent: boolean, isDone: boolean, isFailed: boolean): string | undefined => {
+  if (isCurrent) return 'cyan'
+  if (isDone) return 'green'
+  if (isFailed) return 'red'
+}
 const Header = () => (
   <Box flexDirection='column' marginBottom={1}>
     <Text bold color='cyan'>
@@ -190,26 +217,19 @@ const Scaffold = ({
         setState(s => ({ ...s, error: `directory ${dir} is not empty`, status: 'failed' }))
         return
       }
-      const step = (n: number, msg?: string): void => {
-        setState(s => ({
-          ...s,
-          currentStep: n,
-          details: msg ? [...s.details, msg] : s.details,
-          status: 'running'
-        }))
-      }
+      const step = makeStepUpdater(setState)
       try {
         step(0)
         if (REPO_SPEC.startsWith('/') || REPO_SPEC.startsWith('file://')) {
-          // oxlint-disable-next-line node/no-sync
-          spawnSync('git', ['clone', '--depth', '1', REPO_GIT_URL, fullPath], { stdio: 'pipe' })
+          // oxlint-disable-next-line node/no-sync -- CLI tool: synchronous spawn by design
+          spawnSync('git', ['clone', '--depth', '1', REPO_GIT_URL, fullPath], { stdio: 'pipe' }) // eslint-disable-line sonarjs/no-os-command-from-path -- dev tooling, trusted PATH
           // oxlint-disable-next-line node/no-sync
           rmSync(join(fullPath, '.git'), { force: true, recursive: true })
-          // oxlint-disable-next-line node/no-sync
-        } else spawnSync('bunx', ['-y', 'gitpick', REPO_SPEC, fullPath, '--overwrite'], { stdio: 'pipe' })
+          // oxlint-disable-next-line node/no-sync -- CLI tool: synchronous spawn by design
+        } else spawnSync('bunx', ['-y', 'gitpick', REPO_SPEC, fullPath, '--overwrite'], { stdio: 'pipe' }) // eslint-disable-line sonarjs/no-os-command-from-path -- dev tooling, trusted PATH
         step(1)
-        // oxlint-disable-next-line node/no-sync
-        const revResult = spawnSync('git', ['ls-remote', REPO_GIT_URL, 'HEAD'], { encoding: 'utf8' })
+        // oxlint-disable-next-line node/no-sync -- CLI tool: synchronous spawn by design
+        const revResult = spawnSync('git', ['ls-remote', REPO_GIT_URL, 'HEAD'], { encoding: 'utf8' }) // eslint-disable-line sonarjs/no-os-command-from-path -- dev tooling, trusted PATH
         const scaffoldedFrom = (revResult.stdout.split('\n')[0] ?? '').split('\t')[0] ?? ''
         step(2)
         const removed = removeDirs({ db, dir: fullPath, includeDemos })
@@ -227,8 +247,8 @@ const Scaffold = ({
         else {
           const installStart = Date.now()
           setState(s => ({ ...s, details: [...s.details, '  bun install (this may take 30-90s)'] }))
-          // oxlint-disable-next-line node/no-sync
-          const installResult = spawnSync('bun', ['install'], { cwd: fullPath, stdio: 'pipe' })
+          // oxlint-disable-next-line node/no-sync -- CLI tool: synchronous spawn by design
+          const installResult = spawnSync('bun', ['install'], { cwd: fullPath, stdio: 'pipe' }) // eslint-disable-line sonarjs/no-os-command-from-path -- dev tooling, trusted PATH
           const elapsedSec = Math.round((Date.now() - installStart) / 1000)
           if (installResult.status === 0)
             setState(s => ({ ...s, details: [...s.details, `  bun install done in ${elapsedSec}s`] }))
@@ -245,13 +265,13 @@ const Scaffold = ({
         // oxlint-disable-next-line node/no-sync
         writeFileSync(join(fullPath, '.noboilrc.json'), `${JSON.stringify(manifest, null, 2)}\n`)
         if (!skipGit) {
-          // oxlint-disable-next-line node/no-sync
-          const gitInit = spawnSync('git', ['init', '-q'], { cwd: fullPath })
+          // oxlint-disable-next-line node/no-sync -- CLI tool: synchronous spawn by design
+          const gitInit = spawnSync('git', ['init', '-q'], { cwd: fullPath }) // eslint-disable-line sonarjs/no-os-command-from-path -- dev tooling, trusted PATH
           if (gitInit.status === 0) {
-            // oxlint-disable-next-line node/no-sync
-            spawnSync('git', ['add', '-A'], { cwd: fullPath })
-            // oxlint-disable-next-line node/no-sync
-            spawnSync('git', ['commit', '-q', '-m', 'chore: initial noboil scaffold'], { cwd: fullPath })
+            // oxlint-disable-next-line node/no-sync -- CLI tool: synchronous spawn by design
+            spawnSync('git', ['add', '-A'], { cwd: fullPath }) // eslint-disable-line sonarjs/no-os-command-from-path -- dev tooling, trusted PATH
+            // oxlint-disable-next-line node/no-sync -- CLI tool: synchronous spawn by design
+            spawnSync('git', ['commit', '-q', '-m', 'chore: initial noboil scaffold'], { cwd: fullPath }) // eslint-disable-line sonarjs/no-os-command-from-path -- dev tooling, trusted PATH
             setState(s => ({ ...s, details: [...s.details, '  git init + initial commit'] }))
           }
         }
@@ -279,23 +299,12 @@ const Scaffold = ({
           const isCurrent = i === state.currentStep && state.status === 'running'
           const isDone = i < state.currentStep || (i === state.currentStep && state.status === 'done')
           const isFailed = i === state.currentStep && state.status === 'failed'
-          const icon = isFailed ? (
-            <Text color='red'>✘</Text>
-          ) : isDone ? (
-            <Text color='green'>✔</Text>
-          ) : isCurrent ? (
-            <Text color='cyan'>
-              <Spinner type='dots' />
-            </Text>
-          ) : (
-            <Text dimColor>·</Text>
-          )
           return (
             <Box key={label}>
-              <Box marginRight={1}>{icon}</Box>
-              <Text
-                color={isCurrent ? 'cyan' : isDone ? 'green' : isFailed ? 'red' : undefined}
-                dimColor={!(isCurrent || isDone || isFailed)}>
+              <Box marginRight={1}>
+                <StepIcon isCurrent={isCurrent} isDone={isDone} isFailed={isFailed} />
+              </Box>
+              <Text color={stepTextColor(isCurrent, isDone, isFailed)} dimColor={!(isCurrent || isDone || isFailed)}>
                 {label}
               </Text>
             </Box>

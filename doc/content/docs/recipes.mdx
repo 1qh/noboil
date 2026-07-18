@@ -1962,11 +1962,11 @@ makeCacheCrud({ builders, schema: schemas.movie, table: 'movie', options: {
 
 ```ts
 makeCrud(spacetimedb, {
-  tableName: 'todo',
+  tableName: 'post',
   fields: { done: t.boolean(), title: t.string() },
   idField: t.u32(),
   pk: tbl => tbl.id,
-  table: db => db.todo,
+  table: db => db.post,
   options: { rateLimit: { max: 30, window: 60_000 }, softDelete: true }
 })
 ```
@@ -1974,7 +1974,7 @@ makeCrud(spacetimedb, {
 ### `CrudHooks` — `lib/noboil/src/convex/server/types.ts`
 
 ```ts
-makeCrud({ schema, table: 'todo', options: { hooks: {
+makeCrud({ schema, table: 'task', options: { hooks: {
   beforeCreate: (ctx, { data }) => ({ ...data, ownerId: ctx.userId }),
   afterDelete: async (ctx, { id }) => { await ctx.db.delete(id) }
 } } })
@@ -1984,7 +1984,7 @@ Typechecked usage: `lib/noboil/examples/convex/make-crud.example.ts`.
 ### `CrudOptions` — `lib/noboil/src/convex/server/types.ts`
 
 ```ts
-makeCrud({ schema: schemas.todo, table: 'todo', options: {
+makeCrud({ schema: schemas.task, table: 'task', options: {
   pub: 'isPublished',
   softDelete: true,
   rateLimit: { max: 30, window: 60_000 },
@@ -1995,11 +1995,11 @@ makeCrud({ schema: schemas.todo, table: 'todo', options: {
 ### `CrudResult` — `lib/noboil/src/convex/server/types.ts`
 
 ```ts
-// convex/todo.ts
+// convex/task.ts
 import { makeCrud } from 'noboil/convex/server'
 import { schemas } from './schema'
 export const { auth, pub, authIndexed, create, update, rm } = makeCrud({
-  builders, schema: schemas.todo, table: 'todo', options: { pub: true }
+  builders, schema: schemas.task, table: 'task', options: { pub: true }
 })
 ```
 

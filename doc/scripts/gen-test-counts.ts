@@ -6,7 +6,7 @@ import { walkFiles } from 'noboil/walk'
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 import { DOC_REPO, LIB_NOBOIL, replaceLineBetween, REPO, stripComments } from './lib'
-
+// eslint-disable-next-line sonarjs/super-linear-regex -- disjoint \d+/\s+ tokens with literal suffix, no ambiguous overlap; linear
 const PASS_RE = /(?<pass>\d+)\s+pass/u
 const TEST_CALL_RE = /(?:^|[\s;,([])(?:test|it)(?:\.skip|\.only|\.each\(.+?\))?\s*\(/gu
 const runFullCount = async (cwd: string): Promise<number> => {
@@ -39,7 +39,7 @@ const main = async () => {
     // oxlint-disable-next-line node/no-sync
     if (statSync(root, { throwIfNoEntry: false })?.isDirectory())
       // oxlint-disable-next-line node/no-sync
-      for (const app of readdirSync(root).toSorted()) e2eApps.push(join(root, app))
+      for (const app of readdirSync(root).toSorted((a, b) => (a < b ? -1 : Number(a > b)))) e2eApps.push(join(root, app))
   }
   const e2eCounts = e2eApps
     .map(d => ({ count: countE2EApp(d), name: `${d.split('/web/').at(1)}` }))

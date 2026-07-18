@@ -55,6 +55,7 @@ test.describe
       await expect(moviePage.getCacheStatus()).toBeVisible()
     })
     test('shows cache miss on first fetch', async ({ moviePage }) => {
+      // eslint-disable-next-line sonarjs/pseudo-random -- test fixture id, not security-sensitive
       const randomId = 550 + Math.floor(Math.random() * 1000)
       await moviePage.fetchMovie(randomId)
       const detail = moviePage.getMovieDetail()

@@ -74,8 +74,8 @@ serve({
           ;(ws.data as Record<string, unknown>).ready = true
           const q = (ws.data as Record<string, unknown>).queue as (Buffer | string)[] | undefined
           if (q) {
-            for (const m of q) upstream.send(m)
             ;(ws.data as Record<string, unknown>).queue = undefined
+            for (const m of q) upstream.send(m)
           }
         })
         upstream.addEventListener('message', event => {

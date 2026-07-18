@@ -189,6 +189,7 @@ const makeBudget = ({
       async (
         c: MutCtx,
         args: { actualAmount: number; owner: string; reservedAmount: number; reservedPeriodKey: string }
+        // eslint-disable-next-line sonarjs/cognitive-complexity -- settle reconciles reserved vs actual across period rollover; refactoring risks the untestable balance/inflight accounting
       ): Promise<void> => {
         const { actualAmount, owner, reservedAmount, reservedPeriodKey: rKey } = args
         const reserved = await findRowForKey(c.db, table, owner, rKey)
@@ -254,7 +255,6 @@ const makeBudget = ({
   const auditInvariants = b.m({
     args: typed({}),
     handler: typed(async (c: MutCtx): Promise<BudgetAuditSummary> => {
-      const cur = periodKeyFor(Date.now(), periodMs)
       const prevKey = periodKeyFor(Date.now() - periodMs, periodMs)
       const rows = (await c.db.query(table).take(AUDIT_SCAN_BATCH)) as unknown as BudgetRow[]
       let overshootBalance = 0
@@ -265,7 +265,7 @@ const makeBudget = ({
         if ((r.inflight ?? 0) > inflightMax) overshootInflight += 1
         if (r.periodKey < prevKey && (r.inflight ?? 0) > 0) stuckInflight += 1
       }
-      return { overshootBalance, overshootInflight, rows: rows.length, stuckInflight, ...(cur ? {} : {}) }
+      return { overshootBalance, overshootInflight, rows: rows.length, stuckInflight }
     })
   })
   return typed({ add, auditInvariants, check, pruneStale, reserve, settle })

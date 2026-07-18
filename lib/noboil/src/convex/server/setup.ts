@@ -241,18 +241,16 @@ const setup = <DM extends GenericDataModel>(config: SetupConfig<DM>) => {
     config.mutation,
     customCtx(() => ({}))
   )
-  const crud = <S extends ZodRawShape>(table: keyof DM & string, schema: OwnedSchema<S>, opt?: CrudOptions<S>) =>
-    makeCrud({
+  const crud = <S extends ZodRawShape>(table: keyof DM & string, schema: OwnedSchema<S>, opt?: CrudOptions<S>) => {
+    const ghOnly = gh ? { hooks: mergeHooks(gh, undefined, table) } : undefined
+    return makeCrud({
       builders: { cm, cq, m: typed(m), pq: typed(pq), q: typed(q) },
-      options: opt
-        ? { ...opt, hooks: mergeHooks(gh, opt.hooks, table) }
-        : gh
-          ? { hooks: mergeHooks(gh, undefined, table) }
-          : undefined,
+      options: opt ? { ...opt, hooks: mergeHooks(gh, opt.hooks, table) } : ghOnly,
       schema,
       strictFilter: config.strictFilter,
       table
     })
+  }
   const childCrud = <S extends ZodRawShape, PS extends ZodRawShape = ZodRawShape>(
     table: keyof DM & string,
     meta: { foreignKey: string; index: string; parent: string; parentSchema?: ZodObject<PS>; schema: ZodObject<S> },
@@ -265,17 +263,15 @@ const setup = <DM extends GenericDataModel>(config: SetupConfig<DM>) => {
       options: opt,
       table
     })
-  const orgCrud = <S extends ZodRawShape>(table: keyof DM & string, schema: OrgSchema<S>, opt?: OrgCrudOptions<S>) =>
-    makeOrgCrud({
+  const orgCrud = <S extends ZodRawShape>(table: keyof DM & string, schema: OrgSchema<S>, opt?: OrgCrudOptions<S>) => {
+    const ghOnly = gh ? { hooks: mergeHooks(gh, undefined, table) } : undefined
+    return makeOrgCrud({
       builders: { m: typed(m), q: typed(q) },
-      options: opt
-        ? { ...opt, hooks: mergeHooks(gh, opt.hooks, table) }
-        : gh
-          ? { hooks: mergeHooks(gh, undefined, table) }
-          : undefined,
+      options: opt ? { ...opt, hooks: mergeHooks(gh, opt.hooks, table) } : ghOnly,
       schema,
       table
     })
+  }
   const cacheCrud = <S extends ZodRawShape, K extends keyof S & string>(opts: {
     fetcher?: (c: unknown, key: unknown) => Promise<unknown>
     hooks?: CacheHooks

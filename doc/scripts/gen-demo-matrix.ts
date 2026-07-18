@@ -5,6 +5,7 @@ import { join } from 'node:path'
 import { DOCS_DIR, replaceBetween, REPO } from './lib'
 
 const DEMOS = ['blog', 'chat', 'movie', 'org', 'poll']
+// eslint-disable-next-line sonarjs/super-linear-regex -- disjoint tokens with literal separators over trusted repo source; bounded non-adversarial input
 const TABLE_RE = /(?<name>\w+):\s*table\(s\.\w+(?:,\s*\{(?<opts>[^}]*)\})?/gu
 const API_RE = /\bapi\.(?<name>\w+)\b/gu
 const parseTables = (src: string): Map<string, string[]> => {
@@ -27,7 +28,7 @@ const walkSrc = (dir: string, out: string[] = []): string[] => {
   // oxlint-disable-next-line node/no-sync
   if (!statSync(dir, { throwIfNoEntry: false })) return out
   // oxlint-disable-next-line node/no-sync
-  for (const name of readdirSync(dir).toSorted())
+  for (const name of readdirSync(dir).toSorted((a, b) => (a < b ? -1 : Number(a > b))))
     if (!(name === 'node_modules' || name === '.next' || name === 'module_bindings' || name.startsWith('.'))) {
       const full = join(dir, name)
       // oxlint-disable-next-line node/no-sync
@@ -71,19 +72,23 @@ const main = () => {
   const stdbLazy = readFileSync(`${REPO}/backend/spacetimedb/src/index.ts`, 'utf8')
   const cvxTables = parseTables(cvxLazy)
   const stdbTables = parseTables(stdbLazy)
-  const allTables = [...new Set([...cvxTables.keys(), ...stdbTables.keys()])].toSorted()
+  const allTables = [...new Set([...cvxTables.keys(), ...stdbTables.keys()])].toSorted((a, b) =>
+    a < b ? -1 : Number(a > b)
+  )
   const demoUsage: Record<string, { cvx: Set<string>; stdb: Set<string> }> = {}
   for (const demo of DEMOS)
     demoUsage[demo] = {
       cvx: cvxTablesUsedBy(`${REPO}/web/cvx/${demo}`),
       stdb: stdbTablesUsedBy(`${REPO}/web/stdb/${demo}`, allTables)
     }
-  const tableHeader = `| Table | Options | ${DEMOS.map(d => `cvx-${d}`).join(' | ')} | ${DEMOS.map(d => `stdb-${d}`).join(' | ')} |`
+  const cvxCols = DEMOS.map(d => `cvx-${d}`).join(' | ')
+  const stdbCols = DEMOS.map(d => `stdb-${d}`).join(' | ')
+  const tableHeader = `| Table | Options | ${cvxCols} | ${stdbCols} |`
   const sep = `|---|---|${DEMOS.map(() => '--').join('|')}|${DEMOS.map(() => '--').join('|')}|`
   const rows = allTables.map(t => {
     const opts =
       [...new Set([...(cvxTables.get(t) ?? []), ...(stdbTables.get(t) ?? [])])]
-        .toSorted()
+        .toSorted((a, b) => (a < b ? -1 : Number(a > b)))
         .map(o => `\`${o}\``)
         .join(', ') || '—'
     const cvxCells = DEMOS.map(d => (demoUsage[d]?.cvx.has(t) ? '✓' : '—')).join(' | ')

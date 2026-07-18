@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unnecessary-condition, @typescript-eslint/strict-void-return, no-console */
 /* oxlint-disable unicorn/no-process-exit */
 /* eslint-disable @typescript-eslint/max-params, complexity, no-await-in-loop, no-control-regex, no-promise-executor-return, no-useless-assignment */
+/* eslint-disable sonarjs/cognitive-complexity, sonarjs/no-nested-functions -- browser-automation crawl orchestration; page.evaluate closures run in-browser and cannot be extracted */
 /* oxlint-disable unicorn/consistent-function-scoping */
 /* oxlint-disable promise/always-return, promise/param-names, promise/prefer-await-to-then, unicorn/no-process-exit */
 /** biome-ignore-all lint/performance/noAwaitInLoops: sequential by design */
@@ -80,6 +81,7 @@ const doShots = argv.includes('--shots')
 const doA11y = argv.includes('--a11y')
 const SHOT_DIR = join(tmpdir(), 'crawl-shots')
 const TEST_EMAIL = `crawl${Date.now()}@test.com`
+// eslint-disable-next-line sonarjs/no-hardcoded-passwords -- ephemeral test-only credential for the crawl script, not a real secret
 const TEST_PASSWORD = 'CrawlTest1234!'
 // biome-ignore lint/suspicious/noControlCharactersInRegex: intentional control-char match
 const ANSI_RE = /\[[0-9;]*[A-Za-z]/gu
@@ -199,6 +201,7 @@ const cvxCreateOrgViaApi = async (ctx: BrowserContext, app: AppSpec, issues: Iss
       headers: hdrs,
       method: 'POST'
     })
+    // eslint-disable-next-line sonarjs/pseudo-random -- non-security random slug for throwaway crawl test data
     const slug = `crawl-${Math.random().toString(36).slice(2, 8)}`
     const createRes = await fetch(`${urls().convexApi}/api/mutation`, {
       body: JSON.stringify({
@@ -308,6 +311,7 @@ const fillForm = async (page: Page, route: string, push: (i: Issue) => void) => 
       for (const input of inputs.slice(0, 5)) {
         const type = (await input.getAttribute('type').catch(() => null)) ?? 'text'
         const name = (await input.getAttribute('name').catch(() => null)) ?? ''
+        // eslint-disable-next-line sonarjs/pseudo-random -- non-security random value for throwaway crawl test data
         let val = `crawl-${Math.random().toString(36).slice(2, 8)}`
         if (type === 'email' || name === 'email') val = TEST_EMAIL
         else if (type === 'password' || name === 'password') val = TEST_PASSWORD
@@ -354,9 +358,8 @@ const crawlApp = async (app: AppSpec): Promise<Result> => {
     }
   const browser = await getBrowser()
   const ctx: BrowserContext = await browser.newContext()
-  const captured: string[] = []
-  await ctx.exposeFunction('__crawlReport', (msg: string) => {
-    captured.push(msg)
+  await ctx.exposeFunction('__crawlReport', () => {
+    /* console.error proxy sink; page listeners surface the reported issues */
   })
   await ctx.addInitScript(() => {
     const orig = console.error
@@ -404,7 +407,7 @@ const crawlApp = async (app: AppSpec): Promise<Result> => {
       await page.waitForLoadState('domcontentloaded', { timeout: 5000 }).catch(() => null)
       await pollOverlay(page, route, i => issues.push(i))
       if (doShots) {
-        const slug = `${app.name}${route.replaceAll(/[^\w]+/gu, '_')}`.slice(0, 80)
+        const slug = `${app.name}${route.replaceAll(/\W+/gu, '_')}`.slice(0, 80)
         await page.screenshot({ fullPage: true, path: `${SHOT_DIR}/${slug}.png` }).catch(() => null)
       }
       await fillForm(page, route, i => issues.push(i))

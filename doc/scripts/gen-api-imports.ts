@@ -5,7 +5,8 @@ import { join, resolve } from 'node:path'
 
 const exportPat = /export\s+(?:type\s+)?\{(?<syms>[^}]+)\}/gu
 const exportConstPat = /export\s+(?:const|function|class|default)\s+(?<name>\w+)/gu
-const asPat = /(?<orig>\w+)\s+as\s+(?<alias>\w+)/u
+// eslint-disable-next-line sonarjs/super-linear-regex -- disjoint \w+/\s+ tokens with literal separator, no ambiguous overlap; linear
+const asPat = /\w+\s+as\s+(?<alias>\w+)/u
 const wsPat = /\s/u
 const parseName = (trimmed: string): string | undefined => {
   const asMatch = asPat.exec(trimmed)
@@ -38,7 +39,7 @@ const extractExports = (filePath: string): string[] => {
   }
   exportConstPat.lastIndex = 0
   names.delete('type')
-  return [...names].toSorted()
+  return [...names].toSorted((a, b) => (a < b ? -1 : Number(a > b)))
 }
 const genTable = (pkgDir: string, filter: string): string => {
   // oxlint-disable-next-line node/no-sync

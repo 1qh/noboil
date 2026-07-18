@@ -2,12 +2,11 @@ import imageCompression from 'browser-image-compression'
 
 const BYTES_PER_KB = 1024
 const BYTES_PER_MB = 1024 * 1024
-const fmt = (n: number) =>
-  n < BYTES_PER_KB
-    ? `${n} B`
-    : n < BYTES_PER_MB
-      ? `${(n / BYTES_PER_KB).toFixed(1)} KB`
-      : `${(n / BYTES_PER_MB).toFixed(1)} MB`
+const fmt = (n: number): string => {
+  if (n < BYTES_PER_KB) return `${n} B`
+  if (n < BYTES_PER_MB) return `${(n / BYTES_PER_KB).toFixed(1)} KB`
+  return `${(n / BYTES_PER_MB).toFixed(1)} MB`
+}
 const isImgType = (t: string) => t.startsWith('image/')
 const isImgUrl = (url: string) => {
   const lower = url.toLowerCase()

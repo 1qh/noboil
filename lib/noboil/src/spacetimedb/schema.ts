@@ -144,6 +144,7 @@ const mergeInto = (target: Record<string, unknown>, source: Record<string, unkno
   const keys = Object.keys(source)
   for (const key of keys) target[key] = source[key]
 }
+// eslint-disable-next-line sonarjs/cognitive-complexity -- schema assembler merging every table category into one typed result
 const schema = <T extends SchemaConfig>(config: T): SchemaResult<T> => {
   const all: Record<string, unknown> = {}
   for (const cat of [config.owned, config.orgScoped, config.org, config.base, config.singleton])

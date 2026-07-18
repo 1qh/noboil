@@ -2,7 +2,7 @@
 /* eslint-disable no-console */
 import { readFileSync } from 'node:fs'
 import { DOCS_DIR, LIB_NOBOIL, replaceBetween } from './lib'
-
+// eslint-disable-next-line regexp/no-super-linear-backtracking, sonarjs/super-linear-regex -- scans trusted repo middleware source; bounded non-adversarial input
 const MIDDLEWARE_RE = /(?:\/\*\*\s*(?<doc>[^*]+?)\s*\*\/\s*)?const (?<name>\w+) = \((?<args>[^)]*)\):\s*Middleware\b/gu
 const escapeMd = (s: string): string =>
   s
@@ -36,7 +36,7 @@ const main = () => {
   const cvx = extract(readFileSync(`${LIB_NOBOIL}/src/convex/server/middleware.ts`, 'utf8'))
   // oxlint-disable-next-line node/no-sync
   const stdb = extract(readFileSync(`${LIB_NOBOIL}/src/spacetimedb/server/middleware.ts`, 'utf8'))
-  const all = [...new Set([...cvx, ...stdb].map(mw => mw.name))].toSorted()
+  const all = [...new Set([...cvx, ...stdb].map(mw => mw.name))].toSorted((a, b) => (a < b ? -1 : Number(a > b)))
   const infoByName = new Map<string, MwInfo>()
   for (const mw of [...cvx, ...stdb]) if (!infoByName.has(mw.name) || mw.doc) infoByName.set(mw.name, mw)
   const cvxNames = new Set(cvx.map(mw => mw.name))

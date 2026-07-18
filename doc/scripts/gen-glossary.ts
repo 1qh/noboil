@@ -65,7 +65,7 @@ const main = () => {
   for (const [sub, target] of Object.entries(pkg.exports)) indexSubpath({ pkgName: pkg.name, sub, symToEntry, target })
   const docsDir = DOCS_DIR
   // oxlint-disable-next-line node/no-sync
-  for (const file of readdirSync(docsDir).toSorted())
+  for (const file of readdirSync(docsDir).toSorted((a, b) => (a < b ? -1 : Number(a > b))))
     if (file.endsWith('.mdx') && file !== 'glossary.mdx') linkDocsFor(docsDir, file, symToEntry)
   const sorted = [...symToEntry.entries()].toSorted(([a], [b]) => a.localeCompare(b))
   const rows: string[] = []

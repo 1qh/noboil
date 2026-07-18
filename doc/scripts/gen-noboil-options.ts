@@ -2,7 +2,7 @@
 /* eslint-disable no-console */
 import { readFileSync } from 'node:fs'
 import { DOCS_DIR, LIB_NOBOIL, replaceBetween } from './lib'
-
+// eslint-disable-next-line regexp/no-super-linear-backtracking, sonarjs/super-linear-regex -- matches one interface member from trusted repo source; bounded non-adversarial input
 const FIELD_RE = /^\s*(?<name>\w+)(?<opt>\??):\s*(?<type>[^\n]+)$/u
 const escapeMd = (s: string): string =>
   s

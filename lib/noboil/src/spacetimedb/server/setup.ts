@@ -99,7 +99,14 @@ const toGlobalCtx = (
     timestamp: GlobalHookCtx['timestamp']
   }
 ): GlobalHookCtx => ({ db, sender, table, timestamp })
-const hasGlobalHooks = (hooks: GlobalHooks): boolean =>
+const hasAnyHook = (hooks: {
+  afterCreate?: unknown
+  afterDelete?: unknown
+  afterUpdate?: unknown
+  beforeCreate?: unknown
+  beforeDelete?: unknown
+  beforeUpdate?: unknown
+}): boolean =>
   Boolean(
     hooks.beforeCreate ??
       hooks.afterCreate ??
@@ -108,6 +115,7 @@ const hasGlobalHooks = (hooks: GlobalHooks): boolean =>
       hooks.beforeDelete ??
       hooks.afterDelete
   )
+const hasGlobalHooks = (hooks: GlobalHooks): boolean => hasAnyHook(hooks)
 const mergeGlobalBeforeCreate = (left: GlobalHooks, right: GlobalHooks): GlobalHooks['beforeCreate'] => {
   if (!(left.beforeCreate || right.beforeCreate)) return
   return (ctx, { data: initialData }) => {
@@ -183,15 +191,7 @@ const mergeGlobalHooks = (left: GlobalHooks | undefined, right: GlobalHooks | un
 }
 const hasCrudHooks = <DB, Row extends Rec, CreateArgs extends Rec, UpdatePatch extends Rec>(
   hooks: CrudHooks<DB, Row, CreateArgs, UpdatePatch>
-): boolean =>
-  Boolean(
-    hooks.beforeCreate ??
-      hooks.afterCreate ??
-      hooks.beforeUpdate ??
-      hooks.afterUpdate ??
-      hooks.beforeDelete ??
-      hooks.afterDelete
-  )
+): boolean => hasAnyHook(hooks)
 const mergeCrudBeforeCreate = <DB, Row extends Rec, CreateArgs extends Rec, UpdatePatch extends Rec>(
   table: string,
   globalHooks: GlobalHooks | undefined,
@@ -1085,6 +1085,7 @@ const mergeModifierExtra = (
     index?: string[]
     unique?: string[]
   }
+  // eslint-disable-next-line sonarjs/cognitive-complexity -- schema-modifier builder applying index/unique/extra field variations
 ): Record<string, FieldBuilder> | undefined => {
   const { extra, index: indexFields, unique: uniqueFields } = mods
   const result: Record<string, FieldBuilder> = {}
@@ -1125,6 +1126,7 @@ const collectBsFactories = (name: string, m: BsTag, ctx: BsCtx): void => {
   if (m.category === 'quota' && m.quotaLimit !== undefined && m.quotaDurationMs !== undefined)
     ctx.quotaZ[name] = { durationMs: m.quotaDurationMs, hooks: m.quotaHooks, limit: m.quotaLimit }
 }
+// eslint-disable-next-line sonarjs/cognitive-complexity -- category dispatch collecting per-table schema config across owned/org/scoped variants
 const collectBsSchema = (name: string, m: BsTag, ctx: BsCtx): { fileNs?: boolean | string; orgZod?: ZodLike } => {
   if (m.extraFields) ctx.extraFieldsByTable[name] = m.extraFields
   if (m.category === 'owned' && m.zod) ctx.ownedZ[name] = m.zod
@@ -1451,6 +1453,7 @@ const noboil = ({
   hooks?: GlobalHooks
   middleware?: Middleware[]
   tables: (helpers: NoboilHelpers) => Record<string, BsTable>
+  // eslint-disable-next-line sonarjs/cognitive-complexity -- top-level schema assembler wiring every table category, hook, and middleware
 }): SpacetimeDbLike => {
   const raw = makeSchema()
   const result = tables(makeBsHelpers(raw))

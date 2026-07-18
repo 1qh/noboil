@@ -12,26 +12,25 @@ const camelToKebab = (s: string): string => s.replace(CAMEL_RE, m => `-${m.toLow
 interface ToolFile {
   absPath: string
   cliPath: string[]
-  exportName: 'action' | 'mutation' | 'query'
+  exportName: ToolKind
   fnAccessor: string
   importPath: string
   importVar: string
-  kind: 'action' | 'mutation' | 'query'
+  kind: ToolKind
   modulePath: string[]
   registryKey: string
   tier: 'admin' | 'user'
 }
+type ToolKind = 'action' | 'mutation' | 'query'
 const KIND_RE = /(?:export )?const (?<exp>action|query|mutation) = define(?<def>Tool|Query|Mutation)\(/u
-const detectKind = async (
-  abs: string
-): Promise<null | { exportName: 'action' | 'mutation' | 'query'; kind: 'action' | 'mutation' | 'query' }> => {
+const detectKind = async (abs: string): Promise<null | { exportName: ToolKind; kind: ToolKind }> => {
   const text = await readFile(abs, 'utf8')
   const m = KIND_RE.exec(text)
-  if (!m) return null
-  const exportName = (m.groups as { def: string; exp: string }).exp as 'action' | 'mutation' | 'query'
+  const exp = m?.groups?.exp
+  const def = m?.groups?.def
+  if (!(exp && def)) return null
   const kindMap = { Mutation: 'mutation', Query: 'query', Tool: 'action' } as const
-  const kind = kindMap[(m.groups as { def: string; exp: string }).def as 'Mutation' | 'Query' | 'Tool']
-  return { exportName, kind }
+  return { exportName: exp as ToolKind, kind: kindMap[def as 'Mutation' | 'Query' | 'Tool'] }
 }
 const buildToolFile = async ({
   filename,
@@ -92,9 +91,9 @@ const collect = async (toolsRoot: string): Promise<{ providers: string[]; tools:
     }
   }
   return {
-    providers: [...providers].toSorted(),
+    providers: [...providers].toSorted((a, b) => a.localeCompare(b)),
     tools: tools.toSorted((a, b) => a.registryKey.localeCompare(b.registryKey))
   }
 }
 export { camelToKebab, collect }
-export type { ToolFile }
+export type { ToolFile, ToolKind }

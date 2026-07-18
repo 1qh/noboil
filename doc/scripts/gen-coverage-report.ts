@@ -49,9 +49,9 @@ const targets = [
 const main = () => {
   // oxlint-disable-next-line node/no-sync
   const scripts = readdirSync(SCRIPTS_DIR)
-    .toSorted()
+    .toSorted((a, b) => (a < b ? -1 : Number(a > b)))
     .filter(f => f.startsWith('gen-') && f.endsWith('.ts') && f !== 'gen-all.ts' && f !== 'gen-coverage-report.ts')
-    .toSorted()
+    .toSorted((a, b) => (a < b ? -1 : Number(a > b)))
   const allMarkers: { file: string; markers: string[] }[] = []
   for (const t of targets) {
     const markers = findMarkers(t)
@@ -79,7 +79,10 @@ const main = () => {
     '',
     '| File | Auto-generated sections |',
     '|---|---|',
-    ...allMarkers.map(m => `| \`${m.file}\` | ${m.markers.map(x => `\`${x}\``).join(', ')} |`),
+    ...allMarkers.map(m => {
+      const cells = m.markers.map(x => `\`${x}\``).join(', ')
+      return `| \`${m.file}\` | ${cells} |`
+    }),
     '',
     '## Workflow',
     '',
@@ -95,6 +98,7 @@ const main = () => {
   ]
   // oxlint-disable-next-line node/no-sync
   writeFileSync(OUT, lines.join('\n'))
-  console.log(`Wrote ${OUT.replace(`${REPO}/`, '')} (${scripts.length} generators, ${totalMarkers} markers)`)
+  const rel = OUT.replace(`${REPO}/`, '')
+  console.log(`Wrote ${rel} (${scripts.length} generators, ${totalMarkers} markers)`)
 }
 main()

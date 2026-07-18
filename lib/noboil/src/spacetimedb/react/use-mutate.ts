@@ -113,6 +113,7 @@ const useMutate = <A extends Record<string, unknown>, R = void>(
   const errorHandler = resolveToastError(options)
   const successHandler = resolveToastSuccess(options)
   return useCallback(
+    // eslint-disable-next-line sonarjs/cognitive-complexity -- optimistic mutation runner threading retry, dev-tracking, and toast handlers
     async (args: A): Promise<R> => {
       const name = options?.getName?.(args) ?? (mutate.name || 'mutation')
       const type = options?.type ?? detectMutationType(name)

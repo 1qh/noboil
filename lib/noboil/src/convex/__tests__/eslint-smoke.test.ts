@@ -77,7 +77,6 @@ describe('convex eslint plugin bundle', () => {
         sourceCode: { getAncestors: () => [] }
       }) as { Program?: (n: unknown) => void }
       if (visitor.Program) visitor.Program({ type: 'Program' })
-      // Discovery succeeds (schema + modules both found), so the rule warns nothing.
       expect(reports).toHaveLength(0)
     } finally {
       process.chdir(cwd)
@@ -114,7 +113,6 @@ describe('convex eslint plugin bundle', () => {
         property: { name: 'create', type: 'Identifier' },
         type: 'MemberExpression'
       })
-      // `tasks` has no file in convex/ (only todos.ts), so the rule flags it as an unknown module.
       expect(reports).toHaveLength(1)
       expect(reports[0]?.messageId).toBe('unknownModule')
       expect(reports[0]?.data?.used).toBe('tasks')

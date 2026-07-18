@@ -113,6 +113,7 @@ describe('makeBudget integration (via wired builders)', () => {
     const tt = t()
     await callMutate(tt, api.budgets.reserve, { amount: 50, owner: 'fresh' })
     await callMutate(tt, api.budgets.pruneStale, {})
-    expect(true).toBe(true)
+    const r = (await callQuery(tt, api.budgets.check, { owner: 'fresh' })) as CheckResult
+    expect(typeof r.balance).toBe('number')
   })
 })

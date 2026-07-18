@@ -13,26 +13,16 @@ const portMap = (): Record<string, number> => ({
   postgres: config.ports.postgres,
   stdb: config.ports.stdb
 })
+const lookupToken = (kind: string, key: string | undefined, map: Record<string, number | string>): string => {
+  const v = key ? map[key] : undefined
+  if (!v) throw new Error(`Unknown ${kind} token: {{${kind}:${key}}}. Valid: ${Object.keys(map).join(', ')}`)
+  return String(v)
+}
 const resolve = (token: string): string => {
   const [kind, key] = token.split(':')
-  if (kind === 'port') {
-    const ports = portMap()
-    const p = key ? ports[key] : undefined
-    if (!p) throw new Error(`Unknown port token: {{port:${key}}}. Valid: ${Object.keys(ports).join(', ')}`)
-    return String(p)
-  }
-  if (kind === 'url') {
-    const us = urls() as Record<string, string>
-    const u = key ? us[key] : undefined
-    if (!u) throw new Error(`Unknown url token: {{url:${key}}}. Valid: ${Object.keys(us).join(', ')}`)
-    return u
-  }
-  if (kind === 'path') {
-    const paths = config.paths as Record<string, string>
-    const p = key ? paths[key] : undefined
-    if (!p) throw new Error(`Unknown path token: {{path:${key}}}. Valid: ${Object.keys(paths).join(', ')}`)
-    return p
-  }
+  if (kind === 'port') return lookupToken('port', key, portMap())
+  if (kind === 'url') return lookupToken('url', key, urls())
+  if (kind === 'path') return lookupToken('path', key, config.paths)
   if (kind === 'module' && !key) return config.module
   throw new Error(`Unknown token: {{${token}}}`)
 }

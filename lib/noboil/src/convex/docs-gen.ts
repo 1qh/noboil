@@ -254,9 +254,13 @@ const run = (argv: string[] = process.argv.slice(2)) => {
     const eps = endpointsForFactory(call)
     const fields = tableFields.get(call.table)
     total += eps.length
-    console.log(`${bold(call.table)} ${dim(`(${call.factory})`)} ${dim(`\u2014 ${call.file}`)}`)
-    if (fields !== undefined && fields.length > 0)
-      console.log(`  ${dim('fields:')} ${fields.map(f => `${f.name}: ${f.type}`).join(', ')}`)
+    const factoryTag = dim(`(${call.factory})`)
+    const fileTag = dim(`\u2014 ${call.file}`)
+    console.log(`${bold(call.table)} ${factoryTag} ${fileTag}`)
+    if (fields !== undefined && fields.length > 0) {
+      const fieldList = fields.map(f => `${f.name}: ${f.type}`).join(', ')
+      console.log(`  ${dim('fields:')} ${fieldList}`)
+    }
     console.log(`  ${dim('endpoints:')} ${eps.join(', ')}`)
     console.log('')
   }

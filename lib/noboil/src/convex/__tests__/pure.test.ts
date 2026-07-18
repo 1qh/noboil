@@ -311,8 +311,8 @@ describe('RateLimitInput shorthand', () => {
   test('RateLimitInput type accepts both forms', () => {
     const a: RateLimitInput = 10
     const b: RateLimitInput = { max: 10, window: 60_000 }
-    expect(typeof a).toBe('number')
-    expect(typeof b).toBe('object')
+    expect(normalizeRateLimit(a)).toEqual({ max: 10, window: 60_000 })
+    expect(normalizeRateLimit(b)).toBe(b)
   })
 })
 describe('CrudOptions search config', () => {
@@ -384,12 +384,12 @@ describe('CrudOptions search config', () => {
   })
   test('typesafe: search string shorthand constrained to schema keys', () => {
     const validField: CrudOptions<BlogShape>['search'] = 'content'
-    expect(validField).toBeDefined()
+    expect(Object.keys(blogSchema.shape)).toContain(validField as string)
     const anotherValid: CrudOptions<BlogShape>['search'] = 'title'
-    expect(anotherValid).toBeDefined()
+    expect(Object.keys(blogSchema.shape)).toContain(anotherValid as string)
     // @ts-expect-error - 'conten' is not a key of BlogShape
     const _invalid: CrudOptions<BlogShape>['search'] = 'conten'
-    expect(_invalid).toBeDefined()
+    expect(Object.keys(blogSchema.shape)).not.toContain(_invalid as string)
   })
   test('typesafe: search object field constrained to schema keys', () => {
     const validField: CrudOptions<BlogShape>['search'] = { field: 'content' }
@@ -444,7 +444,7 @@ describe('typesafe field references', () => {
     type ChatShape = typeof chatSchema.shape
     // @ts-expect-error - 'isPubic' is not a key of chatSchema
     const _invalid: keyof ChatShape = 'isPubic'
-    expect(_invalid).toBeDefined()
+    expect(Object.keys(chatSchema.shape)).not.toContain(_invalid)
   })
   test('search shorthand accepts valid schema keys', () => {
     type MsgShape = typeof messageSchema.shape
@@ -455,7 +455,7 @@ describe('typesafe field references', () => {
     type MsgShape = typeof messageSchema.shape
     // @ts-expect-error - 'conten' is not a key of MsgShape
     const _invalid: CrudOptions<MsgShape>['search'] = 'conten'
-    expect(_invalid).toBeDefined()
+    expect(Object.keys(messageSchema.shape)).not.toContain(_invalid as string)
   })
   test('aclFrom.field accepts valid schema keys', () => {
     expect(Object.keys(taskSchema.shape)).toContain('projectId')
@@ -489,13 +489,13 @@ describe('typesafe field references', () => {
     expect(Object.keys(movieSchema.shape)).toContain('tmdb_id')
     type MovieShape = typeof movieSchema.shape
     const key: keyof MovieShape = 'tmdb_id'
-    expect(key).toBe('tmdb_id')
+    expect(Object.keys(movieSchema.shape)).toContain(key)
   })
   test('cacheCrud key rejects invalid schema keys', () => {
     type MovieShape = typeof movieSchema.shape
     // @ts-expect-error - 'tmdb_i' is not a key of MovieShape
     const _invalid: keyof MovieShape = 'tmdb_i'
-    expect(_invalid).toBeDefined()
+    expect(Object.keys(movieSchema.shape)).not.toContain(_invalid)
   })
 })
 describe('WhereOf type safety', () => {
@@ -778,6 +778,7 @@ describe('branded schema type enforcement', () => {
     })
   })
   describe('singletonCrud upsert type safety', () => {
+    // eslint-disable-next-line sonarjs/deprecation -- zod v4 exposes the inferred output only via the `_output` phantom property in a type position
     type ProfileInput = Partial<(typeof singletonSchemas.profile)['_output']>
     test('upsert rejects misspelled field name', () => {
       // @ts-expect-error - misspelledField is not a valid profile key
@@ -822,26 +823,31 @@ describe('branded schema error messages (SchemaTypeError)', () => {
     test('DetectBrand<OwnedSchema> is owned', () => {
       type Result = DetectBrand<typeof ownedSchemas.blog>
       const check: Result = 'owned'
+      // eslint-disable-next-line sonarjs/no-trivial-assertions -- the real assertion is the type-level `check: Result` assignment; the runtime expect anchors the test
       expect(check).toBe('owned')
     })
     test('DetectBrand<OrgSchema> is org', () => {
       type Result = DetectBrand<typeof orgSchemas.wiki>
       const check: Result = 'org'
+      // eslint-disable-next-line sonarjs/no-trivial-assertions -- the real assertion is the type-level `check: Result` assignment; the runtime expect anchors the test
       expect(check).toBe('org')
     })
     test('DetectBrand<BaseSchema> is base', () => {
       type Result = DetectBrand<typeof baseSchemas.movie>
       const check: Result = 'base'
+      // eslint-disable-next-line sonarjs/no-trivial-assertions -- the real assertion is the type-level `check: Result` assignment; the runtime expect anchors the test
       expect(check).toBe('base')
     })
     test('DetectBrand<SingletonSchema> is singleton', () => {
       type Result = DetectBrand<typeof singletonSchemas.profile>
       const check: Result = 'singleton'
+      // eslint-disable-next-line sonarjs/no-trivial-assertions -- the real assertion is the type-level `check: Result` assignment; the runtime expect anchors the test
       expect(check).toBe('singleton')
     })
     test('DetectBrand<plain ZodObject> is unbranded', () => {
       type Result = DetectBrand<typeof plainSchema>
       const check: Result = 'unbranded'
+      // eslint-disable-next-line sonarjs/no-trivial-assertions -- the real assertion is the type-level `check: Result` assignment; the runtime expect anchors the test
       expect(check).toBe('unbranded')
     })
   })
@@ -2316,10 +2322,12 @@ describe('Fix #5: OrgCascadeTableConfig type', () => {
   }
   test('string config accepts valid table name', () => {
     const config: OrgCascadeTableConfig<TestDM> = 'blog'
+    // eslint-disable-next-line sonarjs/no-trivial-assertions -- the real assertion is the type-level `config: OrgCascadeTableConfig<TestDM>` assignment; the runtime expect anchors the test
     expect(config).toBe('blog')
   })
   test('string config accepts another valid table name', () => {
     const config: OrgCascadeTableConfig<TestDM> = 'wiki'
+    // eslint-disable-next-line sonarjs/no-trivial-assertions -- the real assertion is the type-level `config: OrgCascadeTableConfig<TestDM>` assignment; the runtime expect anchors the test
     expect(config).toBe('wiki')
   })
   test('object config accepts valid table name', () => {
@@ -2640,6 +2648,7 @@ describe('VALIDATION_FAILED error code', () => {
   })
   test('VALIDATION_FAILED is a valid ErrorCode', () => {
     const code: ErrorCode = 'VALIDATION_FAILED'
+    // eslint-disable-next-line sonarjs/no-trivial-assertions -- the real assertion is the type-level `code: ErrorCode` assignment; the runtime expect anchors the test
     expect(code).toBe('VALIDATION_FAILED')
   })
   test('err() accepts VALIDATION_FAILED', () => {
@@ -3332,22 +3341,22 @@ describe('bundle verification', () => {
     const { readFileSync } = await import('node:fs')
     // oxlint-disable-next-line node/no-sync
     const content = readFileSync(join(import.meta.dir, '..', 'schema.ts'), 'utf8')
-    expect(content.includes("from 'react'")).toBe(false)
-    expect(content.includes('useState')).toBe(false)
-    expect(content.includes('useEffect')).toBe(false)
+    expect(content).not.toContain("from 'react'")
+    expect(content).not.toContain('useState')
+    expect(content).not.toContain('useEffect')
   })
   test('noboil/convex/schema has no node:fs imports', async () => {
     const { readFileSync } = await import('node:fs')
     // oxlint-disable-next-line node/no-sync
     const content = readFileSync(join(import.meta.dir, '..', 'schema.ts'), 'utf8')
-    expect(content.includes("from 'node:fs'")).toBe(false)
+    expect(content).not.toContain("from 'node:fs'")
   })
   test('noboil/convex/retry has no React or server imports', async () => {
     const { readFileSync } = await import('node:fs')
     // oxlint-disable-next-line node/no-sync
     const content = readFileSync(join(import.meta.dir, '..', 'retry.ts'), 'utf8')
-    expect(content.includes("from 'react'")).toBe(false)
-    expect(content.includes("from 'node:fs'")).toBe(false)
+    expect(content).not.toContain("from 'react'")
+    expect(content).not.toContain("from 'node:fs'")
   })
   test('entry point count matches package.json exports', async () => {
     const { readFileSync } = await import('node:fs')
@@ -3948,7 +3957,7 @@ describe('cacheCrud hooks', () => {
       userId: 'user_123'
     }
     expect(Object.keys(cacheCtx)).toEqual(['db'])
-    expect(Object.keys(crudCtx).toSorted()).toEqual(['db', 'storage', 'userId'])
+    expect(Object.keys(crudCtx).toSorted((a, b) => a.localeCompare(b))).toEqual(['db', 'storage', 'userId'])
   })
 })
 describe('stale-while-revalidate for cacheCrud', () => {
@@ -3957,6 +3966,7 @@ describe('stale-while-revalidate for cacheCrud', () => {
     type GetResult = R['get'] extends RegisteredQuery<'public', Rec, infer T> ? T : never
     type HasStale = GetResult extends null | { stale: boolean } ? true : false
     const _check: HasStale = true
+    // eslint-disable-next-line sonarjs/no-trivial-assertions -- the real assertion is the type-level `_check: HasStale` predicate; the runtime expect anchors the test
     expect(_check).toBe(true)
   })
   test('CacheCrudResult get can return stale: true', () => {
@@ -3965,6 +3975,7 @@ describe('stale-while-revalidate for cacheCrud', () => {
     type StaleResult = Extract<GetResult, { stale: boolean }>
     type IsStaleBoolean = StaleResult['stale'] extends boolean ? true : false
     const _check: IsStaleBoolean = true
+    // eslint-disable-next-line sonarjs/no-trivial-assertions -- the real assertion is the type-level `_check: IsStaleBoolean` predicate; the runtime expect anchors the test
     expect(_check).toBe(true)
   })
   test('CacheCrudResult get still returns null for missing entries', () => {
@@ -3972,12 +3983,14 @@ describe('stale-while-revalidate for cacheCrud', () => {
     type GetResult = R['get'] extends RegisteredQuery<'public', Rec, infer T> ? T : never
     type CanBeNull = null extends GetResult ? true : false
     const _check: CanBeNull = true
+    // eslint-disable-next-line sonarjs/no-trivial-assertions -- the real assertion is the type-level `_check: CanBeNull` predicate; the runtime expect anchors the test
     expect(_check).toBe(true)
   })
   test('CacheOptions accepts staleWhileRevalidate field', () => {
     type Opts = CacheOptions<{ title: ReturnType<typeof string> }, 'title'>
     type HasSWR = 'staleWhileRevalidate' extends keyof Opts ? true : false
     const _check: HasSWR = true
+    // eslint-disable-next-line sonarjs/no-trivial-assertions -- the real assertion is the type-level `_check: HasSWR` predicate; the runtime expect anchors the test
     expect(_check).toBe(true)
   })
   test('staleWhileRevalidate is optional in CacheOptions', () => {
@@ -4040,9 +4053,13 @@ describe('useSearch', () => {
     const _sq: HasSetQuery = true
     const _r: HasResults = true
     const _is: HasIsSearching = true
+    // eslint-disable-next-line sonarjs/no-trivial-assertions -- the real assertion is the type-level `_q: HasQuery` predicate; the runtime expect anchors the test
     expect(_q).toBe(true)
+    // eslint-disable-next-line sonarjs/no-trivial-assertions -- the real assertion is the type-level `_sq: HasSetQuery` predicate; the runtime expect anchors the test
     expect(_sq).toBe(true)
+    // eslint-disable-next-line sonarjs/no-trivial-assertions -- the real assertion is the type-level `_r: HasResults` predicate; the runtime expect anchors the test
     expect(_r).toBe(true)
+    // eslint-disable-next-line sonarjs/no-trivial-assertions -- the real assertion is the type-level `_is: HasIsSearching` predicate; the runtime expect anchors the test
     expect(_is).toBe(true)
   })
 })
@@ -4122,11 +4139,13 @@ describe('global hooks', () => {
   test('SetupConfig accepts hooks field', () => {
     type HasHooks = 'hooks' extends keyof SetupConfig ? true : false
     const _check: HasHooks = true
+    // eslint-disable-next-line sonarjs/no-trivial-assertions -- the real assertion is the type-level `_check: HasHooks` predicate; the runtime expect anchors the test
     expect(_check).toBe(true)
   })
   test('SetupConfig hooks is optional', () => {
     type IsOptional = undefined extends SetupConfig['hooks'] ? true : false
     const _check: IsOptional = true
+    // eslint-disable-next-line sonarjs/no-trivial-assertions -- the real assertion is the type-level `_check: IsOptional` predicate; the runtime expect anchors the test
     expect(_check).toBe(true)
   })
   test('GlobalHooks beforeCreate receives table in context', () => {
@@ -6034,6 +6053,8 @@ describe('middleware', () => {
       }
       const handler = resolveBulkError({ onError: custom })
       expect(handler).toBe(custom)
+      handler?.(new Error('boom'))
+      expect(errors).toHaveLength(1)
     })
   })
   describe('type safety', () => {
@@ -6918,12 +6939,14 @@ describe('DevtoolsProps customization (R11.3)', () => {
     type P = DevtoolsProps['position']
     type Check = 'center' extends P ? true : false
     const invalid: Check = false
+    // eslint-disable-next-line sonarjs/no-trivial-assertions -- the real assertion is the type-level `invalid: Check` predicate; the runtime expect anchors the test
     expect(invalid).toBe(false)
   })
   test('DevtoolsProps rejects invalid defaultTab', () => {
     type T = DevtoolsProps['defaultTab']
     type Check = 'settings' extends T ? true : false
     const invalid: Check = false
+    // eslint-disable-next-line sonarjs/no-trivial-assertions -- the real assertion is the type-level `invalid: Check` predicate; the runtime expect anchors the test
     expect(invalid).toBe(false)
   })
 })
@@ -7175,7 +7198,7 @@ describe('noboil-convex add command', () => {
     })
     test('parseAddFlags accepts trailing positional args as additional fields', () => {
       const flags = parseAddFlags(['todo', '--fields=title:string', 'done:boolean'])
-      expect(flags.fields.length).toBe(2)
+      expect(flags.fields).toHaveLength(2)
     })
     test('default convexDir is convex', () => {
       const flags = parseAddFlags(['todo'])
@@ -7834,7 +7857,7 @@ describe('makeLog factory schema', () => {
   })
   test('makeLog accepts empty input', () => {
     const empty = makeLog({})
-    expect(Object.keys(empty).length).toBe(0)
+    expect(Object.keys(empty)).toHaveLength(0)
   })
 })
 describe('makeKv factory schema', () => {
@@ -7884,7 +7907,7 @@ describe('makeQuota factory schema', () => {
   })
   test('makeQuota accepts empty input', () => {
     const empty = makeQuota({})
-    expect(Object.keys(empty).length).toBe(0)
+    expect(Object.keys(empty)).toHaveLength(0)
   })
 })
 describe('factory parity (cvx kv + log deeper coverage)', () => {
@@ -7901,7 +7924,10 @@ describe('factory parity (cvx kv + log deeper coverage)', () => {
       const kv = makeKv({
         banner: { keys: ['active', 'maintenance'] as const, schema: object({ msg: string() }), writeRole: true }
       })
-      expect((kv.banner as unknown as { keys: readonly string[] }).keys.toSorted()).toEqual(['active', 'maintenance'])
+      expect((kv.banner as unknown as { keys: readonly string[] }).keys.toSorted((a, b) => a.localeCompare(b))).toEqual([
+        'active',
+        'maintenance'
+      ])
     })
     test('kv schema validates', () => {
       const kv = makeKv({ x: { schema: object({ active: boolean(), msg: string() }), writeRole: true } })
@@ -7926,7 +7952,7 @@ describe('factory parity (cvx kv + log deeper coverage)', () => {
     })
     test('makeKv empty input', () => {
       const kv = makeKv({})
-      expect(Object.keys(kv).length).toBe(0)
+      expect(Object.keys(kv)).toHaveLength(0)
     })
   })
   describe('log', () => {
@@ -7969,7 +7995,7 @@ describe('factory parity (cvx kv + log deeper coverage)', () => {
     })
     test('log empty input', () => {
       const l = makeLog({})
-      expect(Object.keys(l).length).toBe(0)
+      expect(Object.keys(l)).toHaveLength(0)
     })
     test('log schema with optional field', () => {
       const l = makeLog({ x: { parent: 'p', schema: object({ note: string().optional() }) } })

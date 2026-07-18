@@ -13,6 +13,7 @@ const walk = (dir: string): string[] =>
     skip: new Set(['__tests__', 'node_modules'])
   })
 const SYM_RE = /(?:export\s+)?(?:const|function|class|interface|type)\s+(?<name>\w+)/u
+// eslint-disable-next-line sonarjs/cognitive-complexity -- flat files×lines×tags scanner; nested iteration is the essential shape
 const main = () => {
   const root = `${LIB_NOBOIL}/src`
   const files = walk(root)

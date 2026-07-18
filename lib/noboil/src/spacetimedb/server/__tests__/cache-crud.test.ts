@@ -165,7 +165,7 @@ describe('stdb makeCacheCrud', () => {
       } as never
     )
     purgeFn({ db: {}, sender: {} as never, timestamp: tsJson('2025-01-01T00:00:00Z') } as never, {} as never)
-    expect(rows.length).toBe(0)
+    expect(rows).toHaveLength(0)
   })
   test('purge with timestamp.toString returning numeric string parses via parseTimestampValue', () => {
     const { reducer, reducers } = captureReducers()
@@ -193,7 +193,7 @@ describe('stdb makeCacheCrud', () => {
       } as never
     )
     purgeFn({ db: {}, sender: {} as never, timestamp: tsStr('99999999999') } as never, {} as never)
-    expect(rows.length).toBe(0)
+    expect(rows).toHaveLength(0)
   })
   test('update NOT_FOUND on missing key', () => {
     const { reducer, reducers } = captureReducers()

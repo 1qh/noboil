@@ -120,11 +120,10 @@ const POST = async (request: Request) => {
     const dbMessages = await fetchQuery(api.message.list, { chatId }, opts)
     existingMessages = dbMessages.map(m => toUIMessage({ id: m._id, parts: m.parts, role: m.role }))
   }
-  const uiMessages: UIMessage[] = isToolApprovalFlow
-    ? (messages as UIMessage[])
-    : message
-      ? [...existingMessages, message as UIMessage]
-      : existingMessages
+  let uiMessages: UIMessage[]
+  if (isToolApprovalFlow) uiMessages = messages as UIMessage[]
+  else if (message) uiMessages = [...existingMessages, message as UIMessage]
+  else uiMessages = existingMessages
   if (message?.role === 'user' && !isToolApprovalFlow)
     await fetchMutation(api.message.create, { chatId, parts: filterSupportedParts(message.parts), role: 'user' }, opts)
   const existingIds = new Set(uiMessages.map(m => m.id))

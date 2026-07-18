@@ -132,7 +132,8 @@ else if (cmd === 'tool') {
   if (sub && rest.length === 1) {
     const suggestion = didYouMean(sub, TOOL_DEV)
     if (suggestion) {
-      console.error(`${red("Unknown 'noboil tool' subcommand:")} ${sub}${dim(`  (did you mean ${bold(suggestion)}?)`)}`)
+      const hint = dim(`  (did you mean ${bold(suggestion)}?)`)
+      console.error(`${red("Unknown 'noboil tool' subcommand:")} ${sub}${hint}`)
       process.exit(1)
     }
   }
@@ -149,7 +150,8 @@ else if (cmd === 'tool') {
   await runNamespace(db, ['add', ...rest])
 } else {
   const suggestion = didYouMean(cmd, Object.keys(COMMANDS))
-  console.error(`${red('Unknown command:')} ${cmd}${suggestion ? dim(`  (did you mean ${bold(suggestion)}?)`) : ''}\n`)
+  const hint = suggestion ? dim(`  (did you mean ${bold(suggestion)}?)`) : ''
+  console.error(`${red('Unknown command:')} ${cmd}${hint}\n`)
   printHelp()
   process.exit(1)
 }

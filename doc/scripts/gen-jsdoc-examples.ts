@@ -6,7 +6,7 @@ import { DOCS_DIR, LIB_NOBOIL, replaceBetween, REPO } from './lib'
 
 const walk = (dir: string, out: string[] = []): string[] => {
   // oxlint-disable-next-line node/no-sync
-  for (const name of readdirSync(dir).toSorted()) {
+  for (const name of readdirSync(dir).toSorted((a, b) => (a < b ? -1 : Number(a > b)))) {
     const skip =
       name.startsWith('.') || name === 'node_modules' || name === 'dist' || name === '_generated' || name === '__tests__'
     if (!skip) {
@@ -30,35 +30,37 @@ interface Example {
   file: string
   symbol: string
 }
+const collectExampleCode = (lines: string[], start: number): { code: string; end: number } => {
+  const codeLines: string[] = []
+  let j = start
+  while (j < lines.length && !(lines[j] ?? '').includes('*/')) {
+    codeLines.push((lines[j] ?? '').replace(JSDOC_STAR_RE, ''))
+    j += 1
+  }
+  const code = codeLines
+    .join('\n')
+    .replaceAll(/^```\w*\n?/gmu, '')
+    .replaceAll(/\n?```$/gmu, '')
+    .trim()
+  return { code, end: j }
+}
+const findSymbolAfter = (lines: string[], from: number): string => {
+  for (let k = from; k < Math.min(from + 5, lines.length); k += 1) {
+    const sm = SYM_RE.exec(lines[k] ?? '')
+    if (sm?.groups?.name) return sm.groups.name
+  }
+  return ''
+}
 const extractExamples = (src: string, file: string): Example[] => {
   const out: Example[] = []
   const lines = src.split('\n')
   let i = 0
   while (i < lines.length) {
-    const line = lines[i] ?? ''
-    if (JSDOC_EXAMPLE_RE.test(line)) {
-      const codeLines: string[] = []
-      let j = i + 1
-      while (j < lines.length && !(lines[j] ?? '').includes('*/')) {
-        const cleaned = (lines[j] ?? '').replace(JSDOC_STAR_RE, '')
-        codeLines.push(cleaned)
-        j += 1
-      }
-      let symbol = ''
-      for (let k = j + 1; k < Math.min(j + 6, lines.length); k += 1) {
-        const sm = SYM_RE.exec(lines[k] ?? '')
-        if (sm?.groups?.name) {
-          symbol = sm.groups.name
-          break
-        }
-      }
-      const code = codeLines
-        .join('\n')
-        .replaceAll(/^```\w*\n?/gmu, '')
-        .replaceAll(/\n?```$/gmu, '')
-        .trim()
+    if (JSDOC_EXAMPLE_RE.test(lines[i] ?? '')) {
+      const { code, end } = collectExampleCode(lines, i + 1)
+      const symbol = findSymbolAfter(lines, end + 1)
       if (code) out.push({ code, file, symbol: symbol || '_(anonymous)_' })
-      i = j
+      i = end
     }
     i += 1
   }

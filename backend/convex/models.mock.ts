@@ -11,6 +11,7 @@ import { simulateReadableStream } from 'ai'
 import { MockLanguageModelV3 } from 'ai/test'
 
 const CITY_PATTERN_1 = /weather (?:in|for) (?<city>[a-z]+)/iu
+// eslint-disable-next-line sonarjs/super-linear-regex -- runs only on short, controlled mock test prompts; [a-z]+ is delimiter-bounded, no adversarial input
 const CITY_PATTERN_2 = /(?<city>[a-z]+)(?:'s)? weather/iu
 const finishReasonStop: LanguageModelV3FinishReason = { raw: 'stop', unified: 'stop' }
 const finishReasonToolCalls: LanguageModelV3FinishReason = { raw: 'tool_calls', unified: 'tool-calls' }

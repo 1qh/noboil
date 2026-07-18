@@ -36,8 +36,8 @@ const EditProjectForm = ({ projectId, taskCount }: { projectId: Id<'project'>; t
     values: project ? pickValues(orgScoped.project, project) : undefined
   })
   const handleDelete = () => {
-    const msg =
-      taskCount > 0 ? `Delete this project and ${taskCount} task${taskCount === 1 ? '' : 's'}?` : 'Delete this project?'
+    const taskPlural = taskCount === 1 ? '' : 's'
+    const msg = taskCount > 0 ? `Delete this project and ${taskCount} task${taskPlural}?` : 'Delete this project?'
     /** biome-ignore lint/suspicious/noAlert: demo page uses native confirm */
     if (!confirm(msg)) return
     remove({ id: projectId })

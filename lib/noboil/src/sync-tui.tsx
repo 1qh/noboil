@@ -1,5 +1,5 @@
 /* oxlint-disable promise/prefer-await-to-then */
-/* eslint-disable react/no-array-index-key, @eslint-react/no-array-index-key, complexity */
+/* eslint-disable react/no-array-index-key, @eslint-react/no-array-index-key */
 import { Box, render, Text, useApp, useInput } from 'ink'
 import Spinner from 'ink-spinner'
 import { useEffect, useMemo, useState } from 'react'
@@ -38,6 +38,101 @@ interface SyncOpts {
   force: boolean
 }
 type SyncRun = (opts: SyncOpts, onProgress: (p: Partial<SyncProgress>) => void) => Promise<void>
+const mergeProgress =
+  (patch: Partial<SyncProgress>) =>
+  (p: SyncProgress): SyncProgress => ({ ...p, ...patch, actions: patch.actions ?? p.actions })
+const SpinnerLine = ({ label }: { label: string }) => (
+  <Box>
+    <Text color='cyan'>
+      <Spinner type='dots' />
+    </Text>
+    <Text> {label}</Text>
+  </Box>
+)
+const ProcessingView = ({
+  current,
+  etaMs,
+  etaSec,
+  pct,
+  processed,
+  recent,
+  total
+}: {
+  current: string
+  etaMs: number
+  etaSec: number
+  pct: number
+  processed: number
+  recent: SyncAction[]
+  total: number
+}) => (
+  <Box flexDirection='column'>
+    <Box>
+      <Text color='cyan'>
+        <Spinner type='dots' />
+      </Text>
+      <Text>
+        {' '}
+        {processed}/{total} ({pct}%){etaMs > 0 ? ` · eta ${etaSec}s` : ''} · {current || 'processing'}
+      </Text>
+    </Box>
+    {recent.length > 0 ? (
+      <Box flexDirection='column' marginTop={1}>
+        {recent.map((a, i) => (
+          /** biome-ignore lint/suspicious/noArrayIndexKey: static list, index stable */
+          <Row action={a} key={`${a.relPath}-${i}`} />
+        ))}
+      </Box>
+    ) : null}
+  </Box>
+)
+const DoneView = ({
+  actions,
+  added,
+  dryRun,
+  fromHash,
+  review,
+  skipped,
+  toHash,
+  updated
+}: {
+  actions: SyncAction[]
+  added: number
+  dryRun: boolean
+  fromHash: string
+  review: number
+  skipped: number
+  toHash: string
+  updated: number
+}) => (
+  <Box flexDirection='column'>
+    <Box gap={2}>
+      {updated > 0 ? <Text color='cyan'>{updated} updated</Text> : null}
+      {added > 0 ? <Text color='green'>{added} added</Text> : null}
+      {skipped > 0 ? <Text dimColor>{skipped} skipped</Text> : null}
+      {review > 0 ? <Text color='yellow'>{review} review</Text> : null}
+      {updated + added + skipped + review === 0 ? <Text color='green'>Already up to date.</Text> : null}
+    </Box>
+    {actions.length > 0 ? (
+      <Box flexDirection='column' marginTop={1}>
+        {actions.map((a, i) => (
+          /** biome-ignore lint/suspicious/noArrayIndexKey: static list, index stable */
+          <Row action={a} key={`${a.relPath}-${i}`} />
+        ))}
+      </Box>
+    ) : null}
+    {fromHash && toHash ? (
+      <Box marginTop={1}>
+        <Text dimColor>
+          {fromHash.slice(0, 7)} → {toHash.slice(0, 7)}
+        </Text>
+      </Box>
+    ) : null}
+    <Box marginTop={1}>
+      <Text color={dryRun ? 'yellow' : 'green'}>{dryRun ? 'No files were written.' : 'Sync complete.'}</Text>
+    </Box>
+  </Box>
+)
 const SyncApp = ({
   dryRun,
   force,
@@ -62,7 +157,7 @@ const SyncApp = ({
     const start = async () => {
       try {
         await run({ dryRun, force }, patch => {
-          setProgress(p => ({ ...p, ...patch, actions: patch.actions ?? p.actions }))
+          setProgress(mergeProgress(patch))
         })
       } catch (error) {
         setProgress(p => ({ ...p, error: error instanceof Error ? error.message : String(error), phase: 'error' }))
@@ -108,72 +203,30 @@ const SyncApp = ({
           pull upstream changes {dryRun ? '(dry-run)' : ''} {force ? '(force)' : ''}
         </Text>
       </Box>
-      {progress.phase === 'cloning' ? (
-        <Box>
-          <Text color='cyan'>
-            <Spinner type='dots' />
-          </Text>
-          <Text> cloning upstream...</Text>
-        </Box>
-      ) : null}
-      {progress.phase === 'comparing' ? (
-        <Box>
-          <Text color='cyan'>
-            <Spinner type='dots' />
-          </Text>
-          <Text> comparing files...</Text>
-        </Box>
-      ) : null}
+      {progress.phase === 'cloning' ? <SpinnerLine label='cloning upstream...' /> : null}
+      {progress.phase === 'comparing' ? <SpinnerLine label='comparing files...' /> : null}
       {progress.phase === 'processing' ? (
-        <Box flexDirection='column'>
-          <Box>
-            <Text color='cyan'>
-              <Spinner type='dots' />
-            </Text>
-            <Text>
-              {' '}
-              {processed}/{progress.total} ({pct}%){etaMs > 0 ? ` · eta ${etaSec}s` : ''} ·{' '}
-              {progress.current || 'processing'}
-            </Text>
-          </Box>
-          {recent.length > 0 ? (
-            <Box flexDirection='column' marginTop={1}>
-              {recent.map((a, i) => (
-                /** biome-ignore lint/suspicious/noArrayIndexKey: static list, index stable */
-                <Row action={a} key={`${a.relPath}-${i}`} />
-              ))}
-            </Box>
-          ) : null}
-        </Box>
+        <ProcessingView
+          current={progress.current}
+          etaMs={etaMs}
+          etaSec={etaSec}
+          pct={pct}
+          processed={processed}
+          recent={recent}
+          total={progress.total}
+        />
       ) : null}
       {progress.phase === 'done' ? (
-        <Box flexDirection='column'>
-          <Box gap={2}>
-            {updated > 0 ? <Text color='cyan'>{updated} updated</Text> : null}
-            {added > 0 ? <Text color='green'>{added} added</Text> : null}
-            {skipped > 0 ? <Text dimColor>{skipped} skipped</Text> : null}
-            {review > 0 ? <Text color='yellow'>{review} review</Text> : null}
-            {updated + added + skipped + review === 0 ? <Text color='green'>Already up to date.</Text> : null}
-          </Box>
-          {actions.length > 0 ? (
-            <Box flexDirection='column' marginTop={1}>
-              {actions.map((a, i) => (
-                /** biome-ignore lint/suspicious/noArrayIndexKey: static list, index stable */
-                <Row action={a} key={`${a.relPath}-${i}`} />
-              ))}
-            </Box>
-          ) : null}
-          {progress.fromHash && progress.toHash ? (
-            <Box marginTop={1}>
-              <Text dimColor>
-                {progress.fromHash.slice(0, 7)} → {progress.toHash.slice(0, 7)}
-              </Text>
-            </Box>
-          ) : null}
-          <Box marginTop={1}>
-            <Text color={dryRun ? 'yellow' : 'green'}>{dryRun ? 'No files were written.' : 'Sync complete.'}</Text>
-          </Box>
-        </Box>
+        <DoneView
+          actions={actions}
+          added={added}
+          dryRun={dryRun}
+          fromHash={progress.fromHash}
+          review={review}
+          skipped={skipped}
+          toHash={progress.toHash}
+          updated={updated}
+        />
       ) : null}
       {progress.phase === 'error' ? (
         <Box marginTop={1}>

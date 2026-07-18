@@ -68,6 +68,7 @@ describe('extractSources', () => {
     const entries = extractSources([
       { title: 'Example', url: 'https://example.com/page' },
       { url: 'https://www.foo.com' },
+      // eslint-disable-next-line sonarjs/no-clear-text-protocols -- test fixture: exercises insecure-URL handling
       { url: 'http://insecure.com' },
       'plain text',
       null
@@ -108,6 +109,7 @@ describe('validateRedirectTo', () => {
     expect(() => validateRedirectTo({ ...ctx, redirectTo: 'https://evil.com/page' })).toThrow('not allowed')
   })
   test('malformed full URL throws', () => {
+    // eslint-disable-next-line sonarjs/no-clear-text-protocols -- test fixture: malformed URL input
     expect(() => validateRedirectTo({ ...ctx, redirectTo: 'http://[' })).toThrow('Invalid')
   })
 })

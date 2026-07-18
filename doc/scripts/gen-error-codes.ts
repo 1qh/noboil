@@ -13,7 +13,7 @@ const PATTERNS = [
 ]
 const walk = (dir: string, out: string[] = []): string[] => {
   // oxlint-disable-next-line node/no-sync
-  for (const name of readdirSync(dir).toSorted()) {
+  for (const name of readdirSync(dir).toSorted((a, b) => (a < b ? -1 : Number(a > b)))) {
     const full = join(dir, name)
     // oxlint-disable-next-line node/no-sync
     if (statSync(full).isDirectory()) walk(full, out)
@@ -39,7 +39,7 @@ const main = () => {
       }
     }
   }
-  const sorted = [...codes].toSorted()
+  const sorted = [...codes].toSorted((a, b) => (a < b ? -1 : Number(a > b)))
   const body = [
     '| Code | Meaning |',
     '|------|---------|',

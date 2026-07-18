@@ -133,7 +133,7 @@ describe('makeCrud (owned) integration', () => {
       key: 'userId',
       value: userId
     })) as TodoDoc[]
-    expect(docs.length).toBe(2)
+    expect(docs).toHaveLength(2)
   })
   test('bulk update via items[] applies all patches', async () => {
     const { tt } = await seedUser(t())

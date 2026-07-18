@@ -48,49 +48,80 @@ const planOps = (rng: Lcg, n: number): Op[] => {
     })
   return ops
 }
+interface Reservation {
+  amount: number
+  periodKey: string
+}
+type ReserveFn = (
+  c: unknown,
+  a: Record<string, unknown>
+) => Promise<{ balance: number; ok: boolean; periodKey: string; reason?: string }>
+type SettleFn = (c: unknown, a: Record<string, unknown>) => Promise<void>
+const applyReserve = async (opts: {
+  amount: number
+  ctx: unknown
+  exports: Record<string, unknown>
+  owner: string
+  reservations: Reservation[]
+}): Promise<void> => {
+  const { amount, ctx, exports, owner, reservations } = opts
+  const r = await (exports.reserve as ReserveFn)(ctx, { amount, owner })
+  if (r.ok) reservations.push({ amount, periodKey: r.periodKey })
+  // biome-ignore lint/suspicious/noMisplacedAssertion: shared property-test assertion helper invoked from within test()
+  expect(r.balance).toBeGreaterThanOrEqual(0)
+  // biome-ignore lint/suspicious/noMisplacedAssertion: shared property-test assertion helper invoked from within test()
+  if (r.ok) expect(r.balance).toBeLessThanOrEqual(CAP)
+}
+const applySettle = async (opts: {
+  ctx: unknown
+  exports: Record<string, unknown>
+  owner: string
+  reservations: Reservation[]
+  rng: Lcg
+}): Promise<void> => {
+  const { ctx, exports, owner, reservations, rng } = opts
+  if (reservations.length === 0) return
+  const idx = rng.int(reservations.length)
+  const reservation = reservations[idx]
+  if (!reservation) return
+  reservations.splice(idx, 1)
+  const actual = Math.max(0, Math.floor(reservation.amount * (rng.next() * 1.5)))
+  await (exports.settle as SettleFn)(ctx, {
+    actualAmount: actual,
+    owner,
+    reservedAmount: reservation.amount,
+    reservedPeriodKey: reservation.periodKey
+  })
+}
+const assertRowInvariants = (db: BudgetDB, owner: string): void => {
+  for (const r of db.rows.filter(rr => rr.owner === owner)) {
+    // biome-ignore lint/suspicious/noMisplacedAssertion: shared property-test assertion helper invoked from within test()
+    expect(r.balance).toBeGreaterThanOrEqual(0)
+    // biome-ignore lint/suspicious/noMisplacedAssertion: shared property-test assertion helper invoked from within test()
+    expect(r.inflight).toBeGreaterThanOrEqual(0)
+  }
+  // biome-ignore lint/suspicious/noMisplacedAssertion: shared property-test assertion helper invoked from within test()
+  expect(sumInflight(db, owner)).toBeLessThanOrEqual(INFLIGHT_MAX)
+}
+const runReserveSettleSeed = async (seed: number): Promise<void> => {
+  setNow(Date.parse('2026-04-29T12:00:00Z'))
+  const { ctx, db, exports } = setupBudget()
+  const owner = `seed${seed}`
+  const rng = createLcg(seed)
+  const ops = planOps(rng, 200)
+  const reservations: Reservation[] = []
+  for (const op of ops) {
+    await (op.kind === 'reserve'
+      ? applyReserve({ amount: op.amount, ctx, exports, owner, reservations })
+      : applySettle({ ctx, exports, owner, reservations, rng }))
+    assertRowInvariants(db, owner)
+  }
+  restoreNow()
+}
 describe('budget property invariants', () => {
   test('reserve+settle never exceeds tolerance, never produces negative inflight/balance', async () => {
     const seeds = [1, 7, 42, 99, 12_345]
-    for (const seed of seeds) {
-      setNow(Date.parse('2026-04-29T12:00:00Z'))
-      const { ctx, db, exports } = setupBudget()
-      const owner = `seed${seed}`
-      const rng = createLcg(seed)
-      const ops = planOps(rng, 200)
-      const reservations: { amount: number; periodKey: string }[] = []
-      for (const op of ops) {
-        if (op.kind === 'reserve') {
-          const r = await (
-            exports.reserve as unknown as (
-              c: unknown,
-              a: Record<string, unknown>
-            ) => Promise<{ balance: number; ok: boolean; periodKey: string; reason?: string }>
-          )(ctx, { amount: op.amount, owner })
-          if (r.ok) reservations.push({ amount: op.amount, periodKey: r.periodKey })
-          expect(r.balance).toBeGreaterThanOrEqual(0)
-          if (r.ok) expect(r.balance).toBeLessThanOrEqual(CAP)
-        } else if (reservations.length > 0) {
-          const idx = rng.int(reservations.length)
-          const reservation = reservations[idx]
-          if (reservation) {
-            reservations.splice(idx, 1)
-            const actual = Math.max(0, Math.floor(reservation.amount * (rng.next() * 1.5)))
-            await (exports.settle as unknown as (c: unknown, a: Record<string, unknown>) => Promise<void>)(ctx, {
-              actualAmount: actual,
-              owner,
-              reservedAmount: reservation.amount,
-              reservedPeriodKey: reservation.periodKey
-            })
-          }
-        }
-        for (const r of db.rows.filter(rr => rr.owner === owner)) {
-          expect(r.balance).toBeGreaterThanOrEqual(0)
-          expect(r.inflight).toBeGreaterThanOrEqual(0)
-        }
-        expect(sumInflight(db, owner)).toBeLessThanOrEqual(INFLIGHT_MAX)
-      }
-      restoreNow()
-    }
+    for (const seed of seeds) await runReserveSettleSeed(seed)
   })
   test('cap rejection prevents overshoot', async () => {
     setNow(Date.parse('2026-04-29T12:00:00Z'))

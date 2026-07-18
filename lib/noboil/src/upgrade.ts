@@ -21,9 +21,10 @@ const upgrade = (args: string[]) => {
   const bunArgs = isGlobal ? ['add', '-g', 'noboil@latest'] : ['add', 'noboil@latest']
   if (isGlobal && !args.includes('--global') && !args.includes('-g'))
     console.log(dim('no noboil project detected — defaulting to global install'))
-  console.log(`${bold('noboil upgrade')} — running ${dim(`bun ${bunArgs.join(' ')}`)}\n`)
-  // oxlint-disable-next-line node/no-sync
-  const result = spawnSync('bun', bunArgs, { stdio: 'inherit' })
+  const cmdLabel = dim(`bun ${bunArgs.join(' ')}`)
+  console.log(`${bold('noboil upgrade')} — running ${cmdLabel}\n`)
+  // oxlint-disable-next-line node/no-sync -- CLI tool: synchronous spawn by design
+  const result = spawnSync('bun', bunArgs, { stdio: 'inherit' }) // eslint-disable-line sonarjs/no-os-command-from-path -- dev tooling, trusted PATH
   if (result.status === 0) console.log(`\n${green('✓')} noboil upgraded.`)
   else {
     console.log(`\n${red('✘')} upgrade failed.`)

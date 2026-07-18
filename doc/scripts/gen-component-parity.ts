@@ -35,15 +35,15 @@ const main = () => {
   const stdbRoot = `${LIB_NOBOIL}/src/spacetimedb/components`
   // oxlint-disable-next-line node/no-sync
   const cvxFiles = readdirSync(cvxRoot)
-    .toSorted()
+    .toSorted((a, b) => (a < b ? -1 : Number(a > b)))
     .filter(f => f.endsWith('.tsx') || f === 'index.ts')
-    .toSorted()
+    .toSorted((a, b) => (a < b ? -1 : Number(a > b)))
   // oxlint-disable-next-line node/no-sync
   const stdbFiles = readdirSync(stdbRoot)
-    .toSorted()
+    .toSorted((a, b) => (a < b ? -1 : Number(a > b)))
     .filter(f => f.endsWith('.tsx') || f === 'index.ts')
-    .toSorted()
-  const allFiles = [...new Set([...cvxFiles, ...stdbFiles])].toSorted()
+    .toSorted((a, b) => (a < b ? -1 : Number(a > b)))
+  const allFiles = [...new Set([...cvxFiles, ...stdbFiles])].toSorted((a, b) => (a < b ? -1 : Number(a > b)))
   const rows: string[] = []
   let perfect = 0
   for (const f of allFiles) {
@@ -62,14 +62,14 @@ const main = () => {
         cvxOnly.length === 0
           ? '—'
           : cvxOnly
-              .toSorted()
+              .toSorted((a, b) => (a < b ? -1 : Number(a > b)))
               .map(e => `\`${e}\``)
               .join(', ')
       } | ${
         stdbOnly.length === 0
           ? '—'
           : stdbOnly
-              .toSorted()
+              .toSorted((a, b) => (a < b ? -1 : Number(a > b)))
               .map(e => `\`${e}\``)
               .join(', ')
       } | ${status} |`

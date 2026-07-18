@@ -16,14 +16,14 @@ const makeGuardedProxy = <T extends AnyApi>(target: T, modules: string[], config
   const moduleSet = new Set(modules)
   const prefix = config.suggestWithLabel === false ? '' : `${config.label}.`
   return new Proxy(target, {
-    get: (obj, prop) => {
+    get: (obj, prop): unknown => {
       if (typeof prop !== 'string') return Reflect.get(obj, prop)
       if (moduleSet.has(prop)) return Reflect.get(obj, prop)
       const suggestion = findSuggestion(modules, prop)
       const msg = suggestion
         ? `guardApi: ${config.label}.${prop} does not exist. Did you mean ${prefix}${suggestion}?`
         : `guardApi: ${config.label}.${prop} does not match any ${config.notFoundLabel ?? 'module'}. Valid modules: ${modules.join(', ')}`
-      config.onError(msg)
+      return config.onError(msg)
     }
   })
 }

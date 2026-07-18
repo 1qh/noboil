@@ -17,9 +17,9 @@ const firstMessage = (rule: { meta: { messages: Record<string, string> } }): str
   return msgs[0] ?? ''
 }
 const main = () => {
-  const cvxNames = Object.keys(cvxRules).toSorted()
-  const stdbNames = Object.keys(stdbRules).toSorted()
-  const all = [...new Set([...cvxNames, ...stdbNames])].toSorted()
+  const cvxNames = Object.keys(cvxRules).toSorted((a, b) => (a < b ? -1 : Number(a > b)))
+  const stdbNames = Object.keys(stdbRules).toSorted((a, b) => (a < b ? -1 : Number(a > b)))
+  const all = [...new Set([...cvxNames, ...stdbNames])].toSorted((a, b) => (a < b ? -1 : Number(a > b)))
   const rows = all.map(name => {
     const inCvx = cvxNames.includes(name)
     const inStdb = stdbNames.includes(name)

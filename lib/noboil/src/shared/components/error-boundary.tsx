@@ -34,16 +34,20 @@ const createErrorBoundary = ({ readErrorCode, readErrorMessage }: CreateErrorBou
       const { onError } = this.props
       if (onError) onError(error, errorInfo)
     }
-    // eslint-disable-next-line @typescript-eslint/promise-function-async
+    // eslint-disable-next-line @typescript-eslint/promise-function-async, sonarjs/function-return-type -- React 19 ReactNode includes Promise so render reads as async-returning; render is a synchronous lifecycle method returning children passthrough or fallback/error UI
     public override render() {
       const { error } = this.state
       const { children, className, fallback } = this.props
       if (!error) return children
       if (fallback)
-        return fallback({
-          error,
-          resetErrorBoundary: () => this.setState({ error: null })
-        })
+        return (
+          <>
+            {fallback({
+              error,
+              resetErrorBoundary: () => this.setState({ error: null })
+            })}
+          </>
+        )
       const code = readErrorCode(error)
       const message = readErrorMessage(error)
       return (

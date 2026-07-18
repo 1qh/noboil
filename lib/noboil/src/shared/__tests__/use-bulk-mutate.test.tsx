@@ -4,9 +4,8 @@ if (typeof document === 'undefined') GlobalRegistrator.register()
 const { act, renderHook } = await import('@testing-library/react')
 const { describe, expect, test } = await import('bun:test')
 const { useBulkMutate } = await import('../react/use-bulk-mutate')
-const swallowed: unknown[] = []
-const defaultOnError = (e: unknown) => {
-  swallowed.push(e)
+const defaultOnError = (): void => {
+  /* swallow errors during bulk-mutate tests */
 }
 describe('useBulkMutate (shared)', () => {
   test('initial state: not pending, no progress', () => {

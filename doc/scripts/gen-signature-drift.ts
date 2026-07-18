@@ -40,13 +40,13 @@ const collectHooks = (root: string): Hook[] => {
   // oxlint-disable-next-line node/no-sync
   if (!statSync(root, { throwIfNoEntry: false })) return out
   // oxlint-disable-next-line node/no-sync
-  for (const f of readdirSync(root).toSorted())
+  for (const f of readdirSync(root).toSorted((a, b) => (a < b ? -1 : Number(a > b))))
     if (f.startsWith('use-') && f.endsWith('.ts') && !f.endsWith('.test.ts')) collectHooksFromFile(root, f, out)
   return out
 }
 const walkDocs = (dir: string, out: string[] = []): string[] => {
   // oxlint-disable-next-line node/no-sync
-  for (const name of readdirSync(dir).toSorted())
+  for (const name of readdirSync(dir).toSorted((a, b) => (a < b ? -1 : Number(a > b))))
     if (!name.startsWith('.')) {
       const full = join(dir, name)
       // oxlint-disable-next-line node/no-sync

@@ -44,13 +44,14 @@ const main = () => {
   const onDisk = new Set(
     // oxlint-disable-next-line node/no-sync
     readdirSync(DOCS_DIR)
-      .toSorted()
+      .toSorted((a, b) => (a < b ? -1 : Number(a > b)))
       .filter(f => f.endsWith('.mdx'))
       .map(f => f.replace(MDX_EXT_RE, ''))
   )
   const ordered: string[] = []
   for (const slug of ORDER) if (onDisk.has(slug)) ordered.push(slug)
-  for (const slug of [...onDisk].toSorted()) if (!ordered.includes(slug)) ordered.push(slug)
+  for (const slug of [...onDisk].toSorted((a, b) => (a < b ? -1 : Number(a > b))))
+    if (!ordered.includes(slug)) ordered.push(slug)
   const missing = ORDER.filter(s => !onDisk.has(s))
   if (missing.length > 0) console.warn(`  ⚠ Listed in ORDER but missing on disk: ${missing.join(', ')}`)
   const next: { pages: string[]; title: string } = { pages: ordered, title: 'Documentation' }

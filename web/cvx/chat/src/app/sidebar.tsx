@@ -18,18 +18,16 @@ const Sb = () => {
   useEffect(() => {
     if (inView && status === 'CanLoadMore') loadMore()
   }, [inView, loadMore, status])
+  const renderStatus = () => {
+    if (status === 'LoadingMore') return <Spinner />
+    if (status === 'CanLoadMore') return <p className='h-4' ref={ref} />
+    if (status === 'Exhausted' && data.length > 20) return <Check className='animate-[fadeOut_2s_forwards] text-primary' />
+    return null
+  }
   return (
     <>
       <ChatSidebar basePath='' getThreadId={thread => thread._id as string} onDelete={handleDelete} threads={data} />
-      <div className='flex justify-center p-2'>
-        {status === 'LoadingMore' ? (
-          <Spinner />
-        ) : status === 'CanLoadMore' ? (
-          <p className='h-4' ref={ref} />
-        ) : status === 'Exhausted' && data.length > 20 ? (
-          <Check className='animate-[fadeOut_2s_forwards] text-primary' />
-        ) : null}
-      </div>
+      <div className='flex justify-center p-2'>{renderStatus()}</div>
     </>
   )
 }

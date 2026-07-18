@@ -28,19 +28,22 @@ const relink = (link: string, target: string) => {
   // oxlint-disable-next-line node/no-sync
   symlinkSync(target, link)
 }
-const linkAppEnvs = () => {
+const collectWebTargets = (): Target[] => {
   const targets: Target[] = []
   for (const kind of ['cvx', 'stdb'] as const) {
     const parent = join(root, kind === 'cvx' ? config.paths.webCvx : config.paths.webStdb)
     // oxlint-disable-next-line node/no-sync
-    if (existsSync(parent))
+    const names = existsSync(parent) ? readdirSync(parent) : []
+    for (const name of names) {
+      const d = join(parent, name)
       // oxlint-disable-next-line node/no-sync
-      for (const name of readdirSync(parent)) {
-        const d = join(parent, name)
-        // oxlint-disable-next-line node/no-sync
-        if (existsSync(join(d, 'package.json'))) targets.push({ depth: 3, dir: d, web: true })
-      }
+      if (existsSync(join(d, 'package.json'))) targets.push({ depth: 3, dir: d, web: true })
+    }
   }
+  return targets
+}
+const linkAppEnvs = () => {
+  const targets = collectWebTargets()
   const docDir = join(root, config.paths.doc)
   // oxlint-disable-next-line node/no-sync
   if (existsSync(join(docDir, 'package.json'))) targets.push({ depth: 1, dir: docDir, web: true })

@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 /* eslint-disable no-console */
 /* eslint-disable complexity */
+/* eslint-disable sonarjs/cognitive-complexity -- multi-branch schema/reducer scanners and report builders over trusted local source */
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { basename, join } from 'node:path'
 import type { Issue } from '../shared/schema-types'
@@ -39,12 +40,18 @@ interface WhereField {
 }
 const reducerPat = /reducer\(\s*['"](?<table>\w+)\.(?<endpoint>[\w.]+)['"]/gu
 const helperPat = /make(?<helper>Crud|Org|CacheCrud|ChildCrud)\(/u
+// eslint-disable-next-line sonarjs/super-linear-regex -- linear: exclusion-class quantifier cannot overlap the following literal comma
 const tablePat = /(?<tname>\w+)\s*:\s*table\([^,]+,\s*\{/gu
-const fieldLinePat = /^\s*(?<fname>\w+)\s*:\s*(?<ftype>.+?)\s*,?$/u
+const fieldLinePat = /^\s*(?<fname>\w+)\s*:\s*(?<ftype>\S.*)$/u
 const trailingCommaPat = /,$/u
+// eslint-disable-next-line sonarjs/super-linear-regex -- linear: exclusion-class quantifier bounded by its own delimiter
 const parenContentPat = /\([^)]*\)/gu
+// eslint-disable-next-line sonarjs/super-linear-regex -- linear: exclusion-class quantifier bounded by its own delimiter
 const braceContentPat = /\{[^}]*\}/gu
 const findModuleDir = findStdbModuleDirDeep
+const paren = (s: string): string => dim(`(${s})`)
+const dash = (s: string): string => dim(`— ${s}`)
+const filePrefix = (file?: string): string => (file ? `${dim(file)} ` : '')
 const findSchemaFile = (moduleDir: string): undefined | { content: string; path: string } => {
   const files = listTypeScriptFiles(moduleDir)
   for (const full of files) {
@@ -125,7 +132,7 @@ const extractFactoryCalls = (moduleDir: string): { calls: FactoryCall[]; files: 
     calls.push({
       factory: entry.factory,
       file: entry.file,
-      options: `endpoints=${[...entry.endpoints].toSorted().join(',')}`,
+      options: `endpoints=${[...entry.endpoints].toSorted((a, b) => a.localeCompare(b)).join(',')}`,
       table
     })
   return { calls, files: files.map(f => basename(f)) }
@@ -148,9 +155,9 @@ const printSchemaPreview = (content: string, calls: FactoryCall[]) => {
   for (const t of tables) {
     const call = calls.find(c => c.table === t.table)
     const eps = call ? endpointsForFactory(call) : []
-    console.log(
-      `  ${bold(t.table)} ${dim(`(${t.factory})`)}${eps.length > 0 ? ` ${dim(`[${eps.length} reducers]`)}` : ''}`
-    )
+    const reducerLabel = dim(`[${eps.length} reducers]`)
+    const reducerBadge = eps.length > 0 ? ` ${reducerLabel}` : ''
+    console.log(`  ${bold(t.table)} ${paren(t.factory)}${reducerBadge}`)
     for (const f of t.fields) console.log(`    ${f.field.padEnd(20)} ${dim(f.type)}`)
     console.log('')
   }
@@ -164,7 +171,7 @@ const printEndpoints = (calls: FactoryCall[]) => {
   for (const call of calls) {
     const eps = endpointsForFactory(call)
     total += eps.length
-    console.log(`  ${bold(call.table)} ${dim(`(${call.factory})`)} ${dim(`— ${call.file}`)}`)
+    console.log(`  ${bold(call.table)} ${paren(call.factory)} ${dash(call.file)}`)
     console.log(`    ${eps.join(', ') || dim('(none)')}`)
     console.log('')
   }
@@ -216,11 +223,12 @@ const runCheck = (moduleDir: string, schemaFile: { content: string; path: string
   }
   const errors = issues.filter(i => i.level === 'error')
   const warnings = issues.filter(i => i.level === 'warn')
-  for (const issue of errors) console.log(`${red('✗')} ${issue.file ? `${dim(issue.file)} ` : ''}${issue.message}`)
-  for (const issue of warnings) console.log(`${yellow('⚠')} ${issue.file ? `${dim(issue.file)} ` : ''}${issue.message}`)
-  console.log(
-    `\n${errors.length > 0 ? red(`${errors.length} error(s)`) : ''}${errors.length > 0 && warnings.length > 0 ? ', ' : ''}${warnings.length > 0 ? yellow(`${warnings.length} warning(s)`) : ''}\n`
-  )
+  for (const issue of errors) console.log(`${red('✗')} ${filePrefix(issue.file)}${issue.message}`)
+  for (const issue of warnings) console.log(`${yellow('⚠')} ${filePrefix(issue.file)}${issue.message}`)
+  const errPart = errors.length > 0 ? red(`${errors.length} error(s)`) : ''
+  const sep = errors.length > 0 && warnings.length > 0 ? ', ' : ''
+  const warnPart = warnings.length > 0 ? yellow(`${warnings.length} warning(s)`) : ''
+  console.log(`\n${errPart}${sep}${warnPart}\n`)
   if (errors.length > 0) process.exit(1)
 }
 const FACTORY_DEFAULT_INDEXES: Record<string, TableIndex[]> = {
@@ -244,6 +252,7 @@ const findSchemaDefFile = (moduleDir: string): undefined | { content: string; pa
 }
 const extractCustomIndexes = (schemaContent: string): Map<string, TableIndex[]> => {
   const result = new Map<string, TableIndex[]>()
+  // eslint-disable-next-line sonarjs/super-linear-regex -- linear: exclusion-class quantifier cannot overlap the following literal comma
   const tableMatch = /(?<name>\w+)\s*:\s*table\([^,]+,\s*\{/gu
   let tm = tableMatch.exec(schemaContent)
   while (tm) {
@@ -267,6 +276,7 @@ const extractWhereFromOptions = (opts: string): string[] => {
     pos += 1
   }
   const block = opts.slice(braceStart + 1, pos - 1)
+  // eslint-disable-next-line sonarjs/super-linear-regex -- linear: single optional prefix then word chars, no ambiguous overlap
   const fieldPat = /(?<wkey>\$?\w+)\s*:/gu
   let fm = fieldPat.exec(block)
   while (fm) {
@@ -338,9 +348,11 @@ const printIndexReport = (moduleDir: string, calls: FactoryCall[]) => {
     const allFields = new Set<string>()
     for (const idx of allIndexes) for (const f of idx.fields) allFields.add(f)
     totalIndexes += allIndexes.length
-    console.log(`  ${bold(call.table)} ${dim(`(${call.factory})`)} ${dim(`— ${call.file}`)}`)
-    for (const idx of allIndexes)
-      console.log(`    ${green('✓')} ${idx.name} ${dim(`[${idx.fields.join(', ')}]`)} ${dim(`(${idx.type})`)}`)
+    console.log(`  ${bold(call.table)} ${paren(call.factory)} ${dash(call.file)}`)
+    for (const idx of allIndexes) {
+      const idxFields = dim(`[${idx.fields.join(', ')}]`)
+      console.log(`    ${green('✓')} ${idx.name} ${idxFields} ${paren(idx.type)}`)
+    }
     if (allIndexes.length === 0) console.log(`    ${dim('(no indexes detected)')}`)
     const tableWhereFields = whereByTable.get(call.table)
     if (tableWhereFields)
@@ -358,8 +370,9 @@ const printIndexReport = (moduleDir: string, calls: FactoryCall[]) => {
   console.log(`${bold(String(totalIndexes))} indexes across ${bold(String(calls.length))} tables\n`)
   if (issues.length > 0) {
     console.log(bold('Performance Suggestions\n'))
-    for (const issue of issues) console.log(`  ${yellow('⚠')} ${issue.file ? `${dim(issue.file)} ` : ''}${issue.message}`)
-    console.log(`\n${yellow(`${issues.length} unindexed where clause(s)`)}\n`)
+    for (const issue of issues) console.log(`  ${yellow('⚠')} ${filePrefix(issue.file)}${issue.message}`)
+    const unindexedSummary = yellow(`${issues.length} unindexed where clause(s)`)
+    console.log(`\n${unindexedSummary}\n`)
   } else console.log(green('✓ No unindexed where clauses detected\n'))
 }
 const accessForFactory = (call: FactoryCall): AccessEntry[] => {
@@ -382,7 +395,7 @@ const printAccessReport = (calls: FactoryCall[]) => {
   let totalEndpoints = 0
   for (const call of calls) {
     const entries = accessForFactory(call)
-    console.log(`  ${bold(call.table)} ${dim(`(${call.factory})`)} ${dim(`— ${call.file}`)}`)
+    console.log(`  ${bold(call.table)} ${paren(call.factory)} ${dash(call.file)}`)
     for (const entry of entries) {
       const icon = ACCESS_ICONS[entry.level] ?? '•'
       console.log(`    ${icon} ${yellow(entry.level)}: ${entry.endpoints.join(', ')}`)
@@ -479,22 +492,26 @@ const printHealthReport = (moduleDir: string, schemaFile: { content: string; pat
   const warnings = allIssues.filter(i => i.level === 'warn')
   const rawScore = HEALTH_MAX - errors.length * HEALTH_ERROR_PENALTY - warnings.length * HEALTH_WARN_PENALTY
   const score = Math.max(0, Math.min(HEALTH_MAX, rawScore))
-  const scoreColor = score >= 90 ? green : score >= 70 ? yellow : red
+  let scoreColor = red
+  if (score >= 90) scoreColor = green
+  else if (score >= 70) scoreColor = yellow
   console.log(bold('Project Health Report\n'))
-  console.log(`  ${bold('Score:')} ${scoreColor(`${score}/100`)}\n`)
+  const scoreText = scoreColor(`${score}/100`)
+  console.log(`  ${bold('Score:')} ${scoreText}\n`)
   console.log(`  ${dim('Tables:')}      ${calls.length}`)
   console.log(`  ${dim('Reducers:')}    ${totalEndpoints}`)
   console.log(`  ${dim('Indexes:')}     ${totalIndexes}`)
   console.log(`  ${dim('Access:')}      ${[...accessLevels].join(', ')}\n`)
   if (errors.length > 0) {
-    console.log(`  ${red('Errors')} ${dim(`(-${HEALTH_ERROR_PENALTY} pts each)`)}\n`)
-    for (const issue of errors) console.log(`    ${red('✗')} ${issue.file ? `${dim(issue.file)} ` : ''}${issue.message}`)
+    const errPenalty = dim(`(-${HEALTH_ERROR_PENALTY} pts each)`)
+    console.log(`  ${red('Errors')} ${errPenalty}\n`)
+    for (const issue of errors) console.log(`    ${red('✗')} ${filePrefix(issue.file)}${issue.message}`)
     console.log('')
   }
   if (warnings.length > 0) {
-    console.log(`  ${yellow('Warnings')} ${dim(`(-${HEALTH_WARN_PENALTY} pts each)`)}\n`)
-    for (const issue of warnings)
-      console.log(`    ${yellow('⚠')} ${issue.file ? `${dim(issue.file)} ` : ''}${issue.message}`)
+    const warnPenalty = dim(`(-${HEALTH_WARN_PENALTY} pts each)`)
+    console.log(`  ${yellow('Warnings')} ${warnPenalty}\n`)
+    for (const issue of warnings) console.log(`    ${yellow('⚠')} ${filePrefix(issue.file)}${issue.message}`)
     console.log('')
   }
   if (allIssues.length === 0) console.log(`  ${green('✓ No issues found')}\n`)

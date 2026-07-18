@@ -44,28 +44,27 @@ const validatorMeta = (val: IntrospectedValidator): Meta => {
     return validatorMeta(val.value as IntrospectedValidator)
   return { type: 'unknown' }
 }
-const buildArgs = (specs: ArgSpecs): ManifestArg[] => {
-  const out: ManifestArg[] = []
-  for (const [name, spec] of Object.entries(specs)) {
-    const introspected = introspect(spec.v)
-    const { type, enum: en } = validatorMeta(introspected)
-    out.push({
-      description: spec.description,
-      name: `--${KEBAB(name)}`,
-      required: spec.required !== false,
-      type,
-      ...(en ? { enum: en } : {}),
-      ...(spec.aliases && spec.aliases.length > 0 ? { aliases: spec.aliases.map(a => `--${KEBAB(a)}`) } : {}),
-      ...(spec.pattern === undefined ? {} : { pattern: spec.pattern }),
-      ...(spec.min === undefined ? {} : { min: spec.min }),
-      ...(spec.max === undefined ? {} : { max: spec.max }),
-      ...(spec.minLength === undefined ? {} : { minLength: spec.minLength }),
-      ...(spec.maxLength === undefined ? {} : { maxLength: spec.maxLength }),
-      ...(spec.integer === undefined ? {} : { integer: spec.integer })
-    })
+type ArgSpec = ArgSpecs[string]
+const buildArgEntry = (name: string, spec: ArgSpec): ManifestArg => {
+  const { type, enum: en } = validatorMeta(introspect(spec.v))
+  const entry: ManifestArg = {
+    description: spec.description,
+    name: `--${KEBAB(name)}`,
+    required: spec.required !== false,
+    type
   }
-  return out
+  if (en) entry.enum = en
+  if (spec.aliases && spec.aliases.length > 0) entry.aliases = spec.aliases.map(a => `--${KEBAB(a)}`)
+  if (spec.pattern !== undefined) entry.pattern = spec.pattern
+  if (spec.min !== undefined) entry.min = spec.min
+  if (spec.max !== undefined) entry.max = spec.max
+  if (spec.minLength !== undefined) entry.minLength = spec.minLength
+  if (spec.maxLength !== undefined) entry.maxLength = spec.maxLength
+  if (spec.integer !== undefined) entry.integer = spec.integer
+  return entry
 }
+const buildArgs = (specs: ArgSpecs): ManifestArg[] =>
+  Object.entries(specs).map(([name, spec]) => buildArgEntry(name, spec))
 const exampleFromFixture = (path: readonly string[], fixture: Record<string, unknown>): string => {
   const [provider, ...rest] = path.map(KEBAB)
   const parts: string[] = [provider ?? '', ...rest]
@@ -165,6 +164,6 @@ const findValidPath = (
     const seg = isMatchAtPrefix ? entry.path[bestMatch] : null
     if (seg) childSet.add(seg)
   }
-  return { validChildren: [...childSet].toSorted(), validPath }
+  return { validChildren: [...childSet].toSorted((a, b) => a.localeCompare(b)), validPath }
 }
 export { buildArgs, buildTree, findCommand, findValidPath }

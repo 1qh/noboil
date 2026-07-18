@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* eslint-disable no-console, no-control-regex, @typescript-eslint/no-unnecessary-condition, complexity */
+/* eslint-disable no-console, no-control-regex, @typescript-eslint/no-unnecessary-condition */
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { didYouMean, parseFlags } from '../src/convex/tools/parser'
@@ -155,6 +155,17 @@ const printTree = (tree: Record<string, ManifestNode>, indent = 0): void => {
     if (node.children) printTree(node.children, indent + 1)
   }
 }
+const argConstraintStr = (a: ManifestCommand['args'][number]): string => {
+  const constraints: string[] = []
+  if (a.pattern) constraints.push(`regex=${a.pattern}`)
+  if (a.minLength !== undefined) constraints.push(`minLen=${a.minLength}`)
+  if (a.maxLength !== undefined) constraints.push(`maxLen=${a.maxLength}`)
+  if (a.min !== undefined) constraints.push(`min=${a.min}`)
+  if (a.max !== undefined) constraints.push(`max=${a.max}`)
+  if (a.integer) constraints.push('integer')
+  if (a.aliases && a.aliases.length > 0) constraints.push(`aliases=${a.aliases.join(',')}`)
+  return constraints.length > 0 ? ` [${constraints.join(' ')}]` : ''
+}
 const printCommandHelp = (path: string[], cmd: ManifestCommand): void => {
   console.log(`${strip(cmd.description)}\n`)
   const required = cmd.args.filter(a => a.required)
@@ -166,16 +177,7 @@ const printCommandHelp = (path: string[], cmd: ManifestCommand): void => {
   for (const a of cmd.args) {
     const enumPart = a.enum ? ` (${a.enum.join('|')})` : ''
     const reqPart = a.required ? '' : ' [optional]'
-    const constraints: string[] = []
-    if (a.pattern) constraints.push(`regex=${a.pattern}`)
-    if (a.minLength !== undefined) constraints.push(`minLen=${a.minLength}`)
-    if (a.maxLength !== undefined) constraints.push(`maxLen=${a.maxLength}`)
-    if (a.min !== undefined) constraints.push(`min=${a.min}`)
-    if (a.max !== undefined) constraints.push(`max=${a.max}`)
-    if (a.integer) constraints.push('integer')
-    if (a.aliases && a.aliases.length > 0) constraints.push(`aliases=${a.aliases.join(',')}`)
-    const constraintStr = constraints.length > 0 ? ` [${constraints.join(' ')}]` : ''
-    console.log(`  ${a.name.padEnd(24)} ${strip(a.description)}${enumPart}${reqPart}${constraintStr}`)
+    console.log(`  ${a.name.padEnd(24)} ${strip(a.description)}${enumPart}${reqPart}${argConstraintStr(a)}`)
   }
   if (cmd.examples.length > 0) {
     console.log('\nExamples:')
@@ -232,11 +234,12 @@ const rejectUnknownFlag = (cmd: ManifestCommand, coerced: Record<string, unknown
     }
 }
 const printProviderIndex = (manifest: Manifest): void => {
-  const providerKeys = Object.keys(manifest.tree).toSorted()
+  const providerKeys = Object.keys(manifest.tree).toSorted((a, b) => a.localeCompare(b))
   console.log('Providers (each installed as a top-level binary):')
   for (const k of providerKeys) {
     const p = manifest.tree[k]
-    console.log(`  ${k}${p?.description ? `  —  ${p.description}` : ''}`)
+    const descPart = p?.description ? `  —  ${p.description}` : ''
+    console.log(`  ${k}${descPart}`)
   }
   console.log("\nRun `<provider> --help` to list that provider's commands.")
   console.log('Run `<provider> <command> --help` for command usage.')
@@ -330,6 +333,40 @@ const printLocalHelp = (): void => {
   console.log('')
   console.log('Set CLI_SESSION_*, CONVEX_SELF_HOSTED_ADMIN_KEY, or X_API_KEY to discover providers.')
 }
+const resolveProviderArgv = (manifest: Manifest, argv0: string[]): string[] => {
+  const providerBinaries = new Set(Object.keys(manifest.tree).map(p => p.replace(PROVIDER_PREFIX_RE, '')))
+  const invoked = (process.argv[1] ?? '').split('/').pop() ?? ''
+  const invokedBinary = invoked.endsWith('.mjs') ? invoked.slice(0, -4) : invoked
+  const alias = providerBinaries.has(invokedBinary) ? invokedBinary : null
+  const providerKey = alias
+    ? (Object.keys(manifest.tree).find(k => k.replace(PROVIDER_PREFIX_RE, '') === alias) ?? alias)
+    : null
+  return providerKey ? [providerKey, ...argv0] : argv0
+}
+const handleGroupNode = ({
+  flagTokens,
+  isHelp,
+  node,
+  path
+}: {
+  flagTokens: string[]
+  isHelp: boolean
+  node: ManifestNode
+  path: string[]
+}): void => {
+  if (isHelp || flagTokens.length === 0) {
+    console.log(`${path.join(' ')} — ${node.description ?? ''}`)
+    console.log('')
+    if (node.children) printTree(node.children)
+    return
+  }
+  console.error(
+    JSON.stringify({
+      error: { category: 'input', code: 'INVALID_ARG', message: `${path.join(' ')} is a group; specify a command` }
+    })
+  )
+  process.exit(2)
+}
 const main = async (argv0: string[] = process.argv.slice(2)): Promise<void> => {
   if (argv0.length === 0 || (argv0.length === 1 && (argv0[0] === '--help' || argv0[0] === '-h'))) {
     printLocalHelp()
@@ -341,14 +378,7 @@ const main = async (argv0: string[] = process.argv.slice(2)): Promise<void> => {
     return
   }
   const manifest = await fetchManifest()
-  const providerBinaries = new Set(Object.keys(manifest.tree).map(p => p.replace(PROVIDER_PREFIX_RE, '')))
-  const invoked = (process.argv[1] ?? '').split('/').pop() ?? ''
-  const invokedBinary = invoked.endsWith('.mjs') ? invoked.slice(0, -4) : invoked
-  const alias = providerBinaries.has(invokedBinary) ? invokedBinary : null
-  const providerKey = alias
-    ? (Object.keys(manifest.tree).find(k => k.replace(PROVIDER_PREFIX_RE, '') === alias) ?? alias)
-    : null
-  const argv = providerKey ? [providerKey, ...argv0] : argv0
+  const argv = resolveProviderArgv(manifest, argv0)
   const isHelp = argv.includes('--help') || argv.includes('-h')
   const { path, consumed } = walkCommandPath(manifest, argv)
   const flagTokens = argv.slice(consumed).filter(t => t !== '--help' && t !== '-h' && t !== '--')
@@ -362,18 +392,8 @@ const main = async (argv0: string[] = process.argv.slice(2)): Promise<void> => {
     return
   }
   if (node.kind !== 'command') {
-    if (isHelp || flagTokens.length === 0) {
-      console.log(`${path.join(' ')} — ${node.description ?? ''}`)
-      console.log('')
-      if (node.children) printTree(node.children)
-      return
-    }
-    console.error(
-      JSON.stringify({
-        error: { category: 'input', code: 'INVALID_ARG', message: `${path.join(' ')} is a group; specify a command` }
-      })
-    )
-    process.exit(2)
+    handleGroupNode({ flagTokens, isHelp, node, path })
+    return
   }
   const cmd = node.command
   if (!cmd) {

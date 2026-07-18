@@ -1,5 +1,5 @@
 /* oxlint-disable promise/prefer-await-to-then */
-/* eslint-disable complexity */
+import type { Key } from 'ink'
 import { Box, render, Text, useApp, useInput } from 'ink'
 import { join } from 'node:path'
 import { useEffect, useState } from 'react'
@@ -57,56 +57,49 @@ const DashboardApp = ({ cwd, manifest, onExit, version }: DashboardProps) => {
   const [filterMode, setFilterMode] = useState(false)
   const [recentIdx, setRecentIdx] = useState(-1)
   const filtered = filter ? COMMANDS.filter(c => c.name.toLowerCase().includes(filter.toLowerCase())) : COMMANDS
-  useInput((input, key) => {
-    if (!filterMode) {
-      if (input === '/') {
-        setFilterMode(true)
-        return
-      }
-      if (recent.length > 0 && key.upArrow) {
-        setRecentIdx(i => Math.min(i + 1, recent.length - 1))
-        return
-      }
-      if (recent.length > 0 && key.downArrow) {
-        setRecentIdx(i => Math.max(i - 1, -1))
-        return
-      }
-      if (recentIdx >= 0 && key.return) {
-        const entry = recent[recentIdx]
-        if (entry) {
-          app.exit()
-          onExit(entry.cmd as Action)
-          return
-        }
-      }
-      const match = COMMANDS.find(c => c.key === input)
-      if (match) {
-        app.exit()
-        onExit(match.action)
-        return
-      }
-      if (input === 'q' || (key.ctrl && input === 'c') || key.escape) {
-        app.exit()
-        onExit('exit')
-      }
+  const exitWith = (action: Action): void => {
+    app.exit()
+    onExit(action)
+  }
+  const handleNavInput = (input: string, key: Key): void => {
+    if (input === '/') {
+      setFilterMode(true)
       return
     }
+    if (recent.length > 0 && key.upArrow) {
+      setRecentIdx(i => Math.min(i + 1, recent.length - 1))
+      return
+    }
+    if (recent.length > 0 && key.downArrow) {
+      setRecentIdx(i => Math.max(i - 1, -1))
+      return
+    }
+    const recentEntry = recentIdx >= 0 && key.return ? recent[recentIdx] : undefined
+    if (recentEntry) {
+      exitWith(recentEntry.cmd as Action)
+      return
+    }
+    const match = COMMANDS.find(c => c.key === input)
+    if (match) {
+      exitWith(match.action)
+      return
+    }
+    if (input === 'q' || (key.ctrl && input === 'c') || key.escape) exitWith('exit')
+  }
+  const handleFilterInput = (input: string, key: Key): void => {
     if (key.escape) {
       setFilterMode(false)
       setFilter('')
       return
     }
     if (key.ctrl && input === 'c') {
-      app.exit()
-      onExit('exit')
+      exitWith('exit')
       return
     }
     if (key.return) {
       const pick = filtered[0]
-      if (pick) {
-        app.exit()
-        onExit(pick.action)
-      } else {
+      if (pick) exitWith(pick.action)
+      else {
         setFilterMode(false)
         setFilter('')
       }
@@ -117,6 +110,10 @@ const DashboardApp = ({ cwd, manifest, onExit, version }: DashboardProps) => {
       return
     }
     if (input && !key.ctrl && !key.meta && PRINTABLE_KEY.test(input)) setFilter(f => f + input)
+  }
+  useInput((input, key) => {
+    if (filterMode) handleFilterInput(input, key)
+    else handleNavInput(input, key)
   })
   return (
     <Box flexDirection='column' padding={1}>

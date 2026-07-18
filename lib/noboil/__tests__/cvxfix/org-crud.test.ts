@@ -79,12 +79,12 @@ describe('makeOrgCrud integration', () => {
       items: [{ name: 'B1' }, { name: 'B2' }, { name: 'B3' }],
       orgId
     })) as string[]
-    expect(ids.length).toBe(3)
+    expect(ids).toHaveLength(3)
     const updated = (await callMutate(tt, api.projects.update, {
       items: ids.map((id, i) => ({ id, name: `U${i}` })),
       orgId
     })) as ProjectDoc[]
-    expect(updated.length).toBe(3)
+    expect(updated).toHaveLength(3)
     const deleted = await callMutate(tt, api.projects.rm, { ids, orgId })
     expect(deleted).toBe(3)
   })

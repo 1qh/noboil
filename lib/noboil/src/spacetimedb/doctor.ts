@@ -30,6 +30,7 @@ const isSchemaFile = (content: string): boolean => {
   for (const marker of schemaMarkers) if (content.includes(marker)) return true
   return false
 }
+// eslint-disable-next-line sonarjs/cognitive-complexity -- directory-tree search across candidate module locations
 const findModuleDir = (root: string): string | undefined => {
   const candidates = [
     root,
@@ -102,8 +103,8 @@ const extractFactoryCalls = (moduleDir: string): FactoryCall[] => {
   return calls
 }
 const checkSpacetimeCli = (): CheckResult => {
-  // oxlint-disable-next-line node/no-sync
-  const result = spawnSync('spacetime', ['--version'], { encoding: 'utf8' })
+  // oxlint-disable-next-line node/no-sync -- CLI tool: synchronous spawn by design
+  const result = spawnSync('spacetime', ['--version'], { encoding: 'utf8' }) // eslint-disable-line sonarjs/no-os-command-from-path -- dev tooling, trusted PATH
   if (result.status !== 0)
     return {
       details: ['spacetime CLI not found on PATH — install from https://spacetimedb.com/install'],
@@ -114,8 +115,8 @@ const checkSpacetimeCli = (): CheckResult => {
   return { details: [version || 'spacetime CLI available'], status: 'pass', title: 'Spacetime CLI' }
 }
 const checkDocker = (): CheckResult => {
-  // oxlint-disable-next-line node/no-sync
-  const result = spawnSync('docker', ['ps', '--format', '{{.Names}}'], { encoding: 'utf8' })
+  // oxlint-disable-next-line node/no-sync -- CLI tool: synchronous spawn by design
+  const result = spawnSync('docker', ['ps', '--format', '{{.Names}}'], { encoding: 'utf8' }) // eslint-disable-line sonarjs/no-os-command-from-path -- dev tooling, trusted PATH
   if (result.status !== 0)
     return { details: ['Docker not running or not installed'], status: 'warn', title: 'Docker Health' }
   const names = result.stdout.trim().split('\n').filter(Boolean)
@@ -174,6 +175,7 @@ interface DoctorReport {
 const emitJson = (report: DoctorReport) => {
   process.stdout.write(`${JSON.stringify(report)}\n`)
 }
+// eslint-disable-next-line sonarjs/cognitive-complexity -- top-level diagnostics orchestration branching json vs human output per check
 const doctor = (opts?: { json?: boolean }) => {
   const json = opts?.json ?? false
   const root = process.cwd()
@@ -283,9 +285,12 @@ const doctor = (opts?: { json?: boolean }) => {
     for (const d of r.details) console.log(`    • ${d}`)
     console.log('')
   }
-  const scoreColor = score >= 90 ? green : score >= 70 ? yellow : red
+  let scoreColor = red
+  if (score >= 90) scoreColor = green
+  else if (score >= 70) scoreColor = yellow
   console.log(`Summary: ${passed} passed, ${warned} warning(s), ${failed} error(s)`)
-  console.log(`Health Score: ${scoreColor(`${score}/${HEALTH_MAX}`)}\n`)
+  const scoreText = scoreColor(`${score}/${HEALTH_MAX}`)
+  console.log(`Health Score: ${scoreText}\n`)
 }
 const run = (argv: readonly string[] = []) => {
   if (argv.includes('--help') || argv.includes('-h')) {

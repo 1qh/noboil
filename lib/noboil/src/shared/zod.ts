@@ -1,4 +1,3 @@
-/* eslint-disable complexity */
 import type { core, input, output, ZodObject, ZodType } from 'zod/v4'
 import { isRecord } from './server/helpers'
 
@@ -79,7 +78,8 @@ const requiredPartial = <S extends ZodObject>(schema: S, requiredKeys: (keyof S[
   for (const k of requiredKeys) required[k as string] = true
   return partial.required(required)
 }
-const defaultValue = (schema: unknown): unknown => {
+const WRAPPER_NO_DEFAULT = Symbol('no-default')
+const walkWrapperDefault = (schema: unknown): unknown => {
   let cur = schema as undefined | ZodSchema
   while (cur && typeof cur === 'object' && 'type' in cur) {
     if (cur.type === 'prefault') {
@@ -93,6 +93,18 @@ const defaultValue = (schema: unknown): unknown => {
     if (!WRAPPERS.has(cur.type)) break
     cur = (cur.def as { innerType?: ZodSchema }).innerType
   }
+  return WRAPPER_NO_DEFAULT
+}
+const stringDefault = (base: unknown): string => {
+  if (base && typeof base === 'object' && 'options' in base) {
+    const opts = (base as { options: readonly string[] }).options
+    return opts[0] ?? ''
+  }
+  return ''
+}
+const defaultValue = (schema: unknown): unknown => {
+  const wrapped = walkWrapperDefault(schema)
+  if (wrapped !== WRAPPER_NO_DEFAULT) return wrapped
   const { schema: base, type } = unwrapZod(schema)
   const fk = fileKindOf(schema)
   if (fk === 'file') return null
@@ -100,13 +112,7 @@ const defaultValue = (schema: unknown): unknown => {
   if (isArrayType(type)) return []
   if (isBooleanType(type)) return false
   if (isNumberType(type)) return 0
-  if (isStringType(type)) {
-    if (base && 'options' in base) {
-      const opts = (base as { options: readonly string[] }).options
-      if (opts.length > 0) return opts[0]
-    }
-    return ''
-  }
+  if (isStringType(type)) return stringDefault(base)
   if (isDateType(type)) return null
   const inner = (base?.def as undefined | { innerType?: unknown })?.innerType
   if (inner) return defaultValue(inner)
@@ -182,10 +188,10 @@ const validateSchemas = (schemas: Record<string, unknown>) => {
   const res: CheckSchemaOutput[] = []
   for (const [table, s] of Object.entries(schemas))
     if (s && typeof s === 'object' && 'shape' in s) scanSchema(s, table, res)
-  if (res.length > 0)
-    throw new Error(
-      `Unsupported Zod types in schema:\n${res.map(f => `  ${f.path}: "${f.zodType}" — use plain types instead`).join('\n')}`
-    )
+  if (res.length > 0) {
+    const details = res.map(f => `  ${f.path}: "${f.zodType}" — use plain types instead`).join('\n')
+    throw new Error(`Unsupported Zod types in schema:\n${details}`)
+  }
 }
 const checkSchema = (schemas: Record<string, ZodObject>) => {
   const res: CheckSchemaOutput[] = []

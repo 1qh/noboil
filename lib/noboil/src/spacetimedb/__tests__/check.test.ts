@@ -3,6 +3,7 @@ import { describe, expect, test } from 'bun:test'
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { captured } from '../../shared/test'
 import {
   run as checkRun,
   checkSchemaConsistency,
@@ -14,7 +15,6 @@ import {
 import { run as doctorRun } from '../doctor'
 import { run as migrateRun } from '../migrate'
 import { run as vizRun } from '../viz'
-import { captured } from '../../shared/test'
 
 const silenced = (fn: () => unknown) => {
   const orig = console.log
@@ -86,7 +86,7 @@ describe('stdb check helpers', () => {
       }
       let out = ''
       try {
-        out = captured(() => {
+        ;({ out } = captured(() => {
           try {
             vizRun([])
           } catch (error) {
@@ -97,7 +97,7 @@ describe('stdb check helpers', () => {
           } catch (error) {
             if (!(error instanceof Error) || error.message !== '__exit__') throw error
           }
-        }).out
+        }))
       } finally {
         process.exit = origExit
       }
@@ -143,10 +143,10 @@ describe('stdb check helpers', () => {
       }
       let out = ''
       try {
-        out = captured(() => {
+        ;({ out } = captured(() => {
           for (const flag of ['--endpoints', '--schema', '--access', '--indexes', '--health', ''])
             tryRun(flag ? [flag] : [])
-        }).out
+        }))
       } finally {
         process.exit = origExit
       }
@@ -327,13 +327,13 @@ describe('stdb check helpers', () => {
       }
       let out = ''
       try {
-        out = captured(() => {
+        ;({ out } = captured(() => {
           try {
             checkRun([])
           } catch (error) {
             if (!(error instanceof Error && error.message.startsWith('__exit__'))) throw error
           }
-        }).out
+        }))
       } finally {
         process.exit = origExit
       }
@@ -370,13 +370,13 @@ describe('stdb check helpers', () => {
       }
       let out = ''
       try {
-        out = captured(() => {
+        ;({ out } = captured(() => {
           try {
             checkRun([])
           } catch (error) {
             if (!(error instanceof Error && error.message.startsWith('__exit__'))) throw error
           }
-        }).out
+        }))
       } finally {
         process.exit = origExit
       }
@@ -450,10 +450,10 @@ describe('stdb check helpers', () => {
       }
       let out = ''
       try {
-        out = captured(() => {
+        ;({ out } = captured(() => {
           for (const flag of ['--indexes', '--access', '--health', '--schema', '--endpoints', ''])
             tryRun(flag ? [flag] : [])
-        }).out
+        }))
       } finally {
         process.exit = origExit
       }
@@ -492,13 +492,13 @@ describe('stdb check helpers', () => {
       }
       let out = ''
       try {
-        out = captured(() => {
+        ;({ out } = captured(() => {
           try {
             checkRun([])
           } catch (error) {
             if (!(error instanceof Error && error.message.startsWith('__exit__'))) throw error
           }
-        }).out
+        }))
       } finally {
         process.exit = origExit
       }

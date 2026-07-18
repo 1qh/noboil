@@ -22,8 +22,9 @@ interface TableSnapshot {
   name: string
 }
 const schemaMarkers = ['schema(', 'table(', 't.']
+// eslint-disable-next-line sonarjs/super-linear-regex -- linear: exclusion-class quantifier cannot overlap the following literal comma
 const tablePat = /(?<tname>\w+)\s*:\s*table\([^,]+,\s*\{/gu
-const fieldLinePat = /^\s*(?<fname>\w+)\s*:\s*(?<ftype>.+?)\s*,?$/u
+const fieldLinePat = /^\s*(?<fname>\w+)\s*:/u
 const isSchemaFile = (content: string): boolean => {
   for (const marker of schemaMarkers) if (content.includes(marker)) return true
   return false
@@ -71,6 +72,7 @@ const parseSchemaContent = (content: string): SchemaSnapshot => {
   tablePat.lastIndex = 0
   return { tables: tables.toSorted((a, b) => a.name.localeCompare(b.name)) }
 }
+// eslint-disable-next-line sonarjs/cognitive-complexity -- structural schema diff walking tables and fields across two snapshots
 const diffSnapshots = (before: SchemaSnapshot, after: SchemaSnapshot): MigrationAction[] => {
   const actions: MigrationAction[] = []
   const beforeMap = new Map<string, TableSnapshot>()
@@ -144,10 +146,11 @@ const findSchemaFile = (root: string): undefined | { content: string; path: stri
   }
 }
 const getSchemaFromGit = (ref: string, filePath: string): string | undefined => {
-  // oxlint-disable-next-line node/no-sync
-  const result = spawnSync('git', ['show', `${ref}:${filePath}`], { encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] })
+  // oxlint-disable-next-line node/no-sync -- CLI tool: synchronous spawn by design
+  const result = spawnSync('git', ['show', `${ref}:${filePath}`], { encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] }) // eslint-disable-line sonarjs/no-os-command-from-path -- dev tooling, trusted PATH
   return result.status === 0 ? result.stdout : undefined
 }
+const stepLabel = (n: number): string => `Step ${n}:`
 const printMigrationPlan = (actions: MigrationAction[]) => {
   if (actions.length === 0) {
     console.log(green('✓ No schema changes detected\n'))
@@ -176,7 +179,7 @@ const printMigrationPlan = (actions: MigrationAction[]) => {
     let step = 1
     for (const a of fieldAddedReq) {
       const fa = a as MigrationAction & { field: string }
-      console.log(`\n  ${yellow(`Step ${step}:`)} Backfill ${cyan(fa.field)} on ${cyan(fa.table)}`)
+      console.log(`\n  ${yellow(stepLabel(step))} Backfill ${cyan(fa.field)} on ${cyan(fa.table)}`)
       console.log(dim('    1. Publish with field optional first'))
       console.log(dim('    2. Backfill existing rows with reducer/script'))
       console.log(dim('    3. Publish again with field required'))
@@ -184,7 +187,7 @@ const printMigrationPlan = (actions: MigrationAction[]) => {
     }
     for (const a of fieldRemoved) {
       const fa = a as MigrationAction & { field: string }
-      console.log(`\n  ${yellow(`Step ${step}:`)} Remove ${cyan(fa.field)} from ${cyan(fa.table)}`)
+      console.log(`\n  ${yellow(stepLabel(step))} Remove ${cyan(fa.field)} from ${cyan(fa.table)}`)
       console.log(dim('    1. Stop writing the field in reducers'))
       console.log(dim('    2. Publish schema without the field'))
       step += 1
@@ -192,7 +195,7 @@ const printMigrationPlan = (actions: MigrationAction[]) => {
     for (const a of fieldTypeChanged) {
       const fa = a as MigrationAction & { field: string; from: string; to: string }
       console.log(
-        `\n  ${yellow(`Step ${step}:`)} Migrate ${cyan(fa.field)} on ${cyan(fa.table)}: ${red(fa.from)} → ${green(fa.to)}`
+        `\n  ${yellow(stepLabel(step))} Migrate ${cyan(fa.field)} on ${cyan(fa.table)}: ${red(fa.from)} → ${green(fa.to)}`
       )
       console.log(dim('    1. Add parallel field with target type'))
       console.log(dim('    2. Backfill and swap reducer usage'))
@@ -200,7 +203,7 @@ const printMigrationPlan = (actions: MigrationAction[]) => {
       step += 1
     }
     for (const a of tableRemoved) {
-      console.log(`\n  ${red(`Step ${step}:`)} Remove table ${cyan(a.table)}`)
+      console.log(`\n  ${red(stepLabel(step))} Remove table ${cyan(a.table)}`)
       console.log(dim('    1. Remove reducer references in app code'))
       console.log(dim('    2. Publish schema without the table'))
       step += 1

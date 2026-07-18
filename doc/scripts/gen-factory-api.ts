@@ -4,8 +4,11 @@ import { readFileSync } from 'node:fs'
 import { DOCS_DIR, LIB_NOBOIL, replaceBetween } from './lib'
 
 const STDB = `${LIB_NOBOIL}/src/spacetimedb/server`
+// eslint-disable-next-line sonarjs/super-linear-regex -- matches one trimmed source line from trusted repo source; bounded non-adversarial input
 const NAME_RE = /(?<role>\w+)Name\s*=\s*`(?<tpl>[^`]+)`/u
+// eslint-disable-next-line regexp/no-super-linear-backtracking, sonarjs/super-linear-regex -- matches one trimmed JSDoc line from trusted repo source; bounded non-adversarial input
 const JSDOC_RE = /^\s*\/\*\*\s*(?<text>.+?)\s*\*\/\s*$/u
+// eslint-disable-next-line regexp/no-super-linear-backtracking, sonarjs/super-linear-regex -- matches one trimmed JSDoc params line from trusted repo source; bounded non-adversarial input
 const PARAMS_RE = /^\[params:\s+(?<params>.+?)\]\s+(?<desc>.+)$/u
 interface Entry {
   desc: string
@@ -40,9 +43,11 @@ const factoryRows = (factory: string, names: Entry[]): string[] => {
   return names.map((n, i) => {
     // biome-ignore lint/suspicious/noTemplateCurlyInString: intentional literal placeholder to replace
     const tpl = `\`${n.tpl.replaceAll('${tableName}', '{table}')}\``
-    const params = n.params ? `\`${n.params.replaceAll('|', String.raw`\|`)}\`` : ''
+    const escapedParams = n.params.replaceAll('|', String.raw`\|`)
+    const params = n.params ? `\`${escapedParams}\`` : ''
     const desc = n.desc.replaceAll('|', String.raw`\|`)
-    return `| ${i === 0 ? `\`${factory}\`` : ' '} | ${tpl} | ${params} | ${desc} |`
+    const label = i === 0 ? `\`${factory}\`` : ' '
+    return `| ${label} | ${tpl} | ${params} | ${desc} |`
   })
 }
 const main = () => {

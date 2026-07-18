@@ -23,22 +23,28 @@ describe('stdb react devtools', () => {
     expect(typeof STALE_THRESHOLD_MS).toBe('number')
   })
   test('mutation tracking lifecycle', () => {
-    const id = trackMutation('addTodo', { title: 't' })
-    completeMutation(id, 'success')
+    expect(() => {
+      const id = trackMutation('addTodo', { title: 't' })
+      completeMutation(id, 'success')
+    }).not.toThrow()
   })
   test('subscription tracking lifecycle', () => {
-    const id = trackSubscription('list', {})
-    updateSubscription(id, 'loaded')
-    updateSubscriptionData(id, [{ x: 1 }], 'preview')
-    untrackSubscription(id)
+    expect(() => {
+      const id = trackSubscription('list', {})
+      updateSubscription(id, 'loaded')
+      updateSubscriptionData(id, [{ x: 1 }], 'preview')
+      untrackSubscription(id)
+    }).not.toThrow()
   })
   test('reducer-call tracking + injectError + pushError', () => {
-    const id = trackReducerCall('createTodo', { title: 't' })
-    completeReducerCall(id, 'success')
-    injectError('UNKNOWN', { message: 'forced' })
-    pushError(new Error('boom'))
-    clearErrors()
-    clearMutations()
+    expect(() => {
+      const id = trackReducerCall('createTodo', { title: 't' })
+      completeReducerCall(id, 'success')
+      injectError('UNKNOWN', { message: 'forced' })
+      pushError(new Error('boom'))
+      clearErrors()
+      clearMutations()
+    }).not.toThrow()
   })
   test('trackCacheAccess records hit/miss', () => {
     expect(() => {

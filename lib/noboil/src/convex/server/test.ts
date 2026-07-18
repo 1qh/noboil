@@ -176,6 +176,7 @@ const makeTestAuth = <DM extends GenericDataModel>(config: TestAuthConfig<DM>) =
   const cleanupOrgTestData = mutation({
     // oxlint-disable-next-line unicorn/max-nested-calls
     args: { slugPrefix: v.string(), tables: v.optional(v.array(v.string())) },
+    // eslint-disable-next-line sonarjs/cognitive-complexity -- test-data cleanup scans many tables with nested filters; test-only helper, refactoring risks the untestable teardown path
     handler: async (ctx: { db: DbLike }, { slugPrefix, tables }: { slugPrefix: string; tables?: string[] }) => {
       if (!isTestMode()) return { count: 0, done: true }
       const allOrgs = await ctx.db.query('org').collect()

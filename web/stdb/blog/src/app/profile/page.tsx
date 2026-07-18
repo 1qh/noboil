@@ -91,22 +91,24 @@ const Page = () => {
   const profile = profiles.find(p => identity && p.userId.isEqual(identity)) ?? null
   const shouldShowContent = isReady || isPlaywright()
   const resolvedAvatar = useResolveFileUrl(profile?.avatar)
+  const resolveValues = () => {
+    if (!shouldShowContent) return
+    if (profile)
+      return {
+        avatar: resolvedAvatar,
+        bio: profile.bio,
+        displayName: profile.displayName,
+        notifications: profile.notifications,
+        theme: profile.theme
+      }
+    return { displayName: '', notifications: true, theme: 'system' as const }
+  }
   const form = useFormMutation({
     mutate: useReducer(reducers.upsertBlogProfile),
     resetOnSuccess: false,
     schema: profileSchema,
     toast: { success: 'Profile saved' },
-    values: shouldShowContent
-      ? profile
-        ? {
-            avatar: resolvedAvatar,
-            bio: profile.bio,
-            displayName: profile.displayName,
-            notifications: profile.notifications,
-            theme: profile.theme
-          }
-        : { displayName: '', notifications: true, theme: 'system' as const }
-      : undefined
+    values: resolveValues()
   })
   if (!shouldShowContent)
     return (

@@ -16,7 +16,9 @@ const queryTable = async <T>(config: {
 }): Promise<QueryResult<T>> => {
   const { columns = ['*'], limit, moduleName, table, token, uri, where } = config
   const cols = columns.join(', ')
-  const sql = `SELECT ${cols} FROM ${table}${where ? ` WHERE ${where}` : ''}${limit ? ` LIMIT ${limit}` : ''}`
+  const whereClause = where ? ` WHERE ${where}` : ''
+  const limitClause = limit ? ` LIMIT ${limit}` : ''
+  const sql = `SELECT ${cols} FROM ${table}${whereClause}${limitClause}`
   const response = await fetch(`${uri}/v1/database/${moduleName}/sql`, {
     body: sql,
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'text/plain' },

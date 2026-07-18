@@ -31,36 +31,27 @@
   "type": "module",
   "exports": {
     ".": "./src/noboil.ts",
-    "./config": "./src/config.ts",
-    "./package.json": "./package.json",
+    "./ansi": "./src/ansi.ts",
     "./components": {
       "noboil-spacetimedb": "./src/spacetimedb/components/index.ts",
       "default": "./src/convex/components/index.ts"
     },
-    "./react": {
-      "noboil-spacetimedb": "./src/spacetimedb/react/index.ts",
-      "default": "./src/convex/react/index.ts"
-    },
-    "./server": {
-      "noboil-spacetimedb": "./src/spacetimedb/server/index.ts",
-      "default": "./src/convex/server/index.ts"
-    },
-    "./schema": {
-      "noboil-spacetimedb": "./src/spacetimedb/schema.ts",
-      "default": "./src/convex/schema.ts"
-    },
-    "./zod": {
-      "noboil-spacetimedb": "./src/spacetimedb/zod.ts",
-      "default": "./src/convex/zod.ts"
-    },
-    "./retry": {
-      "noboil-spacetimedb": "./src/spacetimedb/retry.ts",
-      "default": "./src/convex/retry.ts"
-    },
-    "./seed": {
-      "noboil-spacetimedb": "./src/spacetimedb/seed.ts",
-      "default": "./src/convex/seed.ts"
-    },
+    "./config": "./src/config.ts",
+    "./convex": "./src/convex/index.ts",
+    "./convex/components": "./src/convex/components/index.ts",
+    "./convex/eslint": "./src/convex/eslint.ts",
+    "./convex/next": "./src/convex/next/index.ts",
+    "./convex/react": "./src/convex/react/index.ts",
+    "./convex/retry": "./src/convex/retry.ts",
+    "./convex/schema": "./src/convex/schema.ts",
+    "./convex/seed": "./src/convex/seed.ts",
+    "./convex/server": "./src/convex/server/index.ts",
+    "./convex/test": "./src/convex/server/test.ts",
+    "./convex/test/discover": "./src/convex/server/test-discover.ts",
+    "./convex/tools": "./src/convex/tools/index.ts",
+    "./convex/tools/codegen": "./src/convex/tools/codegen/index.ts",
+    "./convex/zod": "./src/convex/zod.ts",
+    "./env-file": "./src/shared/env-file.ts",
     "./eslint": {
       "noboil-spacetimedb": "./src/spacetimedb/eslint.ts",
       "default": "./src/convex/eslint.ts"
@@ -69,6 +60,39 @@
       "noboil-spacetimedb": "./src/spacetimedb/next/index.ts",
       "default": "./src/convex/next/index.ts"
     },
+    "./package.json": "./package.json",
+    "./react": {
+      "noboil-spacetimedb": "./src/spacetimedb/react/index.ts",
+      "default": "./src/convex/react/index.ts"
+    },
+    "./retry": {
+      "noboil-spacetimedb": "./src/spacetimedb/retry.ts",
+      "default": "./src/convex/retry.ts"
+    },
+    "./schema": {
+      "noboil-spacetimedb": "./src/spacetimedb/schema.ts",
+      "default": "./src/convex/schema.ts"
+    },
+    "./seed": {
+      "noboil-spacetimedb": "./src/spacetimedb/seed.ts",
+      "default": "./src/convex/seed.ts"
+    },
+    "./server": {
+      "noboil-spacetimedb": "./src/spacetimedb/server/index.ts",
+      "default": "./src/convex/server/index.ts"
+    },
+    "./spacetimedb": "./src/spacetimedb/index.ts",
+    "./spacetimedb/components": "./src/spacetimedb/components/index.ts",
+    "./spacetimedb/eslint": "./src/spacetimedb/eslint.ts",
+    "./spacetimedb/next": "./src/spacetimedb/next/index.ts",
+    "./spacetimedb/react": "./src/spacetimedb/react/index.ts",
+    "./spacetimedb/retry": "./src/spacetimedb/retry.ts",
+    "./spacetimedb/schema": "./src/spacetimedb/schema.ts",
+    "./spacetimedb/seed": "./src/spacetimedb/seed.ts",
+    "./spacetimedb/server": "./src/spacetimedb/server/index.ts",
+    "./spacetimedb/test": "./src/spacetimedb/server/test.ts",
+    "./spacetimedb/test/discover": "./src/spacetimedb/server/test-discover.ts",
+    "./spacetimedb/zod": "./src/spacetimedb/zod.ts",
     "./test": {
       "noboil-spacetimedb": "./src/spacetimedb/server/test.ts",
       "default": "./src/convex/server/test.ts"
@@ -77,36 +101,12 @@
       "noboil-spacetimedb": "./src/spacetimedb/server/test-discover.ts",
       "default": "./src/convex/server/test-discover.ts"
     },
-    "./ansi": "./src/ansi.ts",
-    "./env-file": "./src/shared/env-file.ts",
     "./test/utils": "./src/shared/test/index.ts",
     "./walk": "./src/shared/walk.ts",
-    "./convex": "./src/convex/index.ts",
-    "./convex/server": "./src/convex/server/index.ts",
-    "./convex/zod": "./src/convex/zod.ts",
-    "./convex/retry": "./src/convex/retry.ts",
-    "./convex/schema": "./src/convex/schema.ts",
-    "./convex/react": "./src/convex/react/index.ts",
-    "./convex/components": "./src/convex/components/index.ts",
-    "./convex/eslint": "./src/convex/eslint.ts",
-    "./convex/next": "./src/convex/next/index.ts",
-    "./convex/test": "./src/convex/server/test.ts",
-    "./convex/test/discover": "./src/convex/server/test-discover.ts",
-    "./convex/tools": "./src/convex/tools/index.ts",
-    "./convex/tools/codegen": "./src/convex/tools/codegen/index.ts",
-    "./convex/seed": "./src/convex/seed.ts",
-    "./spacetimedb": "./src/spacetimedb/index.ts",
-    "./spacetimedb/server": "./src/spacetimedb/server/index.ts",
-    "./spacetimedb/zod": "./src/spacetimedb/zod.ts",
-    "./spacetimedb/retry": "./src/spacetimedb/retry.ts",
-    "./spacetimedb/schema": "./src/spacetimedb/schema.ts",
-    "./spacetimedb/react": "./src/spacetimedb/react/index.ts",
-    "./spacetimedb/components": "./src/spacetimedb/components/index.ts",
-    "./spacetimedb/eslint": "./src/spacetimedb/eslint.ts",
-    "./spacetimedb/next": "./src/spacetimedb/next/index.ts",
-    "./spacetimedb/test": "./src/spacetimedb/server/test.ts",
-    "./spacetimedb/test/discover": "./src/spacetimedb/server/test-discover.ts",
-    "./spacetimedb/seed": "./src/spacetimedb/seed.ts"
+    "./zod": {
+      "noboil-spacetimedb": "./src/spacetimedb/zod.ts",
+      "default": "./src/convex/zod.ts"
+    }
   },
   "bin": {
     "noboil": "./src/index.ts"
@@ -170,8 +170,5 @@
   },
   "engines": {
     "bun": ">=1.3"
-  },
-  "publishConfig": {
-    "access": "public"
   }
 }

@@ -11,6 +11,12 @@ import {
   schemaMarkers
 } from '../eslint-factory'
 
+type RuleMap = Record<string, { create: (ctx: unknown) => Record<string, unknown> }>
+const makeRuleGetter = (rules: RuleMap) => (k: string) => {
+  const r = rules[k]
+  if (!r) throw new Error(`missing rule: ${k}`)
+  return r
+}
 describe('schemaMarkers', () => {
   test('includes the expected wrapper invocations', () => {
     expect(schemaMarkers).toContain('makeOwned(')
@@ -150,8 +156,8 @@ describe('buildRules', () => {
     const apiCasing = rules['api-casing']
     if (!apiCasing) throw new Error('expected api-casing rule')
     const visitor = apiCasing.create({
-      cwd: '/tmp',
-      filename: '/tmp/x.ts',
+      cwd: '/project',
+      filename: '/project/x.ts',
       report: (d: { messageId: string }) => reports.push(d)
     }) as { MemberExpression: (n: unknown) => void }
     visitor.MemberExpression({
@@ -188,8 +194,8 @@ describe('buildRules', () => {
     const rule = rules['require-rate-limit']
     if (!rule) throw new Error('expected require-rate-limit')
     const visitor = rule.create({
-      cwd: '/tmp',
-      filename: '/tmp/x.ts',
+      cwd: '/project',
+      filename: '/project/x.ts',
       report: (d: { messageId: string }) => reports.push(d)
     }) as { CallExpression: (n: unknown) => void }
     visitor.CallExpression({
@@ -224,16 +230,12 @@ describe('buildRules', () => {
     } as never
     const rules = buildRules(cfg) as Record<string, { create: (ctx: unknown) => Record<string, unknown> }>
     const ctx = {
-      cwd: '/tmp',
-      filename: '/tmp/x.ts',
+      cwd: '/project',
+      filename: '/project/x.ts',
       report: (d: { messageId: string }) => reports.push(d),
       sourceCode: { getAncestors: () => [] }
     }
-    const get = (k: string) => {
-      const r = rules[k]
-      if (!r) throw new Error(`missing rule: ${k}`)
-      return r
-    }
+    const get = makeRuleGetter(rules)
     const naming = (get('consistent-crud-naming').create(ctx) as { CallExpression: (n: unknown) => void }).CallExpression
     naming({
       arguments: [
@@ -348,16 +350,12 @@ describe('buildRules', () => {
     } as never
     const rules = buildRules(cfg) as Record<string, { create: (ctx: unknown) => Record<string, unknown> }>
     const ctx = {
-      cwd: '/tmp',
-      filename: '/tmp/x.ts',
+      cwd: '/project',
+      filename: '/project/x.ts',
       report: (d: { messageId: string }) => reports.push(d),
       sourceCode: { getAncestors: () => [] }
     }
-    const get = (k: string) => {
-      const r = rules[k]
-      if (!r) throw new Error(`missing rule: ${k}`)
-      return r
-    }
+    const get = makeRuleGetter(rules)
     const um = (get('no-unprotected-mutation').create(ctx) as { CallExpression: (n: unknown) => void }).CallExpression
     um({
       arguments: [
@@ -445,12 +443,12 @@ describe('buildRules', () => {
     const rule = rules['no-unlimited-file-size']
     if (!rule) throw new Error('expected rule')
     const visitor = rule.create({
-      cwd: '/tmp',
-      filename: '/tmp/x.ts',
+      cwd: '/project',
+      filename: '/project/x.ts',
       report: (d: { messageId: string }) => reports.push(d)
     }) as { Program: (n: unknown) => void }
     visitor.Program({ type: 'Program' })
-    expect(reports.length).toBe(0)
+    expect(reports).toHaveLength(0)
   })
   test('no-raw-fetch isInsideTryBlock skips inside TryStatement and async-in-CallExpression', () => {
     const reports: { messageId: string }[] = []
@@ -478,15 +476,15 @@ describe('buildRules', () => {
     const insideTry = [{ type: 'TryStatement' }] as never[]
     const insideAsyncCall = [{ type: 'CallExpression' }, { type: 'ArrowFunctionExpression' }] as never[]
     const ctxFor = (anc: never[]) => ({
-      cwd: '/tmp',
-      filename: '/tmp/x.ts',
+      cwd: '/project',
+      filename: '/project/x.ts',
       report: (d: { messageId: string }) => reports.push(d),
       sourceCode: { getAncestors: () => anc }
     })
     const node = { callee: { name: 'fetchQuery', type: 'Identifier' }, type: 'CallExpression' }
     ;(rule.create(ctxFor(insideTry)) as { CallExpression: (n: unknown) => void }).CallExpression(node)
     ;(rule.create(ctxFor(insideAsyncCall)) as { CallExpression: (n: unknown) => void }).CallExpression(node)
-    expect(reports.length).toBe(0)
+    expect(reports).toHaveLength(0)
   })
   test('require-rate-limit skips when options has rateLimit prop (hasProperty path)', () => {
     const reports: { messageId: string }[] = []
@@ -512,8 +510,8 @@ describe('buildRules', () => {
     const rule = rules['require-rate-limit']
     if (!rule) throw new Error('expected rule')
     const visitor = rule.create({
-      cwd: '/tmp',
-      filename: '/tmp/x.ts',
+      cwd: '/project',
+      filename: '/project/x.ts',
       report: (d: { messageId: string }) => reports.push(d)
     }) as { CallExpression: (n: unknown) => void }
     visitor.CallExpression({
@@ -534,7 +532,7 @@ describe('buildRules', () => {
       callee: { name: 'crud', type: 'Identifier' },
       type: 'CallExpression'
     })
-    expect(reports.length).toBe(0)
+    expect(reports).toHaveLength(0)
   })
   test('discovery-check getContextRoot walks subdirectories', () => {
     const reports: { messageId: string }[] = []
@@ -558,8 +556,8 @@ describe('buildRules', () => {
     } as never
     const rules = buildRules(cfg) as Record<string, { create: (ctx: unknown) => Record<string, unknown> }>
     const ctx = {
-      cwd: '/tmp',
-      filename: '/tmp/a/b/c/x.ts',
+      cwd: '/project',
+      filename: '/project/a/b/c/x.ts',
       report: (d: { messageId: string }) => reports.push(d),
       sourceCode: { getAncestors: () => [] }
     }
@@ -567,7 +565,6 @@ describe('buildRules', () => {
     if (!dRule) throw new Error('expected rule')
     const visitor = dRule.create(ctx) as { Program?: (n: unknown) => void }
     if (visitor.Program) visitor.Program({ type: 'Program' })
-    // Empty schema + no modules → discovery fails and the rule reports discoveryFailed.
     expect(reports).toHaveLength(1)
     expect(reports[0]?.messageId).toBe('discoveryFailed')
   })
@@ -593,8 +590,8 @@ describe('buildRules', () => {
     } as never
     const rules = buildRules(cfg) as Record<string, { create: (ctx: unknown) => Record<string, unknown> }>
     const ctx = {
-      cwd: '/tmp',
-      filename: '/tmp/x.ts',
+      cwd: '/project',
+      filename: '/project/x.ts',
       report: (d: { messageId: string }) => reports.push(d),
       sourceCode: { getAncestors: () => [] }
     }
@@ -639,8 +636,8 @@ describe('buildRules', () => {
     } as never
     const rules = buildRules(cfg) as Record<string, { create: (ctx: unknown) => Record<string, unknown> }>
     const ctx = {
-      cwd: '/tmp',
-      filename: '/tmp/x.ts',
+      cwd: '/project',
+      filename: '/project/x.ts',
       report: (d: { messageId: string }) => reports.push(d),
       sourceCode: { getAncestors: () => [] }
     }
@@ -717,14 +714,10 @@ describe('buildRules', () => {
       },
       type: 'ArrowFunctionExpression'
     }
-    const get = (k: string) => {
-      const r = rules[k]
-      if (!r) throw new Error(`missing rule: ${k}`)
-      return r
-    }
+    const get = makeRuleGetter(rules)
     const visitor = get('require-connection').create({
-      cwd: '/tmp',
-      filename: '/tmp/page.tsx',
+      cwd: '/project',
+      filename: '/project/page.tsx',
       report: (d: { messageId: string }) => reports.push(d),
       sourceCode: {
         getAncestors: () => [asyncBlockWithoutConnection]
@@ -734,12 +727,12 @@ describe('buildRules', () => {
     expect(reports.some(r => r.messageId === 'missingConnection')).toBe(true)
     reports.length = 0
     const visitor2 = get('require-connection').create({
-      cwd: '/tmp',
-      filename: '/tmp/page.tsx',
+      cwd: '/project',
+      filename: '/project/page.tsx',
       report: (d: { messageId: string }) => reports.push(d),
       sourceCode: { getAncestors: () => [asyncBlockWithConnection] }
     }) as { CallExpression: (n: unknown) => void }
     visitor2.CallExpression(fetchNode)
-    expect(reports.length).toBe(0)
+    expect(reports).toHaveLength(0)
   })
 })

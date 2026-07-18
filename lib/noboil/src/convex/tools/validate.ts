@@ -60,39 +60,41 @@ const checkNumberConstraints = (name: string, val: number, spec: ArgSpec): null 
     return { details: { arg: name }, message: `${name}: must be integer`, ok: false }
   return null
 }
+const buildUnknownError = (unknownKeys: string[], expected: string[]): ValidateErr => {
+  const didYouMean: Record<string, string> = {}
+  for (const u of unknownKeys) {
+    const s = suggestFlag(u, expected)
+    if (s) didYouMean[u] = s
+  }
+  return {
+    details: { did_you_mean: didYouMean, expected, unknown: unknownKeys },
+    message: `unknown args: ${unknownKeys.join(', ')}`,
+    ok: false
+  }
+}
+const validateOneArg = (opts: { expected: string[]; name: string; spec: ArgSpec; val: unknown }): null | ValidateErr => {
+  const { expected, name, spec, val } = opts
+  const empty = val === undefined || val === null || val === ''
+  if (empty) {
+    if (spec.required !== false)
+      return { details: { expected, missing: name }, message: `missing required: ${name}`, ok: false }
+    return null
+  }
+  if (typeof val === 'string') return checkStringConstraints(name, val, spec)
+  if (typeof val === 'number') return checkNumberConstraints(name, val, spec)
+  return null
+}
 const validateArgs = (specs: ArgSpecs, args: Record<string, unknown>): ValidateErr | ValidateOk => {
   const expected = Object.keys(specs)
   const unknownKeys = Object.keys(args).filter(k => !specs[k])
-  if (unknownKeys.length > 0) {
-    const didYouMean: Record<string, string> = {}
-    for (const u of unknownKeys) {
-      const s = suggestFlag(u, expected)
-      if (s) didYouMean[u] = s
-    }
-    return {
-      details: { did_you_mean: didYouMean, expected, unknown: unknownKeys },
-      message: `unknown args: ${unknownKeys.join(', ')}`,
-      ok: false
-    }
-  }
+  if (unknownKeys.length > 0) return buildUnknownError(unknownKeys, expected)
   const coerced: Record<string, unknown> = {}
   for (const [name, spec] of Object.entries(specs)) {
     const val = args[name]
+    const err = validateOneArg({ expected, name, spec, val })
+    if (err) return err
     const empty = val === undefined || val === null || val === ''
-    if (empty) {
-      if (spec.required !== false)
-        return { details: { expected, missing: name }, message: `missing required: ${name}`, ok: false }
-    } else {
-      if (typeof val === 'string') {
-        const err = checkStringConstraints(name, val, spec)
-        if (err) return err
-      }
-      if (typeof val === 'number') {
-        const err = checkNumberConstraints(name, val, spec)
-        if (err) return err
-      }
-      coerced[name] = val
-    }
+    if (!empty) coerced[name] = val
   }
   return { coerced, ok: true }
 }

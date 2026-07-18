@@ -1,6 +1,7 @@
 {
   "name": "@a/stdb-org",
   "private": true,
+  "description": "noboil stdb org demo app",
   "type": "module",
   "scripts": {
     "build": "next build --turbo",

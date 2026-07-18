@@ -1,6 +1,7 @@
 {
   "name": "@a/stdb-movie",
   "private": true,
+  "description": "noboil stdb movie demo app",
   "type": "module",
   "scripts": {
     "build": "next build --turbo",

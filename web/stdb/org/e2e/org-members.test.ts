@@ -88,7 +88,7 @@ test.describe
         await firstRevoke.click()
         await expect(firstRevoke).not.toBeVisible({ timeout: 5000 })
       }
-      expect(true).toBe(true)
+      await expect(page).toHaveURL(/\/members/u)
     })
   })
 test.describe
@@ -125,6 +125,6 @@ test.describe
         await firstApprove.click()
         await expect(firstApprove).not.toBeVisible({ timeout: 5000 })
       }
-      expect(true).toBe(true)
+      await expect(page).toHaveURL(/\/members/u)
     })
   })

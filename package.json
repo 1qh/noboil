@@ -1,6 +1,7 @@
 {
   "name": "a",
   "private": true,
+  "description": "noboil monorepo — a boilerplate-free full-stack starter with Convex and SpacetimeDB backends",
   "workspaces": [
     "web/cvx/*",
     "doc",
@@ -61,7 +62,7 @@
     "@types/mdx": "latest",
     "axe-core": "latest",
     "babel-plugin-react-compiler": "latest",
-    "lintmax": "latest",
+    "lintmax": "^0.1.82",
     "sherif": "latest",
     "simple-git-hooks": "latest",
     "ts-unused-exports": "latest",

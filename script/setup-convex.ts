@@ -74,7 +74,8 @@ const adminKeyMatch = adminKeyRe.exec(adminKeyRaw)
 if (!adminKeyMatch) throw new Error(`Failed to parse admin key: ${adminKeyRaw.slice(0, 200)}`)
 const adminKey = adminKeyMatch[0]
 patchEnv([['CONVEX_SELF_HOSTED_ADMIN_KEY', adminKey]])
-ok(`Admin key: ${c.dim(`${adminKey.slice(0, 26)}…${adminKey.slice(-6)}`)}`)
+const keyPreview = c.dim(`${adminKey.slice(0, 26)}…${adminKey.slice(-6)}`)
+ok(`Admin key: ${keyPreview}`)
 if (skipDeploy) {
   box('Convex ready (deploy skipped)', [`${c.bold('API')} ${u.convexApi} · ${c.bold('Dashboard')} ${u.convexDashboard}`])
   process.exit(0)
@@ -91,11 +92,12 @@ const feat = [
     ? `${c.green('✓')} TMDB (movie app)`
     : `${c.yellow('○')} TMDB ${c.dim('(set TMDB_KEY in .env for movie app)')}`
 ]
+const minioCreds = c.dim(`(${config.credentials.minio.user} / ${config.credentials.minio.password})`)
 box('Convex ready', [
   `${c.bold('API')}       ${u.convexApi}`,
   `${c.bold('Site')}      ${u.convexSite}`,
   `${c.bold('Dashboard')} ${u.convexDashboard}`,
-  `${c.bold('MinIO')}     ${u.minioConsole} ${c.dim(`(${config.credentials.minio.user} / ${config.credentials.minio.password})`)}`,
+  `${c.bold('MinIO')}     ${u.minioConsole} ${minioCreds}`,
   '',
   c.bold('Features'),
   ...feat,

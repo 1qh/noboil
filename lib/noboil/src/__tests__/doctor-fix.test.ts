@@ -33,20 +33,20 @@ describe('noboil doctor --fix', () => {
   })
   test('--fix patches tsconfig customConditions once', () => {
     // oxlint-disable-next-line node/no-sync
-    spawnSync('bun', [BIN, 'doctor', '--fix'], { cwd: dir, encoding: 'utf8', timeout: 15_000 })
+    spawnSync('bun', [BIN, 'doctor', '--fix'], { cwd: dir, encoding: 'utf8', timeout: 15_000 }) // eslint-disable-line sonarjs/no-os-command-from-path -- test invokes trusted bin by name
     // oxlint-disable-next-line node/no-sync
     const first = JSON.parse(readFileSync(join(dir, 'tsconfig.json'), 'utf8')) as {
       compilerOptions?: { customConditions?: string[] }
     }
     const firstConds = first.compilerOptions?.customConditions ?? []
-    expect(firstConds.filter(c => c === 'noboil-spacetimedb').length).toBe(1)
+    expect(firstConds.filter(c => c === 'noboil-spacetimedb')).toHaveLength(1)
     // oxlint-disable-next-line node/no-sync
-    spawnSync('bun', [BIN, 'doctor', '--fix'], { cwd: dir, encoding: 'utf8', timeout: 15_000 })
+    spawnSync('bun', [BIN, 'doctor', '--fix'], { cwd: dir, encoding: 'utf8', timeout: 15_000 }) // eslint-disable-line sonarjs/no-os-command-from-path -- test invokes trusted bin by name
     // oxlint-disable-next-line node/no-sync
     const second = JSON.parse(readFileSync(join(dir, 'tsconfig.json'), 'utf8')) as {
       compilerOptions?: { customConditions?: string[] }
     }
     const secondConds = second.compilerOptions?.customConditions ?? []
-    expect(secondConds.filter(c => c === 'noboil-spacetimedb').length).toBe(1)
+    expect(secondConds.filter(c => c === 'noboil-spacetimedb')).toHaveLength(1)
   })
 })

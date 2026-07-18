@@ -8,10 +8,10 @@ interface ParseEnumFieldResult<T extends string> {
   optional: boolean
   type: T | { enum: string[] }
 }
-const CAMEL_PAT = /(?<upper>[A-Z])/gu
+const CAMEL_PAT = /[A-Z]/gu
 const FIRST_CHAR_PAT = /^./u
 /** `camelCase` → `Title Case`. Used in scaffold templates for default labels. */
-const camelToTitle = (s: string) => s.replace(CAMEL_PAT, ' $1').replace(FIRST_CHAR_PAT, c => c.toUpperCase())
+const camelToTitle = (s: string) => s.replace(CAMEL_PAT, ' $&').replace(FIRST_CHAR_PAT, c => c.toUpperCase())
 const ENUM_PAT = /^enum\((?<values>[^)]+)\)$/u
 /** Parse a `name:type` or `name:enum(a,b)` field spec from the CLI's `--fields=` flag, with optional `?` suffix. */
 const parseEnumFieldDef = <T extends string>(raw: string, validTypes: Set<T>): null | ParseEnumFieldResult<T> => {

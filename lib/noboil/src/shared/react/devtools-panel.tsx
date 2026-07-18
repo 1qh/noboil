@@ -14,6 +14,16 @@ const POSITION_CLASSES: Record<Position, string> = {
 }
 const MAX_BADGE = 99
 const WATERFALL_MAX_MS = 10_000
+const hitRateColor = (hitRate: number): string => {
+  if (hitRate > 80) return 'text-primary'
+  if (hitRate > 50) return 'text-foreground'
+  return 'text-destructive'
+}
+const waterfallBarColor = (sub: DevSubscription, isSlow: (s: DevSubscription) => boolean): string => {
+  if (sub.status === 'loaded') return isSlow(sub) ? 'bg-destructive' : 'bg-primary'
+  if (sub.status === 'error') return 'bg-destructive'
+  return 'bg-primary'
+}
 const formatTime = (ts: number) => {
   const d = new Date(ts)
   const h = String(d.getHours()).padStart(2, '0')
@@ -40,13 +50,7 @@ const CacheRow = ({ entry }: { entry: DevCacheEntry }) => {
       <span className={cn('size-1.5 shrink-0 rounded-full', entry.stale ? 'bg-destructive' : 'bg-primary')} />
       <span className='shrink-0 font-mono text-muted-foreground'>{entry.table}</span>
       <span className='min-w-0 flex-1 truncate font-mono text-foreground'>{entry.key}</span>
-      <span
-        className={cn(
-          'shrink-0 font-mono tabular-nums',
-          hitRate > 80 ? 'text-primary' : hitRate > 50 ? 'text-foreground' : 'text-destructive'
-        )}>
-        {hitRate}%
-      </span>
+      <span className={cn('shrink-0 font-mono tabular-nums', hitRateColor(hitRate))}>{hitRate}%</span>
       <span className='shrink-0 text-muted-foreground tabular-nums'>
         {entry.hitCount}h/{entry.missCount}m
       </span>
@@ -73,14 +77,7 @@ const WaterfallBar = ({
   const duration = sub.latencyMs || now - sub.startedAt
   const leftPct = Math.min((offset / WATERFALL_MAX_MS) * 100, 100)
   const widthPct = Math.max(Math.min((duration / WATERFALL_MAX_MS) * 100, 100 - leftPct), 1)
-  const barColor =
-    sub.status === 'loaded'
-      ? isSlow(sub)
-        ? 'bg-destructive'
-        : 'bg-primary'
-      : sub.status === 'error'
-        ? 'bg-destructive'
-        : 'bg-primary'
+  const barColor = waterfallBarColor(sub, isSlow)
   return (
     <li className='flex items-center gap-2 border-b border-border px-2 py-1.5 text-xs last:border-b-0'>
       <span className='w-28 shrink-0 truncate font-mono text-muted-foreground'>{sub.query}</span>

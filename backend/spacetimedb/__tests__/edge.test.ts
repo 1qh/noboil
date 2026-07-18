@@ -10,10 +10,9 @@ describe('binding edges', () => {
     const reducerContextType: null | ReducerEventContext = null
     const subscriptionContextType: null | SubscriptionEventContext = null
     const errorContextType: ErrorContext | null = null
-    expect(eventContextType).toBeNull()
-    expect(reducerContextType).toBeNull()
-    expect(subscriptionContextType).toBeNull()
-    expect(errorContextType).toBeNull()
+    const contexts = [eventContextType, reducerContextType, subscriptionContextType, errorContextType]
+    expect(contexts).toHaveLength(4)
+    expect(contexts).toEqual([null, null, null, null])
   })
   test('movie reducers are exposed in generated accessors', () => {
     expect(typeof reducers.createMovie).toBe('object')

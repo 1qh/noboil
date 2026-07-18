@@ -106,6 +106,7 @@ const makeLog = <DB, Tbl extends LogTableLike, T extends string = string>(
   const restoreName = `restore_${tableName}_by_parent`
   const appendParams: FieldBuilders = { ...fields, idempotencyKey: idempotencyKeyField, parent: parentField }
   const purgeParams: FieldBuilders = { parent: parentField }
+  // eslint-disable-next-line sonarjs/cognitive-complexity -- append reducer threading rate-limit, idempotency, and hook lifecycle
   const appendReducer = spacetimedb.reducer({ name: appendName }, appendParams, (ctx, args) => {
     if (rateLimit) enforceRateLimit(tableName, ctx.sender, rateLimit, Number(ctx.timestamp.microsSinceUnixEpoch / 1000n))
     const hookCtx = hkCtx(ctx)
@@ -158,6 +159,7 @@ const makeLog = <DB, Tbl extends LogTableLike, T extends string = string>(
     parent: string
     rawPayload: Record<string, unknown>
     table: LogTableLike
+    // eslint-disable-next-line sonarjs/cognitive-complexity -- idempotency resolver scanning existing rows and sequence bookkeeping
   }): Record<string, unknown> | undefined => {
     let maxSeq = 0
     if (idempotencyKey)

@@ -22,6 +22,25 @@ type Position = 'bottom-left' | 'bottom-right' | 'top-left' | 'top-right'
 type TabId = 'cache' | 'errors' | 'reducers' | 'subs'
 const isStale = (sub: DevSubscription) => sub.status === 'loaded' && Date.now() - sub.lastUpdate > STALE_THRESHOLD_MS
 const isSlow = (sub: DevSubscription) => sub.latencyMs > SLOW_THRESHOLD_MS
+const subStatusColor = (status: DevSubscription['status'], stale: boolean): string => {
+  if (status === 'loaded') return stale ? 'text-foreground' : 'text-primary'
+  if (status === 'error') return 'text-destructive'
+  return 'text-primary'
+}
+const subDotClass = (status: DevSubscription['status'], stale: boolean): string => {
+  if (status === 'loaded') return stale ? 'bg-destructive' : 'bg-primary'
+  if (status === 'error') return 'bg-destructive'
+  return 'bg-primary'
+}
+const reducerStatusColor = (status: DevMutation['status']): string => {
+  if (status === 'error') return 'text-destructive'
+  return 'text-primary'
+}
+const reducerDotClass = (status: DevMutation['status']): string => {
+  if (status === 'success') return 'bg-primary'
+  if (status === 'error') return 'bg-destructive'
+  return 'animate-pulse bg-primary'
+}
 const ConnectionBadge = ({ connection }: { connection: DevConnection }) => {
   const dotClass = connection.isActive ? 'bg-primary' : 'bg-destructive'
   const status = connection.isActive ? 'connected' : 'disconnected'
@@ -74,14 +93,7 @@ const SubRow = ({ sub }: { sub: DevSubscription }) => {
   const [expanded, setExpanded] = useState(false)
   const stale = isStale(sub)
   const slow = isSlow(sub)
-  const statusColor =
-    sub.status === 'loaded'
-      ? stale
-        ? 'text-foreground'
-        : 'text-primary'
-      : sub.status === 'error'
-        ? 'text-destructive'
-        : 'text-primary'
+  const statusColor = subStatusColor(sub.status, stale)
   const statusLabel = stale ? 'stale' : sub.status
   const latencyLabel = sub.latencyMs > 0 ? `${sub.latencyMs}ms` : ''
   return (
@@ -90,18 +102,7 @@ const SubRow = ({ sub }: { sub: DevSubscription }) => {
         className='flex w-full items-center gap-2 px-3 py-2 text-left text-xs hover:bg-muted/50'
         onClick={() => setExpanded(v => !v)}
         type='button'>
-        <span
-          className={cn(
-            'size-1.5 shrink-0 rounded-full',
-            sub.status === 'loaded'
-              ? stale
-                ? 'bg-destructive'
-                : 'bg-primary'
-              : sub.status === 'error'
-                ? 'bg-destructive'
-                : 'bg-primary'
-          )}
-        />
+        <span className={cn('size-1.5 shrink-0 rounded-full', subDotClass(sub.status, stale))} />
         <span className='min-w-0 flex-1 truncate font-mono text-foreground'>{sub.query}</span>
         {latencyLabel ? (
           <span className={cn('shrink-0 font-mono tabular-nums', slow ? 'text-foreground' : 'text-muted-foreground')}>
@@ -128,27 +129,18 @@ const SubRow = ({ sub }: { sub: DevSubscription }) => {
   )
 }
 const ReducerRow = ({ mutation }: { mutation: DevMutation }) => {
-  const statusColor =
-    mutation.status === 'success' ? 'text-primary' : mutation.status === 'error' ? 'text-destructive' : 'text-primary'
+  const statusColor = reducerStatusColor(mutation.status)
   const durationLabel = mutation.durationMs > 0 ? `${mutation.durationMs}ms` : 'pending'
   return (
     <li className='flex items-center gap-2 border-b border-border px-3 py-2 text-xs last:border-b-0'>
-      <span
-        className={cn(
-          'size-1.5 shrink-0 rounded-full',
-          mutation.status === 'success'
-            ? 'bg-primary'
-            : mutation.status === 'error'
-              ? 'bg-destructive'
-              : 'animate-pulse bg-primary'
-        )}
-      />
+      <span className={cn('size-1.5 shrink-0 rounded-full', reducerDotClass(mutation.status))} />
       <span className='shrink-0 pt-px font-mono text-muted-foreground'>{formatTime(mutation.startedAt)}</span>
       <span className='min-w-0 flex-1 truncate font-mono text-foreground'>{mutation.name}</span>
       <span className={cn('shrink-0 font-mono tabular-nums', statusColor)}>{durationLabel}</span>
     </li>
   )
 }
+const emptyMsg = (text: string) => <p className='px-3 py-6 text-center text-xs text-muted-foreground'>{text}</p>
 const Devtools = ({
   buttonClassName,
   className,
@@ -156,6 +148,7 @@ const Devtools = ({
   defaultTab = 'errors',
   panelClassName,
   position = 'bottom-right'
+  // eslint-disable-next-line sonarjs/cognitive-complexity -- top-level devtools panel branching per active tab and counter state
 }: DevtoolsProps = {}) => {
   const { cache, clear, clearMutations, connection, errors, mutations, subscriptions } = useDevErrors()
   const posClass = POSITION_CLASSES[position]
@@ -174,6 +167,76 @@ const Devtools = ({
   const count = errorCount
   const minStart = subscriptions.length > 0 ? Math.min(...subscriptions.map(s => s.startedAt)) : 0
   const connWarnCount = connection.isActive ? 0 : 1
+  const anyAlert = count > 0 || connWarnCount > 0 || staleCount > 0 || pendingCount > 0
+  const closedBgClass = anyAlert
+    ? 'bg-destructive text-foreground hover:bg-destructive'
+    : 'bg-muted text-muted-foreground hover:bg-muted'
+  const renderClosedBadge = () => {
+    if (count > 0) return <span className='text-sm font-bold'>{count > MAX_BADGE ? `${MAX_BADGE}+` : count}</span>
+    if (pendingCount > 0) return <span className='text-sm font-bold'>{pendingCount}</span>
+    if (staleCount > 0) return <span className='text-sm font-bold'>{staleCount}</span>
+    if (connWarnCount > 0) return <span className='text-sm font-bold'>!</span>
+    return <span className='text-base'>S</span>
+  }
+  const errorCountSuffix = errorCount > 0 ? ` (${errorCount})` : ''
+  const subCountSuffix = subCount > 0 ? ` (${subCount})` : ''
+  const staleSuffix = staleCount > 0 ? ` . ${staleCount}!` : ''
+  const slowSuffix = slowCount > 0 ? ` . ${slowCount}~` : ''
+  const reducerCountSuffix = reducerCount > 0 ? ` (${reducerCount})` : ''
+  const pendingSuffix = pendingCount > 0 ? ` . ${pendingCount}` : ''
+  const cacheCountSuffix = cacheCount > 0 ? ` (${cacheCount})` : ''
+  const errorsLabel = `Errors${errorCountSuffix}`
+  const subsLabel = `Subs${subCountSuffix}${staleSuffix}${slowSuffix}`
+  const reducersLabel = `Reducers${reducerCountSuffix}${pendingSuffix}`
+  const cacheLabel = `Cache${cacheCountSuffix}`
+  const renderPanelBody = () => {
+    if (tab === 'errors') {
+      if (errorCount === 0) return emptyMsg('No errors')
+      return (
+        <ul>
+          {errors.map(e => (
+            <ErrorRow error={e} key={e.id} />
+          ))}
+        </ul>
+      )
+    }
+    if (tab === 'subs') {
+      if (subCount === 0) return emptyMsg('No active subscriptions')
+      if (showWaterfall)
+        return (
+          <ul>
+            {subscriptions.map(s => (
+              <WaterfallBar isSlow={isSlow} key={s.id} minStart={minStart} sub={s} />
+            ))}
+          </ul>
+        )
+      return (
+        <ul>
+          {subscriptions.map(s => (
+            <SubRow key={s.id} sub={s} />
+          ))}
+        </ul>
+      )
+    }
+    if (tab === 'reducers') {
+      if (reducerCount === 0) return emptyMsg('No reducer calls tracked')
+      return (
+        <ul>
+          {mutations.map(m => (
+            <ReducerRow key={m.id} mutation={m} />
+          ))}
+        </ul>
+      )
+    }
+    if (cacheCount === 0) return emptyMsg('No cache entries')
+    return (
+      <ul>
+        {cache.map(c => (
+          <CacheRow entry={c} key={c.id} />
+        ))}
+      </ul>
+    )
+  }
   if (!open)
     return (
       <button
@@ -181,28 +244,14 @@ const Devtools = ({
           'fixed',
           posClass,
           'z-9999 flex size-10 items-center justify-center rounded-full shadow-lg transition-colors',
-          count > 0 || connWarnCount > 0
-            ? 'bg-destructive text-foreground hover:bg-destructive'
-            : staleCount > 0 || pendingCount > 0
-              ? 'bg-destructive text-foreground hover:bg-destructive'
-              : 'bg-muted text-muted-foreground hover:bg-muted',
+          closedBgClass,
           className,
           buttonClassName
         )}
         onClick={() => setOpen(v => !v)}
         title='noboil DevTools'
         type='button'>
-        {count > 0 ? (
-          <span className='text-sm font-bold'>{count > MAX_BADGE ? `${MAX_BADGE}+` : count}</span>
-        ) : pendingCount > 0 ? (
-          <span className='text-sm font-bold'>{pendingCount}</span>
-        ) : staleCount > 0 ? (
-          <span className='text-sm font-bold'>{staleCount}</span>
-        ) : connWarnCount > 0 ? (
-          <span className='text-sm font-bold'>!</span>
-        ) : (
-          <span className='text-base'>S</span>
-        )}
+        {renderClosedBadge()}
       </button>
     )
   return (
@@ -216,26 +265,10 @@ const Devtools = ({
       )}>
       <div className='flex items-center justify-between border-b border-border bg-background px-3 py-2'>
         <div className='flex gap-1'>
-          <TabBtn
-            active={tab === 'errors'}
-            label={`Errors${errorCount > 0 ? ` (${errorCount})` : ''}`}
-            onClick={() => setTab('errors')}
-          />
-          <TabBtn
-            active={tab === 'subs'}
-            label={`Subs${subCount > 0 ? ` (${subCount})` : ''}${staleCount > 0 ? ` . ${staleCount}!` : ''}${slowCount > 0 ? ` . ${slowCount}~` : ''}`}
-            onClick={() => setTab('subs')}
-          />
-          <TabBtn
-            active={tab === 'reducers'}
-            label={`Reducers${reducerCount > 0 ? ` (${reducerCount})` : ''}${pendingCount > 0 ? ` . ${pendingCount}` : ''}`}
-            onClick={() => setTab('reducers')}
-          />
-          <TabBtn
-            active={tab === 'cache'}
-            label={`Cache${cacheCount > 0 ? ` (${cacheCount})` : ''}`}
-            onClick={() => setTab('cache')}
-          />
+          <TabBtn active={tab === 'errors'} label={errorsLabel} onClick={() => setTab('errors')} />
+          <TabBtn active={tab === 'subs'} label={subsLabel} onClick={() => setTab('subs')} />
+          <TabBtn active={tab === 'reducers'} label={reducersLabel} onClick={() => setTab('reducers')} />
+          <TabBtn active={tab === 'cache'} label={cacheLabel} onClick={() => setTab('cache')} />
         </div>
         <div className='flex gap-1'>
           {tab === 'errors' ? (
@@ -296,53 +329,7 @@ const Devtools = ({
           </p>
         ) : null}
       </div>
-      <div className='max-h-80 overflow-y-auto'>
-        {tab === 'errors' ? (
-          errorCount === 0 ? (
-            <p className='px-3 py-6 text-center text-xs text-muted-foreground'>No errors</p>
-          ) : (
-            <ul>
-              {errors.map(e => (
-                <ErrorRow error={e} key={e.id} />
-              ))}
-            </ul>
-          )
-        ) : tab === 'subs' ? (
-          subCount === 0 ? (
-            <p className='px-3 py-6 text-center text-xs text-muted-foreground'>No active subscriptions</p>
-          ) : showWaterfall ? (
-            <ul>
-              {subscriptions.map(s => (
-                <WaterfallBar isSlow={isSlow} key={s.id} minStart={minStart} sub={s} />
-              ))}
-            </ul>
-          ) : (
-            <ul>
-              {subscriptions.map(s => (
-                <SubRow key={s.id} sub={s} />
-              ))}
-            </ul>
-          )
-        ) : tab === 'reducers' ? (
-          reducerCount === 0 ? (
-            <p className='px-3 py-6 text-center text-xs text-muted-foreground'>No reducer calls tracked</p>
-          ) : (
-            <ul>
-              {mutations.map(m => (
-                <ReducerRow key={m.id} mutation={m} />
-              ))}
-            </ul>
-          )
-        ) : cacheCount === 0 ? (
-          <p className='px-3 py-6 text-center text-xs text-muted-foreground'>No cache entries</p>
-        ) : (
-          <ul>
-            {cache.map(c => (
-              <CacheRow entry={c} key={c.id} />
-            ))}
-          </ul>
-        )}
-      </div>
+      <div className='max-h-80 overflow-y-auto'>{renderPanelBody()}</div>
     </div>
   )
 }

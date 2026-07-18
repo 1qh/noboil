@@ -47,7 +47,7 @@ const ensureModuleName = (moduleName?: string): string => {
 }
 const DEFAULT_WS_URL = DEFAULT_WS_URI
 const CONNECT_TIMEOUT_MS = 10_000
-const IDENTIFIER_RE = /^[A-Za-z_][A-Za-z0-9_]*$/u
+const IDENTIFIER_RE = /^[A-Za-z_]\w*$/u
 const isTestMode = isStdbTestMode
 const REMOTE_MODULE = {
   procedures: [],
@@ -135,6 +135,7 @@ const normalizeReducerArgs = (ctx: TestContext, reducerName: string, args?: unkn
   for (const name of reducerParams) values.push(argRecord[name])
   return values
 }
+// eslint-disable-next-line sonarjs/cognitive-complexity -- SQL field extractor probing multiple possible schema element layouts
 const getSqlFields = (schema: unknown): string[] => {
   if (!schema || typeof schema !== 'object') return []
   const schemaRecord = schema as Record<string, unknown>
@@ -144,11 +145,9 @@ const getSqlFields = (schema: unknown): string[] => {
       ? (schemaRecord.Product as Record<string, unknown>).elements
       : undefined
   const fields: string[] = []
-  const elementsSource = Array.isArray(directElements)
-    ? directElements
-    : Array.isArray(productElements)
-      ? productElements
-      : []
+  let elementsSource: unknown[] = []
+  if (Array.isArray(directElements)) elementsSource = directElements
+  else if (Array.isArray(productElements)) elementsSource = productElements
   for (const item of elementsSource)
     if (item && typeof item === 'object') {
       const itemRecord = item as Record<string, unknown>

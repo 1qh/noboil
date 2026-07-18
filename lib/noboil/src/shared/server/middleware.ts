@@ -127,7 +127,8 @@ const SCRIPT_TAG_PATTERN = /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi
 const EVENT_HANDLER_PATTERN = /\bon\w+\s*=/giu
 const JAVASCRIPT_PROTO_PATTERN = /javascript\s*:/giu
 const DATA_URI_SCRIPT_PATTERN = /data\s*:\s*text\/html/giu
-const DANGEROUS_TAG_PATTERN = /<\s*\/?\s*(?:iframe|object|embed|applet|form|base|meta|svg|math|details|marquee)\b[^>]*>/giu
+const DANGEROUS_TAG_PATTERN =
+  /<\s*(?:\/\s*)?(?:iframe|object|embed|applet|form|base|meta|svg|math|details|marquee)\b[^>]*>/giu
 const HTML_ENCODED_SCRIPT_PATTERN = /&#(?:x0*(?:3c|3e)|0*(?:60|62));/giu
 const sanitizeString = (val: string): string => {
   let result = val
@@ -144,19 +145,18 @@ const sanitizeString = (val: string): string => {
   }
   return result
 }
+const sanitizeArrayElement = (el: unknown, recurse: (r: Rec) => Rec): unknown => {
+  if (typeof el === 'string') return sanitizeString(el)
+  if (el && typeof el === 'object' && !Array.isArray(el)) return recurse(el as Rec)
+  return el
+}
 const sanitizeRec = (data: Rec): Rec => {
   const result: Rec = {}
   for (const key of Object.keys(data)) {
     const v = data[key]
     if (typeof v === 'string') result[key] = sanitizeString(v)
-    else if (Array.isArray(v)) {
-      const arr: unknown[] = []
-      for (const el of v)
-        if (typeof el === 'string') arr.push(sanitizeString(el))
-        else if (el && typeof el === 'object' && !Array.isArray(el)) arr.push(sanitizeRec(el as Rec))
-        else arr.push(el)
-      result[key] = arr
-    } else if (v && typeof v === 'object' && !Array.isArray(v)) result[key] = sanitizeRec(v as Rec)
+    else if (Array.isArray(v)) result[key] = v.map(el => sanitizeArrayElement(el, sanitizeRec))
+    else if (v && typeof v === 'object' && !Array.isArray(v)) result[key] = sanitizeRec(v as Rec)
     else result[key] = v
   }
   return result

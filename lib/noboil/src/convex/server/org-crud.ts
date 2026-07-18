@@ -238,6 +238,7 @@ const makeOrgCrud = <S extends ZodRawShape>({
   }
   const create = m({
     args: { ...orgIdArg, ...partial.shape, items: array(schema).max(BULK_MAX).optional() },
+    // eslint-disable-next-line sonarjs/cognitive-complexity -- bulk/single org create with per-item validation early-returns; extracting would alter the runtime return-on-error control flow
     handler: typed(async (c: MutCtx, a: Rec) => {
       const { items, orgId } = a as { items?: Rec[]; orgId: string }
       await requireOrgMember({ db: c.db, orgId, userId: c.user._id as string })

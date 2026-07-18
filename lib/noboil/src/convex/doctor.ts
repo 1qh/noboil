@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/* eslint-disable no-console, complexity */
+/* eslint-disable no-console */
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import type { FactoryCall } from './check'
@@ -87,28 +87,26 @@ const extractFactoryCalls = (convexDir: string): FactoryCall[] => {
     }
   return calls
 }
+const factoryLabel = (c: FactoryCall): string => `${c.table} (${c.factory})`
+const pickScoreColor = (s: number): ((v: string) => string) => {
+  if (s >= 90) return green
+  if (s >= 70) return yellow
+  return red
+}
 const RATE_LIMIT_FACTORIES = new Set(['crud', 'orgCrud'])
 const checkRateLimit = (calls: FactoryCall[]): CheckResult => {
-  const relevant: FactoryCall[] = []
-  const skipped: FactoryCall[] = []
-  for (const c of calls)
-    if (RATE_LIMIT_FACTORIES.has(c.factory)) relevant.push(c)
-    else skipped.push(c)
-  if (relevant.length === 0) {
-    const details = ['No crud/orgCrud factories found']
-    if (skipped.length > 0)
-      details.push(`${skipped.map(c => `${c.table} (${c.factory})`).join(', ')} \u2014 typically optional`)
-    return { details, status: 'pass', title: 'Rate Limiting' }
-  }
-  const withRL: string[] = []
-  const withoutRL: string[] = []
-  for (const c of relevant)
-    if (c.options.includes('rateLimit')) withRL.push(c.table)
-    else withoutRL.push(`${c.table} (${c.factory})`)
-  const details = [`${withRL.length}/${relevant.length} write factories have rateLimit`]
-  if (withoutRL.length > 0) for (const name of withoutRL) details.push(`${name} missing rateLimit`)
-  if (skipped.length > 0)
-    details.push(`${skipped.map(c => `${c.table} (${c.factory})`).join(', ')} \u2014 typically optional`)
+  const relevant = calls.filter(c => RATE_LIMIT_FACTORIES.has(c.factory))
+  const skipped = calls.filter(c => !RATE_LIMIT_FACTORIES.has(c.factory))
+  const optionalNote = skipped.length > 0 ? [`${skipped.map(factoryLabel).join(', ')} \u2014 typically optional`] : []
+  if (relevant.length === 0)
+    return { details: ['No crud/orgCrud factories found', ...optionalNote], status: 'pass', title: 'Rate Limiting' }
+  const withRL = relevant.filter(c => c.options.includes('rateLimit'))
+  const withoutRL = relevant.filter(c => !c.options.includes('rateLimit'))
+  const details = [
+    `${withRL.length}/${relevant.length} write factories have rateLimit`,
+    ...withoutRL.map(c => `${factoryLabel(c)} missing rateLimit`),
+    ...optionalNote
+  ]
   return { details, status: withoutRL.length > 0 ? 'warn' : 'pass', title: 'Rate Limiting' }
 }
 const checkEslintContent = (content?: string): CheckResult => {
@@ -156,96 +154,80 @@ interface DoctorReport {
 const emitJson = (report: DoctorReport) => {
   process.stdout.write(`${JSON.stringify(report)}\n`)
 }
-const doctor = (opts?: { json?: boolean }) => {
-  const json = opts?.json ?? false
-  const root = process.cwd()
-  if (!json) console.log(bold('\nnoboil/convex doctor\n'))
-  const convexDir = findConvexDir(root)
-  if (!convexDir) {
-    if (json)
-      emitJson({
-        failed: 1,
-        health: 0,
-        passed: 0,
-        results: [{ details: ['convex/_generated not found'], status: 'fail', title: 'Schema Consistency' }],
-        warned: 0
-      })
-    else {
-      console.log(red('\u2717 Could not find convex/ directory with _generated/'))
-      console.log(dim('  Run from project root or a directory containing convex/'))
-    }
-    process.exit(1)
-  }
-  const schemaFile = findSchemaFile(convexDir)
-  if (!schemaFile) {
-    if (json)
-      emitJson({
-        failed: 1,
-        health: 0,
-        passed: 0,
-        results: [
-          { details: ['schema file with noboil/convex markers not found'], status: 'fail', title: 'Schema Consistency' }
-        ],
-        warned: 0
-      })
-    else {
-      console.log(red('\u2717 Could not find schema file with noboil/convex markers'))
-      console.log(dim('  Expected a .ts file importing makeOwned/makeOrgScoped/etc.'))
-    }
-    process.exit(1)
-  }
-  const calls = extractFactoryCalls(convexDir)
-  const tables = extractSchemaFields(schemaFile.content)
-  const results: CheckResult[] = []
-  const schemaIssues = checkSchemaConsistency(convexDir, schemaFile)
+const exitWithFailure = (json: boolean, jsonMsg: string, consoleLines: string[]): never => {
+  if (json)
+    emitJson({
+      failed: 1,
+      health: 0,
+      passed: 0,
+      results: [{ details: [jsonMsg], status: 'fail', title: 'Schema Consistency' }],
+      warned: 0
+    })
+  else for (const line of consoleLines) console.log(line)
+  process.exit(1)
+}
+type SchemaIssues = ReturnType<typeof checkSchemaConsistency>
+type SchemaTables = ReturnType<typeof extractSchemaFields>
+const schemaConsistencyResult = (schemaIssues: SchemaIssues, tables: SchemaTables, calls: FactoryCall[]): CheckResult => {
   const schemaErrors = schemaIssues.filter(i => i.level === 'error')
   const schemaWarns = schemaIssues.filter(i => i.level === 'warn')
   if (schemaErrors.length > 0)
-    results.push({ details: schemaErrors.map(e => e.message), status: 'fail', title: 'Schema Consistency' })
-  else if (schemaWarns.length > 0)
-    results.push({
+    return { details: schemaErrors.map(e => e.message), status: 'fail', title: 'Schema Consistency' }
+  if (schemaWarns.length > 0)
+    return {
       details: [`${tables.length} tables, ${calls.length} factories, ${schemaWarns.length} warning(s)`],
       status: 'warn',
       title: 'Schema Consistency'
-    })
-  else
-    results.push({
-      details: [`${tables.length} tables, ${calls.length} factory calls, all matched`],
-      status: 'pass',
-      title: 'Schema Consistency'
-    })
-  let totalEps = 0
-  for (const c of calls) totalEps += endpointsForFactory(c).length
-  results.push({
-    details: [`${totalEps} endpoints from ${calls.length} factories`],
+    }
+  return {
+    details: [`${tables.length} tables, ${calls.length} factory calls, all matched`],
     status: 'pass',
-    title: 'Endpoint Coverage'
-  })
-  const indexIssues = checkIndexCoverage(convexDir, calls)
+    title: 'Schema Consistency'
+  }
+}
+const indexCoverageResult = (indexIssues: ReturnType<typeof checkIndexCoverage>): CheckResult => {
   if (indexIssues.length > 0)
-    results.push({
+    return {
       details: [`${indexIssues.length} unindexed where clause(s)`, ...indexIssues.map(i => i.message)],
       status: 'warn',
       title: 'Index Coverage'
-    })
-  else results.push({ details: ['All where clauses have matching indexes'], status: 'pass', title: 'Index Coverage' })
+    }
+  return { details: ['All where clauses have matching indexes'], status: 'pass', title: 'Index Coverage' }
+}
+const buildDoctorResults = (opts: {
+  calls: FactoryCall[]
+  convexDir: string
+  root: string
+  schemaFile: { content: string; path: string }
+  tables: SchemaTables
+}): CheckResult[] => {
+  const { root, convexDir, schemaFile, calls, tables } = opts
+  const results: CheckResult[] = [schemaConsistencyResult(checkSchemaConsistency(convexDir, schemaFile), tables, calls)]
+  let totalEps = 0
+  for (const c of calls) totalEps += endpointsForFactory(c).length
+  results.push(
+    {
+      details: [`${totalEps} endpoints from ${calls.length} factories`],
+      status: 'pass',
+      title: 'Endpoint Coverage'
+    },
+    indexCoverageResult(checkIndexCoverage(convexDir, calls))
+  )
   const levels = new Set<string>()
   for (const c of calls) for (const e of accessForFactory(c)) levels.add(e.level)
   results.push(
-    {
-      details: [`Access levels: ${[...levels].join(', ') || 'none'}`],
-      status: 'pass',
-      title: 'Access Control'
-    },
+    { details: [`Access levels: ${[...levels].join(', ') || 'none'}`], status: 'pass', title: 'Access Control' },
     checkRateLimit(calls)
   )
   const lintmaxConfigPath = join(root, 'lintmax.config.ts')
   // oxlint-disable-next-line node/no-sync
   const eslintContent = existsSync(lintmaxConfigPath) ? readFileSync(lintmaxConfigPath, 'utf8') : undefined
   results.push(checkEslintContent(eslintContent))
-  const pkgPath = join(root, 'package.json')
-  const pkg = readJsonSafe(pkgPath) as null | Record<string, unknown>
+  const pkg = readJsonSafe(join(root, 'package.json')) as null | Record<string, unknown>
   results.push(checkDeps(pkg))
+  return results
+}
+const tallyResults = (results: CheckResult[]): { failed: number; passed: number; warned: number } => {
   let passed = 0
   let warned = 0
   let failed = 0
@@ -253,20 +235,50 @@ const doctor = (opts?: { json?: boolean }) => {
     if (r.status === 'pass') passed += 1
     else if (r.status === 'warn') warned += 1
     else failed += 1
-  const score = calcHealthScore(results)
-  if (json) {
-    emitJson({ failed, health: score, passed, results, warned })
-    return
-  }
+  return { failed, passed, warned }
+}
+const printDoctorReport = (
+  results: CheckResult[],
+  counts: { failed: number; passed: number; warned: number },
+  score: number
+): void => {
   for (const r of results) {
     const icon = STATUS_ICON[r.status] ?? '?'
     console.log(`[${icon}] ${r.title}`)
     for (const d of r.details) console.log(`    \u2022 ${d}`)
     console.log('')
   }
-  const scoreColor = score >= 90 ? green : score >= 70 ? yellow : red
-  console.log(`Summary: ${passed} passed, ${warned} warning(s), ${failed} error(s)`)
-  console.log(`Health Score: ${scoreColor(`${score}/${HEALTH_MAX}`)}\n`)
+  const scoreColor = pickScoreColor(score)
+  console.log(`Summary: ${counts.passed} passed, ${counts.warned} warning(s), ${counts.failed} error(s)`)
+  const scoreText = scoreColor(`${score}/${HEALTH_MAX}`)
+  console.log(`Health Score: ${scoreText}\n`)
+}
+const doctor = (opts?: { json?: boolean }) => {
+  const json = opts?.json ?? false
+  const root = process.cwd()
+  if (!json) console.log(bold('\nnoboil/convex doctor\n'))
+  const convexDir = findConvexDir(root)
+  if (!convexDir)
+    exitWithFailure(json, 'convex/_generated not found', [
+      red('\u2717 Could not find convex/ directory with _generated/'),
+      dim('  Run from project root or a directory containing convex/')
+    ])
+  const schemaFile = findSchemaFile(convexDir)
+  if (!schemaFile)
+    exitWithFailure(json, 'schema file with noboil/convex markers not found', [
+      red('\u2717 Could not find schema file with noboil/convex markers'),
+      dim('  Expected a .ts file importing makeOwned/makeOrgScoped/etc.')
+    ])
+  const calls = extractFactoryCalls(convexDir)
+  const tables = extractSchemaFields(schemaFile.content)
+  const results = buildDoctorResults({ calls, convexDir, root, schemaFile, tables })
+  const counts = tallyResults(results)
+  const score = calcHealthScore(results)
+  if (json) {
+    emitJson({ failed: counts.failed, health: score, passed: counts.passed, results, warned: counts.warned })
+    return
+  }
+  printDoctorReport(results, counts, score)
 }
 const run = (argv: readonly string[] = []) => {
   if (argv.includes('--help') || argv.includes('-h')) {

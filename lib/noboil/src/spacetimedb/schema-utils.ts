@@ -11,7 +11,7 @@ import {
   parseObjectFields,
   SINGLETON_BASE
 } from '../shared/schema-utils'
-
+// eslint-disable-next-line sonarjs/super-linear-regex -- linear: word chars then fixed literal sequence, no ambiguous overlap
 const tableCallPat = /(?<pname>\w+)\s*:\s*t\.table\(\{/gu
 const wrapperFactories = ['makeOwned', 'makeOrgScoped', 'makeSingleton', 'makeBase', 'defineTables']
 const extractSpacetimeTables = (content: string): SchemaTable[] => {

@@ -1,6 +1,5 @@
 #!/usr/bin/env bun
 /* eslint-disable no-console */
-/* eslint-disable complexity */
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { basename, dirname, join } from 'node:path'
 import type { Issue } from '../shared/schema-types'
@@ -36,6 +35,12 @@ interface WhereField {
 }
 const schemaMarkers = SCHEMA_MARKERS
 const factoryPat = new RegExp(`(?<factory>${FACTORY_INVOKE_NAMES.join('|')})\\(\\s*['"](?<table>\\w+)['"]`, 'gu')
+const filePrefix = (file?: string): string => (file ? `${dim(file)} ` : '')
+const tableHeader = (call: FactoryCall): string => {
+  const factoryTag = dim(`(${call.factory})`)
+  const fileTag = dim(`— ${call.file}`)
+  return `  ${bold(call.table)} ${factoryTag} ${fileTag}`
+}
 const isSchemaFile = (content: string): boolean => {
   for (const marker of schemaMarkers) if (content.includes(marker)) return true
   return false
@@ -67,35 +72,46 @@ const findSchemaFile = (convexDir: string): undefined | { content: string; path:
       if (isSchemaFile(content)) return { content, path: full }
     }
 }
-const extractSchemaTableNames = (content: string): Set<string> => {
-  const tables = new Set<string>()
-  for (const factory of wrapperFactories) {
-    const pat = new RegExp(`${factory}\\(\\{`, 'gu')
-    let fm: null | RegExpExecArray = pat.exec(content)
-    while (fm !== null) {
-      let depth = 1
-      let pos = fm.index + fm[0].length
-      while (pos < content.length && depth > 0) {
-        if (content[pos] === '{') depth += 1
-        else if (content[pos] === '}') depth -= 1
-        pos += 1
-      }
-      const block = content.slice(fm.index + fm[0].length, pos - 1)
-      const propPat = /(?<pname>\w+)\s*:\s*object\(/gu
-      let pm = propPat.exec(block)
-      while (pm) {
-        if (pm.groups?.pname) tables.add(pm.groups.pname)
-        pm = propPat.exec(block)
-      }
-      fm = pat.exec(content)
-    }
+const readBalancedBraceBlock = (content: string, startPos: number): string => {
+  let depth = 1
+  let pos = startPos
+  while (pos < content.length && depth > 0) {
+    if (content[pos] === '{') depth += 1
+    else if (content[pos] === '}') depth -= 1
+    pos += 1
   }
+  return content.slice(startPos, pos - 1)
+}
+const collectObjectTables = (block: string, tables: Set<string>): void => {
+  // eslint-disable-next-line sonarjs/super-linear-regex -- linear: \w and \s match disjoint character classes, so adjacent quantifiers cannot overlap-backtrack
+  const propPat = /(?<pname>\w+)\s*:\s*object\(/gu
+  let pm = propPat.exec(block)
+  while (pm) {
+    if (pm.groups?.pname) tables.add(pm.groups.pname)
+    pm = propPat.exec(block)
+  }
+}
+const collectChildTables = (content: string, tables: Set<string>): void => {
+  // eslint-disable-next-line sonarjs/super-linear-regex -- linear: \w and \s match disjoint character classes, so adjacent quantifiers cannot overlap-backtrack
   const childPat = /(?<cname>\w+)\s*:\s*child\(/gu
   let cm = childPat.exec(content)
   while (cm) {
     if (cm.groups?.cname) tables.add(cm.groups.cname)
     cm = childPat.exec(content)
   }
+}
+const extractSchemaTableNames = (content: string): Set<string> => {
+  const tables = new Set<string>()
+  for (const factory of wrapperFactories) {
+    const pat = new RegExp(`${factory}\\(\\{`, 'gu')
+    let fm: null | RegExpExecArray = pat.exec(content)
+    while (fm !== null) {
+      const block = readBalancedBraceBlock(content, fm.index + fm[0].length)
+      collectObjectTables(block, tables)
+      fm = pat.exec(content)
+    }
+  }
+  collectChildTables(content, tables)
   return tables
 }
 const extractRemainingOptions = (content: string, startPos: number): string => {
@@ -131,6 +147,11 @@ const extractFactoryCalls = (convexDir: string): { calls: FactoryCall[]; files: 
     }
   return { calls, files }
 }
+const PREVIEW_OPTION_NAMES = ['search', 'softDelete', 'acl', 'rateLimit', 'pub']
+const collectTableOptions = (call?: FactoryCall): string[] => {
+  if (!call) return []
+  return PREVIEW_OPTION_NAMES.filter(opt => hasOption(call.options, opt))
+}
 const printSchemaPreview = (content: string, calls: FactoryCall[]) => {
   const tables = extractSchemaFields(content)
   console.log(bold('Schema Preview\n'))
@@ -139,17 +160,11 @@ const printSchemaPreview = (content: string, calls: FactoryCall[]) => {
     return
   }
   for (const t of tables) {
-    const call = calls.find(c => c.table === t.table)
-    const options: string[] = []
-    if (call) {
-      if (hasOption(call.options, 'search')) options.push('search')
-      if (hasOption(call.options, 'softDelete')) options.push('softDelete')
-      if (hasOption(call.options, 'acl')) options.push('acl')
-      if (hasOption(call.options, 'rateLimit')) options.push('rateLimit')
-      if (hasOption(call.options, 'pub')) options.push('pub')
-    }
-    const optStr = options.length > 0 ? ` ${dim(`[${options.join(', ')}]`)}` : ''
-    console.log(`  ${bold(t.table)} ${dim(`(${t.factory})`)}${optStr}`)
+    const options = collectTableOptions(calls.find(c => c.table === t.table))
+    const optTag = dim(`[${options.join(', ')}]`)
+    const optStr = options.length > 0 ? ` ${optTag}` : ''
+    const factoryTag = dim(`(${t.factory})`)
+    console.log(`  ${bold(t.table)} ${factoryTag}${optStr}`)
     for (const f of t.fields) console.log(`    ${f.field.padEnd(20)} ${dim(f.type)}`)
     console.log('')
   }
@@ -163,7 +178,7 @@ const printEndpoints = (calls: FactoryCall[]) => {
   for (const call of calls) {
     const eps = endpointsForFactory(call)
     total += eps.length
-    console.log(`  ${bold(call.table)} ${dim(`(${call.factory})`)} ${dim(`\u2014 ${call.file}`)}`)
+    console.log(tableHeader(call))
     const groups: Record<string, string[]> = {}
     for (const ep of eps) {
       const dot = ep.indexOf('.')
@@ -179,17 +194,19 @@ const printEndpoints = (calls: FactoryCall[]) => {
     }
     if (groups['']) console.log(`    ${groups[''].join(', ')}`)
     for (const [prefix, names] of Object.entries(groups))
-      if (prefix) console.log(`    ${dim(`${prefix}.`)}${names.join(`, ${dim(`${prefix}.`)}`)}`)
+      if (prefix) {
+        const prefixTag = dim(`${prefix}.`)
+        const sep = `, ${prefixTag}`
+        console.log(`    ${prefixTag}${names.join(sep)}`)
+      }
     console.log('')
   }
   console.log(`${bold(String(total))} endpoints from ${bold(String(calls.length))} factory calls\n`)
 }
-const runCheck = (convexDir: string, schemaFile: { content: string; path: string }) => {
+const checkSchemaConsistency = (convexDir: string, schemaFile: { content: string; path: string }): Issue[] => {
   const issues: Issue[] = []
   const schemaTables = extractSchemaTableNames(schemaFile.content)
   const { calls, files } = extractFactoryCalls(convexDir)
-  console.log(`${dim('tables in schema:')} ${[...schemaTables].join(', ') || 'none'}`)
-  console.log(`${dim('factory calls:')}    ${calls.length}\n`)
   const seen = new Map<string, string>()
   for (const call of calls) {
     if (seen.has(call.table))
@@ -222,18 +239,26 @@ const runCheck = (convexDir: string, schemaFile: { content: string; path: string
         level: 'warn',
         message: `${call.factory}('${call.table}') in ${call.file} — table name doesn't match filename`
       })
+  return issues
+}
+const runCheck = (convexDir: string, schemaFile: { content: string; path: string }) => {
+  const schemaTables = extractSchemaTableNames(schemaFile.content)
+  const { calls } = extractFactoryCalls(convexDir)
+  console.log(`${dim('tables in schema:')} ${[...schemaTables].join(', ') || 'none'}`)
+  console.log(`${dim('factory calls:')}    ${calls.length}\n`)
+  const issues = checkSchemaConsistency(convexDir, schemaFile)
   if (issues.length === 0) {
     console.log(green('\u2713 All checks passed\n'))
     return
   }
   const errors = issues.filter(i => i.level === 'error')
   const warnings = issues.filter(i => i.level === 'warn')
-  for (const issue of errors) console.log(`${red('\u2717')} ${issue.file ? `${dim(issue.file)} ` : ''}${issue.message}`)
-  for (const issue of warnings)
-    console.log(`${yellow('\u26A0')} ${issue.file ? `${dim(issue.file)} ` : ''}${issue.message}`)
-  console.log(
-    `\n${errors.length > 0 ? red(`${errors.length} error(s)`) : ''}${errors.length > 0 && warnings.length > 0 ? ', ' : ''}${warnings.length > 0 ? yellow(`${warnings.length} warning(s)`) : ''}\n`
-  )
+  for (const issue of errors) console.log(`${red('\u2717')} ${filePrefix(issue.file)}${issue.message}`)
+  for (const issue of warnings) console.log(`${yellow('\u26A0')} ${filePrefix(issue.file)}${issue.message}`)
+  const errStr = errors.length > 0 ? red(`${errors.length} error(s)`) : ''
+  const warnStr = warnings.length > 0 ? yellow(`${warnings.length} warning(s)`) : ''
+  const errWarnSep = errors.length > 0 && warnings.length > 0 ? ', ' : ''
+  console.log(`\n${errStr}${errWarnSep}${warnStr}\n`)
   if (errors.length > 0) process.exit(1)
 }
 const FACTORY_DEFAULT_INDEXES: Record<string, TableIndex[]> = {
@@ -328,6 +353,7 @@ const extractWhereFromOptions = (opts: string): string[] => {
     pos += 1
   }
   const block = opts.slice(braceStart + 1, pos - 1)
+  // eslint-disable-next-line sonarjs/super-linear-regex -- linear: \w and \s match disjoint character classes, so adjacent quantifiers cannot overlap-backtrack
   const fieldPat = /(?<wkey>\$?\w+)\s*:/gu
   let fm = fieldPat.exec(block)
   while (fm) {
@@ -375,61 +401,74 @@ const scanWhereUsage = (root: string, cvxDir: string): WhereField[] => {
   scan(root)
   return results
 }
+const buildWhereByTable = (calls: FactoryCall[], projectWhere: WhereField[]): Map<string, Set<string>> => {
+  const whereByTable = new Map<string, Set<string>>()
+  const add = (table: string, field: string): void => {
+    const set = whereByTable.get(table) ?? new Set<string>()
+    set.add(field)
+    whereByTable.set(table, set)
+  }
+  for (const w of projectWhere) add(w.table, w.field)
+  for (const call of calls) for (const f of extractWhereFromOptions(call.options)) add(call.table, f)
+  return whereByTable
+}
+const indexesFor = (
+  call: FactoryCall,
+  customIndexes: Map<string, TableIndex[]>
+): { allFields: Set<string>; allIndexes: TableIndex[] } => {
+  const defaults = FACTORY_DEFAULT_INDEXES[call.factory] ?? []
+  const custom = customIndexes.get(call.table) ?? []
+  const allIndexes = [...defaults, ...custom]
+  const allFields = new Set<string>()
+  for (const idx of allIndexes) for (const f of idx.fields) allFields.add(f)
+  return { allFields, allIndexes }
+}
+const printCallIndexes = (opts: {
+  call: FactoryCall
+  customIndexes: Map<string, TableIndex[]>
+  issues: Issue[]
+  whereByTable: Map<string, Set<string>>
+}): number => {
+  const { call, customIndexes, whereByTable, issues } = opts
+  const { allFields, allIndexes } = indexesFor(call, customIndexes)
+  console.log(tableHeader(call))
+  for (const idx of allIndexes) {
+    const symbol = idx.type === 'search' ? dim('\uD83D\uDD0D') : green('\u2713')
+    const fieldsTag = dim(`[${idx.fields.join(', ')}]`)
+    const typeTag = dim(`(${idx.type})`)
+    console.log(`    ${symbol} ${idx.name} ${fieldsTag} ${typeTag}`)
+  }
+  if (allIndexes.length === 0) console.log(`    ${dim('(no indexes)')}`)
+  const tableWhereFields = whereByTable.get(call.table)
+  if (tableWhereFields)
+    for (const field of tableWhereFields)
+      if (!allFields.has(field)) {
+        console.log(`    ${yellow('\u26A0')} where filter on '${field}' \u2014 no matching index`)
+        issues.push({
+          file: call.file,
+          level: 'warn',
+          message: `"${call.table}": where on '${field}' is runtime-filtered. Add .index('by_${field}', ['${field}']) for better performance`
+        })
+      }
+  console.log('')
+  return allIndexes.length
+}
 const printIndexReport = (convexDir: string, calls: FactoryCall[]) => {
   const schemaDef = findSchemaDefFile(convexDir)
   const customIndexes = schemaDef ? extractCustomIndexes(schemaDef.content) : new Map<string, TableIndex[]>()
-  const root = dirname(convexDir)
-  const projectWhere = scanWhereUsage(root, convexDir)
-  const whereByTable = new Map<string, Set<string>>()
+  const projectWhere = scanWhereUsage(dirname(convexDir), convexDir)
+  const whereByTable = buildWhereByTable(calls, projectWhere)
   const issues: Issue[] = []
-  for (const w of projectWhere) {
-    const set = whereByTable.get(w.table) ?? new Set()
-    set.add(w.field)
-    whereByTable.set(w.table, set)
-  }
-  for (const call of calls) {
-    const wFields = extractWhereFromOptions(call.options)
-    if (wFields.length > 0) {
-      const set = whereByTable.get(call.table) ?? new Set()
-      for (const f of wFields) set.add(f)
-      whereByTable.set(call.table, set)
-    }
-  }
   console.log(bold('Index Analysis\n'))
   if (schemaDef) console.log(`${dim('schema def:')} ${schemaDef.path}\n`)
   let totalIndexes = 0
-  for (const call of calls) {
-    const defaults = FACTORY_DEFAULT_INDEXES[call.factory] ?? []
-    const custom = customIndexes.get(call.table) ?? []
-    const allIndexes = [...defaults, ...custom]
-    const allFields = new Set<string>()
-    for (const idx of allIndexes) for (const f of idx.fields) allFields.add(f)
-    totalIndexes += allIndexes.length
-    console.log(`  ${bold(call.table)} ${dim(`(${call.factory})`)} ${dim(`\u2014 ${call.file}`)}`)
-    for (const idx of allIndexes) {
-      const symbol = idx.type === 'search' ? dim('\uD83D\uDD0D') : green('\u2713')
-      console.log(`    ${symbol} ${idx.name} ${dim(`[${idx.fields.join(', ')}]`)} ${dim(`(${idx.type})`)}`)
-    }
-    if (allIndexes.length === 0) console.log(`    ${dim('(no indexes)')}`)
-    const tableWhereFields = whereByTable.get(call.table)
-    if (tableWhereFields)
-      for (const field of tableWhereFields)
-        if (!allFields.has(field)) {
-          console.log(`    ${yellow('\u26A0')} where filter on '${field}' \u2014 no matching index`)
-          issues.push({
-            file: call.file,
-            level: 'warn',
-            message: `"${call.table}": where on '${field}' is runtime-filtered. Add .index('by_${field}', ['${field}']) for better performance`
-          })
-        }
-    console.log('')
-  }
+  for (const call of calls) totalIndexes += printCallIndexes({ call, customIndexes, issues, whereByTable })
   console.log(`${bold(String(totalIndexes))} indexes across ${bold(String(calls.length))} tables\n`)
   if (issues.length > 0) {
     console.log(bold('Performance Suggestions\n'))
-    for (const issue of issues)
-      console.log(`  ${yellow('\u26A0')} ${issue.file ? `${dim(issue.file)} ` : ''}${issue.message}`)
-    console.log(`\n${yellow(`${issues.length} unindexed where clause(s)`)}\n`)
+    for (const issue of issues) console.log(`  ${yellow('\u26A0')} ${filePrefix(issue.file)}${issue.message}`)
+    const unindexedSummary = yellow(`${issues.length} unindexed where clause(s)`)
+    console.log(`\n${unindexedSummary}\n`)
   } else console.log(green('\u2713 All detected where clauses have matching indexes\n'))
 }
 const accessForFactory = (call: FactoryCall): AccessEntry[] => {
@@ -481,7 +520,7 @@ const printAccessReport = (calls: FactoryCall[]) => {
   let totalEndpoints = 0
   for (const call of calls) {
     const entries = accessForFactory(call)
-    console.log(`  ${bold(call.table)} ${dim(`(${call.factory})`)} ${dim(`\u2014 ${call.file}`)}`)
+    console.log(tableHeader(call))
     for (const entry of entries) {
       const icon = ACCESS_ICONS[entry.level] ?? '\u2022'
       console.log(`    ${icon} ${yellow(entry.level)}: ${entry.endpoints.join(', ')}`)
@@ -491,70 +530,14 @@ const printAccessReport = (calls: FactoryCall[]) => {
   }
   console.log(`${bold(String(totalEndpoints))} endpoints across ${bold(String(calls.length))} tables\n`)
 }
-const checkSchemaConsistency = (convexDir: string, schemaFile: { content: string; path: string }): Issue[] => {
-  const issues: Issue[] = []
-  const schemaTables = extractSchemaTableNames(schemaFile.content)
-  const { calls, files } = extractFactoryCalls(convexDir)
-  const seen = new Map<string, string>()
-  for (const call of calls) {
-    if (seen.has(call.table))
-      issues.push({
-        file: call.file,
-        level: 'error',
-        message: `Duplicate factory for table "${call.table}" (also in ${seen.get(call.table)})`
-      })
-    else seen.set(call.table, call.file)
-    if (!schemaTables.has(call.table))
-      issues.push({
-        file: call.file,
-        level: 'error',
-        message: `${call.factory}('${call.table}') but no "${call.table}" table found in schema`
-      })
-  }
-  const factoryTables = new Set(calls.map(c => c.table))
-  for (const table of schemaTables)
-    if (!factoryTables.has(table))
-      issues.push({
-        file: basename(schemaFile.path),
-        level: 'warn',
-        message: `Table "${table}" defined in schema but no factory call found`
-      })
-  const convexFiles = new Set(files.map(f => f.replace('.ts', '')))
-  for (const call of calls)
-    if (call.table !== basename(call.file, '.ts') && !convexFiles.has(call.table))
-      issues.push({
-        file: call.file,
-        level: 'warn',
-        message: `${call.factory}('${call.table}') in ${call.file} — table name doesn't match filename`
-      })
-  return issues
-}
 const checkIndexCoverage = (convexDir: string, calls: FactoryCall[]): Issue[] => {
   const schemaDef = findSchemaDefFile(convexDir)
   const customIndexes = schemaDef ? extractCustomIndexes(schemaDef.content) : new Map<string, TableIndex[]>()
-  const root = dirname(convexDir)
-  const projectWhere = scanWhereUsage(root, convexDir)
-  const whereByTable = new Map<string, Set<string>>()
+  const projectWhere = scanWhereUsage(dirname(convexDir), convexDir)
+  const whereByTable = buildWhereByTable(calls, projectWhere)
   const issues: Issue[] = []
-  for (const w of projectWhere) {
-    const set = whereByTable.get(w.table) ?? new Set()
-    set.add(w.field)
-    whereByTable.set(w.table, set)
-  }
   for (const call of calls) {
-    const wFields = extractWhereFromOptions(call.options)
-    if (wFields.length > 0) {
-      const set = whereByTable.get(call.table) ?? new Set()
-      for (const f of wFields) set.add(f)
-      whereByTable.set(call.table, set)
-    }
-  }
-  for (const call of calls) {
-    const defaults = FACTORY_DEFAULT_INDEXES[call.factory] ?? []
-    const custom = customIndexes.get(call.table) ?? []
-    const allIndexes = [...defaults, ...custom]
-    const allFields = new Set<string>()
-    for (const ix of allIndexes) for (const f of ix.fields) allFields.add(f)
+    const { allFields } = indexesFor(call, customIndexes)
     const tableWhereFields = whereByTable.get(call.table)
     if (tableWhereFields)
       for (const field of tableWhereFields)
@@ -570,46 +553,61 @@ const checkIndexCoverage = (convexDir: string, calls: FactoryCall[]): Issue[] =>
 const HEALTH_MAX = 100
 const HEALTH_ERROR_PENALTY = 15
 const HEALTH_WARN_PENALTY = 5
-const printHealthReport = (convexDir: string, schemaFile: { content: string; path: string }) => {
-  const { calls } = extractFactoryCalls(convexDir)
-  const schemaIssues = checkSchemaConsistency(convexDir, schemaFile)
-  const indexIssues = checkIndexCoverage(convexDir, calls)
-  let totalEndpoints = 0
-  for (const call of calls) totalEndpoints += endpointsForFactory(call).length
-  let totalIndexes = 0
-  const schemaDef = findSchemaDefFile(convexDir)
-  const customIndexes = schemaDef ? extractCustomIndexes(schemaDef.content) : new Map<string, TableIndex[]>()
+const pickScoreColor = (s: number): ((v: string) => string) => {
+  if (s >= 90) return green
+  if (s >= 70) return yellow
+  return red
+}
+const countTotalEndpoints = (calls: FactoryCall[]): number => {
+  let total = 0
+  for (const call of calls) total += endpointsForFactory(call).length
+  return total
+}
+const countTotalIndexes = (calls: FactoryCall[], customIndexes: Map<string, TableIndex[]>): number => {
+  let total = 0
   for (const call of calls) {
     const defaults = FACTORY_DEFAULT_INDEXES[call.factory] ?? []
-    const custom = customIndexes.get(call.table) ?? []
-    totalIndexes += defaults.length + custom.length
+    total += defaults.length + (customIndexes.get(call.table) ?? []).length
   }
-  const accessLevels = new Set<string>()
-  for (const call of calls) for (const entry of accessForFactory(call)) accessLevels.add(entry.level)
-  const allIssues = [...schemaIssues, ...indexIssues]
+  return total
+}
+const collectAccessLevels = (calls: FactoryCall[]): Set<string> => {
+  const levels = new Set<string>()
+  for (const call of calls) for (const entry of accessForFactory(call)) levels.add(entry.level)
+  return levels
+}
+const printHealthIssueGroup = (opts: { heading: string; issues: Issue[]; penalty: number; symbol: string }): void => {
+  const { heading, penalty, symbol, issues } = opts
+  if (issues.length === 0) return
+  const penaltyTag = dim(`(-${penalty} pts each)`)
+  console.log(`  ${heading} ${penaltyTag}\n`)
+  for (const issue of issues) console.log(`    ${symbol} ${filePrefix(issue.file)}${issue.message}`)
+  console.log('')
+}
+const printHealthReport = (convexDir: string, schemaFile: { content: string; path: string }) => {
+  const { calls } = extractFactoryCalls(convexDir)
+  const schemaDef = findSchemaDefFile(convexDir)
+  const customIndexes = schemaDef ? extractCustomIndexes(schemaDef.content) : new Map<string, TableIndex[]>()
+  const allIssues = [...checkSchemaConsistency(convexDir, schemaFile), ...checkIndexCoverage(convexDir, calls)]
   const errors = allIssues.filter(i => i.level === 'error')
   const warnings = allIssues.filter(i => i.level === 'warn')
   const rawScore = HEALTH_MAX - errors.length * HEALTH_ERROR_PENALTY - warnings.length * HEALTH_WARN_PENALTY
   const score = Math.max(0, Math.min(HEALTH_MAX, rawScore))
-  const scoreColor = score >= 90 ? green : score >= 70 ? yellow : red
+  const scoreColor = pickScoreColor(score)
   console.log(bold('Project Health Report\n'))
-  console.log(`  ${bold('Score:')} ${scoreColor(`${score}/100`)}\n`)
+  const scoreStr = scoreColor(`${score}/100`)
+  console.log(`  ${bold('Score:')} ${scoreStr}\n`)
   console.log(`  ${dim('Tables:')}      ${calls.length}`)
-  console.log(`  ${dim('Endpoints:')}   ${totalEndpoints}`)
-  console.log(`  ${dim('Indexes:')}     ${totalIndexes}`)
-  console.log(`  ${dim('Access:')}      ${[...accessLevels].join(', ')}\n`)
-  if (errors.length > 0) {
-    console.log(`  ${red('Errors')} ${dim(`(-${HEALTH_ERROR_PENALTY} pts each)`)}\n`)
-    for (const issue of errors)
-      console.log(`    ${red('\u2717')} ${issue.file ? `${dim(issue.file)} ` : ''}${issue.message}`)
-    console.log('')
-  }
-  if (warnings.length > 0) {
-    console.log(`  ${yellow('Warnings')} ${dim(`(-${HEALTH_WARN_PENALTY} pts each)`)}\n`)
-    for (const issue of warnings)
-      console.log(`    ${yellow('\u26A0')} ${issue.file ? `${dim(issue.file)} ` : ''}${issue.message}`)
-    console.log('')
-  }
+  console.log(`  ${dim('Endpoints:')}   ${countTotalEndpoints(calls)}`)
+  console.log(`  ${dim('Indexes:')}     ${countTotalIndexes(calls, customIndexes)}`)
+  console.log(`  ${dim('Access:')}      ${[...collectAccessLevels(calls)].join(', ')}\n`)
+  printHealthIssueGroup({ heading: red('Errors'), issues: errors, penalty: HEALTH_ERROR_PENALTY, symbol: red('\u2717') })
+  printHealthIssueGroup({
+    heading: yellow('Warnings'),
+    issues: warnings,
+    penalty: HEALTH_WARN_PENALTY,
+    symbol: yellow('\u26A0')
+  })
   if (allIssues.length === 0) console.log(`  ${green('\u2713 No issues found')}\n`)
   console.log(
     `  ${dim('Run')} noboil convex check --schema ${dim('for schema preview')}\n` +

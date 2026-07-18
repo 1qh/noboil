@@ -10,7 +10,7 @@ const walkRoutes = (root: string, base = ''): string[] => {
   if (!statSync(root, { throwIfNoEntry: false })) return []
   const out: string[] = []
   // oxlint-disable-next-line node/no-sync
-  for (const name of readdirSync(root).toSorted())
+  for (const name of readdirSync(root).toSorted((a, b) => (a < b ? -1 : Number(a > b))))
     if (!(name.startsWith('.') || name === 'node_modules' || name === 'api')) {
       const full = join(root, name)
       // oxlint-disable-next-line node/no-sync
@@ -18,7 +18,7 @@ const walkRoutes = (root: string, base = ''): string[] => {
       if (s.isDirectory()) out.push(...walkRoutes(full, `${base}/${name}`))
       else if (name === 'page.tsx') out.push(base || '/')
     }
-  return out.toSorted()
+  return out.toSorted((a, b) => (a < b ? -1 : Number(a > b)))
 }
 const main = () => {
   const sections: string[] = []

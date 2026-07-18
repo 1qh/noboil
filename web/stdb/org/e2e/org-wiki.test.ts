@@ -20,25 +20,23 @@ test.beforeEach(async ({ page }) => {
 test.describe
   .serial('Wiki Page UI', () => {
     let orgId: string
-    const wikiIds: string[] = []
     test.beforeAll(async () => {
       await ensureTestUser()
       const slug = generateSlug('wiki-ui')
       ;({ orgId } = await createTestOrg(slug, 'Wiki UI Test Org'))
       activeOrgId = orgId
-      const id1 = await tc.mutation(api.wiki.create, {
+      await tc.mutation(api.wiki.create, {
         orgId,
         slug: `${testPrefix}-page-1`,
         status: 'published',
         title: 'Wiki Page 1'
       })
-      const id2 = await tc.mutation(api.wiki.create, {
+      await tc.mutation(api.wiki.create, {
         orgId,
         slug: `${testPrefix}-page-2`,
         status: 'published',
         title: 'Wiki Page 2'
       })
-      wikiIds.push(id1, id2)
     })
     test.afterAll(async () => {
       await cleanupOrgTestData()
@@ -115,7 +113,7 @@ test.describe
         orgId: testOrgId,
         paginationOpts: { cursor: null, numItems: 100 }
       })
-      expect(wikis.length).toBe(0)
+      expect(wikis).toHaveLength(0)
     })
     test('soft-deleted wiki is still accessible via read', async () => {
       const wiki = await tc.query<WikiResponse>(api.wiki.read, { id: wikiId, orgId: testOrgId })
@@ -144,7 +142,7 @@ test.describe
         orgId: testOrgId,
         paginationOpts: { cursor: null, numItems: 100 }
       })
-      expect(wikis.length).toBe(0)
+      expect(wikis).toHaveLength(0)
     })
   })
 test.describe
@@ -186,14 +184,14 @@ test.describe
         orgId: testOrgId,
         paginationOpts: { cursor: null, numItems: 100 }
       })
-      expect(wikis.length).toBe(3)
+      expect(wikis).toHaveLength(3)
     })
     test('all length returns 3', async () => {
       const { page: wikis } = await tc.query<PaginatedResponse<WikiResponse>>(api.wiki.list, {
         orgId: testOrgId,
         paginationOpts: { cursor: null, numItems: 100 }
       })
-      expect(wikis.length).toBe(3)
+      expect(wikis).toHaveLength(3)
     })
     test('deleting one reduces all length to 2', async () => {
       await tc.mutation(api.wiki.rm, { id: wiki2Id, orgId: testOrgId })
@@ -201,14 +199,14 @@ test.describe
         orgId: testOrgId,
         paginationOpts: { cursor: null, numItems: 100 }
       })
-      expect(wikis.length).toBe(2)
+      expect(wikis).toHaveLength(2)
     })
     test('all returns only 2 non-deleted wikis', async () => {
       const { page: wikis } = await tc.query<PaginatedResponse<WikiResponse>>(api.wiki.list, {
         orgId: testOrgId,
         paginationOpts: { cursor: null, numItems: 100 }
       })
-      expect(wikis.length).toBe(2)
+      expect(wikis).toHaveLength(2)
       const ids = wikis.map((w: { _id: string }) => w._id)
       expect(ids).toContain(wiki1Id)
       expect(ids).toContain(wiki3Id)
@@ -220,7 +218,7 @@ test.describe
         orgId: testOrgId,
         paginationOpts: { cursor: null, numItems: 100 }
       })
-      expect(wikis.length).toBe(0)
+      expect(wikis).toHaveLength(0)
     })
     test('all three wikis still readable via read', async () => {
       const w1 = await tc.query<WikiResponse>(api.wiki.read, { id: wiki1Id, orgId: testOrgId })
@@ -235,14 +233,14 @@ test.describe
         orgId: testOrgId,
         paginationOpts: { cursor: null, numItems: 100 }
       })
-      expect(wikis.length).toBe(0)
+      expect(wikis).toHaveLength(0)
     })
     test('all length reflects partial restore', async () => {
       const { page: wikis } = await tc.query<PaginatedResponse<WikiResponse>>(api.wiki.list, {
         orgId: testOrgId,
         paginationOpts: { cursor: null, numItems: 100 }
       })
-      expect(wikis.length).toBe(0)
+      expect(wikis).toHaveLength(0)
     })
   })
 test.describe
@@ -295,31 +293,29 @@ test.describe
 test.describe
   .serial('Wiki Undo Toast UI', () => {
     let orgId: string
-    const wikiIds: string[] = []
     test.beforeAll(async () => {
       await ensureTestUser()
       const orgSlug = generateSlug('wiki-undo')
       ;({ orgId } = await createTestOrg(orgSlug, 'Wiki Undo Toast Org'))
       activeOrgId = orgId
-      const id1 = await tc.mutation(api.wiki.create, {
+      await tc.mutation(api.wiki.create, {
         orgId,
         slug: `${testPrefix}-undo-1`,
         status: 'published',
         title: 'Undo Wiki 1'
       })
-      const id2 = await tc.mutation(api.wiki.create, {
+      await tc.mutation(api.wiki.create, {
         orgId,
         slug: `${testPrefix}-undo-2`,
         status: 'published',
         title: 'Undo Wiki 2'
       })
-      const id3 = await tc.mutation(api.wiki.create, {
+      await tc.mutation(api.wiki.create, {
         orgId,
         slug: `${testPrefix}-undo-3`,
         status: 'published',
         title: 'Undo Wiki 3'
       })
-      wikiIds.push(id1, id2, id3)
     })
     test.afterAll(async () => {
       await cleanupOrgTestData()
@@ -362,7 +358,7 @@ test.describe
         orgId,
         paginationOpts: { cursor: null, numItems: 100 }
       })
-      expect(wikis.length).toBe(3)
+      expect(wikis).toHaveLength(3)
     })
     test('select all and bulk delete shows undo toast', async ({ page }) => {
       await restoreAllViaBackend()

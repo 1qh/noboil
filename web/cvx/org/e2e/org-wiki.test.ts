@@ -31,28 +31,22 @@ const gotoWikiEdit = async (page: Page, id: string) => {
 test.describe
   .serial('Wiki Page UI', () => {
     let orgId: string
-    const wikiIds: string[] = []
     test.beforeAll(async () => {
       await ensureTestUser()
       const slug = generateSlug('wiki-ui')
       ;({ orgId } = await createTestOrg(slug, 'Wiki UI Test Org'))
-      const id1 = expectSingle(
-        await tc.mutation(api.wiki.create, {
-          orgId,
-          slug: `${testPrefix}-page-1`,
-          status: 'published',
-          title: 'Wiki Page 1'
-        })
-      )
-      const id2 = expectSingle(
-        await tc.mutation(api.wiki.create, {
-          orgId,
-          slug: `${testPrefix}-page-2`,
-          status: 'published',
-          title: 'Wiki Page 2'
-        })
-      )
-      wikiIds.push(id1, id2)
+      await tc.mutation(api.wiki.create, {
+        orgId,
+        slug: `${testPrefix}-page-1`,
+        status: 'published',
+        title: 'Wiki Page 1'
+      })
+      await tc.mutation(api.wiki.create, {
+        orgId,
+        slug: `${testPrefix}-page-2`,
+        status: 'published',
+        title: 'Wiki Page 2'
+      })
     })
     test.afterAll(async () => {
       await cleanupOrgTestData()
@@ -131,7 +125,7 @@ test.describe
         orgId: testOrgId,
         paginationOpts: { cursor: null, numItems: 100 }
       })
-      expect(wikis.length).toBe(0)
+      expect(wikis).toHaveLength(0)
     })
     test('soft-deleted wiki is still accessible via read', async () => {
       const wiki = await tc.query(api.wiki.read, { id: wikiId, orgId: testOrgId })
@@ -206,14 +200,14 @@ test.describe
         orgId: testOrgId,
         paginationOpts: { cursor: null, numItems: 100 }
       })
-      expect(wikis.length).toBe(3)
+      expect(wikis).toHaveLength(3)
     })
     test('all length returns 3', async () => {
       const { page: wikis } = await tc.query(api.wiki.list, {
         orgId: testOrgId,
         paginationOpts: { cursor: null, numItems: 100 }
       })
-      expect(wikis.length).toBe(3)
+      expect(wikis).toHaveLength(3)
     })
     test('deleting one reduces all length to 2', async () => {
       await tc.mutation(api.wiki.rm, { id: wiki2Id, orgId: testOrgId })
@@ -221,14 +215,14 @@ test.describe
         orgId: testOrgId,
         paginationOpts: { cursor: null, numItems: 100 }
       })
-      expect(wikis.length).toBe(2)
+      expect(wikis).toHaveLength(2)
     })
     test('all returns only 2 non-deleted wikis', async () => {
       const { page: wikis } = await tc.query(api.wiki.list, {
         orgId: testOrgId,
         paginationOpts: { cursor: null, numItems: 100 }
       })
-      expect(wikis.length).toBe(2)
+      expect(wikis).toHaveLength(2)
       const ids = wikis.map((w: { _id: string }) => w._id)
       expect(ids).toContain(wiki1Id)
       expect(ids).toContain(wiki3Id)
@@ -240,7 +234,7 @@ test.describe
         orgId: testOrgId,
         paginationOpts: { cursor: null, numItems: 100 }
       })
-      expect(wikis.length).toBe(0)
+      expect(wikis).toHaveLength(0)
     })
     test('all three wikis still readable via read', async () => {
       const w1 = await tc.query(api.wiki.read, { id: wiki1Id, orgId: testOrgId })
@@ -256,7 +250,7 @@ test.describe
         orgId: testOrgId,
         paginationOpts: { cursor: null, numItems: 100 }
       })
-      expect(wikis.length).toBe(1)
+      expect(wikis).toHaveLength(1)
       expect(wikis[0]?._id).toBe(wiki2Id)
     })
     test('all length reflects partial restore', async () => {
@@ -264,7 +258,7 @@ test.describe
         orgId: testOrgId,
         paginationOpts: { cursor: null, numItems: 100 }
       })
-      expect(wikis.length).toBe(1)
+      expect(wikis).toHaveLength(1)
     })
   })
 test.describe
@@ -376,7 +370,7 @@ test.describe
       await expect(page.getByText('Undo Wiki 2').first()).toBeVisible()
       await expect(page.getByText('Undo Wiki 3').first()).toBeVisible()
       const { page: wikis } = await tc.query(api.wiki.list, { orgId, paginationOpts: { cursor: null, numItems: 100 } })
-      expect(wikis.length).toBe(3)
+      expect(wikis).toHaveLength(3)
     })
     test('select all and bulk delete shows undo toast', async ({ page }) => {
       await restoreAllViaBackend()

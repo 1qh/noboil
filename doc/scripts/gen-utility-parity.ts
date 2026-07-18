@@ -154,14 +154,14 @@ const main = () => {
         cvxOnly.length === 0
           ? '—'
           : cvxOnly
-              .toSorted()
+              .toSorted((a, b) => (a < b ? -1 : Number(a > b)))
               .map(s => `\`${s}\``)
               .join(', ')
       } | ${
         stdbOnly.length === 0
           ? '—'
           : stdbOnly
-              .toSorted()
+              .toSorted((a, b) => (a < b ? -1 : Number(a > b)))
               .map(s => `\`${s}\``)
               .join(', ')
       } | ${cvxIntentional.size + stdbIntentional.size} | ${allOk ? '🟢' : '🟡'} |`

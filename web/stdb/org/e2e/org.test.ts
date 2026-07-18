@@ -241,7 +241,7 @@ test.describe
       })
       expect(result.inviteId).toBeDefined()
       expect(result.token).toBeDefined()
-      expect(result.token.length).toBe(32)
+      expect(result.token).toHaveLength(32)
     })
     test('pendingInvites - shows created invites', async () => {
       const invites = await tc.query<InviteResponse[]>(api.org.pendingInvites, { orgId: testOrgId })

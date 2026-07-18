@@ -51,7 +51,7 @@ const run = async (): Promise<void> => {
     `Generated ${now} · ${data.tools.length} tools across ${data.providers.length} provider(s).`,
     ''
   ]
-  const providers = [...toolsByProvider.keys()].toSorted()
+  const providers = [...toolsByProvider.keys()].toSorted((a, b) => a.localeCompare(b))
   for (const prov of providers) {
     const label = prov.replace(PROVIDER_PREFIX_RE, '')
     const tools = (toolsByProvider.get(prov) ?? []).toSorted((a, b) =>

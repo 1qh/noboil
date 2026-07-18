@@ -1,6 +1,9 @@
 import { describe, expect, test } from 'bun:test'
 import { addUrls, checkRateLimit, makeUnique, normalizeRateLimit } from '../helpers'
 
+const noopEq = () => undefined
+const eqChain = () => ({ eq: noopEq })
+const indexQueryStub = { eq: eqChain }
 describe('convex helpers normalizeRateLimit', () => {
   test('number → { max, window: 60s }', () => {
     expect(normalizeRateLimit(10)).toEqual({ max: 10, window: 60_000 })
@@ -16,13 +19,13 @@ describe('addUrls', () => {
     expect(out).toEqual(doc as never)
   })
   test('adds {field}Url for single id, skips null', async () => {
-    const storage = { getUrl: async (id: string) => `http://example/${id}` } as never
+    const storage = { getUrl: async (id: string) => `https://example/${id}` } as never
     const out = (await addUrls({
       doc: { avatar: 'storage-1', missing: null, title: 't' },
       fileFields: ['avatar', 'missing'],
       storage
     })) as { avatarUrl?: string; missingUrl?: string }
-    expect(out.avatarUrl).toBe('http://example/storage-1')
+    expect(out.avatarUrl).toBe('https://example/storage-1')
     expect(out.missingUrl).toBeUndefined()
   })
   test('adds {field}Urls for array', async () => {
@@ -49,7 +52,7 @@ describe('checkRateLimit', () => {
       },
       query: () => ({
         withIndex: (_name: string, build: (q: unknown) => unknown) => {
-          build({ eq: () => ({ eq: () => undefined }) })
+          build(indexQueryStub)
           return { first: async () => rowRef.row }
         }
       })

@@ -19,6 +19,7 @@ const findSlotBody = (src: string, slot: string): string => {
   return src.slice(start, i - 1)
 }
 const tableNames = (body: string): string[] => {
+  // eslint-disable-next-line sonarjs/super-linear-regex -- scans trusted repo schema source; bounded non-adversarial input
   const re = /\n\s*(?<name>\w+):\s*(?:object\(|child\(|\{|orgSchema)/gu
   const out: string[] = []
   let m = re.exec(body)
@@ -28,8 +29,11 @@ const tableNames = (body: string): string[] => {
   }
   return out
 }
+// eslint-disable-next-line sonarjs/super-linear-regex -- scans trusted repo schema source; bounded non-adversarial input
 const PARENT_RE = /(?<table>\w+):\s*child\(\{[^}]*?parent:\s*'(?<parent>\w+)'/gu
+// eslint-disable-next-line sonarjs/super-linear-regex -- scans trusted repo schema source; bounded non-adversarial input
 const FK_RE = /(?<table>\w+):\s*\{[^}]*?parent:\s*'(?<parent>\w+)'/gu
+// eslint-disable-next-line sonarjs/cognitive-complexity -- schema-diagram edge/slot builder over multiple scan passes; sequential passes are the essential shape
 const main = () => {
   // oxlint-disable-next-line node/no-sync
   const src = readFileSync(`${REPO}/backend/convex/s.ts`, 'utf8')
@@ -60,6 +64,7 @@ const main = () => {
   })
   // oxlint-disable-next-line node/no-sync
   const lazySrc = readFileSync(`${REPO}/backend/convex/lazy.ts`, 'utf8')
+  // eslint-disable-next-line sonarjs/super-linear-regex -- scans trusted repo backend source; bounded non-adversarial input
   const cascadeRe = /(?<table>\w+):\s*table\(s\.\w+,\s*\{[^}]*?cascade:[^}]*?table:\s*s\.(?<target>\w+)\.__name/gu
   let cm = cascadeRe.exec(lazySrc)
   while (cm) {
@@ -68,6 +73,7 @@ const main = () => {
     cm = cascadeRe.exec(lazySrc)
   }
   cascadeRe.lastIndex = 0
+  // eslint-disable-next-line sonarjs/super-linear-regex -- scans trusted repo backend source; bounded non-adversarial input
   const aclFromRe = /(?<table>\w+):\s*table\(s\.\w+,\s*\{[^}]*?aclFrom:\s*\{[^}]*?table:\s*s\.(?<target>\w+)\.__name/gu
   let am = aclFromRe.exec(lazySrc)
   while (am) {

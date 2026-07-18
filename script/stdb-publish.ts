@@ -12,7 +12,7 @@ const hashDir = (dir: string): string => {
   for (const path of walkFiles(dir, {
     accept: isHashableFile,
     skip: new Set(['.git', '.next', '.turbo', 'build', 'dist', 'module_bindings', 'node_modules'])
-  }).toSorted()) {
+  }).toSorted((a, b) => a.localeCompare(b))) {
     h.update(`${path}:`)
     // oxlint-disable-next-line node/no-sync
     h.update(readFileSync(path))

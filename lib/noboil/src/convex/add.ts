@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/* eslint-disable no-console, complexity */
+/* eslint-disable no-console */
 import { dirname, join } from 'node:path'
 import type { ParsedField } from '../shared/schema-types'
 import type { FieldType, TableType } from '../shared/types'
@@ -19,37 +19,42 @@ const LOG_NAME_SUFFIX = /Log$|Event$|Item$/u
 const TABLE_TYPES = new Set<TableType>(['cache', 'child', 'kv', 'log', 'org', 'owned', 'quota', 'singleton'])
 const FIELD_TYPES = new Set<FieldType>(['boolean', 'number', 'string'])
 const parseFieldDef = (raw: string): null | ParsedField => parseEnumFieldDef(raw, FIELD_TYPES)
-const parseAddFlags = (args: string[]): AddFlags => {
-  let type: TableType = 'owned'
-  let convexDir = 'convex'
-  let appDir = 'src/app'
-  let name = ''
-  let parent = ''
-  let fieldsRaw = ''
-  const help = hasFlag(args, '--help', '-h')
-  for (const arg of args)
-    if (arg.startsWith('--type=')) {
-      const val = arg.slice('--type='.length)
-      if (TABLE_TYPES.has(val as TableType)) type = val as TableType
-      else {
-        console.log(`${red('Invalid type:')} ${val}. Valid: ${[...TABLE_TYPES].join(', ')}`)
-        process.exit(1)
-      }
-    } else if (arg.startsWith('--fields=')) fieldsRaw = arg.slice('--fields='.length)
-    else if (!arg.startsWith('-'))
-      if (name) fieldsRaw = fieldsRaw ? `${fieldsRaw},${arg}` : arg
-      else name = arg
-  convexDir = readEqFlag(args, 'convex-dir', convexDir)
-  appDir = readEqFlag(args, 'app-dir', appDir)
-  parent = readEqFlag(args, 'parent', parent)
+const parseTypeFlag = (val: string): TableType => {
+  if (TABLE_TYPES.has(val as TableType)) return val as TableType
+  console.log(`${red('Invalid type:')} ${val}. Valid: ${[...TABLE_TYPES].join(', ')}`)
+  process.exit(1)
+}
+interface AddArgAcc {
+  fieldsRaw: string
+  name: string
+  type: TableType
+}
+const applyAddArg = (acc: AddArgAcc, arg: string): void => {
+  if (arg.startsWith('--type=')) acc.type = parseTypeFlag(arg.slice('--type='.length))
+  else if (arg.startsWith('--fields=')) acc.fieldsRaw = arg.slice('--fields='.length)
+  else if (!arg.startsWith('-'))
+    if (acc.name) acc.fieldsRaw = acc.fieldsRaw ? `${acc.fieldsRaw},${arg}` : arg
+    else acc.name = arg
+}
+const parseFieldsRaw = (fieldsRaw: string): ParsedField[] => {
   const fields: ParsedField[] = []
-  if (fieldsRaw)
-    for (const f of fieldsRaw.split(',')) {
-      const parsed = parseFieldDef(f)
-      if (parsed) fields.push(parsed)
-      else console.log(`${yellow('warn')} Skipping invalid field: ${f}`)
-    }
-  return { appDir, convexDir, fields, help, name, parent, type }
+  if (!fieldsRaw) return fields
+  for (const f of fieldsRaw.split(',')) {
+    const parsed = parseFieldDef(f)
+    if (parsed) fields.push(parsed)
+    else console.log(`${yellow('warn')} Skipping invalid field: ${f}`)
+  }
+  return fields
+}
+const parseAddFlags = (args: string[]): AddFlags => {
+  const acc: AddArgAcc = { fieldsRaw: '', name: '', type: 'owned' }
+  const help = hasFlag(args, '--help', '-h')
+  for (const arg of args) applyAddArg(acc, arg)
+  const convexDir = readEqFlag(args, 'convex-dir', 'convex')
+  const appDir = readEqFlag(args, 'app-dir', 'src/app')
+  const parent = readEqFlag(args, 'parent', '')
+  const fields = parseFieldsRaw(acc.fieldsRaw)
+  return { appDir, convexDir, fields, help, name: acc.name, parent, type: acc.type }
 }
 const printAddHelp = () => {
   console.log(`${bold('noboil convex add')} — add a new table/endpoint to your project\n`)
@@ -79,7 +84,11 @@ const printAddHelp = () => {
   console.log(`  ${dim('$')} noboil convex add apiQuota --type=quota\n`)
 }
 const fieldToZod = (f: ParsedField): string => {
-  const base = typeof f.type === 'object' ? `zenum([${f.type.enum.map(v => `'${v}'`).join(', ')}])` : `${f.type}()`
+  let base: string
+  if (typeof f.type === 'object') {
+    const enumValues = f.type.enum.map(v => `'${v}'`).join(', ')
+    base = `zenum([${enumValues}])`
+  } else base = `${f.type}()`
   return f.optional ? `${base}.optional()` : base
 }
 const schemaImport = (type: TableType): string => {
@@ -158,7 +167,7 @@ const genSchemaContent = (name: string, type: TableType, fields: ParsedField[]):
     if (typeof f.type === 'string') zodImports.add(f.type)
     else zodImports.add('enum as zenum')
   if (fields.some(f => f.optional)) zodImports.add('optional')
-  const sortedImports = [...zodImports].toSorted()
+  const sortedImports = [...zodImports].toSorted((a, b) => a.localeCompare(b))
   if (type === 'child')
     return `import { child } from './schema'
 import { ${sortedImports.join(', ')} } from 'zod/v4'
@@ -396,48 +405,85 @@ const toParsedFields = (fs: { enumValues?: string[]; name: string; optional: boo
     optional: f.optional,
     type: f.type === 'enum' ? { enum: f.enumValues ?? [] } : (f.type as FieldType)
   }))
-const add = async (args: string[] = []) => {
-  let flags = parseAddFlags(args)
-  if (flags.help) {
-    printAddHelp()
-    return { created: 0, skipped: 0 }
+const resolveWizardFlags = async (): Promise<AddFlags | null> => {
+  const { runAddWizard } = await import('../shared/components/add-wizard')
+  const { readState, writeState } = await import('../shared/state')
+  const prevState = await readState()
+  const result = await runAddWizard({
+    initialType: prevState.lastTableType as TableType | undefined,
+    kind: 'convex',
+    preview: r => {
+      const pf = toParsedFields(r.fields).length > 0 ? toParsedFields(r.fields) : defaultFields(r.type)
+      return [
+        { content: genSchemaContent(r.name, r.type, pf), path: `convex/${r.name}-schema.ts` },
+        { content: genEndpointContent(r.name, r.type), path: `convex/${r.name}.ts` },
+        { content: genPageContent(r.name, r.type), path: `src/app/${r.name}/page.tsx` }
+      ]
+    },
+    typeDescriptions: TYPE_DESCRIPTIONS
+  })
+  if (!result) {
+    console.log(yellow('Cancelled.'))
+    return null
   }
-  if (args.length === 0) {
-    const { runAddWizard } = await import('../shared/components/add-wizard')
-    const { readState, writeState } = await import('../shared/state')
-    const prevState = await readState()
-    const result = await runAddWizard({
-      initialType: prevState.lastTableType as TableType | undefined,
-      kind: 'convex',
-      preview: r => {
-        const pf = toParsedFields(r.fields).length > 0 ? toParsedFields(r.fields) : defaultFields(r.type)
-        return [
-          { content: genSchemaContent(r.name, r.type, pf), path: `convex/${r.name}-schema.ts` },
-          { content: genEndpointContent(r.name, r.type), path: `convex/${r.name}.ts` },
-          { content: genPageContent(r.name, r.type), path: `src/app/${r.name}/page.tsx` }
-        ]
-      },
-      typeDescriptions: TYPE_DESCRIPTIONS
-    })
-    if (!result) {
-      console.log(yellow('Cancelled.'))
-      return { created: 0, skipped: 0 }
-    }
-    await writeState({ lastTableType: result.type }).catch(() => null)
-    flags = {
-      appDir: 'src/app',
-      convexDir: 'convex',
-      fields: result.fields.map(f => ({
-        name: f.name,
-        optional: f.optional,
-        type: f.type === 'enum' ? { enum: f.enumValues ?? [] } : f.type
-      })),
-      help: false,
-      name: result.name,
-      parent: result.parent,
-      type: result.type
-    }
+  await writeState({ lastTableType: result.type }).catch(() => null)
+  return {
+    appDir: 'src/app',
+    convexDir: 'convex',
+    fields: result.fields.map(f => ({
+      name: f.name,
+      optional: f.optional,
+      type: f.type === 'enum' ? { enum: f.enumValues ?? [] } : f.type
+    })),
+    help: false,
+    name: result.name,
+    parent: result.parent,
+    type: result.type
   }
+}
+const printDryRun = (flags: AddFlags, fields: ParsedField[]): void => {
+  const dryLabel = bold(`Dry-run: ${flags.type} table '${flags.name}'`)
+  console.log(`\n${dryLabel}\n`)
+  console.log(`${dim('--- ')}${flags.convexDir}/${flags.name}-schema.ts${dim(' ---')}`)
+  console.log(genSchemaContent(flags.name, flags.type, fields))
+  console.log(`${dim('--- ')}${flags.convexDir}/${flags.name}.ts${dim(' ---')}`)
+  console.log(genEndpointContent(flags.name, flags.type))
+  console.log(`${dim('--- ')}${flags.appDir}/${flags.name}/page.tsx${dim(' ---')}`)
+  console.log(genPageContent(flags.name, flags.type))
+}
+const writeAddFiles = (opts: {
+  appPath: string
+  convexPath: string
+  fields: ParsedField[]
+  flags: AddFlags
+}): { created: number; skipped: number } => {
+  const { flags, fields, convexPath, appPath } = opts
+  const pageDir = join(appPath, flags.name)
+  const specs = [
+    {
+      content: genSchemaContent(flags.name, flags.type, fields),
+      label: `${flags.convexDir}/${flags.name}-schema.ts`,
+      path: join(convexPath, `${flags.name}-schema.ts`)
+    },
+    {
+      content: genEndpointContent(flags.name, flags.type),
+      label: `${flags.convexDir}/${flags.name}.ts`,
+      path: join(convexPath, `${flags.name}.ts`)
+    },
+    {
+      content: genPageContent(flags.name, flags.type),
+      label: `${flags.appDir}/${flags.name}/page.tsx`,
+      path: join(pageDir, 'page.tsx')
+    }
+  ]
+  let created = 0
+  let skipped = 0
+  for (const spec of specs)
+    if (writeIfNotExists(spec)) created += 1
+    else skipped += 1
+  return { created, skipped }
+}
+const validateAddFlags = (flags: AddFlags): void => {
   if (!flags.name) {
     console.log(`${red('Error:')} table name is required.\n`)
     printAddHelp()
@@ -447,6 +493,28 @@ const add = async (args: string[] = []) => {
     console.log(`${red('Error:')} --parent is required for child type.\n`)
     process.exit(1)
   }
+}
+const printAddResult = (flags: AddFlags, created: number, skipped: number): void => {
+  console.log('')
+  if (created > 0) console.log(`${green('✓')} Created ${created} file${created > 1 ? 's' : ''}.`)
+  if (skipped > 0) console.log(`${yellow('⚠')} Skipped ${skipped} existing file${skipped > 1 ? 's' : ''}.`)
+  console.log(`\n${bold('Next steps:')}`)
+  console.log(`  ${dim('1.')} Import and register in your schema.ts`)
+  console.log(`  ${dim('2.')} Add ${flags.type === 'child' ? 'childCrud' : factoryFn(flags.type)} import to your lazy.ts`)
+  console.log(`  ${dim('3.')} Update guarded-api.ts to include '${flags.name}'\n`)
+}
+const add = async (args: string[] = []) => {
+  let flags = parseAddFlags(args)
+  if (flags.help) {
+    printAddHelp()
+    return { created: 0, skipped: 0 }
+  }
+  if (args.length === 0) {
+    const wiz = await resolveWizardFlags()
+    if (!wiz) return { created: 0, skipped: 0 }
+    flags = wiz
+  }
+  validateAddFlags(flags)
   const fields = flags.fields.length > 0 ? flags.fields : defaultFields(flags.type)
   const { findManifestPath } = await import('../shared/manifest')
   const manifestPath = findManifestPath(process.cwd())
@@ -465,56 +533,13 @@ const add = async (args: string[] = []) => {
   const convexPath = join(projectRoot, flags.convexDir)
   const appPath = join(projectRoot, flags.appDir)
   if (isDryRun) {
-    console.log(`\n${bold(`Dry-run: ${flags.type} table '${flags.name}'`)}\n`)
-    console.log(`${dim('--- ')}${flags.convexDir}/${flags.name}-schema.ts${dim(' ---')}`)
-    console.log(genSchemaContent(flags.name, flags.type, fields))
-    console.log(`${dim('--- ')}${flags.convexDir}/${flags.name}.ts${dim(' ---')}`)
-    console.log(genEndpointContent(flags.name, flags.type))
-    console.log(`${dim('--- ')}${flags.appDir}/${flags.name}/page.tsx${dim(' ---')}`)
-    console.log(genPageContent(flags.name, flags.type))
+    printDryRun(flags, fields)
     return { created: 0, skipped: 0 }
   }
-  console.log(`\n${bold(`Adding ${flags.type} table: ${flags.name}`)}\n`)
-  let created = 0
-  let skipped = 0
-  const schemaFile = join(convexPath, `${flags.name}-schema.ts`)
-  if (
-    writeIfNotExists({
-      content: genSchemaContent(flags.name, flags.type, fields),
-      label: `${flags.convexDir}/${flags.name}-schema.ts`,
-      path: schemaFile
-    })
-  )
-    created += 1
-  else skipped += 1
-  const endpointFile = join(convexPath, `${flags.name}.ts`)
-  if (
-    writeIfNotExists({
-      content: genEndpointContent(flags.name, flags.type),
-      label: `${flags.convexDir}/${flags.name}.ts`,
-      path: endpointFile
-    })
-  )
-    created += 1
-  else skipped += 1
-  const pageDir = join(appPath, flags.name)
-  const pageFile = join(pageDir, 'page.tsx')
-  if (
-    writeIfNotExists({
-      content: genPageContent(flags.name, flags.type),
-      label: `${flags.appDir}/${flags.name}/page.tsx`,
-      path: pageFile
-    })
-  )
-    created += 1
-  else skipped += 1
-  console.log('')
-  if (created > 0) console.log(`${green('✓')} Created ${created} file${created > 1 ? 's' : ''}.`)
-  if (skipped > 0) console.log(`${yellow('⚠')} Skipped ${skipped} existing file${skipped > 1 ? 's' : ''}.`)
-  console.log(`\n${bold('Next steps:')}`)
-  console.log(`  ${dim('1.')} Import and register in your schema.ts`)
-  console.log(`  ${dim('2.')} Add ${flags.type === 'child' ? 'childCrud' : factoryFn(flags.type)} import to your lazy.ts`)
-  console.log(`  ${dim('3.')} Update guarded-api.ts to include '${flags.name}'\n`)
+  const addingLabel = bold(`Adding ${flags.type} table: ${flags.name}`)
+  console.log(`\n${addingLabel}\n`)
+  const { created, skipped } = writeAddFiles({ appPath, convexPath, fields, flags })
+  printAddResult(flags, created, skipped)
   if (userConfig?.hooks?.afterAdd) await userConfig.hooks.afterAdd(hookCtx)
   return { created, skipped }
 }

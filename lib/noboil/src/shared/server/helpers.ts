@@ -66,38 +66,29 @@ const isComparisonOp = (val: unknown): val is ComparisonOp<unknown> =>
   val !== null &&
   ('$gt' in val || '$gte' in val || '$lt' in val || '$lte' in val || '$between' in val)
 const matchField = (docVal: unknown, filterVal: unknown): boolean => {
-  if (isComparisonOp(filterVal)) {
-    const dv = docVal as number
-    if (filterVal.$gt !== undefined && !(dv > (filterVal.$gt as number))) return false
-    if (filterVal.$gte !== undefined && !(dv >= (filterVal.$gte as number))) return false
-    if (filterVal.$lt !== undefined && !(dv < (filterVal.$lt as number))) return false
-    if (filterVal.$lte !== undefined && !(dv <= (filterVal.$lte as number))) return false
-    if (filterVal.$between !== undefined) {
-      const [min, max] = filterVal.$between as [number, number]
-      if (!(dv >= min && dv <= max)) return false
-    }
-    return true
+  if (!isComparisonOp(filterVal)) return Object.is(docVal, filterVal)
+  const dv = docVal as number
+  if (filterVal.$gt !== undefined && dv <= (filterVal.$gt as number)) return false
+  if (filterVal.$gte !== undefined && dv < (filterVal.$gte as number)) return false
+  if (filterVal.$lt !== undefined && dv >= (filterVal.$lt as number)) return false
+  if (filterVal.$lte !== undefined && dv > (filterVal.$lte as number)) return false
+  if (filterVal.$between !== undefined) {
+    const [min, max] = filterVal.$between as [number, number]
+    if (dv < min || dv > max) return false
   }
-  return Object.is(docVal, filterVal)
+  return true
 }
 const pickFields = (data: Record<string, unknown>, keys: string[]): Record<string, unknown> => {
   const result: Record<string, unknown> = {}
   for (const k of keys) if (k in data) result[k] = data[k]
   return result
 }
+const hasNonOwnField = (g: Record<string, unknown>): boolean => Object.keys(g).some(k => k !== 'own' && g[k] !== undefined)
 const groupList = <WG extends Record<string, unknown> & { own?: boolean }>(w?: WG & { or?: WG[] }): WG[] => {
   if (!w) return []
   const groups: WG[] = [{ ...w, or: undefined }, ...(w.or ?? [])]
-  const out: WG[] = []
-  for (const g of groups)
-    if (g.own) out.push(g)
-    else {
-      const keys = Object.keys(g)
-      let hasField = false
-      for (const k of keys) if (k !== 'own' && g[k] !== undefined) hasField = true
-      if (hasField) out.push(g)
-    }
-  return out
+  // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- boolean OR: `own === false` must still fall through to the field check, `??` would short-circuit on it
+  return groups.filter(g => g.own || hasNonOwnField(g))
 }
 const matchW = <WG extends Record<string, unknown> & { own?: boolean }>(
   doc: Record<string, unknown>,
@@ -167,7 +158,8 @@ const createErrorUtils = (config: ErrorUtilsConfig) => {
     const d = extractErrorData(e)
     if (!d) return e instanceof Error ? e.message : 'Unknown error'
     const base = d.message ?? errorMessages[d.code] ?? 'Unknown error'
-    let detail = d.table ? `${base} [${d.table}${d.op ? `:${d.op}` : ''}]` : base
+    const opPart = d.op ? `:${d.op}` : ''
+    let detail = d.table ? `${base} [${d.table}${opPart}]` : base
     if (d.retryAfter !== undefined) detail += ` (retry after ${d.retryAfter}ms)`
     return detail
   }

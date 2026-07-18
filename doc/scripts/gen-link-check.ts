@@ -11,7 +11,7 @@ const MDX_EXT_RE = /\.mdx$/u
 const main = () => {
   // oxlint-disable-next-line node/no-sync
   const files = readdirSync(DOCS_DIR)
-    .toSorted()
+    .toSorted((a, b) => (a < b ? -1 : Number(a > b)))
     .filter(f => f.endsWith('.mdx'))
   const slugs = new Set(files.map(f => f.replace(MDX_EXT_RE, '')))
   const anchorsByFile = new Map<string, Set<string>>()

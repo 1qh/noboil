@@ -7,15 +7,15 @@ const hooksFor = (kind: 'convex' | 'spacetimedb'): string[] => {
   const dir = `${LIB_NOBOIL}/src/${kind}/react`
   // oxlint-disable-next-line node/no-sync
   return readdirSync(dir)
-    .toSorted()
+    .toSorted((a, b) => (a < b ? -1 : Number(a > b)))
     .filter(f => f.startsWith('use-') && f.endsWith('.ts') && !f.endsWith('.test.ts'))
     .map(f => `use${f.slice(4, -3).replaceAll(/-./gu, m => m[1]?.toUpperCase() ?? '')}`)
-    .toSorted()
+    .toSorted((a, b) => (a < b ? -1 : Number(a > b)))
 }
 const main = () => {
   const cvx = hooksFor('convex')
   const stdb = hooksFor('spacetimedb')
-  const all = [...new Set([...cvx, ...stdb])].toSorted()
+  const all = [...new Set([...cvx, ...stdb])].toSorted((a, b) => (a < b ? -1 : Number(a > b)))
   const rows = all.map(hook => {
     const inCvx = cvx.includes(hook)
     const inStdb = stdb.includes(hook)

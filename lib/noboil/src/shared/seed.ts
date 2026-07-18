@@ -42,6 +42,7 @@ const WORDS = [
   'yankee',
   'zulu'
 ] as const
+// eslint-disable-next-line sonarjs/pseudo-random -- non-security seed/demo data generation
 const randomInt = (min: number, max: number): number => Math.floor(Math.random() * (max - min + 1)) + min
 const randomPick = <T>(arr: readonly T[]): T => arr[randomInt(0, arr.length - 1)] as T
 const randomWord = (): string => randomPick(WORDS)
@@ -91,6 +92,7 @@ const createSeedUtils = <TFieldType, TSchemaInput>(
     if (fk === 'file') return options.randomFileRef()
     if (fk === 'files') return [options.randomFileRef(), options.randomFileRef()]
     const { schema: base, type } = helpers.unwrapZod(field as unknown as TSchemaInput)
+    // eslint-disable-next-line sonarjs/pseudo-random -- non-security seed/demo data generation
     if (helpers.isBooleanType(type)) return Math.random() > 0.5
     if (helpers.isNumberType(type)) return randomInt(1, 1000)
     if (helpers.isStringType(type)) return generateStringValue(base)
@@ -109,6 +111,7 @@ const createSeedUtils = <TFieldType, TSchemaInput>(
     for (const k of Object.keys(schema.shape)) {
       const field = schema.shape[k] as ZodType
       if (helpers.isOptionalField(field as unknown as TSchemaInput))
+        // eslint-disable-next-line sonarjs/pseudo-random -- non-security seed/demo data generation
         result[k] = Math.random() > 0.3 ? generateFieldValue(field) : undefined
       else result[k] = generateFieldValue(field)
     }

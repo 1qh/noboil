@@ -64,11 +64,8 @@ const WikiDetailPage = ({ params }: { params: Promise<{ wikiId: Id<'wiki'> }> })
       <div className='flex items-center justify-between'>
         <div className='flex items-center gap-3'>
           <h1 className={cn('text-2xl font-bold', isDeleted && 'line-through opacity-60')}>{wiki.title}</h1>
-          {isDeleted ? (
-            <Badge variant='destructive'>deleted</Badge>
-          ) : canEditWiki ? null : (
-            <Badge variant='secondary'>View only</Badge>
-          )}
+          {isDeleted ? <Badge variant='destructive'>deleted</Badge> : null}
+          {isDeleted || canEditWiki ? null : <Badge variant='secondary'>View only</Badge>}
         </div>
         {canEditWiki && !isDeleted ? (
           <Button nativeButton={false} render={p => <Link {...p} href={`/wiki/${wikiId}/edit`} />} variant='outline'>

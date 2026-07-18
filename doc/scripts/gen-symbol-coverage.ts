@@ -23,14 +23,18 @@ const STRIP_RE =
   /\{\/\* AUTO-GENERATED:SYMBOL-COVERAGE:START \*\/\}[\s\S]*?\{\/\* AUTO-GENERATED:SYMBOL-COVERAGE:END \*\/\}/gu
 const collectDocsText = (root: string): string => {
   let combined = ''
-  // oxlint-disable-next-line node/no-sync
-  for (const f of readdirSync(root).toSorted()) if (f.endsWith('.mdx')) combined += readFileSync(`${root}/${f}`, 'utf8')
+  // oxlint-disable-next-line node/no-sync -- CLI tool: synchronous fs by design
+  const files = readdirSync(root).toSorted((a, b) => (a < b ? -1 : Number(a > b)))
+  for (const f of files)
+    if (f.endsWith('.mdx'))
+      // oxlint-disable-next-line node/no-sync -- CLI tool: synchronous fs by design
+      combined += readFileSync(`${root}/${f}`, 'utf8')
   return combined.replaceAll(STRIP_RE, '')
 }
-const main = () => {
-  const pkg = readJson(PKG_JSON_PATH) as {
-    exports: Record<string, string | { default?: string; import?: string; require?: string; types?: string }>
-  }
+interface Pkg {
+  exports: Record<string, string | { default?: string; import?: string; require?: string; types?: string }>
+}
+const collectPublicExports = (pkg: Pkg): Set<string> => {
   const publicExports = new Set<string>()
   for (const [, target] of Object.entries(pkg.exports)) {
     const path = typeof target === 'string' ? target : (target.types ?? target.default ?? target.import ?? '')
@@ -40,10 +44,15 @@ const main = () => {
       if (statSync(abs, { throwIfNoEntry: false })) for (const sym of collectExports(abs)) publicExports.add(sym)
     }
   }
+  return publicExports
+}
+const main = () => {
+  const pkg = readJson(PKG_JSON_PATH) as Pkg
+  const publicExports = collectPublicExports(pkg)
   const docsText = collectDocsText(DOCS_DIR)
   const documented: string[] = []
   const undocumented: string[] = []
-  for (const sym of [...publicExports].toSorted()) {
+  for (const sym of [...publicExports].toSorted((a, b) => (a < b ? -1 : Number(a > b)))) {
     const re = new RegExp(`\\b${sym}\\b`, 'u')
     if (re.test(docsText)) documented.push(sym)
     else undocumented.push(sym)

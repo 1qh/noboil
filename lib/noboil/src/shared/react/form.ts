@@ -130,28 +130,43 @@ const readRegistryMeta = (schema: unknown): { description?: string; max?: number
     return {}
   }
 }
-const getMeta = (schema: unknown): FieldMeta => {
-  const { schema: base, type } = unwrapZod(schema)
-  const fileKind = fileKindOf(schema)
-  const reg = readRegistryMeta(schema)
-  if (fileKind === 'file' || fileKind === 'files') {
-    const metaFn = (schema as { meta?: () => unknown }).meta
-    const m = metaFn ? (metaFn() as undefined | { accept?: string; maxSize?: number }) : undefined
-    const fileMeta: FieldMeta = { kind: fileKind, ...reg }
-    if (m?.accept) fileMeta.accept = m.accept
-    if (m?.maxSize) fileMeta.maxSize = m.maxSize
-    if (fileKind === 'files') fileMeta.max = reg.max ?? getMax(base)
-    return fileMeta
-  }
-  if (isArrayType(type)) {
-    const el = unwrapZod(elementOf(base))
-    return { kind: isStringType(el.type) ? 'stringArray' : 'unknown', max: reg.max ?? getMax(base), ...reg }
-  }
+type RegistryMeta = ReturnType<typeof readRegistryMeta>
+const getFileMeta = ({
+  base,
+  fileKind,
+  reg,
+  schema
+}: {
+  base: undefined | ZodSchema
+  fileKind: 'file' | 'files'
+  reg: RegistryMeta
+  schema: unknown
+}): FieldMeta => {
+  const metaFn = (schema as { meta?: () => unknown }).meta
+  const m = metaFn ? (metaFn() as undefined | { accept?: string; maxSize?: number }) : undefined
+  const fileMeta: FieldMeta = { kind: fileKind, ...reg }
+  if (m?.accept) fileMeta.accept = m.accept
+  if (m?.maxSize) fileMeta.maxSize = m.maxSize
+  if (fileKind === 'files') fileMeta.max = reg.max ?? getMax(base)
+  return fileMeta
+}
+const getScalarMeta = (type: ReturnType<typeof unwrapZod>['type'], reg: RegistryMeta): FieldMeta => {
   if (isStringType(type)) return { kind: 'string', ...reg }
   if (isNumberType(type)) return { kind: 'number', ...reg }
   if (isBooleanType(type)) return { kind: 'boolean', ...reg }
   if (isDateType(type)) return { kind: 'date', ...reg }
   return { kind: 'unknown', ...reg }
+}
+const getMeta = (schema: unknown): FieldMeta => {
+  const { schema: base, type } = unwrapZod(schema)
+  const fileKind = fileKindOf(schema)
+  const reg = readRegistryMeta(schema)
+  if (fileKind === 'file' || fileKind === 'files') return getFileMeta({ base, fileKind, reg, schema })
+  if (isArrayType(type)) {
+    const el = unwrapZod(elementOf(base))
+    return { kind: isStringType(el.type) ? 'stringArray' : 'unknown', max: reg.max ?? getMax(base), ...reg }
+  }
+  return getScalarMeta(type, reg)
 }
 const buildMeta = <S extends ZodObject>(schema: S): { [K in keyof S['shape']]: FieldMeta } => {
   const meta: FieldMetaMap = {}

@@ -20,7 +20,8 @@ interface ToolPart {
   toolName?: string
   type?: string
 }
-const WEATHER_LOCATION_RE = /weather(?:\s+in)?\s+(?<location>[a-zA-Z\s-]+)/u
+const WEATHER_LOCATION_RE = /weather(?:\s+in)?\s+(?<location>[a-zA-Z][a-zA-Z\s-]*)/u
+// eslint-disable-next-line sonarjs/super-linear-regex -- linear: single character class with one quantifier anchored to end, no ambiguous overlap
 const TRAILING_PUNCT_RE = /[?.!,]+$/u
 const WEATHER_WORD_RE = /\bweather\b/iu
 const withUnavailable = () => Response.json({ error: 'AI not available' }, { status: 503 })
@@ -55,7 +56,7 @@ const getLatestApprovalPart = (messages: UIMessage[]): null | ToolPart => {
 const getLocation = (text: string): string => {
   const match = WEATHER_LOCATION_RE.exec(text)
   if (!match) return 'London'
-  const location = match[1]?.trim()
+  const location = match.groups?.location?.trim()
   if (!location) return 'London'
   return location.replace(TRAILING_PUNCT_RE, '')
 }

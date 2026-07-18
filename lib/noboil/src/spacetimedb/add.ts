@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/* eslint-disable no-console, complexity, @typescript-eslint/max-params */
+/* eslint-disable no-console, @typescript-eslint/max-params */
 import { dirname, join } from 'node:path'
 import type { ParsedField } from '../shared/schema-types'
 import type { FieldType, TableType } from '../shared/types'
@@ -18,6 +18,7 @@ interface AddFlags {
 const TABLE_TYPES = new Set<TableType>(['cache', 'child', 'kv', 'log', 'org', 'owned', 'quota', 'singleton'])
 const FIELD_TYPES = new Set<FieldType>(['boolean', 'number', 'string'])
 const parseFieldDef = (raw: string): null | ParsedField => parseEnumFieldDef(raw, FIELD_TYPES)
+// eslint-disable-next-line sonarjs/cognitive-complexity -- linear flag-parsing dispatcher over argv tokens
 const parseAddFlags = (args: string[]): AddFlags => {
   let type: TableType = 'owned'
   let moduleDir = 'module'
@@ -88,9 +89,11 @@ const fieldToInputType = (f: ParsedField): string => {
     const vals = f.type.enum.map(v => `'${v}'`).join(' | ')
     return f.optional ? `${vals} | undefined` : vals
   }
-  const base = f.type === 'boolean' ? 'boolean' : f.type === 'number' ? 'number' : 'string'
+  const base: string = f.type
   return f.optional ? `${base} | undefined` : base
 }
+const CRUD_FACTORY: Partial<Record<TableType, string>> = { cache: 'CacheCrud', child: 'ChildCrud', org: 'Org' }
+const crudFactory = (type: TableType): string => CRUD_FACTORY[type] ?? 'Crud'
 const defaultFields = (type: TableType): ParsedField[] => {
   const base: ParsedField[] = [
     { name: 'title', optional: false, type: 'string' },
@@ -196,29 +199,10 @@ const genReducerContent = ({
   for (const f of fields) updateFields.push(`  ${f.name}?: ${fieldToInputType({ ...f, optional: true })}`)
   const idType = type === 'singleton' ? 'userId: string' : 'id: number'
   const parentLabel = type === 'child' ? `, parent: '${parent || name}'` : ''
+  const factory = crudFactory(type)
   return `import { reducer } from 'spacetimedb'
-import { make${
-    type === 'cache'
-      ? 'CacheCrud'
-      : type === 'child'
-        ? 'ChildCrud'
-        : type === 'org'
-          ? 'Org'
-          : type === 'singleton'
-            ? 'Crud'
-            : 'Crud'
-  } } from './server'
-const model = make${
-    type === 'cache'
-      ? 'CacheCrud'
-      : type === 'child'
-        ? 'ChildCrud'
-        : type === 'org'
-          ? 'Org'
-          : type === 'singleton'
-            ? 'Crud'
-            : 'Crud'
-  }({ table: '${name}'${parentLabel} })
+import { make${factory} } from './server'
+const model = make${factory}({ table: '${name}'${parentLabel} })
 const create${camelToTitle(name).replaceAll(/\s/gu, '')} = reducer(
   '${name}.create',
   (ctx, input: {
@@ -409,6 +393,7 @@ const promptInteractive = async (): Promise<AddFlags | null> => {
     type: result.type
   }
 }
+// eslint-disable-next-line sonarjs/cognitive-complexity -- sequential file-write orchestration with per-file created/skipped tally
 const addSync = async (flags: AddFlags) => {
   const fields = flags.fields.length > 0 ? flags.fields : defaultFields(flags.type)
   const { findManifestPath } = await import('../shared/manifest')
@@ -426,7 +411,8 @@ const addSync = async (flags: AddFlags) => {
   const isDryRun = process.argv.includes('--dry-run')
   if (!isDryRun && userConfig?.hooks?.beforeAdd) await userConfig.hooks.beforeAdd(hookCtx)
   if (isDryRun) {
-    console.log(`\n${bold(`Dry-run: ${flags.type} table '${flags.name}'`)}\n`)
+    const dryRunLabel = `Dry-run: ${flags.type} table '${flags.name}'`
+    console.log(`\n${bold(dryRunLabel)}\n`)
     console.log(`${dim('--- ')}${flags.moduleDir}/tables/${flags.name}.ts${dim(' ---')}`)
     console.log(genTableContent(flags.name, flags.type, fields))
     console.log(`${dim('--- ')}${flags.moduleDir}/reducers/${flags.name}.ts${dim(' ---')}`)
@@ -437,7 +423,8 @@ const addSync = async (flags: AddFlags) => {
   }
   const modulePath = join(projectRoot, flags.moduleDir)
   const appPath = join(projectRoot, flags.appDir)
-  console.log(`\n${bold(`Adding ${flags.type} table: ${flags.name}`)}\n`)
+  const addingLabel = `Adding ${flags.type} table: ${flags.name}`
+  console.log(`\n${bold(addingLabel)}\n`)
   let created = 0
   let skipped = 0
   const tableFile = join(modulePath, `tables/${flags.name}.ts`)

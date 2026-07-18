@@ -81,8 +81,10 @@ const useList = <F extends PaginatedQueryReference>(query: F, ...rest: ListRest<
   }, [])
   useEffect(() => {
     if (!(isDev && subIdRef.current)) return
-    const devStatus =
-      status === 'LoadingFirstPage' ? 'loading' : status === 'Exhausted' || status === 'CanLoadMore' ? 'loaded' : 'loading'
+    let devStatus: 'loaded' | 'loading'
+    if (status === 'LoadingFirstPage') devStatus = 'loading'
+    else if (status === 'Exhausted' || status === 'CanLoadMore') devStatus = 'loaded'
+    else devStatus = 'loading'
     updateSubscription(subIdRef.current, devStatus)
   }, [status])
   useEffect(() => {

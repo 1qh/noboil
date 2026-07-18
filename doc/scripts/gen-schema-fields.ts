@@ -13,7 +13,9 @@ const escapeMd = (s: string): string =>
     .replaceAll('>', '&gt;')
 const SLOT_RE = /^\s{2}(?<slot>\w+):\s*\{/u
 const TABLE_RE = /^(?<indent>\s+)(?<name>\w+):\s*(?:object\(\{|child\(\{|\{|orgSchema)/u
-const FIELD_RE = /^\s+(?<fname>\w+):\s*(?<ftype>.+?)[,]?$/u
+// eslint-disable-next-line regexp/no-super-linear-backtracking, sonarjs/super-linear-regex -- matches one schema field line from trusted repo source; bounded non-adversarial input
+const FIELD_RE = /^\s+(?<fname>\w+):\s*(?<ftype>.+?),?$/u
+// eslint-disable-next-line sonarjs/super-linear-regex -- single character-class quantifier anchored at end; linear
 const TRAILING_PUNCT_RE = /[,;]+$/u
 const SKIP_KEYS = new Set([
   'durationMs',
@@ -34,6 +36,7 @@ interface ScanState {
   tableFields: Map<string, { fields: { name: string; type: string }[]; slot: string }>
   tableIndent: number
 }
+// eslint-disable-next-line sonarjs/cognitive-complexity -- line-by-line schema scanner state machine; branch-per-syntactic-form is irreducible
 const scanLine = (st: ScanState, raw: string): void => {
   if (!st.inSchema) {
     if (raw.includes('schema({')) {

@@ -57,6 +57,7 @@ type EnrichedDoc<S extends ZodRawShape> = WithUrls<
 >
 // oxlint-disable-next-line typescript/ban-types
 type ErrorCode = BuiltinErrorCode | (string & {})
+// eslint-disable-next-line sonarjs/redundant-type-aliases -- semantic domain alias (file id) exported as public API and used at cast sites
 type FID = string
 /** Map of column name → stdb type builder. The `fields` arg in factory configs (kv/log/quota/crud). */
 type FieldBuilders = Record<string, ColumnBuilder<unknown, AlgebraicTypeType> | TypeBuilder<unknown, AlgebraicTypeType>>

@@ -5,7 +5,8 @@ import { DOCS_DIR, LIB_NOBOIL, replaceBetween } from './lib'
 
 const CVX = `${LIB_NOBOIL}/src/convex/server`
 const ENDPOINT_RE = /^\s*const\s+(?<name>\w+)\s*=\s*b\.(?<kind>[qm])\(/u
-const RETURN_RE = /return\s+typed\(\{\s*(?<body>[^}]+)\s*\}\)/u
+const RETURN_RE = /return\s+typed\(\{(?<body>[^}]+)\}\)/u
+// eslint-disable-next-line sonarjs/super-linear-regex -- single greedy quantifier anchored at end; linear
 const TYPE_ANNOTATION_RE = /:.+$/u
 const extract = (file: string): { kind: 'm' | 'q'; name: string }[] => {
   // oxlint-disable-next-line node/no-sync

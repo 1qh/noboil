@@ -8,8 +8,9 @@ const LIB_NOBOIL = `${REPO}/lib/noboil`
 const DOCS_DIR = `${REPO}/doc/content/docs`
 const PKG_JSON_PATH = `${LIB_NOBOIL}/package.json`
 const BLANK_AFTER_START_RE = /^\n\s*\n/u
-const BLANK_BEFORE_END_RE = /\n\s*\n$/u
-const TABLE_SEP_RE = /^\|[\s|:-]*-{3,}[\s|:-]*\|$/u
+const BLANK_BEFORE_END_RE = /\n[^\S\n]*\n$/u
+// eslint-disable-next-line regexp/no-super-linear-backtracking, sonarjs/super-linear-regex -- matches one trimmed markdown separator line from trusted repo docs; bounded non-adversarial input
+const TABLE_SEP_RE = /^\|[\s|:-]*-{3}[\s|:-]*\|$/u
 const TABLE_SEP_CELL_RE = /^:?-+:?$/u
 const EXPORT_BRACE_RE = /export\s+(?:type\s+)?\{(?<syms>[^}]+)\}/gu
 const TYPE_PREFIX_RE = /^type\s+/u

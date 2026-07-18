@@ -135,9 +135,8 @@ const Page = () => {
             </div>
           </div>
         </div>
-      ) : movie ? (
-        <MovieDetail movie={movie} />
       ) : null}
+      {!pending && movie ? <MovieDetail movie={movie} /> : null}
     </div>
   )
 }

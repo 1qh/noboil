@@ -27,16 +27,17 @@ interface FormReturn<T extends Record<string, unknown>, S extends ZodObject> ext
 }
 type Key<T, V> = string & { [K in keyof T]: T[K] extends V ? K : never }[keyof T]
 type Props<K extends keyof typeof fields> = Parameters<(typeof fields)[K]>[0]
+type StrArrOpt = readonly string[] | string[] | undefined
 interface TypedFields<T> {
-  Arr: (p: WithName<Props<'Arr'>, Key<T, readonly string[] | string[] | undefined>>) => ReactNode
+  Arr: (p: WithName<Props<'Arr'>, Key<T, StrArrOpt>>) => ReactNode
   Choose: (p: WithName<Props<'Choose'>, Key<T, string | undefined>>) => ReactNode
   Colorpick: (p: WithName<Props<'Colorpick'>, Key<T, string | undefined>>) => ReactNode
   Combobox: (p: WithName<Props<'Combobox'>, Key<T, string | undefined>>) => ReactNode
   Datepick: (p: WithName<Props<'Datepick'>, Key<T, null | number | undefined>>) => ReactNode
   Err: typeof fields.Err
   File: (p: WithName<Props<'File'>, Key<T, null | string | undefined>>) => ReactNode
-  Files: (p: WithName<Props<'Files'>, Key<T, readonly string[] | string[] | undefined>>) => ReactNode
-  MultiSelect: (p: WithName<Props<'MultiSelect'>, Key<T, readonly string[] | string[] | undefined>>) => ReactNode
+  Files: (p: WithName<Props<'Files'>, Key<T, StrArrOpt>>) => ReactNode
+  MultiSelect: (p: WithName<Props<'MultiSelect'>, Key<T, StrArrOpt>>) => ReactNode
   Num: (p: WithName<Props<'Num'>, Key<T, number | undefined>>) => ReactNode
   Rating: (p: WithName<Props<'Rating'>, Key<T, number | undefined>>) => ReactNode
   Slider: (p: WithName<Props<'Slider'>, Key<T, number | undefined>>) => ReactNode

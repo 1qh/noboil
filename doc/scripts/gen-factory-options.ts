@@ -5,6 +5,7 @@ import { readFileSync } from 'node:fs'
 import { DOCS_DIR, LIB_NOBOIL, replaceBetween } from './lib'
 
 const STDB = `${LIB_NOBOIL}/src/spacetimedb/server`
+// eslint-disable-next-line regexp/no-super-linear-backtracking, sonarjs/super-linear-regex -- matches one interface member from trusted repo source; bounded non-adversarial input
 const FIELD_RE = /^\s*(?<name>\w+)(?<opt>\??):\s*(?<type>[^/\n]+?)\s*(?:\/\/.*)?$/u
 const LEAD_PAREN_RE = /^\(/u
 const TRAIL_PAREN_RE = /\)$/u
@@ -31,8 +32,10 @@ const extract = (file: string, name: string): { name: string; opt: string; type:
 const formatTable = (rows: { name: string; opt: string; type: string }[]): string => {
   if (rows.length === 0) return '_(none)_'
   const lines = ['| Option | Type | Required |', '|---|---|---|']
-  for (const r of rows)
-    lines.push(`| \`${r.name}\` | \`${r.type.replaceAll(/\\\|/gu, String.raw`\|`)}\` | ${r.opt ? 'no' : 'yes'} |`)
+  for (const r of rows) {
+    const type = r.type.replaceAll(/\\\|/gu, String.raw`\|`)
+    lines.push(`| \`${r.name}\` | \`${type}\` | ${r.opt ? 'no' : 'yes'} |`)
+  }
   return lines.join('\n')
 }
 const main = () => {

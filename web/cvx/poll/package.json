@@ -1,6 +1,7 @@
 {
   "name": "@a/convex-poll",
   "private": true,
+  "description": "noboil cvx poll demo app",
   "type": "module",
   "scripts": {
     "build": "next build --turbo",

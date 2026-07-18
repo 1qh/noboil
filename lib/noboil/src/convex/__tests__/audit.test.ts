@@ -12,7 +12,13 @@ describe('makeAudit shape', () => {
   const mockBuilders = { m: mockMb, q: mockQb } as unknown as Parameters<typeof makeAudit>[0]['builders']
   test('returns append / recent / listByActor / listByTrace / pruneStale', () => {
     const result = makeAudit({ builders: mockBuilders, table: 'audit' })
-    expect(Object.keys(result).toSorted()).toEqual(['append', 'listByActor', 'listByTrace', 'pruneStale', 'recent'])
+    expect(Object.keys(result).toSorted((a, b) => a.localeCompare(b))).toEqual([
+      'append',
+      'listByActor',
+      'listByTrace',
+      'pruneStale',
+      'recent'
+    ])
   })
   test('respects custom ttlMs', () => {
     const result = makeAudit({ builders: mockBuilders, table: 'audit', ttlMs: 60_000 })

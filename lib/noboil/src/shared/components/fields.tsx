@@ -1,6 +1,7 @@
 /** biome-ignore-all lint/nursery/noUndeclaredClasses: tailwind-v4 utilities biome cannot resolve */
 /** biome-ignore-all lint/nursery/noComponentHookFactories: field/handler factory, not a component/hook */
 /* eslint-disable @typescript-eslint/no-unnecessary-condition */
+/* eslint-disable sonarjs/no-nested-functions -- field/handler factory: render-prop + map JSX inherently nests event handlers one level past the threshold */
 /* oxlint-disable jsx-no-jsx-as-prop */
 // oxlint-disable promise/prefer-await-to-then
 'use client'
@@ -51,8 +52,7 @@ interface CreateFieldsModuleOptions {
   }
   unwrapZod: (schema: unknown) => { schema: unknown; type?: string }
 }
-type FieldKind = string
-type FieldMetaMap = Record<string, { accept?: string; kind: FieldKind; max?: number; maxSize?: number }>
+type FieldMetaMap = Record<string, { accept?: string; kind: string; max?: number; maxSize?: number }>
 type FileFieldComponent = (props: {
   accept?: string
   compressImg?: boolean
@@ -67,7 +67,12 @@ type FileFieldComponent = (props: {
 }) => ReactNode
 const CAMEL_RE = /(?<lower>[a-z\d])(?<upper>[A-Z])/gu
 const FIRST_CHAR_RE = /^./u
-const HEX_COLOR_REGEX = /^#[\dA-Fa-f]{6}$/u
+const SubmitButtonIcon = ({ Icon, pending }: { Icon?: LucideIcon; pending: boolean }): ReactNode => {
+  if (pending) return <Spinner />
+  if (Icon) return <Icon />
+  return null
+}
+const HEX_COLOR_REGEX = /^#[\dA-F]{6}$/iu
 // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters
 const readValue = <T,>(field: AnyFieldApi): T => {
   const raw: unknown = field.state.value
@@ -101,7 +106,7 @@ const createFieldsModule = ({
     if (!c) throw new Error(errors?.fieldOutsideForm ?? 'Field must be inside <Form>')
     return c
   }
-  const useField = (name: string, kind: FieldKind) => {
+  const useField = (name: string, kind: string) => {
     const ctx = useFCtx()
     const info = ctx.meta[name]
     if (!info)
@@ -125,7 +130,11 @@ const createFieldsModule = ({
   }
   /** Derives a human-readable label from a camelCase field name. */
   const deriveLabel = (name: string): string =>
-    name.replace(CAMEL_RE, '$1 $2').replace(FIRST_CHAR_RE, c => c.toUpperCase())
+    name.replace(CAMEL_RE, '$<lower> $<upper>').replace(FIRST_CHAR_RE, c => c.toUpperCase())
+  const fieldLabelText = (label: false | string | undefined, name: string, required?: boolean): string | undefined => {
+    if (label === false) return
+    return `${label ?? deriveLabel(name)}${required ? ' *' : ''}`
+  }
   const defaultEnumOptions = (schema: ZodObject, name: string): { label: string; value: string }[] => {
     const { schema: inner } = unwrapZod(schema.shape[name])
     if (typeof inner === 'object' && inner !== null && 'options' in inner) {
@@ -632,7 +641,7 @@ const createFieldsModule = ({
                 disabled={disabled}
                 dropClassName={dropClassName}
                 field={f}
-                label={label === false ? undefined : `${label ?? deriveLabel(name)}${required ? ' *' : ''}`}
+                label={fieldLabelText(label, name, required)}
                 maxSize={maxSize ?? info.maxSize}
                 {...props}
               />
@@ -681,7 +690,7 @@ const createFieldsModule = ({
                 disabled={disabled}
                 dropClassName={dropClassName}
                 field={f}
-                label={label === false ? undefined : `${label ?? deriveLabel(name)}${required ? ' *' : ''}`}
+                label={fieldLabelText(label, name, required)}
                 max={max ?? info.max}
                 maxSize={maxSize ?? info.maxSize}
                 multiple
@@ -986,7 +995,7 @@ const createFieldsModule = ({
         <form.Subscribe selector={s => s.isSubmitting}>
           {pending => (
             <Button disabled={disabled ?? pending} type='submit' {...props}>
-              {pending ? <Spinner /> : Icon ? <Icon /> : null}
+              <SubmitButtonIcon Icon={Icon} pending={pending} />
               {children}
             </Button>
           )}

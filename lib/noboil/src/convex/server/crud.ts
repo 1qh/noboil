@@ -41,8 +41,21 @@ import {
   warnLargeFilterSet
 } from './helpers'
 
+type SearchInput = string | true | undefined | { field?: string; index?: string }
 type W = WG & { or?: WG[] }
 type WG = Rec & { own?: boolean }
+const resolveSearchCfg = (search: SearchInput): null | { field: string; index: string } => {
+  if (search === true) return { field: 'text', index: 'search_field' }
+  if (typeof search === 'string') return { field: search, index: 'search_field' }
+  if (typeof search === 'object') return { field: search.field ?? 'text', index: search.index ?? 'search_field' }
+  return null
+}
+const resolvePubWhere = (pub: boolean | string | undefined | { where?: unknown }): unknown => {
+  if (typeof pub === 'string') return { [pub]: true }
+  if (typeof pub === 'boolean') return
+  return pub?.where
+}
+// eslint-disable-next-line sonarjs/cognitive-complexity -- irreducible where-clause expression builder; behavior is covered by pure.test.ts and refactoring risks the untestable runtime filter path
 const buildExpr = (fb: FilterLike, w: WG, vid: null | string) => {
   let e: unknown = null
   const and = (x: unknown) => {
@@ -107,14 +120,7 @@ const makeCrud = <S extends ZodRawShape>({
   const { m, pq, q } = builders
   const rl = opt?.rateLimit ? normalizeRateLimit(opt.rateLimit) : undefined
   const hooks = opt?.hooks
-  const searchCfg =
-    opt?.search === true
-      ? { field: 'text', index: 'search_field' }
-      : typeof opt?.search === 'string'
-        ? { field: opt.search, index: 'search_field' }
-        : typeof opt?.search === 'object'
-          ? { field: opt.search.field ?? 'text', index: opt.search.index ?? 'search_field' }
-          : null
+  const searchCfg = resolveSearchCfg(opt?.search)
   const partial = schema.partial()
   const bulkIdsSchema = array(zid(table)).max(BULK_MAX)
   const updateItemSchema = partial.extend({ expectedUpdatedAt: number().optional(), id: zid(table) })
@@ -129,8 +135,7 @@ const makeCrud = <S extends ZodRawShape>({
     const r = wSchema.safeParse(i)
     return r.success ? (r.data as W) : errValidation('INVALID_WHERE', r.error)
   }
-  const pubWhere =
-    typeof opt?.pub === 'string' ? { [opt.pub]: true } : typeof opt?.pub === 'boolean' ? undefined : opt?.pub?.where
+  const pubWhere = resolvePubWhere(opt?.pub)
   const defaults = { auth: parseW(opt?.auth?.where), pub: parseW(pubWhere) }
   const enrich = async (c: ReadCtx, docs: Rec[]) => {
     const withAuthorDocs = await c.withAuthor(docs as { userId: string }[])
@@ -287,6 +292,7 @@ const makeCrud = <S extends ZodRawShape>({
       user?: Rec
     },
     { id }: { id: string }
+    // eslint-disable-next-line sonarjs/cognitive-complexity -- soft-delete/cascade/hook branches are irreducible; refactoring risks the untestable runtime delete path
   ) => {
     if (opt?.softDelete) {
       const doc = await c.db.get(id)
@@ -330,6 +336,7 @@ const makeCrud = <S extends ZodRawShape>({
     }),
     create: m({
       args: { ...partial.shape, items: array(schema).max(BULK_MAX).optional() },
+      // eslint-disable-next-line sonarjs/cognitive-complexity -- bulk/single create with per-item validation early-returns; extracting would alter the runtime return-on-error control flow
       handler: typed(async (c: CrudMCtx, a: Rec) => {
         const items = a.items as Rec[] | undefined
         if (items) {

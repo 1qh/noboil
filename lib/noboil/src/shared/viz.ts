@@ -28,7 +28,8 @@ const isSchemaFile = (content: string, markers: string[] = SCHEMA_MARKERS): bool
 const printSummary = (tables: TableInfo[], children: ChildInfo[]) => {
   console.log(bold('\nSchema Summary\n'))
   for (const t of [...tables, ...children]) {
-    console.log(`  ${bold(t.name)} ${dim(`[${t.tableType}]`)}`)
+    const typeLabel = dim(`[${t.tableType}]`)
+    console.log(`  ${bold(t.name)} ${typeLabel}`)
     for (const f of t.fields) console.log(`    ${dim('\u2502')} ${f.name}: ${dim(f.type)}`)
     console.log('')
   }

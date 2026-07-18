@@ -31,8 +31,9 @@ const MemberList = () => {
   const [query, setQuery] = useState('')
   const members = memberRows.map(m => {
     const p = profileByUserId.get(m.userId.toHexString())
-    const role: 'admin' | 'member' | 'owner' =
-      m.userId.toHexString() === org.userId.toHexString() ? 'owner' : m.isAdmin ? 'admin' : 'member'
+    let role: 'admin' | 'member' | 'owner' = 'member'
+    if (m.userId.toHexString() === org.userId.toHexString()) role = 'owner'
+    else if (m.isAdmin) role = 'admin'
     return {
       memberId: m.id,
       name: p?.displayName ?? 'Unknown',

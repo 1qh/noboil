@@ -92,46 +92,53 @@ const optReferenced = (root: string, file: string, opt: string): boolean => {
   const src = readFileSync(path, 'utf8')
   return new RegExp(`\\b${opt}\\b`, 'u').test(src)
 }
-const main = () => {
+interface OptionRowResult {
+  cvxMissing: number
+  intentionalNotes: string[]
+  row: string
+  stdbMissing: number
+}
+const buildOptionRow = (spec: Spec): OptionRowResult => {
   const cvxRoot = `${LIB_NOBOIL}/src/convex/server`
   const stdbRoot = `${LIB_NOBOIL}/src/spacetimedb/server`
+  const cvxMissing: string[] = []
+  const stdbMissing: string[] = []
+  const cvxHas: string[] = []
+  const stdbHas: string[] = []
+  for (const opt of spec.expectedOpts) {
+    if (optReferenced(cvxRoot, spec.factoryFile, opt)) cvxHas.push(opt)
+    else cvxMissing.push(opt)
+    if (optReferenced(stdbRoot, spec.factoryFile, opt)) stdbHas.push(opt)
+    else stdbMissing.push(opt)
+  }
+  const cvxIntentional = Object.keys(spec.intentionalCvxOnly ?? {})
+  const stdbIntentional = Object.keys(spec.intentionalStdbOnly ?? {})
+  const cvxRealMissing = cvxMissing.filter(o => !cvxIntentional.includes(o))
+  const stdbRealMissing = stdbMissing.filter(o => !stdbIntentional.includes(o))
+  const status = cvxRealMissing.length === 0 && stdbRealMissing.length === 0 ? '🟢' : '🔴'
+  const cvxCol = cvxRealMissing.length === 0 ? '—' : cvxRealMissing.map(o => `\`${o}\``).join(', ')
+  const stdbCol = stdbRealMissing.length === 0 ? '—' : stdbRealMissing.map(o => `\`${o}\``).join(', ')
+  const row = `| \`${spec.brand}\` | ${cvxHas.length}/${spec.expectedOpts.length} | ${stdbHas.length}/${spec.expectedOpts.length} | ${cvxIntentional.length + stdbIntentional.length} | ${status} | ${cvxCol} | ${stdbCol} |`
+  const intentionalNotes: string[] = []
+  for (const [opt, reason] of Object.entries(spec.intentionalCvxOnly ?? {}))
+    intentionalNotes.push(`- **\`${spec.brand}.${opt}\`** (cvx-only): ${reason}`)
+  for (const [opt, reason] of Object.entries(spec.intentionalStdbOnly ?? {}))
+    intentionalNotes.push(`- **\`${spec.brand}.${opt}\`** (stdb-only): ${reason}`)
+  return { cvxMissing: cvxMissing.length, intentionalNotes, row, stdbMissing: stdbMissing.length }
+}
+const main = () => {
   const rows: string[] = []
+  const intentionalNotes: string[] = []
   let totalCvxMissing = 0
   let totalStdbMissing = 0
   let totalChecked = 0
-  const intentionalNotes: string[] = []
   for (const spec of SPECS) {
-    const cvxMissing: string[] = []
-    const stdbMissing: string[] = []
-    const cvxHas: string[] = []
-    const stdbHas: string[] = []
-    for (const opt of spec.expectedOpts) {
-      totalChecked += 1
-      const c = optReferenced(cvxRoot, spec.factoryFile, opt)
-      const s = optReferenced(stdbRoot, spec.factoryFile, opt)
-      if (c) cvxHas.push(opt)
-      else {
-        cvxMissing.push(opt)
-        totalCvxMissing += 1
-      }
-      if (s) stdbHas.push(opt)
-      else {
-        stdbMissing.push(opt)
-        totalStdbMissing += 1
-      }
-    }
-    const cvxIntentional = Object.keys(spec.intentionalCvxOnly ?? {})
-    const stdbIntentional = Object.keys(spec.intentionalStdbOnly ?? {})
-    const cvxRealMissing = cvxMissing.filter(o => !cvxIntentional.includes(o))
-    const stdbRealMissing = stdbMissing.filter(o => !stdbIntentional.includes(o))
-    const status = cvxRealMissing.length === 0 && stdbRealMissing.length === 0 ? '🟢' : '🔴'
-    rows.push(
-      `| \`${spec.brand}\` | ${cvxHas.length}/${spec.expectedOpts.length} | ${stdbHas.length}/${spec.expectedOpts.length} | ${cvxIntentional.length + stdbIntentional.length} | ${status} | ${cvxRealMissing.length === 0 ? '—' : cvxRealMissing.map(o => `\`${o}\``).join(', ')} | ${stdbRealMissing.length === 0 ? '—' : stdbRealMissing.map(o => `\`${o}\``).join(', ')} |`
-    )
-    for (const [opt, reason] of Object.entries(spec.intentionalCvxOnly ?? {}))
-      intentionalNotes.push(`- **\`${spec.brand}.${opt}\`** (cvx-only): ${reason}`)
-    for (const [opt, reason] of Object.entries(spec.intentionalStdbOnly ?? {}))
-      intentionalNotes.push(`- **\`${spec.brand}.${opt}\`** (stdb-only): ${reason}`)
+    const res = buildOptionRow(spec)
+    rows.push(res.row)
+    intentionalNotes.push(...res.intentionalNotes)
+    totalCvxMissing += res.cvxMissing
+    totalStdbMissing += res.stdbMissing
+    totalChecked += spec.expectedOpts.length
   }
   const body = [
     `Per-factory option parity. For each factory, checks every expected option is textually referenced in both backends' factory file. The "intentional" column documents architecturally-justified backend-specific options (with rationale below).`,

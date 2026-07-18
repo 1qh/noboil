@@ -53,7 +53,7 @@ interface SqlSchemaElement {
 const SNAKE_TO_CAMEL_RE = /_(?<ch>[a-z])/gu
 const CAMEL_TO_SNAKE_RE = /(?<ch>[A-Z])/gu
 const ERROR_CODE_RE = /REDUCER_CALL_FAILED\([^)]*\):\s*(?!The\s)(?<code>[A-Z_]+)/u
-const ERROR_CODE_FALLBACK_RE = /(?:code[":]+\s*)(?<code>[A-Z_]+)/u
+const ERROR_CODE_FALLBACK_RE = /code[":]+\s*(?<code>[A-Z_]+)/u
 const FATAL_ERROR_RE = /fatal error/iu
 const REDUCER_NAME_RE = /REDUCER_CALL_FAILED\((?<reducer>[^)]+)\)/u
 const API_PATH_RE = /api\.(?<mod>\w+)\.(?<fn>\w+)/u
@@ -265,7 +265,9 @@ const addTestOrgMember = async (orgId: string, _userId: string, isAdmin: boolean
   const membersAfter = await httpQuery('org_member', ctx.token)
   const orgMembers = membersAfter.filter(m => Number(m.org_id) === toU32(orgId))
   const newMember = orgMembers.find(m => !beforeIds.has(Number(m.id)))
-  return newMember ? str(newMember.id) : orgMembers.at(-1) ? str(orgMembers.at(-1)?.id) : ''
+  if (newMember) return str(newMember.id)
+  const lastMember = orgMembers.at(-1)
+  return lastMember ? str(lastMember.id) : ''
 }
 const removeTestOrgMember = async (orgId: string, _userId: string): Promise<void> => {
   const memberToken = userTokens.get(_userId)
@@ -429,102 +431,84 @@ const buildMutationArgs = (apiPath: string, args: Record<string, unknown>): unkn
       return Object.values(data)
   }
 }
-const queryRows = async (apiPath: string, args: Record<string, unknown>): Promise<unknown> => {
-  const { token } = getHttpCtx()
-  const queryTableMap: Record<string, string> = {
-    'org.get': 'org',
-    'org.getBySlug': 'org',
-    'org.members': 'org_member',
-    'org.membership': 'org_member',
-    'org.myOrgs': 'org',
-    'org.pendingInvites': 'org_invite',
-    'orgProfile.get': 'org_profile',
-    'project.list': 'project',
-    'project.read': 'project',
-    'task.read': 'task',
-    'wiki.list': 'wiki',
-    'wiki.read': 'wiki'
+const memberRole = (m: NormalizedRow, ownerUserId: string): string => {
+  if (str(m.userId) === ownerUserId) return 'owner'
+  return m.isAdmin ? 'admin' : 'member'
+}
+const resolveOrgMembers = async (rows: NormalizedRow[], orgId: unknown): Promise<unknown> => {
+  const filtered = rows.filter(r => String(r.orgId) === String(orgId))
+  const orgRows = await httpQuery('org', getHttpCtx().token)
+  const normalizedOrg = orgRows.map(r => normalizeRow(r)).find(o => String(o.id) === String(orgId))
+  const ownerUserId = normalizedOrg?.userId ? str(normalizedOrg.userId) : ''
+  return filtered.map(m =>
+    Object.assign(m, {
+      role: memberRole(m, ownerUserId),
+      userId: m.userId ? str(m.userId) : undefined
+    })
+  )
+}
+const resolveOrgMembership = async (rows: NormalizedRow[], orgId: unknown): Promise<MembershipResult | null> => {
+  const orgRows = await httpQuery('org', getHttpCtx().token)
+  const org = orgRows.map(r => normalizeRow(r)).find(o => String(o.id) === String(orgId))
+  if (org) return { role: 'owner', userId: org.userId ? str(org.userId) : undefined }
+  const m = rows.find(r => String(r.orgId) === String(orgId))
+  if (m) return { role: m.isAdmin ? 'admin' : 'member', userId: m.userId ? str(m.userId) : undefined }
+  return null
+}
+const resolveOrgProfile = async (rows: NormalizedRow[]): Promise<unknown> => {
+  try {
+    const fs = await import('node:fs')
+    // oxlint-disable-next-line node/no-sync
+    const tokenFileContent = fs.readFileSync(`${process.cwd()}/e2e/.stdb-test-token.json`, 'utf8')
+    const { identity } = JSON.parse(tokenFileContent) as IdentityResponse
+    const match = rows.find(r => String(r.userId).includes(identity) || String(r.user_id).includes(identity))
+    if (match) return match
+  } catch {
+    /* */
   }
-  const tableName = queryTableMap[apiPath]
-  if (!tableName) throw new Error(`No table mapping for query ${apiPath}`)
-  const rawRows = await httpQuery(tableName, token)
-  const rows = rawRows.map(r => normalizeRow(r))
-  if (apiPath === 'org.get') {
-    const id = args.orgId ?? args.id
-    return rows.find(r => String(r.id) === String(id)) ?? null
-  }
-  if (apiPath === 'org.getBySlug') return rows.find(r => r.slug === args.slug) ?? null
+  return rows[0] ?? null
+}
+const queryTableMap: Record<string, string> = {
+  'org.get': 'org',
+  'org.getBySlug': 'org',
+  'org.members': 'org_member',
+  'org.membership': 'org_member',
+  'org.myOrgs': 'org',
+  'org.pendingInvites': 'org_invite',
+  'orgProfile.get': 'org_profile',
+  'project.list': 'project',
+  'project.read': 'project',
+  'task.read': 'task',
+  'wiki.list': 'wiki',
+  'wiki.read': 'wiki'
+}
+const findOneOrThrow = (rows: NormalizedRow[], predicate: (r: NormalizedRow) => boolean): NormalizedRow => {
+  const found = rows.find(predicate)
+  if (!found) throw new Error('REDUCER_CALL_FAILED(query): NOT_FOUND')
+  return found
+}
+const resolveReadQuery = (
+  apiPath: string,
+  rows: NormalizedRow[],
+  args: Record<string, unknown>
+): { hit: boolean; value: unknown } => {
+  if (apiPath === 'org.get')
+    return { hit: true, value: rows.find(r => String(r.id) === String(args.orgId ?? args.id)) ?? null }
+  if (apiPath === 'org.getBySlug') return { hit: true, value: rows.find(r => r.slug === args.slug) ?? null }
   if (apiPath === 'org.myOrgs')
-    return rows.map(o => ({
-      org: { ...o, _id: String(o.id) },
-      role: 'owner'
-    }))
-  if (apiPath === 'org.members') {
-    const filtered = rows.filter(r => String(r.orgId) === String(args.orgId))
-    const orgRows = await httpQuery('org', getHttpCtx().token)
-    const normalizedOrg = orgRows.map(r => normalizeRow(r)).find(o => String(o.id) === String(args.orgId))
-    const ownerUserId = normalizedOrg?.userId ? str(normalizedOrg.userId) : ''
-    return filtered.map(m =>
-      Object.assign(m, {
-        role: str(m.userId) === ownerUserId ? 'owner' : m.isAdmin ? 'admin' : 'member',
-        userId: m.userId ? str(m.userId) : undefined
-      })
-    )
-  }
-  if (apiPath === 'org.membership') {
-    const orgMembers = rows.filter(r => String(r.orgId) === String(args.orgId))
-    const orgRows = await httpQuery('org', getHttpCtx().token)
-    const normalizedOrgs = orgRows.map(r => normalizeRow(r))
-    const org = normalizedOrgs.find(o => String(o.id) === String(args.orgId))
-    if (org) {
-      const result: MembershipResult = {
-        role: 'owner',
-        userId: org.userId ? str(org.userId) : undefined
-      }
-      return result
+    return { hit: true, value: rows.map(o => ({ org: { ...o, _id: String(o.id) }, role: 'owner' })) }
+  if (apiPath === 'org.pendingInvites')
+    return { hit: true, value: rows.filter(r => String(r.orgId) === String(args.orgId)) }
+  if (apiPath === 'project.read')
+    return {
+      hit: true,
+      value: findOneOrThrow(rows, r => String(r.id) === String(args.id) && String(r.orgId) === String(args.orgId))
     }
-    if (orgMembers.length > 0) {
-      const m = orgMembers[0]
-      if (m) {
-        const result: MembershipResult = {
-          role: m.isAdmin ? 'admin' : 'member',
-          userId: m.userId ? str(m.userId) : undefined
-        }
-        return result
-      }
-    }
-    return null
-  }
-  if (apiPath === 'org.pendingInvites') return rows.filter(r => String(r.orgId) === String(args.orgId))
-  if (apiPath === 'orgProfile.get') {
-    try {
-      const fs = await import('node:fs')
-      // oxlint-disable-next-line node/no-sync
-      const tokenFileContent = fs.readFileSync(`${process.cwd()}/e2e/.stdb-test-token.json`, 'utf8')
-      const parsed = JSON.parse(tokenFileContent) as IdentityResponse
-      const { identity } = parsed
-      const match = rows.find(r => String(r.userId).includes(identity) || String(r.user_id).includes(identity))
-      if (match) return match
-    } catch {
-      /* */
-    }
-    return rows[0] ?? null
-  }
-  if (apiPath === 'project.read') {
-    const found = rows.find(r => String(r.id) === String(args.id) && String(r.orgId) === String(args.orgId))
-    if (!found) throw new Error('REDUCER_CALL_FAILED(query): NOT_FOUND')
-    return found
-  }
-  if (apiPath === 'task.read') {
-    const found = rows.find(r => String(r.id) === String(args.id))
-    if (!found) throw new Error('REDUCER_CALL_FAILED(query): NOT_FOUND')
-    return found
-  }
-  if (apiPath === 'wiki.read') {
-    const found = rows.find(r => String(r.id) === String(args.id))
-    if (!found) throw new Error('REDUCER_CALL_FAILED(query): NOT_FOUND')
-    return found
-  }
+  if (apiPath === 'task.read') return { hit: true, value: findOneOrThrow(rows, r => String(r.id) === String(args.id)) }
+  if (apiPath === 'wiki.read') return { hit: true, value: findOneOrThrow(rows, r => String(r.id) === String(args.id)) }
+  return { hit: false, value: null }
+}
+const resolveListQuery = (apiPath: string, rows: NormalizedRow[], args: Record<string, unknown>): unknown => {
   if (apiPath === 'project.list') {
     const filtered = args.orgId ? rows.filter(r => String(r.orgId) === String(args.orgId)) : rows
     const result: ListResult = { isDone: true, page: filtered }
@@ -540,6 +524,18 @@ const queryRows = async (apiPath: string, args: Record<string, unknown>): Promis
     return result
   }
   return rows
+}
+const queryRows = async (apiPath: string, args: Record<string, unknown>): Promise<unknown> => {
+  const { token } = getHttpCtx()
+  const tableName = queryTableMap[apiPath]
+  if (!tableName) throw new Error(`No table mapping for query ${apiPath}`)
+  const rawRows = await httpQuery(tableName, token)
+  const rows = rawRows.map(r => normalizeRow(r))
+  if (apiPath === 'org.members') return resolveOrgMembers(rows, args.orgId)
+  if (apiPath === 'org.membership') return resolveOrgMembership(rows, args.orgId)
+  if (apiPath === 'orgProfile.get') return resolveOrgProfile(rows)
+  const read = resolveReadQuery(apiPath, rows, args)
+  return read.hit ? read.value : resolveListQuery(apiPath, rows, args)
 }
 const mutationReducerMap: Record<string, string> = {
   'org.acceptInvite': 'org_accept_invite',
@@ -563,6 +559,21 @@ const mutationReducerMap: Record<string, string> = {
   'wiki.rm': 'rm_wiki',
   'wiki.update': 'update_wiki'
 }
+const maxIdForOrg = async (table: string, orgId: unknown, token: string): Promise<string> => {
+  const rows = await httpQuery(table, token)
+  const filtered = rows.filter(r => Number(r.org_id) === toU32(orgId))
+  let maxId = 0
+  for (const r of filtered) {
+    const id = Number(r.id)
+    if (id > maxId) maxId = id
+  }
+  return maxId > 0 ? String(maxId) : ''
+}
+const latestRowById = async (table: string, id: unknown, token: string): Promise<unknown> => {
+  const rows = await httpQuery(table, token)
+  const found = rows.find(r => Number(r.id) === toU32(id))
+  return found ? normalizeRow(found) : undefined
+}
 const handleMutationResult = async (apiPath: string, args: Record<string, unknown>, token: string): Promise<unknown> => {
   if (apiPath === 'org.create') {
     const data = (args.data ?? args) as Record<string, unknown>
@@ -585,48 +596,11 @@ const handleMutationResult = async (apiPath: string, args: Record<string, unknow
     const empty: InviteResult = { inviteId: '', token: '' }
     return empty
   }
-  if (apiPath === 'project.create') {
-    const projects = await httpQuery('project', token)
-    const filtered = projects.filter(p => Number(p.org_id) === toU32(args.orgId))
-    let maxId = 0
-    for (const p of filtered) {
-      const pid = Number(p.id)
-      if (pid > maxId) maxId = pid
-    }
-    return maxId > 0 ? String(maxId) : ''
-  }
-  if (apiPath === 'project.update') {
-    const projects = await httpQuery('project', token)
-    const found = projects.find(p => Number(p.id) === toU32(args.id))
-    if (found) return normalizeRow(found)
-    return
-  }
-  if (apiPath === 'task.create') {
-    const tasks = await httpQuery('task', token)
-    const filtered = tasks.filter(t => Number(t.org_id) === toU32(args.orgId))
-    let maxId = 0
-    for (const t of filtered) {
-      const tid = Number(t.id)
-      if (tid > maxId) maxId = tid
-    }
-    return maxId > 0 ? String(maxId) : ''
-  }
-  if (apiPath === 'task.toggle') {
-    const tasks = await httpQuery('task', token)
-    const found = tasks.find(t => Number(t.id) === toU32(args.id))
-    if (found) return normalizeRow(found)
-    return
-  }
-  if (apiPath === 'wiki.create') {
-    const wikis = await httpQuery('wiki', token)
-    const filtered = wikis.filter(w => Number(w.org_id) === toU32(args.orgId))
-    let maxId = 0
-    for (const w of filtered) {
-      const wid = Number(w.id)
-      if (wid > maxId) maxId = wid
-    }
-    return maxId > 0 ? String(maxId) : ''
-  }
+  if (apiPath === 'project.create') return maxIdForOrg('project', args.orgId, token)
+  if (apiPath === 'project.update') return latestRowById('project', args.id, token)
+  if (apiPath === 'task.create') return maxIdForOrg('task', args.orgId, token)
+  if (apiPath === 'task.toggle') return latestRowById('task', args.id, token)
+  if (apiPath === 'wiki.create') return maxIdForOrg('wiki', args.orgId, token)
 }
 const makeTc = () => ({
   mutation: async <T>(apiRef: unknown, args: Record<string, unknown>): Promise<T> => {

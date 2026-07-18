@@ -19,10 +19,11 @@ const InviteDialog = ({ orgId }: InviteDialogProps) => {
   const form = useForm({
     onSubmit: async d => {
       const result = await sendInvite({ ...d, orgId })
-      if (!('token' in result)) return d
-      await navigator.clipboard.writeText(`${globalThis.location.origin}/invite/${result.token}`)
-      toast.success('Invite link copied to clipboard')
-      setOpen(false)
+      if ('token' in result) {
+        await navigator.clipboard.writeText(`${globalThis.location.origin}/invite/${result.token}`)
+        toast.success('Invite link copied to clipboard')
+        setOpen(false)
+      }
       return d
     },
     resetOnSuccess: true,

@@ -17,7 +17,10 @@ const c = {
   yellow: (s: string) => styleText('yellow', s)
 }
 const log = (msg: string) => process.stdout.write(`${msg}\n`)
-const step = (n: number, total: number, label: string) => log(`${c.cyan(`[${n}/${total}]`)} ${label}`)
+const step = (n: number, total: number, label: string) => {
+  const counter = c.cyan(`[${n}/${total}]`)
+  log(`${counter} ${label}`)
+}
 const ok = (label: string) => log(`${c.green('✓')} ${label}`)
 const warn = (label: string) => log(`${c.yellow('!')} ${label}`)
 const fail = (label: string) => log(`${c.red('✗')} ${label}`)
@@ -96,11 +99,13 @@ const hasDocker = async () => {
   return r.exitCode === 0
 }
 const hasCmd = async (cmd: string) => {
-  const r = await $`bash -lc ${`command -v ${cmd}`}`.quiet().nothrow()
+  const lookup = `command -v ${cmd}`
+  const r = await $`bash -lc ${lookup}`.quiet().nothrow()
   return r.exitCode === 0
 }
 const portFree = async (port: number) => {
-  const r = await $`bash -c ${`lsof -iTCP:${port} -sTCP:LISTEN -t`}`.quiet().nothrow()
+  const lsofCmd = `lsof -iTCP:${port} -sTCP:LISTEN -t`
+  const r = await $`bash -c ${lsofCmd}`.quiet().nothrow()
   return r.stdout.toString().trim() === ''
 }
 const composeRunning = async (file: string) => {

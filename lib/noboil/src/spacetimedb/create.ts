@@ -144,7 +144,8 @@ const installDeps = (cwd: string) => {
     execSync(`bun add ${missing.join(' ')}`, { cwd, stdio: 'pipe' })
     console.log(`  ${green('✓')} installed ${missing.length} package${missing.length > 1 ? 's' : ''}`)
   } catch {
-    console.log(`  ${yellow('⚠')} install failed — run ${dim(`bun add ${missing.join(' ')}`)} manually`)
+    const cmdHint = dim(`bun add ${missing.join(' ')}`)
+    console.log(`  ${yellow('⚠')} install failed — run ${cmdHint} manually`)
   }
 }
 const BACKEND_FILES: [string, string][] = [
@@ -228,8 +229,8 @@ const preflight = () => {
   else warnings.push(`spacetime CLI not found — ${dim('curl -sSf https://install.spacetimedb.com | sh')}`)
   if (cmdExists('docker'))
     try {
-      // oxlint-disable-next-line node/no-sync
-      execSync('docker info', { stdio: 'pipe' })
+      // oxlint-disable-next-line node/no-sync -- CLI tool: synchronous exec by design
+      execSync('docker info', { stdio: 'pipe' }) // eslint-disable-line sonarjs/no-os-command-from-path -- dev tooling, trusted PATH
       console.log(`  ${green('✓')} Docker running`)
     } catch {
       warnings.push(`Docker installed but not running — ${dim('start Docker Desktop or systemctl start docker')}`)

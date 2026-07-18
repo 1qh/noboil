@@ -18,7 +18,8 @@ const printUseHelp = () => {
   console.log(bold('Usage:'))
   console.log('  noboil stdb use <target>\n')
   console.log(bold('Targets:'))
-  console.log(`  local    ${dim(`${DEFAULT_WS_URI} (Docker)`)}`)
+  const localTarget = dim(`${DEFAULT_WS_URI} (Docker)`)
+  console.log(`  local    ${localTarget}`)
   console.log(`  cloud    ${dim('https://maincloud.spacetimedb.com')}\n`)
   console.log(bold('What it does:'))
   console.log(`  ${dim('1.')} Updates NEXT_PUBLIC_SPACETIMEDB_URI and SPACETIMEDB_URI in .env`)
@@ -27,6 +28,7 @@ const printUseHelp = () => {
   console.log(`  ${dim('$')} noboil stdb use local`)
   console.log(`  ${dim('$')} noboil stdb use cloud\n`)
 }
+// eslint-disable-next-line sonarjs/cognitive-complexity -- target-switch dispatcher branching per env var and CLI update
 const switchTarget = (args: string[] = []) => {
   if (args.includes('--help') || args.includes('-h') || args.length === 0) {
     printUseHelp()
@@ -61,12 +63,12 @@ const switchTarget = (args: string[] = []) => {
     const additions: string[] = []
     if (!hasPublic) additions.push(`NEXT_PUBLIC_SPACETIMEDB_URI=${target.uri}`)
     if (!hasServer) additions.push(`SPACETIMEDB_URI=${target.uri}`)
-    // oxlint-disable-next-line node/no-sync
+    // oxlint-disable-next-line node/no-sync -- CLI tool: synchronous fs by design
     if (additions.length > 0) writeFileSync(envPath, `${original.trimEnd()}\n${additions.join('\n')}\n`)
-    // oxlint-disable-next-line node/no-sync
+    // oxlint-disable-next-line node/no-sync -- CLI tool: synchronous fs by design
   } else writeFileSync(envPath, updated)
-  // oxlint-disable-next-line node/no-sync
-  spawnSync('spacetime', ['server', 'set-default', target.server], { stdio: 'pipe' })
+  // oxlint-disable-next-line node/no-sync -- CLI tool: synchronous spawn by design
+  spawnSync('spacetime', ['server', 'set-default', target.server], { stdio: 'pipe' }) // eslint-disable-line sonarjs/no-os-command-from-path -- dev tooling, trusted PATH
   console.log(`${green('✓')} ${target.label}`)
   console.log(`  ${dim(envPath)} → ${bold(target.uri)}`)
 }

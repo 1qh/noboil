@@ -168,7 +168,7 @@ interface CrudBuilders extends BaseBuilders {
  *
  * @example
  * ```ts
- * makeCrud({ schema, table: 'todo', options: { hooks: {
+ * makeCrud({ schema, table: 'task', options: { hooks: {
  *   beforeCreate: (ctx, { data }) => ({ ...data, ownerId: ctx.userId }),
  *   afterDelete: async (ctx, { id }) => { await ctx.db.delete(id) }
  * } } })
@@ -195,7 +195,7 @@ interface CrudHooks {
  *
  * @example
  * ```ts
- * makeCrud({ schema: schemas.todo, table: 'todo', options: {
+ * makeCrud({ schema: schemas.task, table: 'task', options: {
  *   pub: 'isPublished',
  *   softDelete: true,
  *   rateLimit: { max: 30, window: 60_000 },
@@ -226,11 +226,11 @@ interface CrudReadApi<S extends ZodRawShape, V extends FunctionVisibility = 'pub
  *
  * @example
  * ```ts
- * // convex/todo.ts
+ * // convex/task.ts
  * import { makeCrud } from 'noboil/convex/server'
  * import { schemas } from './schema'
  * export const { auth, pub, authIndexed, create, update, rm } = makeCrud({
- *   builders, schema: schemas.todo, table: 'todo', options: { pub: true }
+ *   builders, schema: schemas.task, table: 'task', options: { pub: true }
  * })
  * ```
  */

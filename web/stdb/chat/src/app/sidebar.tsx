@@ -18,22 +18,19 @@ const Sb = () => {
   const identityKey = toIdentityKey(identity)
   const chats: Chat[] = allChats
     .filter(c => toIdentityKey(c.userId) === identityKey)
-    .toSorted((a, b) => (a.updatedAt > b.updatedAt ? -1 : a.updatedAt < b.updatedAt ? 1 : 0))
+    .toSorted((a, b) => Number(b.updatedAt) - Number(a.updatedAt))
   const handleDelete = async (chatId: number) => {
     await deleteChat({ id: chatId })
+  }
+  const renderStatus = () => {
+    if (!isReady) return <Spinner />
+    if (chats.length > 20) return <Check className='animate-[fadeOut_2s_forwards] text-primary' />
+    return null
   }
   return (
     <>
       <ChatSidebar basePath='' getThreadId={thread => thread.id} onDelete={handleDelete} threads={chats} />
-      <div className='flex justify-center p-2'>
-        {isReady ? (
-          chats.length > 20 ? (
-            <Check className='animate-[fadeOut_2s_forwards] text-primary' />
-          ) : null
-        ) : (
-          <Spinner />
-        )}
-      </div>
+      <div className='flex justify-center p-2'>{renderStatus()}</div>
     </>
   )
 }

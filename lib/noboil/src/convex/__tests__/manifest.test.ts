@@ -3,11 +3,11 @@ import { describe, expect, test } from 'bun:test'
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { captured } from '../../shared/test'
 import { add as addCmd } from '../add'
 import { run as checkRun, checkSchemaConsistency, printAccessReport, printSchemaPreview } from '../check'
 import { run as doctorRun } from '../doctor'
 import { run as migrateRun } from '../migrate'
-import { captured } from '../../shared/test'
 import { buildArgs, buildTree, findCommand, findValidPath } from '../tools/manifest'
 import { run as vizRun } from '../viz'
 
@@ -252,7 +252,8 @@ describe('manifest helpers', () => {
       let out = ''
       try {
         ;({ out } = captured(() => {
-          for (const flag of ['--endpoints', '--schema', '--access', '--indexes', '--health', '']) tryRun(flag ? [flag] : [])
+          for (const flag of ['--endpoints', '--schema', '--access', '--indexes', '--health', ''])
+            tryRun(flag ? [flag] : [])
         }))
       } finally {
         process.exit = origExit

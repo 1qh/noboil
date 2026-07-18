@@ -27,7 +27,9 @@ const Page = () => {
       if (!identity) return null
       const org = orgs.find((o: Org) => o.id === m.orgId)
       if (!org) return null
-      const role: OrgRole = sameIdentity(org.userId, identity) ? 'owner' : m.isAdmin ? 'admin' : 'member'
+      let role: OrgRole = 'member'
+      if (sameIdentity(org.userId, identity)) role = 'owner'
+      else if (m.isAdmin) role = 'admin'
       return { org: { _id: `${org.id}`, avatarId: org.avatarId, name: org.name, slug: org.slug }, role }
     })
     .filter(item => item !== null)

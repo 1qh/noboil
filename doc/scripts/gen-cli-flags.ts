@@ -12,11 +12,17 @@ const escapeMd = (s: string): string =>
     .replaceAll('>', '&gt;')
 const OPTIONS_HEADER_RE = /^\s*Options:\s*$/u
 const UPPER_START_RE = /^[A-Z]/u
-const FLAG_RE = /^\s{2,}(?<flag>(?:--[\w-]+|-\w)(?:[=,\s][^\s][^\s]*)*)\s{2,}(?<desc>\S.*)$/u
+// eslint-disable-next-line regexp/no-super-linear-backtracking, sonarjs/slow-regex -- matches one trimmed --help line from trusted repo docs; bounded non-adversarial input
+const FLAG_RE = /^\s{2,}(?<flag>(?:--[\w-]+|-\w)(?:[=,\s]\S+)*)\s{2,}(?<desc>\S.*)$/u
 const COMMAND_RE = /\*\*(?<cmd>noboil(?: \w+)?(?: \w+)?(?: --help)?)\*\*\n+```text\n(?<body>[\s\S]*?)\n```/gu
 interface Flag {
   description: string
   flag: string
+}
+const parseFlagLine = (line: string): Flag | null => {
+  const m = FLAG_RE.exec(line)
+  if (m?.groups?.desc && m.groups.flag) return { description: m.groups.desc.trim(), flag: m.groups.flag.trim() }
+  return null
 }
 const parseHelpBlock = (text: string): Flag[] => {
   const flags: Flag[] = []
@@ -25,11 +31,10 @@ const parseHelpBlock = (text: string): Flag[] => {
     const line = raw.trimEnd()
     if (OPTIONS_HEADER_RE.test(line)) inOpts = true
     else {
-      if (UPPER_START_RE.test(line.trim()) && line.trim().endsWith(':')) inOpts = line.trim() === 'Options:'
-      if (inOpts) {
-        const m = FLAG_RE.exec(line)
-        if (m?.groups?.desc && m.groups.flag) flags.push({ description: m.groups.desc.trim(), flag: m.groups.flag.trim() })
-      }
+      const trimmed = line.trim()
+      if (UPPER_START_RE.test(trimmed) && trimmed.endsWith(':')) inOpts = trimmed === 'Options:'
+      const flag = inOpts ? parseFlagLine(line) : null
+      if (flag) flags.push(flag)
     }
   }
   return flags

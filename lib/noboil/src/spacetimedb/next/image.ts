@@ -116,7 +116,9 @@ const makePost =
         thumbnail
       })
       const outputBuffer = await pipeline.toBuffer()
-      const outputMime = thumbnail ? 'image/webp' : body.options?.format ? formatToMime[body.options.format] : contentType
+      let outputMime = contentType
+      if (thumbnail) outputMime = 'image/webp'
+      else if (body.options?.format) outputMime = formatToMime[body.options.format]
       return new NextResponse(new Uint8Array(outputBuffer), {
         headers: { 'Cache-Control': 'public, max-age=31536000, immutable', 'Content-Type': outputMime }
       })

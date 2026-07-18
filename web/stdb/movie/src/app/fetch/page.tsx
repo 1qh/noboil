@@ -2,6 +2,7 @@
 /** biome-ignore-all lint/correctness/useImageSize: remote image, dimensions unknown */
 /* eslint-disable @next/next/no-img-element */
 'use client'
+import type { SyntheticEvent } from 'react'
 import { reducers } from '@a/be-spacetimedb/spacetimedb'
 import { Badge } from '@a/ui/badge'
 import { Input } from '@a/ui/input'
@@ -27,6 +28,107 @@ const Page = () => {
   const [movie, setMovie] = useState<MovieDetailData | null>(null)
   const [fetchError, setFetchError] = useState('')
   const [pending, go] = useTransition()
+  const handleSubmit = (e: SyntheticEvent) => {
+    e.preventDefault()
+    const n = Number(id)
+    if (!n || n < 1) {
+      setFetchError('Enter a valid TMDB ID')
+      return
+    }
+    setFetchError('')
+    go(async () => {
+      try {
+        const loadedMovie = await fetchMovieAction(n)
+        setMovie(loadedMovie)
+        setCacheStatus(lastTmdbId === n ? 'Cache Hit' : 'Cache Miss')
+        setLastTmdbId(n)
+        createMovie(loadedMovie)
+      } catch {
+        setFetchError('Movie not found')
+        setMovie(null)
+        setCacheStatus('')
+      }
+    })
+  }
+  const renderContent = () => {
+    if (pending)
+      return (
+        <div className='flex flex-col gap-4' data-testid='movie-loading'>
+          <Skeleton className='h-6 w-32' />
+          <Skeleton className='h-48 w-full rounded-lg' />
+          <div className='flex gap-4'>
+            <Skeleton className='h-56 w-36 shrink-0' />
+            <div className='flex flex-1 flex-col gap-2'>
+              <Skeleton className='h-8 w-64' />
+              <Skeleton className='h-4 w-48' />
+              <Skeleton className='h-6 w-32' />
+              <Skeleton className='mt-2 h-20 w-full' />
+            </div>
+          </div>
+        </div>
+      )
+    if (!movie) return null
+    return (
+      <div className='flex flex-col gap-4' data-testid='movie-detail'>
+        <div className='flex items-center gap-2'>
+          <Badge data-testid='cache-status' variant='default'>
+            {cacheStatus || 'Fetched from TMDB'}
+          </Badge>
+          <span className='text-sm text-muted-foreground' data-testid='movie-id'>
+            ID: {movie.tmdbId}
+          </span>
+        </div>
+        {movie.backdropPath ? (
+          <img
+            alt={movie.title}
+            className='w-full rounded-lg object-cover'
+            src={`${TMDB_BACKDROP}${movie.backdropPath}`}
+          />
+        ) : null}
+        <div className='flex gap-4'>
+          {movie.posterPath ? (
+            <img
+              alt={movie.title}
+              className='h-56 w-36 shrink-0 rounded-lg object-cover'
+              src={`${TMDB_IMG}${movie.posterPath}`}
+            />
+          ) : null}
+          <div className='flex flex-col gap-2'>
+            <h2 className='text-2xl font-bold'>{movie.title}</h2>
+            {movie.originalTitle === movie.title ? null : (
+              <p className='text-sm text-muted-foreground'>{movie.originalTitle}</p>
+            )}
+            {movie.tagline ? <p className='text-muted-foreground italic'>{movie.tagline}</p> : null}
+            <div className='flex flex-wrap gap-1'>
+              {movie.genres.map((g: { id: number; name: string }) => (
+                <Badge key={g.id} variant='outline'>
+                  {g.name}
+                </Badge>
+              ))}
+            </div>
+            <div className='mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-sm [&_span]:text-muted-foreground'>
+              <p>
+                <span>Release:</span> {movie.releaseDate}
+              </p>
+              <p>
+                <span>Runtime:</span> {movie.runtime ?? 'N/A'} min
+              </p>
+              <p>
+                <span>Rating:</span> {movie.voteAverage.toFixed(1)} ({movie.voteCount.toLocaleString()} votes)
+              </p>
+              <p>
+                <span>Budget:</span> {formatMoney(movie.budget)}
+              </p>
+              <p>
+                <span>Revenue:</span> {formatMoney(movie.revenue)}
+              </p>
+            </div>
+          </div>
+        </div>
+        <p className='text-muted-foreground'>{movie.overview}</p>
+      </div>
+    )
+  }
   return (
     <div className='mx-auto flex max-w-2xl flex-col gap-4 p-4' data-testid='movie-fetch-page'>
       <div className='flex items-center gap-2'>
@@ -35,31 +137,7 @@ const Page = () => {
         </Link>
         <h1 className='text-xl font-semibold'>Fetch by ID</h1>
       </div>
-      <form
-        className='flex gap-2'
-        data-testid='movie-fetch-form'
-        onSubmit={e => {
-          e.preventDefault()
-          const n = Number(id)
-          if (!n || n < 1) {
-            setFetchError('Enter a valid TMDB ID')
-            return
-          }
-          setFetchError('')
-          go(async () => {
-            try {
-              const loadedMovie = await fetchMovieAction(n)
-              setMovie(loadedMovie)
-              setCacheStatus(lastTmdbId === n ? 'Cache Hit' : 'Cache Miss')
-              setLastTmdbId(n)
-              createMovie(loadedMovie)
-            } catch {
-              setFetchError('Movie not found')
-              setMovie(null)
-              setCacheStatus('')
-            }
-          })
-        }}>
+      <form className='flex gap-2' data-testid='movie-fetch-form' onSubmit={handleSubmit}>
         <Input
           data-testid='movie-id-input'
           onChange={e => setId(e.target.value)}
@@ -75,80 +153,7 @@ const Page = () => {
           {fetchError}
         </p>
       ) : null}
-      {pending ? (
-        <div className='flex flex-col gap-4' data-testid='movie-loading'>
-          <Skeleton className='h-6 w-32' />
-          <Skeleton className='h-48 w-full rounded-lg' />
-          <div className='flex gap-4'>
-            <Skeleton className='h-56 w-36 shrink-0' />
-            <div className='flex flex-1 flex-col gap-2'>
-              <Skeleton className='h-8 w-64' />
-              <Skeleton className='h-4 w-48' />
-              <Skeleton className='h-6 w-32' />
-              <Skeleton className='mt-2 h-20 w-full' />
-            </div>
-          </div>
-        </div>
-      ) : movie ? (
-        <div className='flex flex-col gap-4' data-testid='movie-detail'>
-          <div className='flex items-center gap-2'>
-            <Badge data-testid='cache-status' variant='default'>
-              {cacheStatus || 'Fetched from TMDB'}
-            </Badge>
-            <span className='text-sm text-muted-foreground' data-testid='movie-id'>
-              ID: {movie.tmdbId}
-            </span>
-          </div>
-          {movie.backdropPath ? (
-            <img
-              alt={movie.title}
-              className='w-full rounded-lg object-cover'
-              src={`${TMDB_BACKDROP}${movie.backdropPath}`}
-            />
-          ) : null}
-          <div className='flex gap-4'>
-            {movie.posterPath ? (
-              <img
-                alt={movie.title}
-                className='h-56 w-36 shrink-0 rounded-lg object-cover'
-                src={`${TMDB_IMG}${movie.posterPath}`}
-              />
-            ) : null}
-            <div className='flex flex-col gap-2'>
-              <h2 className='text-2xl font-bold'>{movie.title}</h2>
-              {movie.originalTitle === movie.title ? null : (
-                <p className='text-sm text-muted-foreground'>{movie.originalTitle}</p>
-              )}
-              {movie.tagline ? <p className='text-muted-foreground italic'>{movie.tagline}</p> : null}
-              <div className='flex flex-wrap gap-1'>
-                {movie.genres.map((g: { id: number; name: string }) => (
-                  <Badge key={g.id} variant='outline'>
-                    {g.name}
-                  </Badge>
-                ))}
-              </div>
-              <div className='mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-sm [&_span]:text-muted-foreground'>
-                <p>
-                  <span>Release:</span> {movie.releaseDate}
-                </p>
-                <p>
-                  <span>Runtime:</span> {movie.runtime ?? 'N/A'} min
-                </p>
-                <p>
-                  <span>Rating:</span> {movie.voteAverage.toFixed(1)} ({movie.voteCount.toLocaleString()} votes)
-                </p>
-                <p>
-                  <span>Budget:</span> {formatMoney(movie.budget)}
-                </p>
-                <p>
-                  <span>Revenue:</span> {formatMoney(movie.revenue)}
-                </p>
-              </div>
-            </div>
-          </div>
-          <p className='text-muted-foreground'>{movie.overview}</p>
-        </div>
-      ) : null}
+      {renderContent()}
     </div>
   )
 }

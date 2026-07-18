@@ -47,6 +47,36 @@ const resolveBulkError = (
     }
   return defaultOnError
 }
+const reportBulkErrors = ({
+  errorHandler,
+  errors,
+  packageName,
+  total
+}: {
+  errorHandler: ((error: unknown) => void) | undefined
+  errors: unknown[]
+  packageName: string
+  total: number
+}): void => {
+  if (errors.length === 0 || !errorHandler) return
+  errorHandler(errors[0])
+  if (errors.length > 1) {
+    console.error(`[${packageName}] Bulk operation: ${errors.length} of ${total} items failed`)
+    for (let i = 1; i < errors.length; i += 1) console.error(`[${packageName}] Bulk error ${i + 1}:`, errors[i])
+  }
+}
+const showBulkSuccess = (
+  resultCount: number,
+  toastCfg: BulkMutateToast | undefined,
+  onSuccess?: (count: number) => void
+): void => {
+  if (resultCount === 0) return
+  if (toastCfg?.success) {
+    const msg = typeof toastCfg.success === 'function' ? toastCfg.success(resultCount) : toastCfg.success
+    toast.success(msg)
+  }
+  onSuccess?.(resultCount)
+}
 const useBulkMutate = <A, R = void>({
   bulkMax,
   defaultOnError,
@@ -102,20 +132,8 @@ const useBulkMutate = <A, R = void>({
         const settled = await Promise.allSettled(tasks)
         const { errors, results } = collectSettled(settled)
         if (toastCfg?.loading) toast.dismiss(toastId)
-        if (errors.length > 0 && errorHandler) {
-          errorHandler(errors[0])
-          if (errors.length > 1) {
-            console.error(`[${packageName}] Bulk operation: ${errors.length} of ${items.length} items failed`)
-            for (let i = 1; i < errors.length; i += 1) console.error(`[${packageName}] Bulk error ${i + 1}:`, errors[i])
-          }
-        }
-        if (results.length > 0) {
-          if (toastCfg?.success) {
-            const msg = typeof toastCfg.success === 'function' ? toastCfg.success(results.length) : toastCfg.success
-            toast.success(msg)
-          }
-          options?.onSuccess?.(results.length)
-        }
+        reportBulkErrors({ errorHandler, errors, packageName, total: items.length })
+        showBulkSuccess(results.length, toastCfg, options?.onSuccess)
         const bulkResult = { errors, results, settled }
         options?.onSettled?.(bulkResult)
         return bulkResult

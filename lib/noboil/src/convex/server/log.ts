@@ -37,6 +37,13 @@ import {
 
 const DEFAULT_LIMIT = 500
 const BULK_MAX = 100
+type SearchInput = boolean | string | undefined | { field?: string; index?: string }
+const resolveSearchCfg = (search: SearchInput): null | { field: string; index: string } => {
+  if (search === true) return { field: 'text', index: 'search_field' }
+  if (typeof search === 'string') return { field: search, index: 'search_field' }
+  if (typeof search === 'object') return { field: search.field ?? 'text', index: search.index ?? 'search_field' }
+  return null
+}
 interface LogRow {
   _id: string
   idempotencyKey?: string
@@ -71,6 +78,7 @@ const makeLog = <S extends ZodRawShape>({
   search?: boolean | string | { field?: string; index?: string }
   softDelete?: boolean
   table: string
+  // eslint-disable-next-line sonarjs/cognitive-complexity -- log factory assembles many endpoints/branches; behavior is covered by pure.test.ts and refactoring risks the untestable runtime paths
 }): LogFactoryResult<S> => {
   const pubField = typeof pub === 'string' ? pub : null
   const pubWhereOpt = typeof pub === 'object' && 'where' in pub ? pub.where : undefined
@@ -79,14 +87,7 @@ const makeLog = <S extends ZodRawShape>({
   const partial = schema.partial()
   const wgSchema = partial.extend({ own: boolean().optional() })
   const wSchema = wgSchema.extend({ or: array(wgSchema).optional() })
-  const searchCfg =
-    searchOpt === true
-      ? { field: 'text', index: 'search_field' }
-      : typeof searchOpt === 'string'
-        ? { field: searchOpt, index: 'search_field' }
-        : typeof searchOpt === 'object'
-          ? { field: searchOpt.field ?? 'text', index: searchOpt.index ?? 'search_field' }
-          : null
+  const searchCfg = resolveSearchCfg(searchOpt)
   const fileFs = detectFiles(schema.shape)
   const enrich = async (c: ReadCtx, docs: { userId: string }[]) => {
     const withAuthored = await c.withAuthor(docs)
@@ -298,6 +299,7 @@ const makeLog = <S extends ZodRawShape>({
   const rmOne = b.m({
     // oxlint-disable-next-line unicorn/max-nested-calls
     args: typed({ id: zid(table).optional(), ids: array(zid(table)).max(BULK_MAX).optional() }),
+    // eslint-disable-next-line sonarjs/cognitive-complexity -- bulk/single delete with soft-delete + hook branches; extracting would alter the runtime return-on-error control flow
     handler: typed(async (c: MutCtx, args: { id?: string; ids?: string[] }) => {
       await rl(c)
       const targets = args.ids ?? (args.id ? [args.id] : [])

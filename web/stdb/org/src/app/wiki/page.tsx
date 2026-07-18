@@ -63,6 +63,95 @@ const WikiPage = () => {
   const activeItems = showDeleted ? [] : wikis
   const deletedItems = deletedWikis
   const visibleCount = showDeleted ? deletedItems.length : activeItems.length
+  const renderDeleted = () => {
+    if (deletedItems.length === 0)
+      return (
+        <Card>
+          <CardContent className='flex flex-col items-center gap-2 py-8 text-center'>
+            <Trash2 className='size-12 text-muted-foreground/50' />
+            <p className='text-muted-foreground'>No deleted wiki pages</p>
+          </CardContent>
+        </Card>
+      )
+    return (
+      <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-3'>
+        {deletedItems.map(w => (
+          <Card className='border-dashed opacity-60' data-testid='deleted-wiki-item' key={w._id}>
+            <CardHeader>
+              <div className='flex items-center justify-between'>
+                <CardTitle className='line-through'>{w.title}</CardTitle>
+                <Badge variant='destructive'>deleted</Badge>
+              </div>
+            </CardHeader>
+            <CardContent className='flex items-center justify-between'>
+              <span className='text-sm text-muted-foreground'>{w.slug}</span>
+              <Button
+                data-testid='restore-wiki'
+                onClick={() => {
+                  restoreWiki({ id: w._id })
+                }}
+                size='sm'
+                variant='outline'>
+                <RotateCcw className='mr-1.5 size-3.5' />
+                Restore
+              </Button>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    )
+  }
+  const renderActive = () => {
+    if (activeItems.length === 0)
+      return (
+        <Card>
+          <CardContent className='flex flex-col items-center py-8 text-center'>
+            <FileText className='mb-2 size-12 text-muted-foreground' />
+            <p className='text-muted-foreground'>No wiki pages yet</p>
+          </CardContent>
+        </Card>
+      )
+    return (
+      <>
+        {isAdmin && activeItems.length > 0 ? (
+          <div className='flex items-center gap-2'>
+            <Checkbox
+              aria-label='Select all wiki pages'
+              checked={selected.size === activeItems.length}
+              onCheckedChange={toggleSelectAll}
+            />
+            <span className='text-sm text-muted-foreground'>Select all</span>
+          </div>
+        ) : null}
+        <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-3'>
+          {activeItems.map(w => (
+            <div className='relative' key={w._id}>
+              {isAdmin ? (
+                <Checkbox
+                  aria-label={`Select ${w.title}`}
+                  checked={selected.has(w._id)}
+                  className='absolute top-2 left-2 z-10'
+                  onCheckedChange={() => toggleSelect(w._id)}
+                  onClick={e => e.stopPropagation()}
+                />
+              ) : null}
+              <Link href={`/wiki/${w.id}`}>
+                <Card className='transition-colors hover:bg-muted'>
+                  <CardHeader className={cn(isAdmin ? 'pl-10' : '')}>
+                    <CardTitle>{w.title}</CardTitle>
+                  </CardHeader>
+                  <CardContent className='flex items-center gap-2'>
+                    <span className='text-sm text-muted-foreground'>{w.slug}</span>
+                    <Badge variant={w.status === 'published' ? 'default' : 'secondary'}>{w.status}</Badge>
+                  </CardContent>
+                </Card>
+              </Link>
+            </div>
+          ))}
+        </div>
+      </>
+    )
+  }
   return (
     <div className='space-y-6'>
       <div className='flex items-center justify-between'>
@@ -121,88 +210,7 @@ const WikiPage = () => {
           />
         </div>
       )}
-      {showDeleted ? (
-        deletedItems.length === 0 ? (
-          <Card>
-            <CardContent className='flex flex-col items-center gap-2 py-8 text-center'>
-              <Trash2 className='size-12 text-muted-foreground/50' />
-              <p className='text-muted-foreground'>No deleted wiki pages</p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-3'>
-            {deletedItems.map(w => (
-              <Card className='border-dashed opacity-60' data-testid='deleted-wiki-item' key={w._id}>
-                <CardHeader>
-                  <div className='flex items-center justify-between'>
-                    <CardTitle className='line-through'>{w.title}</CardTitle>
-                    <Badge variant='destructive'>deleted</Badge>
-                  </div>
-                </CardHeader>
-                <CardContent className='flex items-center justify-between'>
-                  <span className='text-sm text-muted-foreground'>{w.slug}</span>
-                  <Button
-                    data-testid='restore-wiki'
-                    onClick={() => {
-                      restoreWiki({ id: w._id })
-                    }}
-                    size='sm'
-                    variant='outline'>
-                    <RotateCcw className='mr-1.5 size-3.5' />
-                    Restore
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )
-      ) : activeItems.length === 0 ? (
-        <Card>
-          <CardContent className='flex flex-col items-center py-8 text-center'>
-            <FileText className='mb-2 size-12 text-muted-foreground' />
-            <p className='text-muted-foreground'>No wiki pages yet</p>
-          </CardContent>
-        </Card>
-      ) : (
-        <>
-          {isAdmin && activeItems.length > 0 ? (
-            <div className='flex items-center gap-2'>
-              <Checkbox
-                aria-label='Select all wiki pages'
-                checked={selected.size === activeItems.length}
-                onCheckedChange={toggleSelectAll}
-              />
-              <span className='text-sm text-muted-foreground'>Select all</span>
-            </div>
-          ) : null}
-          <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-3'>
-            {activeItems.map(w => (
-              <div className='relative' key={w._id}>
-                {isAdmin ? (
-                  <Checkbox
-                    aria-label={`Select ${w.title}`}
-                    checked={selected.has(w._id)}
-                    className='absolute top-2 left-2 z-10'
-                    onCheckedChange={() => toggleSelect(w._id)}
-                    onClick={e => e.stopPropagation()}
-                  />
-                ) : null}
-                <Link href={`/wiki/${w.id}`}>
-                  <Card className='transition-colors hover:bg-muted'>
-                    <CardHeader className={cn(isAdmin ? 'pl-10' : '')}>
-                      <CardTitle>{w.title}</CardTitle>
-                    </CardHeader>
-                    <CardContent className='flex items-center gap-2'>
-                      <span className='text-sm text-muted-foreground'>{w.slug}</span>
-                      <Badge variant={w.status === 'published' ? 'default' : 'secondary'}>{w.status}</Badge>
-                    </CardContent>
-                  </Card>
-                </Link>
-              </div>
-            ))}
-          </div>
-        </>
-      )}
+      {showDeleted ? renderDeleted() : renderActive()}
     </div>
   )
 }

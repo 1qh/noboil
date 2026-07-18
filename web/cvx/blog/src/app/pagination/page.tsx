@@ -9,13 +9,10 @@ const Page = () => {
   const { data, hasMore, isLoadingMore, sentinelRef, status } = useInfiniteList(api.blog.list, {
     where: { or: [{ published: true }, { own: true }] }
   })
-  return (
-    <div data-testid='crud-pagination-page'>
-      <Create />
-      <List blogs={data} />
-      {isLoadingMore ? (
-        <Spinner className='m-auto' data-testid='loading-more' />
-      ) : hasMore ? (
+  const renderFooter = () => {
+    if (isLoadingMore) return <Spinner className='m-auto' data-testid='loading-more' />
+    if (hasMore)
+      return (
         <div
           className='h-8'
           data-testid='load-more-trigger'
@@ -23,9 +20,16 @@ const Page = () => {
             sentinelRef.current = el
           }}
         />
-      ) : status === 'Exhausted' ? (
-        <Check className='m-auto animate-[fadeOut_2s_forwards] text-primary' data-testid='pagination-exhausted' />
-      ) : null}
+      )
+    if (status === 'Exhausted')
+      return <Check className='m-auto animate-[fadeOut_2s_forwards] text-primary' data-testid='pagination-exhausted' />
+    return null
+  }
+  return (
+    <div data-testid='crud-pagination-page'>
+      <Create />
+      <List blogs={data} />
+      {renderFooter()}
     </div>
   )
 }

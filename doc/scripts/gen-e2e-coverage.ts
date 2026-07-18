@@ -23,7 +23,7 @@ const collectDir = (dir: string): { describes: number; files: number; tests: num
   let tests = 0
   let files = 0
   // oxlint-disable-next-line node/no-sync
-  for (const name of readdirSync(dir).toSorted())
+  for (const name of readdirSync(dir).toSorted((a, b) => (a < b ? -1 : Number(a > b))))
     if (name.endsWith('.test.ts')) {
       // oxlint-disable-next-line node/no-sync
       const src = readFileSync(`${dir}/${name}`, 'utf8')

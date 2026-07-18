@@ -1,6 +1,7 @@
 {
   "name": "@a/stdb-poll",
   "private": true,
+  "description": "noboil stdb poll demo app",
   "type": "module",
   "scripts": {
     "build": "next build --turbo",

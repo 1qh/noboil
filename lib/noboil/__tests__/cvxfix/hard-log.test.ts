@@ -57,7 +57,7 @@ describe('makeLog (hard-delete) integration', () => {
       key: 'parent',
       value: 'pi'
     })) as { _id: string }[]
-    expect(r.length).toBe(1)
+    expect(r).toHaveLength(1)
   })
   test('purgeByParent without softDelete hard-deletes', async () => {
     const tt = await seedUser(t())

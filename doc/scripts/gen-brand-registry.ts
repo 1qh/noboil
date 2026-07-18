@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs'
 import { DOCS_DIR, LIB_NOBOIL, replaceBetween } from './lib'
 
 const TYPES_PATH = `${LIB_NOBOIL}/src/convex/server/types.ts`
+// eslint-disable-next-line sonarjs/super-linear-regex -- disjoint tokens with literal separators, no ambiguous overlap; linear
 const ENTRY_RE = /(?<brand>\w+):\s*'(?<hint>[^']+)'/u
 const main = () => {
   // oxlint-disable-next-line node/no-sync
@@ -21,7 +22,7 @@ const main = () => {
         rows.push(`| \`${m.groups.brand}\` | ${safeHint} |`)
       }
     }
-  rows.sort()
+  rows.sort((a, b) => (a < b ? -1 : Number(a > b)))
   const table = ['| Brand | Maker → Factory + Wrapper |', '|---|---|', ...rows].join('\n')
   const target = `${DOCS_DIR}/architecture.mdx`
   const dirty = replaceBetween(target, 'BRAND-REGISTRY', table)

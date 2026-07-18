@@ -32,9 +32,11 @@ const Publish = ({
     }
   })
   const [pending, go] = useTransition()
+  const statusText = published ? 'Published' : 'Draft'
+  const publishLabel = pending ? <Spinner /> : statusText
   return (
     <div className={cn('flex items-center gap-2', className)} data-testid='publish-toggle' {...props}>
-      <Label htmlFor={publishId}>{pending ? <Spinner /> : published ? 'Published' : 'Draft'}</Label>
+      <Label htmlFor={publishId}>{publishLabel}</Label>
       <Switch
         checked={published}
         data-testid='publish-switch'

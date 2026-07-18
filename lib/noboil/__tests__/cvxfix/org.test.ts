@@ -159,7 +159,7 @@ describe('makeOrg integration', () => {
     const my = (await callQuery(joiner, api.orgs.myJoinRequest, { orgId })) as { _id: string }
     await callMutate(joiner, api.orgs.cancelJoinRequest, { requestId: my._id })
     const after = (await callQuery(joiner, api.orgs.myJoinRequest, { orgId })) as null | { status: string }
-    expect(after?.status !== 'pending').toBe(true)
+    expect(after?.status).not.toBe('pending')
   })
   test('setAdmin promotes a member; removeMember removes them', async () => {
     const owner = await seedUser(t())
@@ -256,7 +256,7 @@ describe('makeOrg integration', () => {
       ctx.db.insert('orgMember', { isAdmin: false, orgId: otherOrgId, updatedAt: Date.now(), userId: owner.userId })
     )
     const list = (await callQuery(owner.tt, api.orgs.myOrgs, {})) as { org: { slug: string }; role: string }[]
-    expect(list.length).toBe(2)
+    expect(list).toHaveLength(2)
     expect(list.some(e => e.role === 'owner')).toBe(true)
     expect(list.some(e => e.role === 'member')).toBe(true)
   })

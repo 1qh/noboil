@@ -18,7 +18,7 @@ describe('stdb rls SQL builders', () => {
   })
   test('rlsChildSql without parentPub yields one WHERE clause', () => {
     const out = rlsChildSql({ fk: 'parent', name: 'msg', parent: 'chat' })
-    expect(out.length).toBe(1)
+    expect(out).toHaveLength(1)
   })
   test('rlsSql owned + string pub yields PubOrSender', () => {
     const sql = rlsSql('blog', 'owned', 'published')

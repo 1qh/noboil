@@ -276,9 +276,10 @@ const VoteView = ({ options, pollId }: { options: string[]; pollId: number }) =>
 }
 const PollCard = ({ onOptimisticRemove, p }: { onOptimisticRemove?: () => void; p: Poll }) => {
   const [open, setOpen] = useState(false)
-  const created = (p as Poll & { createdAt?: number | undefined | { toDate: () => Date } }).createdAt
-  const createdDate =
-    typeof created === 'number' ? new Date(created) : created && typeof created === 'object' ? created.toDate() : null
+  const created = (p as Poll & { createdAt?: number | { toDate: () => Date } }).createdAt
+  let createdDate: Date | null = null
+  if (typeof created === 'number') createdDate = new Date(created)
+  else if (created && typeof created === 'object') createdDate = created.toDate()
   return (
     <Collapsible
       className='rounded-lg border bg-card p-4 transition-shadow hover:shadow-sm'

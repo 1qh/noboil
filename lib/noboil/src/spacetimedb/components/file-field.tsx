@@ -114,6 +114,33 @@ const Preview = ({
     </div>
   )
 }
+const DropSlotBody = ({
+  accept,
+  compact,
+  isUploading,
+  maxSize,
+  progress
+}: {
+  accept?: string
+  compact?: boolean
+  isUploading?: boolean
+  maxSize?: number
+  progress: number
+}) => {
+  if (isUploading) return compact ? <span className='text-xs'>{progress}%</span> : <Progress v={progress} />
+  if (compact) return <Upload className='size-5 text-muted-foreground' />
+  return (
+    <>
+      {accept?.includes('image') ? (
+        <ImageIcon className='mb-2 size-8 text-muted-foreground' />
+      ) : (
+        <Upload className='mb-2 size-8 text-muted-foreground' />
+      )}
+      <span className='text-sm text-muted-foreground'>Click or drag</span>
+      {maxSize ? <span className='mt-1 text-xs text-muted-foreground'>Max {fmt(maxSize)}</span> : null}
+    </>
+  )
+}
 const DropSlot = ({
   accept,
   compact,
@@ -150,25 +177,7 @@ const DropSlot = ({
       // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role
       role='button'
       tabIndex={0}>
-      {isUploading ? (
-        compact ? (
-          <span className='text-xs'>{progress}%</span>
-        ) : (
-          <Progress v={progress} />
-        )
-      ) : compact ? (
-        <Upload className='size-5 text-muted-foreground' />
-      ) : (
-        <>
-          {accept?.includes('image') ? (
-            <ImageIcon className='mb-2 size-8 text-muted-foreground' />
-          ) : (
-            <Upload className='mb-2 size-8 text-muted-foreground' />
-          )}
-          <span className='text-sm text-muted-foreground'>Click or drag</span>
-          {maxSize ? <span className='mt-1 text-xs text-muted-foreground'>Max {fmt(maxSize)}</span> : null}
-        </>
-      )}
+      <DropSlotBody accept={accept} compact={compact} isUploading={isUploading} maxSize={maxSize} progress={progress} />
     </div>
   </>
 )
@@ -324,7 +333,10 @@ const FileFieldImpl = ({
 }) => {
   const { resolveUrl, upload: uploadFile } = useFileApi()
   const raw: unknown = f.state.value as unknown
-  const vals = useMemo(() => (multiple ? ((raw ?? []) as string[]) : raw ? [raw as string] : []), [multiple, raw])
+  const vals = useMemo(() => {
+    if (multiple) return (raw ?? []) as string[]
+    return raw ? [raw as string] : []
+  }, [multiple, raw])
   const inv = f.state.meta.isTouched && !f.state.meta.isValid
   const canAdd = multiple ? !max || vals.length < max : vals.length === 0
   const { isUploading, progress, reset, upload } = useFileUpload(uploadFile)

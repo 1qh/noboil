@@ -53,6 +53,7 @@ interface ChildCrudConfigLoose {
   tableName: string
 }
 type ChildCrudExports = CrudExports
+// eslint-disable-next-line sonarjs/redundant-type-aliases -- exported public-API result type mirroring the CrudResult naming convention
 type ChildCrudResult = ChildCrudExports
 interface ChildParentPkLike<Row, Id> {
   find: (id: Id) => null | Row

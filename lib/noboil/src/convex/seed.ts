@@ -5,6 +5,7 @@ const ALPHA = 'abcdefghijklmnopqrstuvwxyz'
 const DIGITS = '0123456789'
 const randomChars = (len: number, chars: string): string => {
   let result = ''
+  // eslint-disable-next-line sonarjs/pseudo-random -- non-sensitive: generates demo/seed record ids, not a security or cryptographic context
   for (let i = 0; i < len; i += 1) result += chars[Math.floor(Math.random() * chars.length)]
   return result
 }

@@ -143,6 +143,7 @@ const makeChildCrud = <S extends ZodRawShape, PS extends ZodRawShape = ZodRawSha
   })
   const update = m({
     args: { ...partial.shape, id: zid(table).optional(), items: array(updateItemSchema).max(BULK_MAX).optional() },
+    // eslint-disable-next-line sonarjs/cognitive-complexity -- bulk/single update with per-item validation early-returns; extracting would alter the runtime return-on-error control flow
     handler: typed(async (ctx: MutCtx, a: Rec) => {
       const rawItems = a.items as (Rec & { id: string })[] | undefined
       if (rawItems) {
@@ -177,6 +178,7 @@ const makeChildCrud = <S extends ZodRawShape, PS extends ZodRawShape = ZodRawSha
   })
   const rm = m({
     args: { id: zid(table).optional(), ids: bulkIdsSchema.optional() },
+    // eslint-disable-next-line sonarjs/cognitive-complexity -- bulk/single delete with soft-delete + hook branches; extracting would alter the runtime return-on-error control flow
     handler: typed(async (ctx: MutCtx, a: Rec) => {
       const ids = a.ids as string[] | undefined
       if (ids) {

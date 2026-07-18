@@ -67,7 +67,7 @@ describe('binary utils', () => {
     for (let i = 0; i < big.length; i += 1) big[i] = i % 256
     const b64 = arrayBufferToBase64(big.buffer)
     const restored = base64ToBytes(b64)
-    expect(restored.length).toBe(big.length)
+    expect(restored).toHaveLength(big.length)
     expect(restored[0]).toBe(0)
     expect(restored[100]).toBe(100)
     expect(restored[256]).toBe(0)

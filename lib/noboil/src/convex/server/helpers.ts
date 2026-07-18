@@ -204,6 +204,7 @@ const cleanFiles = async (opts: {
   fileFields: string[]
   next?: Record<string, unknown>
   storage: StorageLike
+  // eslint-disable-next-line sonarjs/cognitive-complexity -- file-field diff/cleanup across array + scalar shapes is irreducible; refactoring risks the untestable storage-delete path
 }) => {
   const { doc, fileFields, next, storage } = opts
   if (fileFields.length === 0) return
@@ -219,7 +220,11 @@ const cleanFiles = async (opts: {
         }
       else if (Object.hasOwn(next, f)) {
         const nv = next[f]
-        const keep = new Set(Array.isArray(nv) ? nv : nv ? [nv] : [])
+        let keepVals: unknown[]
+        if (Array.isArray(nv)) keepVals = nv
+        else if (nv) keepVals = [nv]
+        else keepVals = []
+        const keep = new Set(keepVals)
         for (const p of pArr)
           if (!keep.has(p as FID)) {
             const id = toId(p)

@@ -39,9 +39,8 @@ const run = async (argv: string[]): Promise<number> => {
   const entry = COMMANDS[cmd]
   if (!entry) {
     const suggestion = didYouMean(cmd, Object.keys(COMMANDS))
-    console.error(
-      `${red("Unknown 'noboil convex' subcommand:")} ${cmd}${suggestion ? dim(`  (did you mean ${bold(suggestion)}?)`) : ''}\n`
-    )
+    const hint = suggestion ? dim(`  (did you mean ${bold(suggestion)}?)`) : ''
+    console.error(`${red("Unknown 'noboil convex' subcommand:")} ${cmd}${hint}\n`)
     printHelp()
     return 1
   }

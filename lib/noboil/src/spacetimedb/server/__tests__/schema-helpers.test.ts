@@ -44,7 +44,7 @@ describe('stdb schema-helpers', () => {
     // oxlint-disable-next-line unicorn/max-nested-calls
     const t = td(orgTable(z.object({ name: z.string() }) as never))
     expect(t.fields.orgId).toBe('u32')
-    expect(t.indexes.map(i => i.name).toSorted()).toEqual(['by_org', 'by_org_user'])
+    expect(t.indexes.map(i => i.name).toSorted((a, b) => a.localeCompare(b))).toEqual(['by_org', 'by_org_user'])
   })
   test('orgChildTable indexes by parent foreignKey', () => {
     // oxlint-disable-next-line unicorn/max-nested-calls

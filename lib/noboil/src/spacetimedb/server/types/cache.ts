@@ -3,6 +3,7 @@ import type { AlgebraicTypeType, ColumnBuilder, TypeBuilder } from 'spacetimedb/
 import type { ReducerExportLike } from './common'
 
 type CacheBuilder = ColumnBuilder<unknown, AlgebraicTypeType> | TypeBuilder<unknown, AlgebraicTypeType>
+// eslint-disable-next-line sonarjs/redundant-type-aliases -- exported named public-API type asserting cache has no builder variants
 type CacheBuilders = never
 interface CacheConfig<
   DB,
@@ -46,6 +47,7 @@ type CacheFieldValues<F extends CacheFieldBuilders> = {
 interface CacheHookCtx {
   db: unknown
 }
+// eslint-disable-next-line sonarjs/redundant-type-aliases -- exported named public-API type asserting cache exposes no lifecycle hooks
 type CacheHooks = never
 interface CacheOptions {
   ttl?: number

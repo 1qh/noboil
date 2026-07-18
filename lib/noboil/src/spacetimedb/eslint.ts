@@ -24,6 +24,7 @@ const hasSchemaMarkers = (dir: string): boolean => {
     }
   return false
 }
+// eslint-disable-next-line sonarjs/cognitive-complexity -- recursive subdirectory scan with nested filesystem guards
 const searchSubdirs = (root: string): string | undefined => {
   // oxlint-disable-next-line node/no-sync
   if (!existsSync(root)) return
@@ -61,6 +62,7 @@ const STDB_IMPORT_MARKERS = [
   "'spacetimedb/react'",
   '"spacetimedb/react"'
 ]
+// eslint-disable-next-line sonarjs/cognitive-complexity -- multi-signal detection scanning bindings, schema dir, and imports
 const hasSpacetimeImportsFresh = (root: string): boolean => {
   // oxlint-disable-next-line node/no-sync
   if (existsSync(join(root, 'module_bindings'))) return true

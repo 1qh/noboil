@@ -32,7 +32,8 @@ const run = async (argv: string[]): Promise<number> => {
   const cmd = SUBCOMMANDS[sub]
   if (!cmd) {
     const suggestion = didYouMean(sub, Object.keys(SUBCOMMANDS))
-    console.error(`unknown 'noboil tool' subcommand: ${sub}${suggestion ? `  (did you mean ${suggestion}?)` : ''}`)
+    const hint = suggestion ? `  (did you mean ${suggestion}?)` : ''
+    console.error(`unknown 'noboil tool' subcommand: ${sub}${hint}`)
     console.error('')
     printHelp()
     return 2

@@ -1,14 +1,15 @@
 {
   "name": "@a/be-convex",
   "private": true,
+  "description": "noboil Convex backend functions",
   "exports": {
     ".": "./convex/_generated/api.js",
     "./ai": "./ai.ts",
     "./chat": "./convex/chat.ts",
     "./lazy": "./lazy.ts",
     "./model": "./convex/_generated/dataModel.d.ts",
-    "./server": "./convex/_generated/server.js",
-    "./s": "./s.ts"
+    "./s": "./s.ts",
+    "./server": "./convex/_generated/server.js"
   },
   "scripts": {
     "build": "tsc",

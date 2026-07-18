@@ -1,12 +1,13 @@
 /** biome-ignore-all lint/nursery/noComponentHookFactories: test fixture, not a component/hook */
 /* eslint-disable no-console */
-/* eslint-disable @typescript-eslint/naming-convention, @typescript-eslint/no-deprecated, @typescript-eslint/no-unnecessary-condition, @typescript-eslint/no-unnecessary-type-parameters */
+/* eslint-disable @typescript-eslint/naming-convention, @typescript-eslint/no-unnecessary-condition, @typescript-eslint/no-unnecessary-type-parameters */
+/* eslint-disable sonarjs/no-trivial-assertions -- compile-time type tests: the type annotation / @ts-expect-error is the assertion, the runtime expect is an intentionally-trivial carrier for assertions-in-tests */
 import type { ComponentProps } from 'react'
 import type { Identity } from 'spacetimedb'
 import type { z } from 'zod/v4'
 import { describe, expect, test } from 'bun:test'
 import { join } from 'node:path'
-import { array, boolean, date, globalRegistry, number, object, optional, string, enum as zenum } from 'zod/v4'
+import { array, boolean, date, email, globalRegistry, number, object, optional, string, enum as zenum } from 'zod/v4'
 import type { AccessEntry, FactoryCall } from '../check'
 import type ErrorBoundary from '../components/error-boundary'
 // oxlint-disable-next-line import/no-namespace
@@ -226,6 +227,7 @@ const makeSenderError = (data: unknown): Error => {
   const code = typeof rawCode === 'string' ? rawCode : String(rawCode)
   return new Error(`${code}:${JSON.stringify(data)}`)
 }
+// eslint-disable-next-line sonarjs/cognitive-complexity -- optimistic-update reducer applying create/update/delete mutations in sequence
 const applyOptimistic = (items: Rec[], pending: PendingMutation[]): Rec[] => {
   if (pending.length === 0) return items
   let out = [...items]
@@ -871,7 +873,7 @@ describe('branded schema type enforcement', () => {
     })
   })
   describe('singletonCrud upsert type safety', () => {
-    type ProfileInput = Partial<(typeof singletonSchemas.profile)['_output']>
+    type ProfileInput = Partial<z.infer<typeof singletonSchemas.profile>>
     test('upsert rejects misspelled field name', () => {
       // @ts-expect-error - misspelledField is not a valid profile key
       const invalid: ProfileInput = { misspelledField: 'x' }
@@ -907,7 +909,7 @@ describe('universal table()', () => {
     const { readFileSync } = await import('node:fs')
     // oxlint-disable-next-line node/no-sync
     const content = readFileSync(join(import.meta.dir, '..', 'server', 'setup.ts'), 'utf8')
-    expect(content.includes('table: TableFn')).toBe(true)
+    expect(content).toContain('table: TableFn')
   })
 })
 describe('branded schema error messages (SchemaTypeError)', () => {
@@ -2242,7 +2244,7 @@ describe('Fix #1: getOrgMember compound index', () => {
     const { readFileSync } = await import('node:fs')
     // oxlint-disable-next-line node/no-sync
     const content = readFileSync(join(import.meta.dir, '..', 'server', 'index.ts'), 'utf8')
-    expect(content.includes('getOrgMember')).toBe(false)
+    expect(content).not.toContain('getOrgMember')
   })
   test('requireOrgMember is not exported from org-crud', async () => {
     const mod = await import('../server/org-crud')
@@ -2336,7 +2338,7 @@ describe('Fix #3: factory table names typed as keyof DM & string', () => {
     const { readFileSync } = await import('node:fs')
     // oxlint-disable-next-line node/no-sync
     const content = readFileSync(join(import.meta.dir, '..', 'server', 'index.ts'), 'utf8')
-    expect(content.includes('setup')).toBe(true)
+    expect(content).toContain('setup')
   })
 })
 describe('Fix #4: ownedCascade helper', () => {
@@ -2397,7 +2399,7 @@ describe('Fix #4: ownedCascade helper', () => {
     const { readFileSync } = await import('node:fs')
     // oxlint-disable-next-line node/no-sync
     const content = readFileSync(join(import.meta.dir, '..', 'server', 'index.ts'), 'utf8')
-    expect(content.includes('ownedCascade')).toBe(true)
+    expect(content).toContain('ownedCascade')
   })
   test('ownedCascade mirrors orgCascade behavior', () => {
     const owned = ownedCascade(taskSchema, { foreignKey: 'projectId' })
@@ -3416,22 +3418,22 @@ describe('bundle verification', () => {
     const { readFileSync } = await import('node:fs')
     // oxlint-disable-next-line node/no-sync
     const content = readFileSync(join(import.meta.dir, '..', 'schema.ts'), 'utf8')
-    expect(content.includes("from 'react'")).toBe(false)
-    expect(content.includes('useState')).toBe(false)
-    expect(content.includes('useEffect')).toBe(false)
+    expect(content).not.toContain("from 'react'")
+    expect(content).not.toContain('useState')
+    expect(content).not.toContain('useEffect')
   })
   test('noboil/spacetimedb/schema has no node:fs imports', async () => {
     const { readFileSync } = await import('node:fs')
     // oxlint-disable-next-line node/no-sync
     const content = readFileSync(join(import.meta.dir, '..', 'schema.ts'), 'utf8')
-    expect(content.includes("from 'node:fs'")).toBe(false)
+    expect(content).not.toContain("from 'node:fs'")
   })
   test('noboil/spacetimedb/retry has no React or server imports', async () => {
     const { readFileSync } = await import('node:fs')
     // oxlint-disable-next-line node/no-sync
     const content = readFileSync(join(import.meta.dir, '..', 'retry.ts'), 'utf8')
-    expect(content.includes("from 'react'")).toBe(false)
-    expect(content.includes("from 'node:fs'")).toBe(false)
+    expect(content).not.toContain("from 'react'")
+    expect(content).not.toContain("from 'node:fs'")
   })
   test('entry point count matches package.json exports', async () => {
     const { readFileSync } = await import('node:fs')
@@ -3980,7 +3982,7 @@ describe('cacheCrud hooks', () => {
       userId: 'user_123'
     }
     expect(Object.keys(cacheCtx)).toEqual(['db'])
-    expect(Object.keys(crudCtx).toSorted()).toEqual(['db', 'storage', 'userId'])
+    expect(Object.keys(crudCtx).toSorted((a, b) => a.localeCompare(b))).toEqual(['db', 'storage', 'userId'])
   })
 })
 describe('stale-while-revalidate for cacheCrud', () => {
@@ -8009,7 +8011,7 @@ describe('Sprint 4 Tier 1', () => {
 })
 describe('Sprint 4 Tier 2', () => {
   test('getFieldErrors infers schema keys and returns runtime field errors from Zod validation', () => {
-    const schema = object({ email: string().email(), title: string().min(3) })
+    const schema = object({ email: email(), title: string().min(3) })
     const parsed = schema.safeParse({ email: 'invalid', title: '' })
     expect(parsed.success).toBe(false)
     if (parsed.success) return
@@ -8250,6 +8252,7 @@ describe('Sprint 5 toastFieldError', () => {
       messages.push(message)
     })
     expect(toasted).toBe(false)
+    expect(messages).toHaveLength(0)
   })
   test('returns false for non-noboil errors', () => {
     const messages: string[] = []
@@ -8257,6 +8260,7 @@ describe('Sprint 5 toastFieldError', () => {
       messages.push(message)
     })
     expect(toasted).toBe(false)
+    expect(messages).toHaveLength(0)
   })
   test('does not call toast when no field error', () => {
     const messages: string[] = []
@@ -8369,7 +8373,7 @@ describe('Sprint 5 useMutation exports', () => {
     const { readFileSync } = await import('node:fs')
     // oxlint-disable-next-line node/no-sync
     const content = readFileSync(join(import.meta.dir, '..', 'react', 'use-mutate.ts'), 'utf8')
-    expect(content.includes('useMut = <A extends Record<string, unknown>, R = void>(')).toBe(true)
+    expect(content).toContain('useMut = <A extends Record<string, unknown>, R = void>(')
   })
   test('MutateOptions type is exported from react index', () => {
     const opts: ReactIndexTypes.MutateOptions<{ id: string }, { ok: boolean }> = {
@@ -8686,16 +8690,16 @@ describe('Sprint 6 Tier 2.4 ERROR_MESSAGES enhancements', () => {
     for (const key of Object.keys(ERROR_MESSAGES)) {
       const message = ERROR_MESSAGES[key as keyof typeof ERROR_MESSAGES]
       expect(message.length).toBeGreaterThanOrEqual(14)
-      expect(message.trim().includes(' ')).toBe(true)
+      expect(message.trim()).toContain(' ')
     }
   })
   test('ERROR_MESSAGES count matches expected codes', () => {
     expect(Object.keys(ERROR_MESSAGES)).toHaveLength(38)
   })
   test('specific improved messages contain required wording', () => {
-    expect(ERROR_MESSAGES.NOT_FOUND.includes('deleted')).toBe(true)
-    expect(ERROR_MESSAGES.RATE_LIMITED.includes('wait')).toBe(true)
-    expect(ERROR_MESSAGES.VALIDATION_FAILED.includes('fields')).toBe(true)
+    expect(ERROR_MESSAGES.NOT_FOUND).toContain('deleted')
+    expect(ERROR_MESSAGES.RATE_LIMITED).toContain('wait')
+    expect(ERROR_MESSAGES.VALIDATION_FAILED).toContain('fields')
   })
 })
 describe('Sprint 6 Tier 3.1 defaultValue with prefault/default wrappers', () => {
@@ -8949,17 +8953,17 @@ describe('Sprint 8 polish: useList skip returns isLoading false', () => {
     expect(skip.isLoading).toBe(false)
   })
 })
+const withUniversalTable = (
+  run: (table: Parameters<Parameters<typeof noboil>[0]['tables']>[0]['table']) => void
+): void => {
+  noboil({
+    tables: ({ table }) => {
+      run(table)
+      return {}
+    }
+  })
+}
 describe('unified schema()', () => {
-  const withUniversalTable = (
-    run: (table: Parameters<Parameters<typeof noboil>[0]['tables']>[0]['table']) => void
-  ): void => {
-    noboil({
-      tables: ({ table }) => {
-        run(table)
-        return {}
-      }
-    })
-  }
   test('schema() brands owned schemas correctly', () => {
     const s = buildSchema({
       owned: { blog: object({ published: boolean(), title: string() }) }
@@ -9064,15 +9068,15 @@ describe('unified schema()', () => {
     expect(category).toBe('owned')
   })
 })
+const readSetupSource = async (): Promise<string> => {
+  const { readFileSync } = await import('node:fs')
+  // oxlint-disable-next-line node/no-sync
+  return readFileSync(join(import.meta.dir, '..', 'server', 'setup.ts'), 'utf8')
+}
 describe('softDelete auto-adds deletedAt column', () => {
-  const readSetupSource = async (): Promise<string> => {
-    const { readFileSync } = await import('node:fs')
-    // oxlint-disable-next-line node/no-sync
-    return readFileSync(join(import.meta.dir, '..', 'server', 'setup.ts'), 'utf8')
-  }
   test('setup source includes softDelete auto-injection code', async () => {
     const content = await readSetupSource()
-    expect(content.includes('softDelete ? { ...extra, deletedAt: raw.t.timestamp().optional() } : extra')).toBe(true)
+    expect(content).toContain('softDelete ? { ...extra, deletedAt: raw.t.timestamp().optional() } : extra')
   })
   test('softDelete in ownedTable auto-injects deletedAt', async () => {
     const content = await readSetupSource()
@@ -9080,8 +9084,8 @@ describe('softDelete auto-adds deletedAt column', () => {
       'ownedTable = <F extends TblInput>(fields: F, options?: OwnedOpts<F>): BsTable => {'
     )
     const injected = content.indexOf('sdExtra = softDelete ? { ...extra, deletedAt:', ownedStart)
-    expect(ownedStart !== -1).toBe(true)
-    expect(injected > ownedStart).toBe(true)
+    expect(ownedStart).not.toBe(-1)
+    expect(injected).toBeGreaterThan(ownedStart)
   })
   test('softDelete in orgScopedTable auto-injects deletedAt', async () => {
     const content = await readSetupSource()
@@ -9089,50 +9093,34 @@ describe('softDelete auto-adds deletedAt column', () => {
       'orgScopedTable = <F extends TblInput>(fields: F, options?: OrgScopedOpts<F>): BsTable => {'
     )
     const injected = content.indexOf('sdExtra = softDelete ? { ...extra, deletedAt:', orgScopedStart)
-    expect(orgScopedStart !== -1).toBe(true)
-    expect(injected > orgScopedStart).toBe(true)
+    expect(orgScopedStart).not.toBe(-1)
+    expect(injected).toBeGreaterThan(orgScopedStart)
   })
 })
 describe('compoundIndex shorthand', () => {
-  const readSetupSource = async (): Promise<string> => {
-    const { readFileSync } = await import('node:fs')
-    // oxlint-disable-next-line node/no-sync
-    return readFileSync(join(import.meta.dir, '..', 'server', 'setup.ts'), 'utf8')
-  }
   test('compoundIndexToEntry function exists', async () => {
     const content = await readSetupSource()
-    expect(content.includes('const compoundIndexToEntry = (columns: string[])')).toBe(true)
+    expect(content).toContain('const compoundIndexToEntry = (columns: string[])')
   })
   test('compoundIndexToEntry generates correct accessor name', async () => {
     const content = await readSetupSource()
-    expect(
-      content.includes("columns.map((c, i) => (i === 0 ? c : c.charAt(0).toUpperCase() + c.slice(1))).join('')")
-    ).toBe(true)
+    expect(content).toContain("columns.map((c, i) => (i === 0 ? c : c.charAt(0).toUpperCase() + c.slice(1))).join('')")
   })
   test('OrgScopedOpts accepts compoundIndex', async () => {
     const content = await readSetupSource()
-    expect(content.includes("compoundIndex?: ('orgId' | ZodKeys<F>)[]")).toBe(true)
+    expect(content).toContain("compoundIndex?: ('orgId' | ZodKeys<F>)[]")
   })
   test('OrgScopedOpts accepts cascade as object (unified with Convex)', async () => {
     const content = await readSetupSource()
-    expect(content.includes('cascade?: boolean | { foreignKey: string; table: string }')).toBe(true)
+    expect(content).toContain('cascade?: boolean | { foreignKey: string; table: string }')
   })
   test('algorithm type is union not string', async () => {
     const content = await readSetupSource()
-    expect(content.includes("algorithm: 'btree' | 'hash'")).toBe(true)
+    expect(content).toContain("algorithm: 'btree' | 'hash'")
   })
 })
+type PubOption = boolean | string | undefined
 describe('type-safe column references in table options', () => {
-  const withUniversalTable = (
-    run: (table: Parameters<Parameters<typeof noboil>[0]['tables']>[0]['table']) => void
-  ): void => {
-    noboil({
-      tables: ({ table }) => {
-        run(table)
-        return {}
-      }
-    })
-  }
   test('index shorthand accepts valid field names', () => {
     let category: unknown
     withUniversalTable(table => {
@@ -9218,7 +9206,7 @@ describe('type-safe column references in table options', () => {
     })
   })
   test('pub option accepts published field on blog schema', () => {
-    let pub: boolean | string | undefined
+    let pub: PubOption
     withUniversalTable(table => {
       const ownedSchema = buildSchema({
         owned: { blog: object({ published: boolean(), title: string() }) }
@@ -9232,7 +9220,7 @@ describe('type-safe column references in table options', () => {
     expect(pub).toBe('published')
   })
   test('pub option accepts isPublic field on chat schema', () => {
-    let pub: boolean | string | undefined
+    let pub: PubOption
     withUniversalTable(table => {
       const ownedSchema = buildSchema({
         owned: { chat: object({ isPublic: boolean(), title: string() }) }
@@ -9246,7 +9234,7 @@ describe('type-safe column references in table options', () => {
     expect(pub).toBe('isPublic')
   })
   test('pub option accepts true for all-public rows', () => {
-    let pub: boolean | string | undefined
+    let pub: PubOption
     withUniversalTable(table => {
       const ownedSchema = buildSchema({
         owned: { blog: object({ published: boolean(), title: string() }) }
@@ -9284,8 +9272,8 @@ describe('type-safe column references in table options', () => {
     const { readFileSync } = await import('node:fs')
     // oxlint-disable-next-line node/no-sync
     const content = readFileSync(join(import.meta.dir, '..', 'server', 'setup.ts'), 'utf8')
-    expect(content.includes('pub?: boolean | ZodKeys<F>')).toBe(true)
-    expect(content.includes('pub?: string')).toBe(false)
+    expect(content).toContain('pub?: boolean | ZodKeys<F>')
+    expect(content).not.toContain('pub?: string')
   })
 })
 describe('RLS SQL generation from pub metadata', () => {
@@ -9907,7 +9895,7 @@ describe('makeLog factory schema', () => {
   })
   test('makeLog accepts empty input', () => {
     const empty = makeLog({})
-    expect(Object.keys(empty).length).toBe(0)
+    expect(Object.keys(empty)).toHaveLength(0)
   })
 })
 describe('makeKv factory schema', () => {
@@ -9950,7 +9938,7 @@ describe('makeQuota factory schema', () => {
   })
   test('makeQuota accepts empty input', () => {
     const empty = makeQuota({})
-    expect(Object.keys(empty).length).toBe(0)
+    expect(Object.keys(empty)).toHaveLength(0)
   })
 })
 describe('factory parity (stdb under-coverage closure)', () => {
@@ -9992,7 +9980,7 @@ describe('factory parity (stdb under-coverage closure)', () => {
     })
     test('makeQuota result keys match input keys', () => {
       const q = makeQuota({ alpha: { durationMs: 1, limit: 1 }, beta: { durationMs: 2, limit: 2 } })
-      expect(Object.keys(q).toSorted()).toEqual(['alpha', 'beta'])
+      expect(Object.keys(q).toSorted((a, b) => a.localeCompare(b))).toEqual(['alpha', 'beta'])
     })
   })
   describe('singleton: deeper unit coverage', () => {
@@ -10029,11 +10017,11 @@ describe('factory parity (stdb under-coverage closure)', () => {
     })
     test('makeSingleton with empty input returns empty record', () => {
       const s = makeSingleton({})
-      expect(Object.keys(s).length).toBe(0)
+      expect(Object.keys(s)).toHaveLength(0)
     })
     test('singleton output type structure matches input keys', () => {
       const s = makeSingleton({ pref: object({ theme: string() }), settings: object({ lang: string() }) })
-      expect(Object.keys(s).toSorted()).toEqual(['pref', 'settings'])
+      expect(Object.keys(s).toSorted((a, b) => a.localeCompare(b))).toEqual(['pref', 'settings'])
     })
     test('singleton schema parses nested objects', () => {
       // oxlint-disable-next-line unicorn/max-nested-calls
@@ -10075,11 +10063,11 @@ describe('factory parity (stdb under-coverage closure)', () => {
     })
     test('makeBase with empty input', () => {
       const b = makeBase({})
-      expect(Object.keys(b).length).toBe(0)
+      expect(Object.keys(b)).toHaveLength(0)
     })
     test('base preserves multiple independent entries', () => {
       const b = makeBase({ a: object({ x: number() }), b: object({ y: string() }) })
-      expect(Object.keys(b).toSorted()).toEqual(['a', 'b'])
+      expect(Object.keys(b).toSorted((x, y) => x.localeCompare(y))).toEqual(['a', 'b'])
     })
     test('base schema accepts arrays', () => {
       // oxlint-disable-next-line unicorn/max-nested-calls
@@ -10123,7 +10111,7 @@ describe('factory parity (stdb under-coverage closure)', () => {
     })
     test('orgScoped with multiple entries — keys preserved', () => {
       const o = makeOrgScoped({ a: object({ x: string() }), b: object({ y: string() }), c: object({ z: string() }) })
-      expect(Object.keys(o).toSorted()).toEqual(['a', 'b', 'c'])
+      expect(Object.keys(o).toSorted((a, b) => a.localeCompare(b))).toEqual(['a', 'b', 'c'])
     })
     test('orgScoped brand stable across schema chains', () => {
       const o = makeOrgScoped({ wiki: object({ title: string().min(1).max(200) }) })
@@ -10131,7 +10119,7 @@ describe('factory parity (stdb under-coverage closure)', () => {
     })
     test('makeOrgScoped empty input', () => {
       const o = makeOrgScoped({})
-      expect(Object.keys(o).length).toBe(0)
+      expect(Object.keys(o)).toHaveLength(0)
     })
     test('orgScoped boolean validation', () => {
       const o = makeOrgScoped({ task: object({ done: boolean() }) })
@@ -10153,7 +10141,7 @@ describe('factory parity (stdb under-coverage closure)', () => {
     })
     test('makeOrg supports multiple org-definition entries', () => {
       const o = makeOrg({ team: object({ name: string() }), workspace: object({ slug: string() }) })
-      expect(Object.keys(o).toSorted()).toEqual(['team', 'workspace'])
+      expect(Object.keys(o).toSorted((a, b) => a.localeCompare(b))).toEqual(['team', 'workspace'])
     })
     test('orgScoped factory composes with makeOrg without conflict', () => {
       const orgDef = makeOrg({ team: object({ name: string() }) })
@@ -10176,7 +10164,10 @@ describe('kv: deeper coverage', () => {
     const kv = makeKv({
       banner: { keys: ['active', 'maintenance'] as const, schema: object({ msg: string() }), writeRole: true }
     })
-    expect((kv.banner as unknown as { keys: readonly string[] }).keys.toSorted()).toEqual(['active', 'maintenance'])
+    expect((kv.banner as unknown as { keys: readonly string[] }).keys.toSorted((a, b) => a.localeCompare(b))).toEqual([
+      'active',
+      'maintenance'
+    ])
   })
   test('kv schema validates correctly', () => {
     const kv = makeKv({ x: { schema: object({ active: boolean(), msg: string() }), writeRole: true } })
@@ -10201,7 +10192,7 @@ describe('kv: deeper coverage', () => {
   })
   test('makeKv empty input', () => {
     const kv = makeKv({})
-    expect(Object.keys(kv).length).toBe(0)
+    expect(Object.keys(kv)).toHaveLength(0)
   })
 })
 describe('log: deeper coverage', () => {
@@ -10244,7 +10235,7 @@ describe('log: deeper coverage', () => {
   })
   test('log empty input returns empty record', () => {
     const l = makeLog({})
-    expect(Object.keys(l).length).toBe(0)
+    expect(Object.keys(l)).toHaveLength(0)
   })
   test('log schema with optional field', () => {
     const l = makeLog({ x: { parent: 'p', schema: object({ note: string().optional() }) } })

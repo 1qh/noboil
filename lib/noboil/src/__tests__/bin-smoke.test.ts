@@ -7,7 +7,7 @@ const BIN = join(REPO, 'src', 'index.ts')
 const CONVEX_BIN = join(REPO, 'src', 'convex', 'cli.ts')
 const STDB_BIN = join(REPO, 'src', 'spacetimedb', 'cli.ts')
 // oxlint-disable-next-line node/no-sync
-const run = (bin: string, args: string[]) => spawnSync('bun', [bin, ...args], { encoding: 'utf8', timeout: 10_000 })
+const run = (bin: string, args: string[]) => spawnSync('bun', [bin, ...args], { encoding: 'utf8', timeout: 10_000 }) // eslint-disable-line sonarjs/no-os-command-from-path -- test invokes trusted bin by name
 describe('noboil bin smoke', () => {
   test('--help exits 0 and lists commands', () => {
     const r = run(BIN, ['--help'])
@@ -20,6 +20,7 @@ describe('noboil bin smoke', () => {
   test('--version prints a semver', () => {
     const r = run(BIN, ['--version'])
     expect(r.status).toBe(0)
+    // eslint-disable-next-line sonarjs/super-linear-regex -- disjoint classes (\d vs literal '.'), no ambiguous backtracking; bounded CLI --version output
     expect(r.stdout).toMatch(/\d+\.\d+\.\d+/u)
   })
   test('init --help exits 0', () => {
@@ -69,6 +70,7 @@ describe('noboil convex bin smoke', () => {
   test('--version prints semver', () => {
     const r = run(CONVEX_BIN, ['--version'])
     expect(r.status).toBe(0)
+    // eslint-disable-next-line sonarjs/super-linear-regex -- disjoint classes (\d vs literal '.'), no ambiguous backtracking; bounded CLI --version output
     expect(r.stdout).toMatch(/\d+\.\d+\.\d+/u)
   })
   test('add --help exits 0', () => {
@@ -85,6 +87,7 @@ describe('noboil stdb bin smoke', () => {
   test('--version prints semver', () => {
     const r = run(STDB_BIN, ['--version'])
     expect(r.status).toBe(0)
+    // eslint-disable-next-line sonarjs/super-linear-regex -- disjoint classes (\d vs literal '.'), no ambiguous backtracking; bounded CLI --version output
     expect(r.stdout).toMatch(/\d+\.\d+\.\d+/u)
   })
   test('add --help exits 0', () => {

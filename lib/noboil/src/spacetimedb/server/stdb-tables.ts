@@ -53,6 +53,7 @@ const isZodObject = (value: unknown): value is ZodLike =>
   isRecord(value) && value.type === 'object' && 'shape' in value && isRecord(value.shape)
 const hasOptional = (value: FieldBuilder): value is FieldBuilder & { optional: () => FieldBuilder } =>
   isRecord(value) && 'optional' in value && typeof value.optional === 'function'
+// eslint-disable-next-line sonarjs/cognitive-complexity -- character-by-character PascalCase transform with word-boundary state
 const toPascalCase = (value: string): string => {
   let out = ''
   let word = ''
@@ -100,6 +101,7 @@ const unionObject = (
   options: undefined | unknown[],
   t: ZodBridgeT,
   ctx: { fromSchema: FieldFromSchemaFn; path: string }
+  // eslint-disable-next-line sonarjs/cognitive-complexity -- zod-union to field-builder bridge branching per variant shape
 ): FieldBuilder => {
   const { fromSchema, path } = ctx
   const variants: Record<string, unknown>[] = []
@@ -125,7 +127,7 @@ const unionObject = (
     }
   }
   const merged: Record<string, FieldBuilder> = {}
-  fieldNames.sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))
+  fieldNames.sort((a, b) => (a < b ? -1 : Number(a > b)))
   for (const name of fieldNames) {
     const baseField = fromSchema(firstSchemaByField[name], t, `${path}.${name}`)
     merged[name] = (fieldCounts[name] ?? 0) === totalVariants ? baseField : asOptional(baseField)

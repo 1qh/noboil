@@ -43,7 +43,7 @@ const extractFactoryCalls = (moduleDir: string): FactoryCall[] => {
     calls.push({
       factory: 'reducer',
       file: entry.file,
-      options: `endpoints=${[...entry.endpoints].toSorted().join(',')}`,
+      options: `endpoints=${[...entry.endpoints].toSorted((a, b) => a.localeCompare(b)).join(',')}`,
       table
     })
   return calls
@@ -191,9 +191,13 @@ const run = (argv: string[] = process.argv.slice(2)) => {
     const eps = endpointsForFactory(call)
     const fields = tableFields.get(call.table)
     total += eps.length
-    console.log(`${bold(call.table)} ${dim(`(${call.factory})`)} ${dim(`\u2014 ${call.file}`)}`)
-    if (fields && fields.length > 0)
-      console.log(`  ${dim('fields:')} ${fields.map(f => `${f.name}: ${f.type}`).join(', ')}`)
+    const factoryBadge = dim(`(${call.factory})`)
+    const fileBadge = dim(`\u2014 ${call.file}`)
+    console.log(`${bold(call.table)} ${factoryBadge} ${fileBadge}`)
+    if (fields && fields.length > 0) {
+      const fieldList = fields.map(f => `${f.name}: ${f.type}`).join(', ')
+      console.log(`  ${dim('fields:')} ${fieldList}`)
+    }
     console.log(`  ${dim('reducers:')} ${eps.join(', ')}`)
     console.log('')
   }

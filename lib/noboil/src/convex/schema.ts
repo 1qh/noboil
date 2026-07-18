@@ -195,6 +195,13 @@ type SchemaResult<T extends SchemaConfig> = (NonNullable<T['base']> extends infe
     ? { [K in keyof O]: Named<K & string> & O[K] & SingletonSchema<O[K] extends ZodObject<infer S> ? S : ZodRawShape> }
     : unknown)
 /** Combines all branded schemas into a single namespace, mirroring noboil/spacetimedb/schema. */
+const mergeFactory = <C>(
+  target: Record<string, unknown>,
+  cfg: C | undefined,
+  make: (c: C) => Record<string, unknown>
+): void => {
+  if (cfg) mergeInto(target, make(cfg))
+}
 const schema = <T extends SchemaConfig>(config: T): SchemaResult<T> => {
   const all: Record<string, unknown> = {}
   for (const cat of [config.owned, config.orgScoped, config.org, config.base, config.singleton])
@@ -202,14 +209,14 @@ const schema = <T extends SchemaConfig>(config: T): SchemaResult<T> => {
   if (config.children) for (const [k, v] of Object.entries(config.children)) all[k] = v
   validateSchemas(all)
   const result: Record<string, unknown> = {}
-  if (config.owned) mergeInto(result, makeOwned(config.owned))
-  if (config.orgScoped) mergeInto(result, makeOrgScoped(config.orgScoped))
-  if (config.org) mergeInto(result, makeOrg(config.org))
-  if (config.base) mergeInto(result, makeBase(config.base))
-  if (config.singleton) mergeInto(result, makeSingleton(config.singleton))
-  if (config.log) mergeInto(result, makeLog(config.log))
-  if (config.kv) mergeInto(result, makeKv(config.kv))
-  if (config.quota) mergeInto(result, makeQuota(config.quota))
+  mergeFactory(result, config.owned, makeOwned)
+  mergeFactory(result, config.orgScoped, makeOrgScoped)
+  mergeFactory(result, config.org, makeOrg)
+  mergeFactory(result, config.base, makeBase)
+  mergeFactory(result, config.singleton, makeSingleton)
+  mergeFactory(result, config.log, makeLog)
+  mergeFactory(result, config.kv, makeKv)
+  mergeFactory(result, config.quota, makeQuota)
   if (config.children) mergeInto(result, config.children)
   for (const name of Object.keys(result))
     Object.defineProperty(result[name] as object, '__name', {

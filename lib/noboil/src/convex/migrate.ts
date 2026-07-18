@@ -77,62 +77,63 @@ const parseFieldsFromBlock = (block: string): FieldInfo[] => {
   }
   return fields
 }
-const parseSchemaContent = (content: string): SchemaSnapshot => {
-  const tables: TableSnapshot[] = []
-  const processFactory = (factory: string) => {
-    const pat = new RegExp(`${factory}\\(\\{`, 'gu')
-    let fm = pat.exec(content)
-    while (fm !== null) {
-      const endPos = findBracketEnd(content, fm.index + fm[0].length)
-      const outerBlock = content.slice(fm.index + fm[0].length, endPos)
-      const propPat = /(?<tname>\w+)\s*:\s*object\(\{/gu
-      let pm = propPat.exec(outerBlock)
-      while (pm) {
-        const start = pm.index + pm[0].length
-        const fieldEnd = findBracketEnd(outerBlock, start)
-        const fieldBlock = outerBlock.slice(start, fieldEnd)
-        tables.push({
-          factory: FACTORY_MAP[factory] ?? factory,
-          fields: parseFieldsFromBlock(fieldBlock),
-          name: pm.groups?.tname ?? ''
-        })
-        pm = propPat.exec(outerBlock)
-      }
-      fm = pat.exec(content)
+const parseFactoryTables = (content: string, factory: string, tables: TableSnapshot[]): void => {
+  const pat = new RegExp(`${factory}\\(\\{`, 'gu')
+  let fm = pat.exec(content)
+  while (fm !== null) {
+    const outerBlock = content.slice(fm.index + fm[0].length, findBracketEnd(content, fm.index + fm[0].length))
+    // eslint-disable-next-line sonarjs/super-linear-regex -- linear: \w and \s match disjoint character classes, so adjacent quantifiers cannot overlap-backtrack
+    const propPat = /(?<tname>\w+)\s*:\s*object\(\{/gu
+    let pm = propPat.exec(outerBlock)
+    while (pm) {
+      const start = pm.index + pm[0].length
+      const fieldBlock = outerBlock.slice(start, findBracketEnd(outerBlock, start))
+      tables.push({
+        factory: FACTORY_MAP[factory] ?? factory,
+        fields: parseFieldsFromBlock(fieldBlock),
+        name: pm.groups?.tname ?? ''
+      })
+      pm = propPat.exec(outerBlock)
     }
+    fm = pat.exec(content)
   }
-  for (const factory of wrapperFactories) processFactory(factory)
+}
+const parseChildTables = (content: string, tables: TableSnapshot[]): void => {
+  // eslint-disable-next-line sonarjs/super-linear-regex -- linear: \w and \s match disjoint character classes, so adjacent quantifiers cannot overlap-backtrack
   const childPat = /(?<cname>\w+)\s*:\s*child\(\{/gu
   let cm = childPat.exec(content)
   while (cm) {
-    let depth = 1
-    let pos = cm.index + cm[0].length
-    while (pos < content.length && depth > 0) {
-      if (content[pos] === '{') depth += 1
-      else if (content[pos] === '}') depth -= 1
-      pos += 1
-    }
-    const childBlock = content.slice(cm.index + cm[0].length, pos - 1)
+    const childBlock = content.slice(cm.index + cm[0].length, findBracketEnd(content, cm.index + cm[0].length))
     const sm = CHILD_SCHEMA_PAT.exec(childBlock)
     if (sm) {
       const schemaStart = sm.index + sm[0].length
-      let d = 1
-      let sp = schemaStart
-      while (sp < childBlock.length && d > 0) {
-        if (childBlock[sp] === '{') d += 1
-        else if (childBlock[sp] === '}') d -= 1
-        sp += 1
-      }
-      const fieldBlock = childBlock.slice(schemaStart, sp - 1)
-      tables.push({
-        factory: 'childCrud',
-        fields: parseFieldsFromBlock(fieldBlock),
-        name: cm.groups?.cname ?? ''
-      })
+      const fieldBlock = childBlock.slice(schemaStart, findBracketEnd(childBlock, schemaStart))
+      tables.push({ factory: 'childCrud', fields: parseFieldsFromBlock(fieldBlock), name: cm.groups?.cname ?? '' })
     }
     cm = childPat.exec(content)
   }
+}
+const parseSchemaContent = (content: string): SchemaSnapshot => {
+  const tables: TableSnapshot[] = []
+  for (const factory of wrapperFactories) parseFactoryTables(content, factory, tables)
+  parseChildTables(content, tables)
   return { tables: tables.toSorted((a, b) => a.name.localeCompare(b.name)) }
+}
+const diffTableFields = (prev: TableSnapshot, t: TableSnapshot, actions: MigrationAction[]): void => {
+  const prevFields = new Map<string, FieldInfo>()
+  const nextFields = new Map<string, FieldInfo>()
+  for (const f of prev.fields) prevFields.set(f.name, f)
+  for (const f of t.fields) nextFields.set(f.name, f)
+  for (const f of t.fields)
+    if (!prevFields.has(f.name))
+      actions.push({ field: f.name, table: t.name, type: f.optional ? 'field_added_optional' : 'field_added_required' })
+  for (const f of prev.fields)
+    if (!nextFields.has(f.name)) actions.push({ field: f.name, table: t.name, type: 'field_removed' })
+  for (const f of t.fields) {
+    const pf = prevFields.get(f.name)
+    if (pf && pf.type !== f.type)
+      actions.push({ field: f.name, from: pf.type, table: t.name, to: f.type, type: 'field_type_changed' })
+  }
 }
 const diffSnapshots = (before: SchemaSnapshot, after: SchemaSnapshot): MigrationAction[] => {
   const actions: MigrationAction[] = []
@@ -147,24 +148,7 @@ const diffSnapshots = (before: SchemaSnapshot, after: SchemaSnapshot): Migration
     if (prev) {
       if (prev.factory !== t.factory)
         actions.push({ from: prev.factory, table: t.name, to: t.factory, type: 'factory_changed' })
-      const prevFields = new Map<string, FieldInfo>()
-      const nextFields = new Map<string, FieldInfo>()
-      for (const f of prev.fields) prevFields.set(f.name, f)
-      for (const f of t.fields) nextFields.set(f.name, f)
-      for (const f of t.fields)
-        if (!prevFields.has(f.name))
-          actions.push({
-            field: f.name,
-            table: t.name,
-            type: f.optional ? 'field_added_optional' : 'field_added_required'
-          })
-      for (const f of prev.fields)
-        if (!nextFields.has(f.name)) actions.push({ field: f.name, table: t.name, type: 'field_removed' })
-      for (const f of t.fields) {
-        const pf = prevFields.get(f.name)
-        if (pf && pf.type !== f.type)
-          actions.push({ field: f.name, from: pf.type, table: t.name, to: f.type, type: 'field_type_changed' })
-      }
+      diffTableFields(prev, t, actions)
     }
   }
   return actions
@@ -194,9 +178,82 @@ const findSchemaFile = (root: string): undefined | { content: string; path: stri
     }
 }
 const getSchemaFromGit = (ref: string, filePath: string): string | undefined => {
-  // oxlint-disable-next-line node/no-sync
-  const result = spawnSync('git', ['show', `${ref}:${filePath}`], { encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] })
+  // oxlint-disable-next-line node/no-sync -- CLI tool: synchronous fs by design
+  const result = spawnSync('git', ['show', `${ref}:${filePath}`], { encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] }) // eslint-disable-line sonarjs/no-os-command-from-path -- dev tooling: resolves `git` from the developer's trusted PATH
   return result.status === 0 ? result.stdout : undefined
+}
+const stepLabel = (step: number, color: (v: string) => string): string => color(`Step ${step}:`)
+type FieldAction = MigrationAction & { field: string }
+const printSafeChanges = (tableAdded: MigrationAction[], fieldAddedOpt: MigrationAction[]): void => {
+  if (tableAdded.length + fieldAddedOpt.length === 0) return
+  console.log(green(bold('Safe changes (no migration needed):')))
+  for (const a of tableAdded) console.log(`  ${green('+')} Table ${cyan(a.table)} added`)
+  for (const a of fieldAddedOpt) {
+    const fa = a as FieldAction
+    console.log(`  ${green('+')} Field ${cyan(fa.field)} added to ${cyan(fa.table)} (optional)`)
+  }
+  console.log()
+}
+interface DangerGroups {
+  factoryChanged: MigrationAction[]
+  fieldAddedReq: MigrationAction[]
+  fieldRemoved: MigrationAction[]
+  fieldTypeChanged: MigrationAction[]
+  tableRemoved: MigrationAction[]
+}
+const printDangerousChanges = (g: DangerGroups): void => {
+  const total =
+    g.tableRemoved.length +
+    g.factoryChanged.length +
+    g.fieldAddedReq.length +
+    g.fieldRemoved.length +
+    g.fieldTypeChanged.length
+  if (total === 0) return
+  console.log(yellow(bold('Requires migration:')))
+  let step = 1
+  for (const a of g.fieldAddedReq) {
+    const fa = a as FieldAction
+    console.log(`\n  ${stepLabel(step, yellow)} Backfill ${cyan(fa.field)} on ${cyan(fa.table)}`)
+    console.log(dim('    1. Add field as optional first'))
+    console.log(dim('    2. Run backfill mutation to set default values'))
+    console.log(dim('    3. Make field required after all docs have the value'))
+    step += 1
+  }
+  for (const a of g.fieldRemoved) {
+    const fa = a as FieldAction
+    console.log(`\n  ${stepLabel(step, yellow)} Remove ${cyan(fa.field)} from ${cyan(fa.table)}`)
+    console.log(dim('    1. Remove field from schema'))
+    console.log(
+      dim(`    2. Run cleanup mutation: db.query("${fa.table}").collect() → patch each doc to unset ${fa.field}`)
+    )
+    step += 1
+  }
+  for (const a of g.fieldTypeChanged) {
+    const fa = a as MigrationAction & { field: string; from: string; to: string }
+    console.log(
+      `\n  ${stepLabel(step, yellow)} Migrate ${cyan(fa.field)} on ${cyan(fa.table)}: ${red(fa.from)} → ${green(fa.to)}`
+    )
+    console.log(dim('    1. Add new field with target type (optional)'))
+    console.log(dim('    2. Run transform mutation to convert existing values'))
+    console.log(dim('    3. Remove old field, rename new field'))
+    step += 1
+  }
+  for (const a of g.factoryChanged) {
+    const fa = a as MigrationAction & { from: string; to: string }
+    console.log(`\n  ${stepLabel(step, yellow)} Factory change on ${cyan(fa.table)}: ${red(fa.from)} → ${green(fa.to)}`)
+    console.log(dim('    1. Update factory call and table helper'))
+    console.log(dim('    2. Backfill new required system fields (e.g. orgId for orgCrud, userId for crud)'))
+    console.log(dim('    3. Update all client-side API references'))
+    step += 1
+  }
+  for (const a of g.tableRemoved) {
+    console.log(`\n  ${stepLabel(step, red)} Remove table ${cyan(a.table)}`)
+    console.log(dim('    1. Remove all references in client code'))
+    console.log(dim('    2. Run cleanup mutation to delete all documents'))
+    console.log(dim('    3. Remove table from schema'))
+    step += 1
+  }
+  console.log()
 }
 const printMigrationPlan = (actions: MigrationAction[]) => {
   if (actions.length === 0) {
@@ -204,71 +261,17 @@ const printMigrationPlan = (actions: MigrationAction[]) => {
     return
   }
   console.log(bold(`\n${actions.length} change(s) detected:\n`))
-  const tableAdded = actions.filter(a => a.type === 'table_added')
-  const tableRemoved = actions.filter(a => a.type === 'table_removed')
-  const factoryChanged = actions.filter(a => a.type === 'factory_changed')
-  const fieldAddedReq = actions.filter(a => a.type === 'field_added_required')
-  const fieldAddedOpt = actions.filter(a => a.type === 'field_added_optional')
-  const fieldRemoved = actions.filter(a => a.type === 'field_removed')
-  const fieldTypeChanged = actions.filter(a => a.type === 'field_type_changed')
-  const dangerous = [...tableRemoved, ...factoryChanged, ...fieldAddedReq, ...fieldRemoved, ...fieldTypeChanged]
-  const safe = [...tableAdded, ...fieldAddedOpt]
-  if (safe.length > 0) {
-    console.log(green(bold('Safe changes (no migration needed):')))
-    for (const a of tableAdded) console.log(`  ${green('+')} Table ${cyan(a.table)} added`)
-    for (const a of fieldAddedOpt) {
-      const fa = a as MigrationAction & { field: string }
-      console.log(`  ${green('+')} Field ${cyan(fa.field)} added to ${cyan(fa.table)} (optional)`)
-    }
-    console.log()
-  }
-  if (dangerous.length > 0) {
-    console.log(yellow(bold('Requires migration:')))
-    let step = 1
-    for (const a of fieldAddedReq) {
-      const fa = a as MigrationAction & { field: string }
-      console.log(`\n  ${yellow(`Step ${step}:`)} Backfill ${cyan(fa.field)} on ${cyan(fa.table)}`)
-      console.log(dim('    1. Add field as optional first'))
-      console.log(dim('    2. Run backfill mutation to set default values'))
-      console.log(dim('    3. Make field required after all docs have the value'))
-      step += 1
-    }
-    for (const a of fieldRemoved) {
-      const fa = a as MigrationAction & { field: string }
-      console.log(`\n  ${yellow(`Step ${step}:`)} Remove ${cyan(fa.field)} from ${cyan(fa.table)}`)
-      console.log(dim('    1. Remove field from schema'))
-      console.log(
-        dim(`    2. Run cleanup mutation: db.query("${fa.table}").collect() → patch each doc to unset ${fa.field}`)
-      )
-      step += 1
-    }
-    for (const a of fieldTypeChanged) {
-      const fa = a as MigrationAction & { field: string; from: string; to: string }
-      console.log(
-        `\n  ${yellow(`Step ${step}:`)} Migrate ${cyan(fa.field)} on ${cyan(fa.table)}: ${red(fa.from)} → ${green(fa.to)}`
-      )
-      console.log(dim('    1. Add new field with target type (optional)'))
-      console.log(dim('    2. Run transform mutation to convert existing values'))
-      console.log(dim('    3. Remove old field, rename new field'))
-      step += 1
-    }
-    for (const a of factoryChanged) {
-      const fa = a as MigrationAction & { from: string; to: string }
-      console.log(`\n  ${yellow(`Step ${step}:`)} Factory change on ${cyan(fa.table)}: ${red(fa.from)} → ${green(fa.to)}`)
-      console.log(dim('    1. Update factory call and table helper'))
-      console.log(dim('    2. Backfill new required system fields (e.g. orgId for orgCrud, userId for crud)'))
-      console.log(dim('    3. Update all client-side API references'))
-      step += 1
-    }
-    for (const a of tableRemoved) {
-      console.log(`\n  ${red(`Step ${step}:`)} Remove table ${cyan(a.table)}`)
-      console.log(dim('    1. Remove all references in client code'))
-      console.log(dim('    2. Run cleanup mutation to delete all documents'))
-      console.log(dim('    3. Remove table from schema'))
-      step += 1
-    }
-    console.log()
-  }
+  printSafeChanges(
+    actions.filter(a => a.type === 'table_added'),
+    actions.filter(a => a.type === 'field_added_optional')
+  )
+  printDangerousChanges({
+    factoryChanged: actions.filter(a => a.type === 'factory_changed'),
+    fieldAddedReq: actions.filter(a => a.type === 'field_added_required'),
+    fieldRemoved: actions.filter(a => a.type === 'field_removed'),
+    fieldTypeChanged: actions.filter(a => a.type === 'field_type_changed'),
+    tableRemoved: actions.filter(a => a.type === 'table_removed')
+  })
 }
 const run = (argv: string[] = process.argv.slice(2)) => {
   const root = process.cwd()
@@ -300,7 +303,8 @@ Examples:
     const snapshot = parseSchemaContent(schemaFile.content)
     console.log(bold(`${snapshot.tables.length} table(s):\n`))
     for (const t of snapshot.tables) {
-      console.log(`  ${cyan(t.name)} ${dim(`(${t.factory})`)}`)
+      const factoryTag = dim(`(${t.factory})`)
+      console.log(`  ${cyan(t.name)} ${factoryTag}`)
       for (const f of t.fields) console.log(`    ${f.name}: ${f.type}${f.optional ? dim(' (optional)') : ''}`)
     }
     console.log()

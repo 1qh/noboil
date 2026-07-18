@@ -14,6 +14,7 @@ import { FileIcon, ImageIcon, Upload, X } from 'lucide-react'
 import { createContext, use, useCallback, useMemo } from 'react'
 import { useDropzone } from 'react-dropzone'
 import { toast } from 'sonner'
+import type { UploadResult } from '../react/use-upload'
 import { compress, fmt, isImgType, parseAccept } from '../../shared/components/file-utils'
 import useUpload from '../react/use-upload'
 
@@ -66,6 +67,45 @@ const Progress = ({ v }: { v: number }) => (
     <span className='text-sm text-muted-foreground'>{v}%</span>
   </div>
 )
+const UPLOAD_ERROR_MESSAGES: Record<string, string> = {
+  ABORTED: 'Upload canceled',
+  INVALID_RESPONSE: 'Invalid response',
+  NETWORK: 'Network error'
+}
+const uploadErrorText = (res: { code?: string; status?: number }): string => {
+  if (res.code === 'HTTP') return `Upload failed (${res.status})`
+  return UPLOAD_ERROR_MESSAGES[res.code ?? ''] ?? 'Failed to start upload'
+}
+const dropRejectionText = (code: string | undefined, maxSize?: number, max?: number): null | string => {
+  if (code === 'file-too-large' && maxSize) return `Max ${fmt(maxSize)}`
+  if (code === 'file-invalid-type') return 'Invalid type'
+  if (code === 'too-many-files' && max) return `Max ${max}`
+  return null
+}
+const runDropUpload = async (opts: {
+  accepted: File[]
+  compressImg?: boolean
+  f: AnyFieldApi
+  max?: number
+  multiple?: boolean
+  upload: (file: File) => Promise<UploadResult>
+  vals: string[]
+}): Promise<void> => {
+  const { accepted, compressImg, f, max, multiple, upload, vals } = opts
+  if (multiple && max && vals.length + accepted.length > max) {
+    toast.error(`Max ${max}`)
+    return
+  }
+  const ids: string[] = []
+  for (const file of accepted) {
+    /** biome-ignore lint/performance/noAwaitInLoops: sequential by design */
+    const res = await upload(await compress(file, compressImg ?? true))
+    if (res.ok) ids.push(res.storageId)
+    else toast.error(`${file.name}: ${uploadErrorText(res)}`)
+  }
+  if (multiple) f.handleChange([...vals, ...ids])
+  else if (ids[0]) f.handleChange(ids[0])
+}
 const FileFieldImpl = ({
   accept,
   compressImg = true,
@@ -89,32 +129,21 @@ const FileFieldImpl = ({
   max?: number
   maxSize?: number
   multiple?: boolean
+  // eslint-disable-next-line sonarjs/cognitive-complexity -- file-field component: dropzone config + upload state + conditional single/multi preview and drop rendering
 }) => {
   const { upload: uploadRef } = useFileApi()
   const raw: unknown = f.state.value
   const name = f.name as string
-  const vals = useMemo(() => (multiple ? ((raw ?? []) as string[]) : raw ? [raw as string] : []), [multiple, raw])
+  const vals = useMemo<string[]>(() => {
+    if (multiple) return (raw ?? []) as string[]
+    return raw ? [raw as string] : []
+  }, [multiple, raw])
   const inv = f.state.meta.isTouched && !f.state.meta.isValid
   const canAdd = multiple ? !max || vals.length < max : vals.length === 0
   const { isUploading, progress, reset, upload } = useUpload(uploadRef)
   const errorId = `${name}-error`
   const onDrop = useCallback(
-    async (accepted: File[]) => {
-      if (multiple && max && vals.length + accepted.length > max) return toast.error(`Max ${max}`)
-      const ids: string[] = []
-      for (const file of accepted) {
-        /** biome-ignore lint/performance/noAwaitInLoops: sequential by design */
-        const res = await upload(await compress(file, compressImg))
-        if (res.ok) ids.push(res.storageId)
-        else if (res.code === 'HTTP') toast.error(`${file.name}: Upload failed (${res.status})`)
-        else if (res.code === 'ABORTED') toast.error(`${file.name}: Upload canceled`)
-        else if (res.code === 'NETWORK') toast.error(`${file.name}: Network error`)
-        else if (res.code === 'INVALID_RESPONSE') toast.error(`${file.name}: Invalid response`)
-        else toast.error(`${file.name}: Failed to start upload`)
-      }
-      if (multiple) f.handleChange([...vals, ...ids])
-      else if (ids[0]) f.handleChange(ids[0])
-    },
+    async (accepted: File[]) => runDropUpload({ accepted, compressImg, f, max, multiple, upload, vals }),
     [compressImg, f, max, multiple, upload, vals]
   )
   const { getInputProps, getRootProps, inputRef, isDragActive } = useDropzone({
@@ -124,10 +153,8 @@ const FileFieldImpl = ({
     multiple: Boolean(multiple),
     onDrop,
     onDropRejected: r => {
-      const code = r[0]?.errors[0]?.code
-      if (code === 'file-too-large' && maxSize) toast.error(`Max ${fmt(maxSize)}`)
-      else if (code === 'file-invalid-type') toast.error('Invalid type')
-      else if (code === 'too-many-files' && max) toast.error(`Max ${max}`)
+      const msg = dropRejectionText(r[0]?.errors[0]?.code, maxSize, max)
+      if (msg) toast.error(msg)
     }
   })
   const dropCls = cn(
@@ -138,6 +165,53 @@ const FileFieldImpl = ({
     dropClassName
   )
   const tid = testId ?? name
+  const singleView = vals[0] ? (
+    <Preview
+      id={vals[0]}
+      onRemove={() => {
+        f.handleChange(null)
+        reset()
+      }}
+    />
+  ) : (
+    <>
+      <input
+        {...getInputProps()}
+        aria-describedby={inv ? errorId : undefined}
+        aria-hidden='true'
+        aria-invalid={inv}
+        aria-label={label ?? 'File upload'}
+        tabIndex={-1}
+      />
+      {/* biome-ignore lint/a11y/useSemanticElements: intentional role, semantic element not applicable */}
+      <div
+        {...getRootProps()}
+        aria-label='Upload file'
+        className={dropCls}
+        onKeyDown={e => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault()
+            inputRef.current.click()
+          }
+        }}
+        role='button'
+        tabIndex={0}>
+        {isUploading ? (
+          <Progress v={progress} />
+        ) : (
+          <>
+            {accept?.includes('image') ? (
+              <ImageIcon className='mb-2 size-8 text-muted-foreground' />
+            ) : (
+              <Upload className='mb-2 size-8 text-muted-foreground' />
+            )}
+            <span className='text-sm text-muted-foreground'>Click or drag</span>
+            {maxSize ? <span className='mt-1 text-xs text-muted-foreground'>Max {fmt(maxSize)}</span> : null}
+          </>
+        )}
+      </div>
+    </>
+  )
   return (
     <Field {...props} data-invalid={inv} data-testid={tid}>
       {label ? (
@@ -188,52 +262,8 @@ const FileFieldImpl = ({
             </>
           ) : null}
         </div>
-      ) : vals[0] ? (
-        <Preview
-          id={vals[0]}
-          onRemove={() => {
-            f.handleChange(null)
-            reset()
-          }}
-        />
       ) : (
-        <>
-          <input
-            {...getInputProps()}
-            aria-describedby={inv ? errorId : undefined}
-            aria-hidden='true'
-            aria-invalid={inv}
-            aria-label={label ?? 'File upload'}
-            tabIndex={-1}
-          />
-          {/* biome-ignore lint/a11y/useSemanticElements: intentional role, semantic element not applicable */}
-          <div
-            {...getRootProps()}
-            aria-label='Upload file'
-            className={dropCls}
-            onKeyDown={e => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault()
-                inputRef.current.click()
-              }
-            }}
-            role='button'
-            tabIndex={0}>
-            {isUploading ? (
-              <Progress v={progress} />
-            ) : (
-              <>
-                {accept?.includes('image') ? (
-                  <ImageIcon className='mb-2 size-8 text-muted-foreground' />
-                ) : (
-                  <Upload className='mb-2 size-8 text-muted-foreground' />
-                )}
-                <span className='text-sm text-muted-foreground'>Click or drag</span>
-                {maxSize ? <span className='mt-1 text-xs text-muted-foreground'>Max {fmt(maxSize)}</span> : null}
-              </>
-            )}
-          </div>
-        </>
+        singleView
       )}
       {inv ? <FieldError errors={f.state.meta.errors} id={errorId} /> : null}
     </Field>

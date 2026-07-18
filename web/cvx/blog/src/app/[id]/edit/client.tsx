@@ -21,9 +21,11 @@ const Publish = ({ className, id, published, ...props }: ComponentProps<'div'> &
   const update = useMutation(api.blog.update)
   const [pending, go] = useTransition()
   const switchId = useId()
+  const statusText = published ? 'Published' : 'Draft'
+  const publishLabel = pending ? <Spinner /> : statusText
   return (
     <div className={cn('flex items-center gap-2', className)} data-testid='publish-toggle' {...props}>
-      <Label htmlFor={switchId}>{pending ? <Spinner /> : published ? 'Published' : 'Draft'}</Label>
+      <Label htmlFor={switchId}>{publishLabel}</Label>
       <Switch
         checked={published}
         data-testid='publish-switch'
