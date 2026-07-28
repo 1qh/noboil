@@ -8,6 +8,6 @@
     "skipLibCheck": true,
     "strict": true
   },
-  "extends": "lintmax/tsconfig",
+  "extends": "../../../../tsconfig.json",
   "include": ["."]
 }

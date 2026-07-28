@@ -8,5 +8,5 @@
     "target": "ESNext"
   },
   "exclude": ["node_modules"],
-  "extends": "lintmax/tsconfig"
+  "extends": "../../tsconfig.json"
 }

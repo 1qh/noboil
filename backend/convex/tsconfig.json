@@ -3,6 +3,6 @@
     "jsx": "preserve"
   },
   "exclude": ["node_modules", "convex/edge.test.ts", "convex/f.test.ts", "convex/org-api.test.ts"],
-  "extends": "lintmax/tsconfig",
+  "extends": "../../tsconfig.json",
   "include": ["."]
 }

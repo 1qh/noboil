@@ -62,7 +62,7 @@
     "@types/mdx": "latest",
     "axe-core": "latest",
     "babel-plugin-react-compiler": "latest",
-    "lintmax": "^0.1.82",
+    "lintmax": "latest",
     "sherif": "latest",
     "simple-git-hooks": "latest",
     "ts-unused-exports": "latest",

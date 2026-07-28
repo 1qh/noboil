@@ -1,5 +1,5 @@
 {
-  "extends": "lintmax/tsconfig",
+  "extends": "../../tsconfig.json",
   "include": ["src/**/*.ts", "../../noboil.config.ts"],
   "compilerOptions": {
     "types": ["bun-types"]

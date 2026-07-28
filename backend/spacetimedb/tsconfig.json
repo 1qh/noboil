@@ -3,5 +3,5 @@
     "types": ["bun-types"]
   },
   "exclude": ["node_modules", "**/dist"],
-  "extends": "lintmax/tsconfig"
+  "extends": "../../tsconfig.json"
 }

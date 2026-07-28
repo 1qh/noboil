@@ -5,6 +5,6 @@
     }
   },
   "exclude": ["node_modules", "playwright-report", "test-results"],
-  "extends": "lintmax/tsconfig",
+  "extends": "../../../tsconfig.json",
   "include": [".", ".next/types/**/*.ts"]
 }

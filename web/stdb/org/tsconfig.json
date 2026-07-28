@@ -5,6 +5,6 @@
     }
   },
   "exclude": ["e2e", "node_modules"],
-  "extends": "lintmax/tsconfig",
+  "extends": "../../../tsconfig.json",
   "include": [".", ".next/types/**/*.ts"]
 }
