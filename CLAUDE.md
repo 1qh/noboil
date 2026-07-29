@@ -525,7 +525,7 @@ Building + publishing library packages with tsdown.
 
 ### NEVER
 
-- Never bundle deps consumers should install themselves. Cost: duplicate/version-conflict in consumer tree.
+- Never bundle a dep the consumer installs itself. Cost: duplicate/version-conflict in consumer tree.
 
 ---
 
