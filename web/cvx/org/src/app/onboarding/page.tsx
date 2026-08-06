@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@a/ui
 import { FieldGroup } from '@a/ui/field'
 import { Spinner } from '@a/ui/spinner'
 import { useMutation, useQuery } from 'convex/react'
+import { useRouter } from 'next/navigation'
 import { defineSteps } from 'noboil/convex/components'
 import { toast } from 'sonner'
 import { appearanceStep, orgStep, preferencesStep, profileStep } from '~/schema'
@@ -15,6 +16,7 @@ const { StepForm, useStepper } = defineSteps(
   { id: 'preferences', label: 'Preferences', schema: preferencesStep }
 )
 const OnboardingPage = () => {
+  const router = useRouter()
   const profile = useQuery(api.orgProfile.get, {})
   const upsert = useMutation(api.orgProfile.upsert)
   const create = useMutation(api.org.create)
@@ -31,7 +33,7 @@ const OnboardingPage = () => {
     },
     onSuccess: () => {
       toast.success('Welcome aboard!')
-      globalThis.location.href = '/'
+      router.push('/')
     },
     values: profile
       ? {

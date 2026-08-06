@@ -2,6 +2,7 @@
 import { reducers, tables } from '@a/be-spacetimedb/spacetimedb'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@a/ui/card'
 import { FieldGroup } from '@a/ui/field'
+import { useRouter } from 'next/navigation'
 import { defineSteps } from 'noboil/spacetimedb/components'
 import { useMut } from 'noboil/spacetimedb/react'
 import { toast } from 'sonner'
@@ -20,6 +21,7 @@ const themeOptions = [
   { label: 'System', value: 'system' }
 ]
 const OnboardingPage = () => {
+  const router = useRouter()
   const { identity } = useSpacetimeDB()
   const [profiles] = useTable(tables.orgProfile)
   const profile = identity ? profiles.find(p => p.userId.toHexString() === identity.toHexString()) : null
@@ -57,7 +59,7 @@ const OnboardingPage = () => {
     },
     onSuccess: () => {
       toast.success('Welcome aboard!')
-      globalThis.location.href = '/dashboard'
+      router.push('/dashboard')
     },
     values: initialValues
   })
