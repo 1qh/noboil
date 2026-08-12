@@ -48,6 +48,9 @@
   "simple-git-hooks": {
     "pre-commit": "bun doc/scripts/gen-all.ts && sh up.sh && git add -u"
   },
+  "overrides": {
+    "@ai-sdk/google": "4.0.42"
+  },
   "dependencies": {
     "@a/config": "workspace:*",
     "noboil": "workspace:*"
