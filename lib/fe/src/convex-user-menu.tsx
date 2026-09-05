@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/nursery/noUnsafeTypeAssertion: narrows loosely-typed runtime/codegen values to the library's typed model at guarded facade boundaries */
 import type { PopoverTrigger } from '@a/ui/popover'
 import type { ComponentProps } from 'react'
 import { api } from '@a/be-convex'

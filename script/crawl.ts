@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/nursery/noUnsafeTypeAssertion: narrows loosely-typed runtime/codegen values to the library's typed model at guarded facade boundaries */
 /* eslint-disable @typescript-eslint/no-unnecessary-condition, @typescript-eslint/strict-void-return, no-console */
 /* oxlint-disable unicorn/no-process-exit */
 /* eslint-disable @typescript-eslint/max-params, complexity, no-await-in-loop, no-control-regex, no-promise-executor-return, no-useless-assignment */

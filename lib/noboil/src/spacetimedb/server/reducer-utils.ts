@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/nursery/noUnsafeTypeAssertion: narrows loosely-typed runtime/codegen values to the library's typed model at guarded facade boundaries */
 import type { Identity, Timestamp } from 'spacetimedb'
 import type { FieldBuilders, OptionalBuilder, OwnedRow, PkLike, TableLike } from './types/common'
 /** Build a `code: message`-formatted Error so reducer rejections carry a structured prefix. */

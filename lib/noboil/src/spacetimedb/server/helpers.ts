@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/nursery/noUnsafeTypeAssertion: narrows loosely-typed runtime/codegen values to the library's typed model at guarded facade boundaries */
 /* eslint-disable max-depth */
 import type { ZodObject, output as ZodOutput, ZodRawShape } from 'zod/v4'
 import { Identity } from 'spacetimedb'

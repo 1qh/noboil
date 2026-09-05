@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/nursery/noUnsafeTypeAssertion: narrows loosely-typed runtime/codegen values to the library's typed model at guarded facade boundaries */
 import type { ZodObject, ZodRawShape, ZodType } from 'zod/v4'
 /**
  * Strict env reader: parses `process.env` against a Zod schema once, lazily, and returns

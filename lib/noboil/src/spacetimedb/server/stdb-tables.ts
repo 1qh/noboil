@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/nursery/noUnsafeTypeAssertion: narrows loosely-typed runtime/codegen values to the library's typed model at guarded facade boundaries */
 import type { AlgebraicTypeType, ColumnBuilder, table as stdbTable, TypeBuilder } from 'spacetimedb/server'
 import { schema as stdbSchema, t as stdbT, table as stdbTableFn } from 'spacetimedb/server'
 import { isRecord } from '../../shared/server/helpers'

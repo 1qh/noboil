@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/nursery/noUnsafeTypeAssertion: test fixtures construct and assert partial, invalid, or runtime-shaped values to exercise edge cases */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /** In-memory db fake for budget tests. Mirrors the subset of the Convex db api used by budget factories. */
 interface BudgetDB {

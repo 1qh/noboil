@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/nursery/noUnsafeTypeAssertion: narrows loosely-typed runtime/codegen values to the library's typed model at guarded facade boundaries */
 import { writeFile } from 'node:fs/promises'
 import { defineConfig } from 'tsdown'
 import pkg from './package.json' with { type: 'json' }

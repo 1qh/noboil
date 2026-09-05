@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/nursery/noUnsafeTypeAssertion: narrows loosely-typed runtime/codegen values to the library's typed model at guarded facade boundaries */
 import type { UIMessage } from 'ai'
 
 const isObject = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null

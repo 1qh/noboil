@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/nursery/noUnsafeTypeAssertion: test fixtures construct and assert partial, invalid, or runtime-shaped values to exercise edge cases */
 import type { GenericMutationCtx, GenericQueryCtx } from 'convex/server'
 import { object, string } from 'zod/v4'
 import { schema as nbSchema } from '../../../src/convex/schema'

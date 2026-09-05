@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/nursery/noUnsafeTypeAssertion: narrows loosely-typed runtime/codegen values to the library's typed model at guarded facade boundaries */
 /* eslint-disable @typescript-eslint/strict-void-return */
 /* oxlint-disable jsx-no-new-object-as-prop */
 'use client'

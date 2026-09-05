@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/nursery/noUnsafeTypeAssertion: narrows loosely-typed runtime/codegen values to the library's typed model at guarded facade boundaries */
 'use client'
 import type { Stepper as CoreStepper, Step } from '@stepperize/core'
 import type { ComponentProps, ReactNode } from 'react'

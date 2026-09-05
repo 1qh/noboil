@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/nursery/noUnsafeTypeAssertion: narrows loosely-typed runtime/codegen values to the library's typed model at guarded facade boundaries */
 import type { Infer, PropertyValidators, Validator } from 'convex/values'
 import { v } from 'convex/values'
 import type { ArgSpec, ArgSpecs, CostClass, ToolMeta } from './types'

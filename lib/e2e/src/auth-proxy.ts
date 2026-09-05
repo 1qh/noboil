@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/nursery/noUnsafeTypeAssertion: narrows loosely-typed runtime/codegen values to the library's typed model at guarded facade boundaries */
 /** biome-ignore-all lint/style/noProcessEnv: env/CLI module, intentional process.env */
 import { config, urls } from '@a/config'
 import { serve } from 'bun'

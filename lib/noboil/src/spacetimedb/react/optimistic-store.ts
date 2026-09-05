@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/nursery/noUnsafeTypeAssertion: narrows loosely-typed runtime/codegen values to the library's typed model at guarded facade boundaries */
 'use client'
 import { createContext, createElement, use, useMemo, useRef, useSyncExternalStore } from 'react'
 import type { MutationType } from '../../shared/types'

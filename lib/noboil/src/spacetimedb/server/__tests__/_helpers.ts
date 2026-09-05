@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/nursery/noUnsafeTypeAssertion: test fixtures construct and assert partial, invalid, or runtime-shaped values to exercise edge cases */
 /** Shared fake fixtures for stdb server reducer tests. Pure helpers — no runtime side effects. */
 interface IdentityFake {
   __id: string

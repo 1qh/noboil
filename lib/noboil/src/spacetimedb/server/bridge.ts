@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/nursery/noUnsafeTypeAssertion: narrows loosely-typed runtime/codegen values to the library's typed model at guarded facade boundaries */
 const idx = (fn: (ib: unknown) => unknown): never => fn as never
 const flt = (fn: (fb: unknown) => unknown): never => fn as never
 const sch = (fn: (sb: unknown) => unknown): never => fn as never

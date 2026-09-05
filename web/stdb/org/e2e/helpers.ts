@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/nursery/noUnsafeTypeAssertion: narrows loosely-typed runtime/codegen values to the library's typed model at guarded facade boundaries */
 /** biome-ignore-all lint/performance/noAwaitInLoops: sequential e2e */
 /* eslint-disable no-await-in-loop */
 import type { Page } from '@playwright/test'

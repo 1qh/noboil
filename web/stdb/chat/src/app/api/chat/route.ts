@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/nursery/noUnsafeTypeAssertion: narrows loosely-typed runtime/codegen values to the library's typed model at guarded facade boundaries */
 import type { UIMessage } from 'ai'
 import { isStdbTestMode } from '@a/fe/test-mode'
 import { createUIMessageStream, createUIMessageStreamResponse } from 'ai'

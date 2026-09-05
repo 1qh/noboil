@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/nursery/noUnsafeTypeAssertion: narrows loosely-typed runtime/codegen values to the library's typed model at guarded facade boundaries */
 import { file, write } from 'bun'
 import { homedir } from 'node:os'
 import { join } from 'node:path'

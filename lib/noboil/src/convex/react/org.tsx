@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/nursery/noUnsafeTypeAssertion: narrows loosely-typed runtime/codegen values to the library's typed model at guarded facade boundaries */
 /* eslint-disable @typescript-eslint/no-unnecessary-type-parameters */
 'use client'
 import type { FunctionReference } from 'convex/server'
@@ -124,12 +125,10 @@ const setActiveOrgCookieClient = ({ orgId, slug }: { orgId: string; slug: string
 const useActiveOrg = <O extends OrgDoc>(orgGetQuery: FunctionReference<'query'>) => {
   const [activeOrgId, setActiveOrgId] = useState<null | string>(getActiveOrgIdFromCookie)
   const activeOrg = useQuery(orgGetQuery, activeOrgId ? { orgId: activeOrgId } : 'skip') as null | O | undefined
-  // oxlint-disable-next-line react-hooks/exhaustive-deps
   const setActiveOrg = useCallback((org: OrgDoc) => {
     setActiveOrgCookieClient({ orgId: org._id, slug: org.slug })
     setActiveOrgId(org._id)
   }, [])
-  // oxlint-disable-next-line react-hooks/exhaustive-deps
   const clearActiveOrg = useCallback(() => {
     /* oxlint-disable unicorn/no-document-cookie */
     /** biome-ignore lint/suspicious/noDocumentCookie: cookie management */

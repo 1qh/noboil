@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/nursery/noUnsafeTypeAssertion: narrows loosely-typed runtime/codegen values to the library's typed model at guarded facade boundaries */
 import { DbConnectionBuilder, DbConnectionImpl } from 'spacetimedb/sdk'
 import { isStdbTestMode } from '../../shared/test-mode'
 import { DEFAULT_HTTP_URI, DEFAULT_WS_URI, wsToHttp } from '../defaults'

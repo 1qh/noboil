@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/nursery/noUnsafeTypeAssertion: test fixtures construct and assert partial, invalid, or runtime-shaped values to exercise edge cases */
 import type { GenericMutationCtx, GenericQueryCtx } from 'convex/server'
 import { makeFileUpload } from '../../../src/convex/server/file'
 import { action, internalMutation, internalQuery, mutation, query } from './_generated/server'

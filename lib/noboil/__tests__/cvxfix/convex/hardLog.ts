@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/nursery/noUnsafeTypeAssertion: test fixtures construct and assert partial, invalid, or runtime-shaped values to exercise edge cases */
 import { makeLog } from '../../../src/convex/server/log'
 import { m, q } from './auth-builders'
 import { voteSchema } from './s'

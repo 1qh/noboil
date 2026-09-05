@@ -1,8 +1,9 @@
 /* oxlint-disable promise/prefer-await-to-then */
 /* eslint-disable react/no-array-index-key, @eslint-react/no-array-index-key */
+/* eslint-disable react/hook-use-state -- see above */
 import { Box, render, Text, useApp, useInput } from 'ink'
 import Spinner from 'ink-spinner'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNow } from './shared/react/use-now'
 /** The elapsed/ETA readout ticks once a second so it advances between progress events. */
 const ELAPSED_TICK_MS = 1000
@@ -186,7 +187,7 @@ const SyncApp = ({
   const skipped = actions.filter(a => a.kind === 'skipped').length
   const review = actions.filter(a => a.kind === 'review').length
   const recent = actions.slice(-12)
-  const startTime = useMemo(() => Date.now(), [])
+  const [startTime] = useState(() => Date.now())
   const now = useNow(ELAPSED_TICK_MS)
   const processed = actions.length
   const pct = progress.total > 0 ? Math.floor((processed / progress.total) * 100) : 0

@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/nursery/noUnsafeTypeAssertion: test fixtures construct and assert partial, invalid, or runtime-shaped values to exercise edge cases */
 import { describe, expect, test } from 'bun:test'
 import { callReducer } from 'noboil/spacetimedb/test'
 import { reducers, tables } from '../module_bindings'

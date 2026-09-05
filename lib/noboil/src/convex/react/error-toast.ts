@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/nursery/noUnsafeTypeAssertion: narrows loosely-typed runtime/codegen values to the library's typed model at guarded facade boundaries */
 'use client'
 import type { ErrorToastOptions } from '../../shared/react/error-toast'
 import type { ToastFn } from '../../shared/react/toast'

@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/nursery/noUnsafeTypeAssertion: narrows loosely-typed runtime/codegen values to the library's typed model at guarded facade boundaries */
 import type { ZodObject, ZodRawShape } from 'zod/v4'
 import { number } from 'zod/v4'
 import type { DbLike, Mb, MutCtx, Qb, Rec, SingletonCrudResult, SingletonOptions } from './types'

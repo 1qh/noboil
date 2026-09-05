@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/nursery/noUnsafeTypeAssertion: test fixtures construct and assert partial, invalid, or runtime-shaped values to exercise edge cases */
 /** biome-ignore-all lint/nursery/noComponentHookFactories: test fixture, not a component/hook */
 /* eslint-disable @typescript-eslint/naming-convention, no-console */
 import type { GenericTableInfo, RegisteredQuery } from 'convex/server'

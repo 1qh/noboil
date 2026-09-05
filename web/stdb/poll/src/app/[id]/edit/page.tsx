@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/nursery/noUnsafeTypeAssertion: narrows loosely-typed runtime/codegen values to the library's typed model at guarded facade boundaries */
 'use client'
 import { reducers, tables } from '@a/be-spacetimedb/spacetimedb'
 import { FieldGroup } from '@a/ui/field'

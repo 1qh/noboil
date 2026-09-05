@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/nursery/noUnsafeTypeAssertion: narrows loosely-typed runtime/codegen values to the library's typed model at guarded facade boundaries */
 // oxlint-disable unicorn/prefer-add-event-listener
 /* eslint-disable no-await-in-loop */
 'use client'

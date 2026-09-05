@@ -626,7 +626,7 @@ const after = await quota.record()
 | `useCrud`               | `(refs: R, options?: CrudOptions)`                                                                            |
 | `useInfiniteList`       | `(query: F, ...rest: InfiniteListRest&lt;F&gt;)`                                                              |
 | `useKv`                 | `(refs: R, key: string)`                                                                                      |
-| `useList`               | `(query: F, ...rest: ListRest&lt;F&gt;)`                                                                      |
+| `useList`               | `(query: F, args?: PaginatedQueryArgs&lt;F&gt;, options?: UseListOptions)`                                    |
 | `useLog`                | `(refs: R, args: \{ parent: string \})`                                                                       |
 | `useMutate`             | `(ref: T, options?: MutateOptions)`                                                                           |
 | `useOptimisticMutation` | `(\{ mutation, onOptimistic, onRollback, onSettled, onSuccess \}: OptimisticOptions&lt;T&gt;)`                |
@@ -1553,7 +1553,7 @@ Both `noboil/convex/eslint` and `noboil/spacetimedb/eslint` ship the same rule s
 JSDoc-tagged exports are surfaced here so consumers can tell stable API from in-flux surface. The generator picks up `@beta`, `@alpha`, `@experimental`, `@deprecated`, `@internal` on the line above any `export`/`const`/`function`/`class`/`interface`/`type` declaration.
 
 {/* AUTO-GENERATED:STABILITY:START */}
-Scanned **364 files**, **7882 declared symbols**. No `@beta`/`@alpha`/`@experimental`/`@deprecated`/`@internal` JSDoc tags found — entire public surface is **stable**.
+Scanned **364 files**, **7886 declared symbols**. No `@beta`/`@alpha`/`@experimental`/`@deprecated`/`@internal` JSDoc tags found — entire public surface is **stable**.
 
 To mark API stability, add JSDoc tags above an export:
 

@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/nursery/noUnsafeTypeAssertion: narrows loosely-typed runtime/codegen values to the library's typed model at guarded facade boundaries */
 import type { output } from 'zod/v4'
 import { TMDB } from '@lorenzopant/tmdb'
 import { v } from 'convex/values'

@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/nursery/noUnsafeTypeAssertion: test fixtures construct and assert partial, invalid, or runtime-shaped values to exercise edge cases */
 /** biome-ignore-all lint/suspicious/noUndeclaredEnvVars: intentional env access */
 import { afterEach, describe, expect, test } from 'bun:test'
 import { object, string } from 'zod/v4'

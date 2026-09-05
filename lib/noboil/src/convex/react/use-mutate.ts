@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/nursery/noUnsafeTypeAssertion: narrows loosely-typed runtime/codegen values to the library's typed model at guarded facade boundaries */
 /** biome-ignore-all lint/nursery/noComponentHookFactories: handler map, not a component/hook */
 /** biome-ignore-all lint/style/noProcessEnv: intentional env access */
 /* eslint-disable @eslint-react/immutability -- `store` is an external store bridged by useSyncExternalStore (./optimistic-store); mutating it from an async callback IS its API, and the rule's "use state instead" would defeat optimistic updates */

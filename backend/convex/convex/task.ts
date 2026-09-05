@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/nursery/noUnsafeTypeAssertion: narrows loosely-typed runtime/codegen values to the library's typed model at guarded facade boundaries */
 import { zid } from 'convex-helpers/server/zod4'
 import { canEdit, err, requireOrgMember, requireOrgRole, time } from 'noboil/convex/server'
 import { api, m, pq } from '../lazy'

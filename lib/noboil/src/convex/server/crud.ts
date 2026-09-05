@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/nursery/noUnsafeTypeAssertion: narrows loosely-typed runtime/codegen values to the library's typed model at guarded facade boundaries */
 /** biome-ignore-all lint/performance/noAwaitInLoops: sequential by design */
 // oxlint-disable promise/prefer-await-to-then
 /* eslint-disable no-await-in-loop */

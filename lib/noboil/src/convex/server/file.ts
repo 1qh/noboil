@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/nursery/noUnsafeTypeAssertion: narrows loosely-typed runtime/codegen values to the library's typed model at guarded facade boundaries */
 import type { ActionBuilder, GenericDataModel, MutationBuilder, QueryBuilder } from 'convex/server'
 import { anyApi } from 'convex/server'
 import { ConvexError, v } from 'convex/values'

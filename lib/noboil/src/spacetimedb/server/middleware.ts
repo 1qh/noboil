@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/nursery/noUnsafeTypeAssertion: narrows loosely-typed runtime/codegen values to the library's typed model at guarded facade boundaries */
 import type { GlobalHookCtx, GlobalHooks, Middleware, MiddlewareCtx, Rec } from './types'
 import { createComposeMiddleware, createInputSanitize, sanitizeRec, sanitizeString } from '../../shared/server/middleware'
 import { log } from './helpers'

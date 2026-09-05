@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/nursery/noUnsafeTypeAssertion: narrows loosely-typed runtime/codegen values to the library's typed model at guarded facade boundaries */
 import type { Id } from '@a/be-convex/model'
 import type { UIMessage } from 'ai'
 import { api } from '@a/be-convex'

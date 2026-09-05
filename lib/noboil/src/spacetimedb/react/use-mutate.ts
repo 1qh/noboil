@@ -1,9 +1,10 @@
+/** biome-ignore-all lint/nursery/noUnsafeTypeAssertion: narrows loosely-typed runtime/codegen values to the library's typed model at guarded facade boundaries */
 /* eslint-disable @eslint-react/immutability -- `store` is an external store bridged by useSyncExternalStore (./optimistic-store); mutating it from an async callback IS its API, and the rule's "use state instead" would defeat optimistic updates */
 /* eslint-disable complexity */
 'use client'
 import { useCallback } from 'react'
 import { toast } from 'sonner'
-import { useReducer as useStdbReducer } from 'spacetimedb/react'
+import { useReducer as stdbReducerHook } from 'spacetimedb/react'
 import type { RetryOptions } from '../retry'
 import type { UndefinedToOptional } from '../zod'
 import type { MutationType } from './optimistic-store'
@@ -183,19 +184,23 @@ const inferReducerName = (reducer: unknown): string | undefined => {
  * `useMutate` provides — `useMutate` is reducer-fn-agnostic, this is reducer-hook-shaped.
  */
 const useMutation = <A extends Record<string, unknown>, R = void, D = unknown>(
-  useReducerHook: (desc: D) => (args: A) => Promise<R>,
+  reducerHook: (desc: D) => (args: A) => Promise<R>,
   reducer: D,
   options?: MutateOptions<A, R>
 ): ((args: UndefinedToOptional<A>) => Promise<R>) => {
   const inferredName = inferReducerName(reducer)
   const opts = inferredName && !options?.getName ? { ...options, getName: () => inferredName } : options
-  const strict = useMutate(useReducerHook(reducer), opts)
+  const strict = useMutate(reducerHook(reducer), opts)
   return async (args: UndefinedToOptional<A>) => strict(args as Record<string, unknown> as A)
 }
 const useMut = <A extends Record<string, unknown>, R = void>(
   reducer: unknown,
   options?: MutateOptions<A, R>
-): ((args: UndefinedToOptional<A>) => Promise<R>) =>
-  useMutation(useStdbReducer as unknown as (desc: unknown) => (args: A) => Promise<R>, reducer, options)
+): ((args: UndefinedToOptional<A>) => Promise<R>) => {
+  const inferredName = inferReducerName(reducer)
+  const opts = inferredName && !options?.getName ? { ...options, getName: () => inferredName } : options
+  const strict = useMutate(stdbReducerHook(reducer as never) as (args: A) => Promise<R>, opts)
+  return async (args: UndefinedToOptional<A>) => strict(args as Record<string, unknown> as A)
+}
 export type { MutateOptions, MutateToast }
 export { defaultOnError, useMut, useMutate, useMutation }

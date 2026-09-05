@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/nursery/noUnsafeTypeAssertion: test fixtures construct and assert partial, invalid, or runtime-shaped values to exercise edge cases */
 import { describe, expect, test } from 'bun:test'
 import { makeFileUpload } from '../file'
 import { captureReducers, tsAtMs } from './_helpers'

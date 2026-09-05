@@ -1,5 +1,6 @@
 /* eslint-disable @eslint-react/exhaustive-deps, @eslint-react/set-state-in-effect, react-hooks/exhaustive-deps */
 'use client'
+/* oxlint-disable react/exhaustive-effect-dependencies -- mirrors the already-reason-disabled biome useExhaustiveDependencies twin; the deps are intentional and stable */
 import { useEffect, useRef, useState } from 'react'
 import { toSql } from 'spacetimedb'
 import { useSpacetimeDB } from 'spacetimedb/react'

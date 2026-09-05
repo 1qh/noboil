@@ -2,6 +2,7 @@
 /* eslint-disable @eslint-react/dom-no-dangerously-set-innerhtml, react/no-danger, @eslint-react/set-state-in-effect */
 /* oxlint-disable jsx-no-new-array-as-prop */
 'use client'
+/* oxlint-disable react/exhaustive-effect-dependencies */
 import type { Org, OrgMember } from '@a/be-spacetimedb/spacetimedb/types'
 import type { OrgRole } from 'noboil/spacetimedb'
 import type { ReactNode } from 'react'

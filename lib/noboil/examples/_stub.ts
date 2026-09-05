@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/nursery/noUnsafeTypeAssertion: narrows loosely-typed runtime/codegen values to the library's typed model at guarded facade boundaries */
 /** Builder stubs used inside `*.example.ts` files. Provide values that satisfy the real factory types
  * without pulling in the convex/spacetimedb runtime. They never execute — these files exist to lock
  * the public API surface to compile-time checks.

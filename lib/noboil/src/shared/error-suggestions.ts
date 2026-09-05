@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/nursery/noUnsafeTypeAssertion: narrows loosely-typed runtime/codegen values to the library's typed model at guarded facade boundaries */
 import type { BuiltinErrorCode } from './error-messages'
 /** Actionable hints attached to error codes — read by agents (and humans) to self-correct without consulting docs. */
 const ERROR_SUGGESTIONS: Partial<Record<BuiltinErrorCode, string>> = {

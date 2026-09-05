@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/nursery/noUnsafeTypeAssertion: test fixtures construct and assert partial, invalid, or runtime-shaped values to exercise edge cases */
 import { afterEach, describe, expect, test } from 'bun:test'
 import { calculateDelay, createRetryUtils, DEFAULT_OPTIONS } from '../retry'
 

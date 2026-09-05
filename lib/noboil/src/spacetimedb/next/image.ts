@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/nursery/noUnsafeTypeAssertion: narrows loosely-typed runtime/codegen values to the library's typed model at guarded facade boundaries */
 'use server'
 /* eslint-disable @typescript-eslint/require-await */
 import type { NextRequest } from 'next/server'

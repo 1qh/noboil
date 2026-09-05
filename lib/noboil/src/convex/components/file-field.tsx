@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/nursery/noUnsafeTypeAssertion: narrows loosely-typed runtime/codegen values to the library's typed model at guarded facade boundaries */
 /** biome-ignore-all lint/nursery/noUndeclaredClasses: tailwind-v4 utilities biome cannot resolve */
 /* eslint-disable @typescript-eslint/no-misused-promises, @typescript-eslint/strict-void-return */
 /* oxlint-disable jsx-no-new-object-as-prop, jsx-a11y/prefer-tag-over-role */

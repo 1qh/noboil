@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/nursery/noUnsafeTypeAssertion: test fixtures construct and assert partial, invalid, or runtime-shaped values to exercise edge cases */
 /* eslint-disable @typescript-eslint/max-params */
 import type { TestContext, TestUser } from 'noboil/spacetimedb/test'
 import { config } from '@a/config'

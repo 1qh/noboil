@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/nursery/noUnsafeTypeAssertion: test fixtures construct and assert partial, invalid, or runtime-shaped values to exercise edge cases */
 import { describe, expect, it } from 'bun:test'
 import { v } from 'convex/values'
 import type { ArgSpecs, IntrospectedValidator } from '../types'

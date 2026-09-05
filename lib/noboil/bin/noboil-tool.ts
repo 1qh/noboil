@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/** biome-ignore-all lint/nursery/noUnsafeTypeAssertion: narrows loosely-typed runtime/codegen values to the library's typed model at guarded facade boundaries */
 /* eslint-disable no-console, no-control-regex, @typescript-eslint/no-unnecessary-condition */
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'

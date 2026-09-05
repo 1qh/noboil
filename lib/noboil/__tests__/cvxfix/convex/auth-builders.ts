@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/nursery/noUnsafeTypeAssertion: test fixtures construct and assert partial, invalid, or runtime-shaped values to exercise edge cases */
 import type { GenericMutationCtx, GenericQueryCtx } from 'convex/server'
 import { customCtx } from 'convex-helpers/server/customFunctions'
 import { zCustomMutation, zCustomQuery } from 'convex-helpers/server/zod4'

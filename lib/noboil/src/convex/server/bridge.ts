@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/nursery/noUnsafeTypeAssertion: narrows loosely-typed runtime/codegen values to the library's typed model at guarded facade boundaries */
 import type { FilterLike, IndexLike, SearchLike } from './types'
 /** Type-bridge for index builders — coerces our typed `IndexLike` fn to Convex's untyped slot. Internal. */
 const idx = (fn: (ib: IndexLike) => IndexLike): never => fn as never

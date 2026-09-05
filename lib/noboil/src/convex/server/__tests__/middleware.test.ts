@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/nursery/noUnsafeTypeAssertion: test fixtures construct and assert partial, invalid, or runtime-shaped values to exercise edge cases */
 /* eslint-disable no-console */
 import { afterEach, beforeEach, describe, expect, mock, test } from 'bun:test'
 import { auditLog, composeMiddleware, inputSanitize, slowQueryWarn } from '../middleware'

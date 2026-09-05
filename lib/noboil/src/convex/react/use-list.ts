@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/nursery/noUnsafeTypeAssertion: narrows loosely-typed runtime/codegen values to the library's typed model at guarded facade boundaries */
 'use client'
 import type { PaginatedQueryArgs, PaginatedQueryReference } from 'convex/react'
 import type { FunctionReturnType } from 'convex/server'
@@ -9,10 +10,6 @@ import { trackSubscription, untrackSubscription, updateSubscription, updateSubsc
 import { usePendingMutations } from './optimistic-store'
 
 type ListItems<F extends PaginatedQueryReference> = FunctionReturnType<F>['page']
-type ListRest<F extends PaginatedQueryReference> =
-  PaginatedQueryArgs<F> extends Record<string, never>
-    ? [args?: PaginatedQueryArgs<F>, options?: UseListOptions]
-    : [args: PaginatedQueryArgs<F>, options?: UseListOptions]
 /** Options for `useList`. `optimistic` overlays pending mutations; `pageSize` controls page increments. */
 interface UseListOptions {
   optimistic?: boolean
@@ -62,22 +59,22 @@ const applyOptimistic = <T extends Rec>(items: T[], pending: PendingMutation[]):
  * const { data, loadMore, isDone } = useList(api.blog.list, { where: { published: true } })
  * ```
  */
-const useList = <F extends PaginatedQueryReference>(query: F, ...rest: ListRest<F>) => {
-  const queryArgs = (rest[0] ?? {}) as unknown as PaginatedQueryArgs<F>
-  const pageSize = rest[1]?.pageSize ?? DEFAULT_PAGE_SIZE
-  const isOptimistic = rest[1]?.optimistic !== false
+const useList = <F extends PaginatedQueryReference>(query: F, args?: PaginatedQueryArgs<F>, options?: UseListOptions) => {
+  const queryArgs = (args ?? {}) as PaginatedQueryArgs<F>
+  const pageSize = options?.pageSize ?? DEFAULT_PAGE_SIZE
+  const isOptimistic = options?.optimistic !== false
   const { loadMore, results, status } = usePaginatedQuery(query, queryArgs, { initialNumItems: pageSize })
   const pending = usePendingMutations()
   const subIdRef = useRef(0)
-  /** biome-ignore lint/correctness/useExhaustiveDependencies: subscribe lifecycle is intentionally one-time */
+  const queryRef = useRef(query)
+  const queryArgsRef = useRef(queryArgs)
   useEffect(() => {
     if (!isDev) return
-    const queryName = typeof query === 'string' ? query : ((query as { _name?: string })._name ?? 'unknown')
-    subIdRef.current = trackSubscription(queryName, queryArgs)
+    const q = queryRef.current
+    const queryName = typeof q === 'string' ? q : ((q as { _name?: string })._name ?? 'unknown')
+    subIdRef.current = trackSubscription(queryName, queryArgsRef.current)
     const id = subIdRef.current
     return () => untrackSubscription(id)
-    // oxlint-disable-next-line react-hooks/exhaustive-deps
-    // eslint-disable-next-line @eslint-react/exhaustive-deps, react-hooks/exhaustive-deps
   }, [])
   useEffect(() => {
     if (!(isDev && subIdRef.current)) return

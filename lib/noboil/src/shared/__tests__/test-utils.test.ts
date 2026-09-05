@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/nursery/noUnsafeTypeAssertion: test fixtures construct and assert partial, invalid, or runtime-shaped values to exercise edge cases */
 import { describe, expect, test } from 'bun:test'
 import type { Lcg } from '../test/index'
 import { advanceNow, createLcg, hermeticTry, restoreNow, setHermeticAdapter, setNow, withFakeNow } from '../test/index'

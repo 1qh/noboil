@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/nursery/noUnsafeTypeAssertion: narrows loosely-typed runtime/codegen values to the library's typed model at guarded facade boundaries */
 import type { Identity, Timestamp } from 'spacetimedb'
 import type { AlgebraicTypeType, TypeBuilder } from 'spacetimedb/server'
 import type { ZodObject, ZodRawShape } from 'zod/v4'
@@ -156,7 +157,6 @@ const makeOrgCrud = <
     table: tableAccessor,
     tableName
   } = config
-  /** biome-ignore lint/nursery/noComponentHookFactories: handler map, not a component/hook */
   const useAcl = Boolean(options?.acl)
   const hooks = options?.hooks
   const requireMembershipOrOwner = ({

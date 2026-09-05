@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/nursery/noUnsafeTypeAssertion: narrows loosely-typed runtime/codegen values to the library's typed model at guarded facade boundaries */
 /* oxlint-disable promise/param-names, promise/prefer-await-to-then */
 /* eslint-disable @typescript-eslint/strict-void-return, no-promise-executor-return, no-await-in-loop, @eslint-react/web-api-no-leaked-timeout, @eslint-react/no-array-index-key, react/no-array-index-key, @typescript-eslint/no-unnecessary-condition */
 import { Box, render, Text, useApp, useInput } from 'ink'

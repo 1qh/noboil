@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+/** biome-ignore-all lint/nursery/noUnsafeTypeAssertion: narrows loosely-typed runtime/codegen values to the library's typed model at guarded facade boundaries */
 /* eslint-disable no-console */
 import { rules as cvxRules } from '../../lib/noboil/src/convex/eslint'
 import { rules as stdbRules } from '../../lib/noboil/src/spacetimedb/eslint'

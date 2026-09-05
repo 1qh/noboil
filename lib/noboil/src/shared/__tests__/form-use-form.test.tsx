@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/nursery/noUnsafeTypeAssertion: test fixtures construct and assert partial, invalid, or runtime-shaped values to exercise edge cases */
 import { GlobalRegistrator } from '@happy-dom/global-registrator'
 
 if (typeof document === 'undefined') GlobalRegistrator.register()

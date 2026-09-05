@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/nursery/noUnsafeTypeAssertion: narrows loosely-typed runtime/codegen values to the library's typed model at guarded facade boundaries */
 import type { api as BeApi } from '@a/be-convex'
 import type { Id } from '@a/be-convex/model'
 import type { FunctionArgs, FunctionReference, FunctionReturnType } from 'convex/server'

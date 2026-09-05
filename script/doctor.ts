@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/nursery/noUnsafeTypeAssertion: narrows loosely-typed runtime/codegen values to the library's typed model at guarded facade boundaries */
 /* oxlint-disable no-process-exit */
 import { config } from '@a/config'
 import { $ } from 'bun'

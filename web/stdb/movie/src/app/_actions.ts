@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/nursery/noUnsafeTypeAssertion: narrows loosely-typed runtime/codegen values to the library's typed model at guarded facade boundaries */
 'use server'
 import { TMDB } from '@lorenzopant/tmdb'
 import { isStdbTestMode } from 'noboil/spacetimedb'

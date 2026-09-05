@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/nursery/noUnsafeTypeAssertion: narrows loosely-typed runtime/codegen values to the library's typed model at guarded facade boundaries */
 'use client'
 import type { PaginatedQueryArgs, PaginatedQueryReference } from 'convex/react'
 import type { FunctionReturnType } from 'convex/server'
@@ -17,13 +18,7 @@ type ListItems<F extends PaginatedQueryReference> = FunctionReturnType<F>['page'
 /** Wraps useList with an IntersectionObserver sentinel for automatic infinite scroll pagination. */
 const useInfiniteList = <F extends PaginatedQueryReference>(query: F, ...rest: InfiniteListRest<F>) => {
   const [args, opts] = rest as [PaginatedQueryArgs<F> | undefined, InfiniteListOptions | undefined]
-  const { data, isDone, loadMore, status } = (useList as (...a: unknown[]) => ReturnType<typeof useList>)(
-    query,
-    args ?? {},
-    {
-      pageSize: opts?.pageSize
-    }
-  )
+  const { data, isDone, loadMore, status } = useList(query, args, { pageSize: opts?.pageSize })
   const sentinelRef = useRef<HTMLElement | null>(null)
   const observerRef = useRef<IntersectionObserver | null>(null)
   const isLoadingMore = status === 'LoadingMore'

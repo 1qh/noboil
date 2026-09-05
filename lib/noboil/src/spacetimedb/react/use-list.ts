@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/nursery/noUnsafeTypeAssertion: narrows loosely-typed runtime/codegen values to the library's typed model at guarded facade boundaries */
 /* eslint-disable @eslint-react/set-state-in-effect */
 'use client'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'

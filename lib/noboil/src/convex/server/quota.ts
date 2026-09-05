@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/nursery/noUnsafeTypeAssertion: narrows loosely-typed runtime/codegen values to the library's typed model at guarded facade boundaries */
 /* oxlint-disable unicorn/prefer-ternary */
 /* eslint-disable @typescript-eslint/max-params */
 import { string } from 'zod/v4'

@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/nursery/noUnsafeTypeAssertion: narrows loosely-typed runtime/codegen values to the library's typed model at guarded facade boundaries */
 /* eslint-disable complexity, @typescript-eslint/max-params */
 import type { GenericDataModel, GenericMutationCtx, GenericQueryCtx } from 'convex/server'
 import type { ZodObject, ZodRawShape } from 'zod/v4'

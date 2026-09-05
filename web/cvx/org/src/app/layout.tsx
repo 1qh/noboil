@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/nursery/noUnsafeTypeAssertion: narrows loosely-typed runtime/codegen values to the library's typed model at guarded facade boundaries */
 import type { Doc } from '@a/be-convex/model'
 import type { FunctionReference } from 'convex/server'
 import type { Metadata } from 'next'

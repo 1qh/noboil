@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/nursery/noUnsafeTypeAssertion: narrows loosely-typed runtime/codegen values to the library's typed model at guarded facade boundaries */
 import type { ZodObject, ZodType } from 'zod/v4'
 import { array, boolean, number, object, string, unknown, uuid, enum as zenum } from 'zod/v4'
 import { isRecord } from '../shared/server/helpers'

@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/nursery/noUnsafeTypeAssertion: test fixtures construct and assert partial, invalid, or runtime-shaped values to exercise edge cases */
 import type { CacheBuilders } from '../../../src/convex/server/types'
 import { makeCacheCrud } from '../../../src/convex/server/cache-crud'
 import { action, internalMutation, internalQuery, mutation, query } from './_generated/server'

@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/nursery/noUnsafeTypeAssertion: narrows loosely-typed runtime/codegen values to the library's typed model at guarded facade boundaries */
 import type { ZodObject, ZodRawShape } from 'zod/v4'
 import { zodOutputToConvexFields as z2c } from 'convex-helpers/server/zod4'
 import { defineTable } from 'convex/server'

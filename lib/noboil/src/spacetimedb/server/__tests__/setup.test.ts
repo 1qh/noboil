@@ -1,8 +1,12 @@
+/** biome-ignore-all lint/nursery/noUnsafeTypeAssertion: test fixtures construct and assert partial, invalid, or runtime-shaped values to exercise edge cases */
 import { describe, expect, test } from 'bun:test'
 import { z } from 'zod/v4'
 import { noboil, setup, setupCrud } from '../setup'
 import { captureReducers } from './_helpers'
 
+interface DataArg {
+  data: unknown
+}
 const tryCall = (fn: () => unknown) => {
   try {
     return fn()
@@ -66,7 +70,7 @@ describe('stdb setup wires factories with global hooks', () => {
           afterUpdate: () => {
             calls.push('g.afterUpdate')
           },
-          beforeCreate: (_c: unknown, p: { data: unknown }) => {
+          beforeCreate: (_c: unknown, p: DataArg) => {
             calls.push('g.beforeCreate')
             return p.data
           },
@@ -96,7 +100,7 @@ describe('stdb setup wires factories with global hooks', () => {
           afterUpdate: () => {
             calls.push('l.afterUpdate')
           },
-          beforeCreate: (_c: unknown, p: { data: unknown }) => {
+          beforeCreate: (_c: unknown, p: DataArg) => {
             calls.push('l.beforeCreate')
             return p.data
           },
@@ -150,7 +154,7 @@ describe('stdb setup wires factories with global hooks', () => {
           afterUpdate: () => {
             calls.push('g.afterUpdate')
           },
-          beforeCreate: (_c: unknown, p: { data: unknown }) => {
+          beforeCreate: (_c: unknown, p: DataArg) => {
             calls.push('g.beforeCreate')
             return p.data
           },
@@ -173,7 +177,7 @@ describe('stdb setup wires factories with global hooks', () => {
           afterUpdate: () => {
             calls.push('l.afterUpdate')
           },
-          beforeCreate: (_c: unknown, p: { data: unknown }) => {
+          beforeCreate: (_c: unknown, p: DataArg) => {
             calls.push('l.beforeCreate')
             return p.data
           },
@@ -209,7 +213,7 @@ describe('stdb setup wires factories with global hooks', () => {
           afterCreate: () => {
             calls.push('g.afterCreate')
           },
-          beforeCreate: (_c: unknown, p: { data: unknown }) => {
+          beforeCreate: (_c: unknown, p: DataArg) => {
             calls.push('g.beforeCreate')
             return p.data
           }
@@ -231,7 +235,7 @@ describe('stdb setup wires factories with global hooks', () => {
           afterCreate: () => {
             calls.push('l.afterCreate')
           },
-          beforeCreate: (_c: unknown, p: { data: unknown }) => {
+          beforeCreate: (_c: unknown, p: DataArg) => {
             calls.push('l.beforeCreate')
             return p.data
           }
@@ -259,7 +263,7 @@ describe('stdb setup wires factories with global hooks', () => {
       { reducer } as never,
       {
         hooks: {
-          beforeCreate: (_c: unknown, p: { data: unknown }) => p.data
+          beforeCreate: (_c: unknown, p: DataArg) => p.data
         }
       } as never
     ) as Record<string, unknown>
@@ -285,7 +289,7 @@ describe('stdb setup wires factories with global hooks', () => {
           afterCreate: () => {
             calls.push('g.afterCreate')
           },
-          beforeCreate: (_c: unknown, p: { data: unknown }) => {
+          beforeCreate: (_c: unknown, p: DataArg) => {
             calls.push('g.beforeCreate')
             return p.data
           }
@@ -300,7 +304,7 @@ describe('stdb setup wires factories with global hooks', () => {
       idField: {} as never,
       options: {
         hooks: {
-          beforeCreate: (_c: unknown, p: { data: unknown }) => {
+          beforeCreate: (_c: unknown, p: DataArg) => {
             calls.push('l.beforeCreate')
             return p.data
           }
@@ -321,7 +325,7 @@ describe('stdb setup wires factories with global hooks', () => {
       { reducer } as never,
       {
         hooks: {
-          beforeCreate: async (_c: unknown, p: { data: unknown }) => {
+          beforeCreate: async (_c: unknown, p: DataArg) => {
             await Promise.resolve()
             return p.data
           }
@@ -354,7 +358,7 @@ describe('stdb setup wires factories with global hooks', () => {
           afterCreate: () => undefined,
           afterDelete: () => undefined,
           afterUpdate: () => undefined,
-          beforeCreate: (_c: unknown, p: { data: unknown }) => p.data,
+          beforeCreate: (_c: unknown, p: DataArg) => p.data,
           beforeDelete: () => undefined,
           beforeUpdate: (_c: unknown, p: { patch: unknown }) => p.patch
         },
@@ -363,7 +367,7 @@ describe('stdb setup wires factories with global hooks', () => {
             afterCreate: () => undefined,
             afterDelete: () => undefined,
             afterUpdate: () => undefined,
-            beforeCreate: (_c: unknown, p: { data: unknown }) => p.data,
+            beforeCreate: (_c: unknown, p: DataArg) => p.data,
             beforeDelete: () => undefined,
             beforeUpdate: (_c: unknown, p: { patch: unknown }) => p.patch,
             name: 'mw'
@@ -381,7 +385,7 @@ describe('stdb setup wires factories with global hooks', () => {
           afterCreate: () => undefined,
           afterDelete: () => undefined,
           afterUpdate: () => undefined,
-          beforeCreate: (_c: unknown, p: { data: unknown }) => p.data,
+          beforeCreate: (_c: unknown, p: DataArg) => p.data,
           beforeDelete: () => undefined,
           beforeUpdate: (_c: unknown, p: { patch: unknown }) => p.patch
         }

@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/nursery/noUnsafeTypeAssertion: narrows loosely-typed runtime/codegen values to the library's typed model at guarded facade boundaries */
 const env = (k: string): string | undefined => {
   const r = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process
   return r?.env?.[k]

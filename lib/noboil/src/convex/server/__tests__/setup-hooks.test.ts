@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/nursery/noUnsafeTypeAssertion: test fixtures construct and assert partial, invalid, or runtime-shaped values to exercise edge cases */
 /* oxlint-disable promise/prefer-await-to-callbacks */
 import { describe, expect, test } from 'bun:test'
 import { z } from 'zod/v4'

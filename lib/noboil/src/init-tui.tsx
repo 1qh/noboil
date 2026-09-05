@@ -1,5 +1,6 @@
 /* oxlint-disable promise/param-names, promise/prefer-await-to-then */
 /* eslint-disable @eslint-react/web-api-no-leaked-timeout, @typescript-eslint/no-unnecessary-type-conversion, @typescript-eslint/strict-void-return, no-promise-executor-return */
+/* oxlint-disable react/exhaustive-effect-dependencies -- the extra-deps direction is a compiler-native false positive; these are intentional trigger deps for a non-compiled component */
 import { env } from 'bun'
 import { Box, render, Text, useApp, useInput } from 'ink'
 import Spinner from 'ink-spinner'

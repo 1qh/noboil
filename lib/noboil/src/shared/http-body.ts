@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/nursery/noUnsafeTypeAssertion: narrows loosely-typed runtime/codegen values to the library's typed model at guarded facade boundaries */
 const DEFAULT_MAX_HTTP_BODY = 2_000_000
 /** Build a `{ error }` JSON Response with the given status — handy shorthand in HTTP handlers. */
 const jsonErr = (error: string, status: number): Response => Response.json({ error }, { status })

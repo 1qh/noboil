@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/nursery/noUnsafeTypeAssertion: narrows loosely-typed runtime/codegen values to the library's typed model at guarded facade boundaries */
 /* eslint-disable @typescript-eslint/no-unnecessary-condition */
 import type { ZodObject, ZodRawShape } from 'zod/v4'
 import { number, string } from 'zod/v4'

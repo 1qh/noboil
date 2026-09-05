@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/nursery/noUnsafeTypeAssertion: narrows loosely-typed runtime/codegen values to the library's typed model at guarded facade boundaries */
 import { defineTable } from 'convex/server'
 import { v } from 'convex/values'
 import { any, object, string } from 'zod/v4'
